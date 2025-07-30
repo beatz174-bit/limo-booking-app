@@ -18,7 +18,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (token) {
-      fetch("http://localhost:8000/users/admin/settings", {
+      fetch("http://localhost:8000/setup", {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((res) => res.ok ? res.json() : Promise.reject("Failed"))
@@ -39,7 +39,7 @@ export default function AdminDashboard() {
   const handleSave = async () => {
     setError("");
     setMessage("");
-    const res = await fetch("http://localhost:8000/users/admin/settings", {
+    const res = await fetch("http://localhost:8000/setup", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

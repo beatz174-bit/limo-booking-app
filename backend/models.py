@@ -8,7 +8,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     full_name = Column(String)
-    password_hash = Column(String)
+    hashed_password = Column(String)
     role = Column(String, default="customer")  # 'customer' or 'driver'
     is_approved = Column(Boolean, default=False)
 

@@ -1,7 +1,8 @@
 // src/App.tsx
 import React from "react";
-import { BrowserRouter as Router, Route, Routes, Link, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./AuthContext";
+// import Header from "./components/Header";
 import HomePage from "./pages/HomePage";
 import BookingPage from "./pages/BookingPage";
 import ConfirmationPage from "./pages/ConfirmationPage";
@@ -10,6 +11,8 @@ import SetupPage from "./pages/SetupPage";
 import LoginPage from "./pages/LoginPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import { RequireAuth, RequireDriver } from "./ProtectedRoute";
+import AppLayout from "./layouts/AppLayout";
+import NotFoundPage from "./pages/NotFoundPage";
 
 function AppRoutes() {
   const { loading, setupRequired } = useAuth();
@@ -36,14 +39,9 @@ export default function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="flex flex-col min-h-screen">
-          <main className="flex-grow p-4">
-            <AppRoutes />
-          </main>
-          <footer className="bg-gray-100 text-center text-sm p-4 border-t">
-            &copy; {new Date().getFullYear()} Limo Booking Service. All rights reserved.
-          </footer>
-        </div>
+        <AppLayout>
+          <AppRoutes />
+        </AppLayout>
       </Router>
     </AuthProvider>
   );

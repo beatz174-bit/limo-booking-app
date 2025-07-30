@@ -20,7 +20,7 @@ interface Settings {
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (token: string) => void;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
   setupRequired: boolean;
@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const refreshSettings = async () => {
     try {
-      const res = await fetch("http://localhost:8000/users/admin/settings");
+      const res = await fetch("http://localhost:8000/setup");
       if (res.ok) {
         const data = await res.json();
         setSettings(data);
@@ -69,10 +69,65 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const login = async (email: string, password: string) => {
+    const res = await fetch("http://localhost:8000/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!res.ok) {
+      const detail = await res.text();
+      throw new Error(`Login failed: ${detail}`);
+    }
+
+    const data = await res.json();
+    localStorage.setItem("token", data.token);
+    setToken(data.token);
+    setUser({
+      id: -1,
+      email,
+      full_name: data.full_name,
+      role: data.role,
+      is_approved: true,
+    });
+  };
+
+  const restoreUser = async () => {
+    const storedToken = localStorage.getItem("token");
+    if (!storedToken) return;
+
+    try {
+      const res = await fetch("http://localhost:8000/users/me", {
+        headers: {
+          Authorization: `Bearer ${storedToken}`,
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setToken(storedToken);
+        setUser(data);
+      } else {
+        localStorage.removeItem("token");
+        setToken(null);
+        setUser(null);
+      }
+    } catch (err) {
+      console.error("Failed to restore user:", err);
+      setToken(null);
+      setUser(null);
+    }
+  };
+
+  useEffect(() => {
+    restoreUser();
+  }, []);
+
   useEffect(() => {
     const checkSetup = async () => {
       try {
-        const res = await fetch("http://localhost:8000/users/admin/settings");
+        const res = await fetch("http://localhost:8000/setup");
         if (!res.ok) {
           setSetupRequired(true);
         } else {
@@ -106,11 +161,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         });
     }
   }, [token]);
-
-  const login = (newToken: string) => {
-    localStorage.setItem("token", newToken);
-    setToken(newToken);
-  };
 
   const logout = () => {
     setToken(null);

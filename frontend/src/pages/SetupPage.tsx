@@ -23,7 +23,7 @@ export default function SetupPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:8000/users/admin/settings")
+    fetch("http://localhost:8000/setup")
       .then((res) => {
         if (res.ok) {
           navigate("/login");
@@ -48,18 +48,23 @@ export default function SetupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+  const payload = {
+    admin_email: form.admin_email,
+    full_name: form.full_name,
+    admin_password: form.admin_password,
+    settings: {
+      flagfall: form.settings.flagfall,
+      per_km_rate: form.settings.per_km_rate,
+      per_min_rate: form.settings.per_min_rate,
+      google_maps_api_key: form.settings.google_maps_api_key,
+      allow_public_registration: form.settings.allow_public_registration, // or a value from form if you support toggling
+    },
+  };
+
     setError("");
     try {
-      await completeSetup({
-        full_name: form.full_name,
-        email: form.admin_email,
-        password: form.admin_password,
-        flagfall: Number(form.settings.flagfall),
-        per_km_rate: Number(form.settings.per_km_rate),
-        per_minute_rate: Number(form.settings.per_min_rate),
-        google_maps_api_key: form.settings.google_maps_api_key,
-        account_mode: form.settings.allow_public_registration ? "open" : "staged",
-      });
+      await completeSetup(payload);
       navigate("/admin");
     } catch (err: any) {
   const message = err instanceof Error ? err.message : "Unknown error";

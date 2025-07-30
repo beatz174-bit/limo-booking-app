@@ -1,17 +1,26 @@
 // src/components/Header.tsx
 import React from "react";
-import { Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 
 export default function Header() {
-  const { user, logout } = useAuth();
+  const { token, user, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  // const { user, logout } = useAuth();
 
-  return (
-    <header className="bg-gray-800 text-white p-4 flex items-center justify-between">
-      <div className="flex items-center space-x-3">
-        <img src="/logo.svg" alt="Logo" className="w-10 h-10" />
-        <h1 className="text-2xl font-bold">Limo Booking Service</h1>
-      </div>
+  const hideNav = ["/login", "/setup"].includes(location.pathname);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+    return (
+    <header className="bg-gray-800 text-white p-4 flex justify-between items-center">
+      <h1 className="text-xl font-bold">Limo Booking App</h1>
+
+      {!hideNav && (
       <nav className="flex items-center space-x-4">
         <Link to="/" className="text-blue-300 hover:underline">Home</Link>
         <Link to="/book" className="text-blue-300 hover:underline">Book</Link>
@@ -20,15 +29,23 @@ export default function Header() {
         {user?.role === "driver" && (
           <Link to="/admin" className="text-blue-300 hover:underline">Admin</Link>
         )}
-        {user ? (
-          <>
-            <span className="text-sm">Hi, {user.full_name}</span>
-            <button onClick={logout} className="text-sm text-red-300 hover:underline">Logout</button>
-          </>
+        {token ? (
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+          >
+            Logout
+          </button>
         ) : (
-          <Link to="/login" className="text-blue-300 hover:underline">Login</Link>
+          <button
+            onClick={() => navigate("/login")}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+          >
+            Login
+          </button>
         )}
       </nav>
+      )}
     </header>
   );
 }

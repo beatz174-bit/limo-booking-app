@@ -7,11 +7,11 @@ import AppLayout from "./layouts/AppLayout";
 export const RequireAuth = ({ children }: { children: JSX.Element }) => {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
-  return <AppLayout>{children}</AppLayout>;
+  return children;
 };
 
 export const RequireDriver = ({ children }: { children: JSX.Element }) => {
   const { user } = useAuth();
   if (!user || user.role !== "driver") return <Navigate to="/login" replace />;
-  return <AppLayout>{children}</AppLayout>;
+  return children;
 };

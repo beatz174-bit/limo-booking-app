@@ -13,19 +13,12 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    const res = await fetch("http://localhost:8000/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
 
-    if (res.ok) {
-      const data = await res.json();
-      login(data.access_token);
-      navigate("/");
-    } else {
-      const err = await res.json();
-      setError(err.detail || "Login failed");
+    try {
+      await login(email, password); // ✅ call AuthContext login(email, password)
+      navigate("/"); // ✅ redirect on success
+    } catch (err: any) {
+      setError(err.message || "Login failed");
     }
   };
 
