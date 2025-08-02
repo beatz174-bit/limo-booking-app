@@ -90,12 +90,40 @@ export default function BookingPage() {
       .catch(err => console.error(err));
   }, []);
 
+  // useEffect(() => {
+  //   if (date) {
+  //     fetch(`http://localhost:8000/availability?date=${date}`)
+  //       .then((res) => res.json())
+  //       .then((data) => setAvailableTimes(data.available_times))
+  //       .catch(() => setAvailableTimes([]));
+  //   }
+  // }, [date]);
+
   useEffect(() => {
+    const generateAvailableTimes = () => {
+      const now = new Date();
+      const selectedDate = new Date(date);
+      const times: string[] = [];
+
+      for (let hour = 0; hour < 24; hour++) {
+        for (let min = 0; min < 60; min += 15) {
+          const optionTime = new Date(selectedDate);
+          optionTime.setHours(hour, min, 0, 0);
+
+          // Only include times in the future
+          if (optionTime > now) {
+            times.push(optionTime.toTimeString().slice(0, 5)); // "HH:MM"
+          }
+        }
+      }
+
+      setAvailableTimes(times);
+    };
+
     if (date) {
-      fetch(`http://localhost:8000/availability?date=${date}`)
-        .then((res) => res.json())
-        .then((data) => setAvailableTimes(data.available_times))
-        .catch(() => setAvailableTimes([]));
+      generateAvailableTimes();
+    } else {
+      setAvailableTimes([]);
     }
   }, [date]);
 
@@ -197,6 +225,7 @@ export default function BookingPage() {
         type="date"
         value={date}
         onChange={(e) => setDate(e.target.value)}
+        min={new Date().toISOString().split("T")[0]} // only future dates
         className="border px-2 py-1 rounded mb-4 w-full"
       />
 
