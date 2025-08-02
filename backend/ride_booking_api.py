@@ -37,9 +37,9 @@ app.include_router(auth_router)
 
 ORS_API_KEY = os.getenv("ORS_API_KEY")
 # Pricing constants
-FLAGFALL = 10.0
-PER_KM_RATE = 2.0
-PER_MIN_RATE = 1.0
+# FLAGFALL = 10.0
+# PER_KM_RATE = 2.0
+# PER_MIN_RATE = 1.0
 
 # In-memory stores
 bookings = []
@@ -105,6 +105,31 @@ def check_availability(date: str):
     available_slots = [s for s in all_slots if s not in taken_times]
     return {"available_times": available_slots}
 
+# @app.post("/quote")
+# def generate_quote(req: QuoteRequest):
+#     coords = [
+#         [req.pickup.lng, req.pickup.lat],
+#         [req.dropoff.lng, req.dropoff.lat]
+#     ]
+#     try:
+#         response = httpx.post(
+#             "https://api.openrouteservice.org/v2/directions/driving-car",
+#             headers={"Authorization": ORS_API_KEY},
+#             json={"coordinates": coords}
+#         )
+#         response.raise_for_status()
+#         data = response.json()
+#         distance_km = data["routes"][0]["summary"]["distance"] / 1000
+#         duration_min = data["routes"][0]["summary"]["duration"] / 60
+#         price = FLAGFALL + (PER_KM_RATE * distance_km) + (PER_MIN_RATE * duration_min)
+#         return {
+#             "estimated_distance_km": round(distance_km, 2),
+#             "estimated_duration_min": round(duration_min, 1),
+#             "price": round(price, 2)
+#         }
+#     except httpx.HTTPError as e:
+#         raise HTTPException(status_code=502, detail=f"ORS API failed: {str(e)}")
+
 @app.post("/quote")
 def generate_quote(req: QuoteRequest):
     coords = [
@@ -121,7 +146,15 @@ def generate_quote(req: QuoteRequest):
         data = response.json()
         distance_km = data["routes"][0]["summary"]["distance"] / 1000
         duration_min = data["routes"][0]["summary"]["duration"] / 60
-        price = FLAGFALL + (PER_KM_RATE * distance_km) + (PER_MIN_RATE * duration_min)
+
+        # 🔽 Fetch rates from DB
+        db = SessionLocal()
+        config = db.query(AdminConfig).first()
+        if not config:
+            raise HTTPException(status_code=500, detail="Admin settings not found")
+
+        price = float(config.flagfall) + (float(config.per_km_rate) * distance_km) + (float(config.per_min_rate) * duration_min)
+
         return {
             "estimated_distance_km": round(distance_km, 2),
             "estimated_duration_min": round(duration_min, 1),
@@ -151,37 +184,7 @@ def approve_booking(booking_id: str):
 def list_customer_bookings(email: str):
     return [b for b in bookings if b.customer_email == email]
 
-# @app.post("/setup")
-# def complete_setup(data: SetupPayload):
-#     db: Session = SessionLocal()
 
-#     # Prevent running setup more than once
-#     existing_admin = db.query(User).filter(User.role == "admin").first()
-#     if existing_admin:
-#         raise HTTPException(status_code=400, detail="Setup already completed.")
-
-#     # Create admin user
-#     admin_user = User(
-#         email=data.admin_email,
-#         full_name=data.full_name,
-#         hashed_password=hash_password(data.admin_password),
-#         role="admin",
-#         is_approved=True,
-#     )
-#     db.add(admin_user)
-
-#     # Save settings
-#     config = AdminConfig(
-#         allow_public_registration=(data.settings.get("account_mode") == "open"),
-#         google_maps_api_key=data.settings.get("google_maps_api_key", ""),
-#         flagfall=data.settings.get("flagfall", 10.0),
-#         per_km_rate=data.settings.get("per_km_rate", 2.0),
-#         per_min_rate=data.settings.get("per_minute_rate", 1.0),
-#     )
-#     db.add(config)
-
-#     db.commit()
-#     return {"message": "Setup complete"}
 @app.post("/setup")
 def complete_setup(data: SetupPayload):
     try:
@@ -236,19 +239,6 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
         "role": user.role,
         "full_name": user.full_name
     }
-
-# @app.get("/setup")
-# def check_setup_status():
-#     config = SessionLocal().query(AdminConfig).first()
-#     if not config:
-#         raise HTTPException(status_code=404, detail="Not configured")
-#     return {
-#         "flagfall": config.flagfall,
-#         "per_km_rate": config.per_km_rate,
-#         "per_minute_rate": config.per_min_rate,
-#         "google_maps_api_key": config.google_maps_api_key,
-#         "account_mode": "open" if config.allow_public_registration else "staged",
-#     }
 
 @app.get("/setup")
 def check_setup_status():

@@ -11,10 +11,6 @@ interface Location {
   lng: number;
 }
 
-const FLAGFALL = 10;
-const PER_KM_RATE = 2;
-const PER_MIN_RATE = 1;
-
 function AutocompleteInput({ label, value, onSelect }: { label: string; value: string; onSelect: (location: Location) => void }) {
   const {
     ready,
@@ -77,6 +73,22 @@ export default function BookingPage() {
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [pickup, setPickup] = useState<Location | null>(null);
   const [dropoff, setDropoff] = useState<Location | null>(null);
+  const [flagfall, setFlagfall] = useState(0);
+  const [perKmRate, setPerKmRate] = useState(0);
+  const [perMinRate, setPerMinRate] = useState(0);
+  const [distance, setDistance] = useState<number | null>(null);
+  const [duration, setDuration] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch("http://localhost:8000/setup")
+      .then(res => res.ok ? res.json() : Promise.reject("Failed to fetch pricing"))
+      .then(data => {
+        setFlagfall(data.flagfall || 0);
+        setPerKmRate(data.per_km_rate || 0);
+        setPerMinRate(data.per_min_rate || 0);
+      })
+      .catch(err => console.error(err));
+  }, []);
 
   useEffect(() => {
     if (date) {
@@ -136,11 +148,15 @@ export default function BookingPage() {
 
         const distanceKm = element.distance.value / 1000;
         const durationMin = element.duration.value / 60;
-        const price = FLAGFALL + distanceKm * PER_KM_RATE + durationMin * PER_MIN_RATE;
+        const price = flagfall + distanceKm.toFixed(1) * perKmRate + durationMin.toFixed(1) * perMinRate;
         setQuote(Number(price.toFixed(2)));
+        setDistance(distanceKm);
+        setDuration(durationMin)
       }
     );
+
   };
+
 
   const handleBooking = async () => {
     const bookingDateTime = `${date}T${time}:00`;
@@ -210,6 +226,8 @@ export default function BookingPage() {
 
       {quote !== null && (
         <div className="mt-4">
+          <p className="mb-2">Estimated Distance: <strong>{distance.toFixed(1)} Km</strong></p>
+          <p className="mb-2">Estimated Travel time: <strong>{duration.toFixed(1)} Min</strong></p>
           <p className="mb-2">Estimated Price: <strong>${quote.toFixed(2)}</strong></p>
           <button
             onClick={handleBooking}
