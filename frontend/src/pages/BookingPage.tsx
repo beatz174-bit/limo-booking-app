@@ -90,15 +90,6 @@ export default function BookingPage() {
       .catch(err => console.error(err));
   }, []);
 
-  // useEffect(() => {
-  //   if (date) {
-  //     fetch(`http://localhost:8000/availability?date=${date}`)
-  //       .then((res) => res.json())
-  //       .then((data) => setAvailableTimes(data.available_times))
-  //       .catch(() => setAvailableTimes([]));
-  //   }
-  // }, [date]);
-
   useEffect(() => {
     const generateAvailableTimes = () => {
       const now = new Date();

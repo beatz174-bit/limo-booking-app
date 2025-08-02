@@ -36,10 +36,6 @@ app.add_middleware(
 app.include_router(auth_router)
 
 ORS_API_KEY = os.getenv("ORS_API_KEY")
-# Pricing constants
-# FLAGFALL = 10.0
-# PER_KM_RATE = 2.0
-# PER_MIN_RATE = 1.0
 
 # In-memory stores
 bookings = []
@@ -104,31 +100,6 @@ def check_availability(date: str):
     all_slots = [(requested_date + timedelta(hours=h)).strftime("%H:%M") for h in range(6, 22)]
     available_slots = [s for s in all_slots if s not in taken_times]
     return {"available_times": available_slots}
-
-# @app.post("/quote")
-# def generate_quote(req: QuoteRequest):
-#     coords = [
-#         [req.pickup.lng, req.pickup.lat],
-#         [req.dropoff.lng, req.dropoff.lat]
-#     ]
-#     try:
-#         response = httpx.post(
-#             "https://api.openrouteservice.org/v2/directions/driving-car",
-#             headers={"Authorization": ORS_API_KEY},
-#             json={"coordinates": coords}
-#         )
-#         response.raise_for_status()
-#         data = response.json()
-#         distance_km = data["routes"][0]["summary"]["distance"] / 1000
-#         duration_min = data["routes"][0]["summary"]["duration"] / 60
-#         price = FLAGFALL + (PER_KM_RATE * distance_km) + (PER_MIN_RATE * duration_min)
-#         return {
-#             "estimated_distance_km": round(distance_km, 2),
-#             "estimated_duration_min": round(duration_min, 1),
-#             "price": round(price, 2)
-#         }
-#     except httpx.HTTPError as e:
-#         raise HTTPException(status_code=502, detail=f"ORS API failed: {str(e)}")
 
 @app.post("/quote")
 def generate_quote(req: QuoteRequest):
