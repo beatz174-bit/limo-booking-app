@@ -299,3 +299,24 @@ def get_current_user(request: Request, db: Session = Depends(get_db)):
         "role": user.role,
         "is_approved": user.is_approved,
     }
+
+@app.post("/settings")
+def update_settings(data: SettingsPayload):
+    try:
+        db = SessionLocal()
+        config = db.query(AdminConfig).first()
+        if not config:
+            raise HTTPException(status_code=404, detail="Settings not found")
+
+        config.allow_public_registration = (data.account_mode == "open")
+        config.google_maps_api_key = data.google_maps_api_key
+        config.flagfall = data.flagfall
+        config.per_km_rate = data.per_km_rate
+        config.per_min_rate = data.per_minute_rate
+
+        db.commit()
+        return {"message": "Settings updated"}
+    except ValidationError as e:
+        raise HTTPException(status_code=422, detail=e.errors())
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

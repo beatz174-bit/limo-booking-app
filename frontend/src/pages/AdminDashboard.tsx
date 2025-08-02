@@ -44,15 +44,14 @@ export default function AdminDashboard() {
     setError("");
     setMessage("");
     const payload = {
-      settings: {
-        allow_public_registration: settings?.allow_public_registration ?? false,
-        google_maps_api_key: settings?.google_maps_api_key ?? "",
-        flagfall: settings?.flagfall ?? 0,
-        per_km_rate: settings?.per_km_rate ?? 0,
-        per_minute_rate: settings?.per_min_rate ?? 0,
-      },
-    };
-    const res = await fetch("http://localhost:8000/setup", {
+    
+      allow_public_registration: settings?.allow_public_registration ?? false,
+      google_maps_api_key: settings?.google_maps_api_key ?? "",
+      flagfall: settings?.flagfall ?? 0,
+      per_km_rate: settings?.per_km_rate ?? 0,
+      per_minute_rate: settings?.per_min_rate ?? 0,
+      };
+    const res = await fetch("http://localhost:8000/settings", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
