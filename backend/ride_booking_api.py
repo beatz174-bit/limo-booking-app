@@ -2,7 +2,7 @@
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException, Depends, Request, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from datetime import datetime, timedelta
 from typing import List
 import uuid
@@ -18,11 +18,12 @@ from auth import router as auth_router
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from typing import Optional
+from decimal import Decimal
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 app = FastAPI()
-app.include_router(auth_router)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],  # ← allow all origins for dev
@@ -32,7 +33,7 @@ app.add_middleware(
 )
 
 
-
+app.include_router(auth_router)
 
 ORS_API_KEY = os.getenv("ORS_API_KEY")
 # Pricing constants
@@ -71,11 +72,20 @@ class Booking(BaseModel):
     quoted_price: float
     status: str = "pending"  # pending, confirmed, completed
 
+# Define a nested model for the settings field
+class SettingsPayload(BaseModel):
+    flagfall: Decimal = Field(gt=0, max_digits=6, decimal_places=2)
+    per_km_rate: Decimal = Field(gt=0, max_digits=6, decimal_places=2)
+    per_minute_rate: Decimal = Field(gt=0, max_digits=6, decimal_places=2)
+    google_maps_api_key: str = Field(min_length=10)
+    account_mode: str = Field(min_length=3, default="admin") 
+    allow_public_registration: bool = False  # Optional default
+
 class SetupPayload(BaseModel):
     admin_email: str
     admin_password: str
     full_name: str
-    settings: dict  # expects: flagfall, per_km_rate, per_minute_rate, google_maps_api_key, account_mode
+    settings: SettingsPayload # expects: flagfall, per_km_rate, per_minute_rate, google_maps_api_key, account_mode
 
 class LoginRequest(BaseModel):
     email: str
@@ -141,37 +151,76 @@ def approve_booking(booking_id: str):
 def list_customer_bookings(email: str):
     return [b for b in bookings if b.customer_email == email]
 
+# @app.post("/setup")
+# def complete_setup(data: SetupPayload):
+#     db: Session = SessionLocal()
+
+#     # Prevent running setup more than once
+#     existing_admin = db.query(User).filter(User.role == "admin").first()
+#     if existing_admin:
+#         raise HTTPException(status_code=400, detail="Setup already completed.")
+
+#     # Create admin user
+#     admin_user = User(
+#         email=data.admin_email,
+#         full_name=data.full_name,
+#         hashed_password=hash_password(data.admin_password),
+#         role="admin",
+#         is_approved=True,
+#     )
+#     db.add(admin_user)
+
+#     # Save settings
+#     config = AdminConfig(
+#         allow_public_registration=(data.settings.get("account_mode") == "open"),
+#         google_maps_api_key=data.settings.get("google_maps_api_key", ""),
+#         flagfall=data.settings.get("flagfall", 10.0),
+#         per_km_rate=data.settings.get("per_km_rate", 2.0),
+#         per_min_rate=data.settings.get("per_minute_rate", 1.0),
+#     )
+#     db.add(config)
+
+#     db.commit()
+#     return {"message": "Setup complete"}
 @app.post("/setup")
 def complete_setup(data: SetupPayload):
-    db: Session = SessionLocal()
+    try:
+        db: Session = SessionLocal()
 
-    # Prevent running setup more than once
-    existing_admin = db.query(User).filter(User.role == "admin").first()
-    if existing_admin:
-        raise HTTPException(status_code=400, detail="Setup already completed.")
+        # Prevent running setup more than once
+        existing_admin = db.query(User).filter(User.role == "admin").first()
+        if existing_admin:
+            raise HTTPException(status_code=400, detail="Setup already completed.")
 
-    # Create admin user
-    admin_user = User(
-        email=data.admin_email,
-        full_name=data.full_name,
-        hashed_password=hash_password(data.admin_password),
-        role="admin",
-        is_approved=True,
-    )
-    db.add(admin_user)
+        # Create admin user
+        admin_user = User(
+            email=data.admin_email,
+            full_name=data.full_name,
+            hashed_password=hash_password(data.admin_password),
+            role="admin",
+            is_approved=True,
+        )
+        db.add(admin_user)
 
-    # Save settings
-    config = AdminConfig(
-        allow_public_registration=(data.settings.get("account_mode") == "open"),
-        google_maps_api_key=data.settings.get("google_maps_api_key", ""),
-        flagfall=data.settings.get("flagfall", 10.0),
-        per_km_rate=data.settings.get("per_km_rate", 2.0),
-        per_min_rate=data.settings.get("per_minute_rate", 1.0),
-    )
-    db.add(config)
+        s = data.settings  # easier to read
 
-    db.commit()
-    return {"message": "Setup complete"}
+        # Save settings
+        config = AdminConfig(
+            allow_public_registration=(s.account_mode == "open"),
+            google_maps_api_key=s.google_maps_api_key,
+            flagfall=s.flagfall,
+            per_km_rate=s.per_km_rate,
+            per_min_rate=s.per_minute_rate,
+        )
+        db.add(config)
+
+        db.commit()
+        return {"message": "Setup complete"}
+    except ValidationError as e:
+        raise HTTPException(status_code=422, detail=e.errors())
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/auth/login", response_model=LoginResponse)
 def login(data: LoginRequest, db: Session = Depends(get_db)):
@@ -188,18 +237,38 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
         "full_name": user.full_name
     }
 
+# @app.get("/setup")
+# def check_setup_status():
+#     config = SessionLocal().query(AdminConfig).first()
+#     if not config:
+#         raise HTTPException(status_code=404, detail="Not configured")
+#     return {
+#         "flagfall": config.flagfall,
+#         "per_km_rate": config.per_km_rate,
+#         "per_minute_rate": config.per_min_rate,
+#         "google_maps_api_key": config.google_maps_api_key,
+#         "account_mode": "open" if config.allow_public_registration else "staged",
+#     }
+
 @app.get("/setup")
 def check_setup_status():
-    config = SessionLocal().query(AdminConfig).first()
-    if not config:
-        raise HTTPException(status_code=404, detail="Not configured")
-    return {
-        "flagfall": config.flagfall,
-        "per_km_rate": config.per_km_rate,
-        "per_minute_rate": config.per_min_rate,
-        "google_maps_api_key": config.google_maps_api_key,
-        "account_mode": "open" if config.allow_public_registration else "staged",
-    }
+    try:
+        db = SessionLocal()
+        config = db.query(AdminConfig).first()
+        if not config:
+            raise HTTPException(status_code=404, detail="Not configured")
+
+        return {
+            "flagfall": float(config.flagfall or 0.0),
+            "per_km_rate": float(config.per_km_rate or 0.0),
+            "per_min_rate": float(config.per_min_rate or 0.0),
+            "google_maps_api_key": config.google_maps_api_key or "",
+            "account_mode": "open" if config.allow_public_registration else "staged",
+        }
+    except Exception as e:
+        print("Error in GET /setup:", e)
+        raise HTTPException(status_code=500, detail="Failed to load setup configuration")
+
 
 @app.get("/users/me")
 def get_current_user(request: Request, db: Session = Depends(get_db)):

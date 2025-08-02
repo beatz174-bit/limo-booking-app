@@ -30,28 +30,46 @@ export default function AdminDashboard() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!settings) return;
     const { name, type, checked, value } = e.target;
-    setSettings({
-      ...settings,
-      [name]: type === "checkbox" ? checked : parseFloat(value) || value,
-    });
+    let newValue: any = type === "checkbox" ? checked : value;
+
+    if (["flagfall", "per_km_rate", "per_min_rate"].includes(name)) {
+      newValue = parseFloat(newValue);
+      if (isNaN(newValue) || newValue < 0) return;
+    }
+
+    setSettings({ ...settings, [name]: newValue });
   };
 
   const handleSave = async () => {
     setError("");
     setMessage("");
+    const payload = {
+      settings: {
+        allow_public_registration: settings?.allow_public_registration ?? false,
+        google_maps_api_key: settings?.google_maps_api_key ?? "",
+        flagfall: settings?.flagfall ?? 0,
+        per_km_rate: settings?.per_km_rate ?? 0,
+        per_minute_rate: settings?.per_min_rate ?? 0,
+      },
+    };
     const res = await fetch("http://localhost:8000/setup", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(settings),
+      body: JSON.stringify(payload),
     });
+
     if (res.ok) {
       setMessage("Settings saved");
     } else {
-      const err = await res.json();
-      setError(err.detail || "Failed to save settings");
+      try {
+        const err = await res.json();
+        setError(typeof err.detail === "string" ? err.detail : JSON.stringify(err.detail));
+      } catch {
+        setError("Failed to save settings");
+      }
     }
   };
 
@@ -71,38 +89,52 @@ export default function AdminDashboard() {
             onChange={handleChange}
           /> Allow public registration
         </label>
-        <input
-          type="text"
-          name="google_maps_api_key"
-          value={settings.google_maps_api_key}
-          onChange={handleChange}
-          placeholder="Google Maps API Key"
-          className="border p-2 w-full"
-        />
-        <input
-          type="number"
-          name="flagfall"
-          value={settings.flagfall}
-          onChange={handleChange}
-          placeholder="Flagfall"
-          className="border p-2 w-full"
-        />
-        <input
-          type="number"
-          name="per_km_rate"
-          value={settings.per_km_rate}
-          onChange={handleChange}
-          placeholder="Per KM Rate"
-          className="border p-2 w-full"
-        />
-        <input
-          type="number"
-          name="per_min_rate"
-          value={settings.per_min_rate}
-          onChange={handleChange}
-          placeholder="Per Minute Rate"
-          className="border p-2 w-full"
-        />
+        <label className="block">
+          Google Maps API Key:
+          <input
+            type="text"
+            name="google_maps_api_key"
+            value={settings.google_maps_api_key}
+            onChange={handleChange}
+            className="border p-2 w-full"
+          />
+        </label>
+        <label className="block">
+          Flagfall:
+          <input
+            type="number"
+            name="flagfall"
+            value={settings.flagfall}
+            onChange={handleChange}
+            step="0.01"
+            min="0"
+            className="border p-2 w-full"
+          />
+        </label>
+        <label className="block">
+          Per KM Rate:
+          <input
+            type="number"
+            name="per_km_rate"
+            value={settings.per_km_rate}
+            onChange={handleChange}
+            step="0.01"
+            min="0"
+            className="border p-2 w-full"
+          />
+        </label>
+        <label className="block">
+          Per Minute Rate:
+          <input
+            type="number"
+            name="per_min_rate"
+            value={settings.per_min_rate}
+            onChange={handleChange}
+            step="0.01"
+            min="0"
+            className="border p-2 w-full"
+          />
+        </label>
         <button
           onClick={handleSave}
           className="bg-blue-600 text-white px-4 py-2 rounded"

@@ -10,7 +10,7 @@ import HistoryPage from "./pages/HistoryPage";
 import SetupPage from "./pages/SetupPage";
 import LoginPage from "./pages/LoginPage";
 import AdminDashboard from "./pages/AdminDashboard";
-import { RequireAuth, RequireDriver } from "./ProtectedRoute";
+import { RequireAuth, RequireAdmin } from "./ProtectedRoute";
 import AppLayout from "./layouts/AppLayout";
 import NotFoundPage from "./pages/NotFoundPage";
 
@@ -29,7 +29,7 @@ function AppRoutes() {
       <Route path="/book" element={<RequireAuth><BookingPage /></RequireAuth>} />
       <Route path="/confirmation" element={<RequireAuth><ConfirmationPage /></RequireAuth>} />
       <Route path="/history" element={<RequireAuth><HistoryPage /></RequireAuth>} />
-      <Route path="/admin" element={<RequireDriver><AdminDashboard /></RequireDriver>} />
+      <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
       <Route path="*" element={<div className="p-4">404 - Page not found</div>} />
     </Routes>
   );

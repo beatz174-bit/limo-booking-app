@@ -26,7 +26,7 @@ export default function Header() {
         <Link to="/book" className="text-blue-300 hover:underline">Book</Link>
         <Link to="/confirmation" className="text-blue-300 hover:underline">Confirmation</Link>
         <Link to="/history" className="text-blue-300 hover:underline">History</Link>
-        {user?.role === "driver" && (
+        {user?.role === "admin" && (
           <Link to="/admin" className="text-blue-300 hover:underline">Admin</Link>
         )}
         {token ? (

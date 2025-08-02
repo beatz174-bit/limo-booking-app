@@ -10,8 +10,8 @@ export const RequireAuth = ({ children }: { children: JSX.Element }) => {
   return children;
 };
 
-export const RequireDriver = ({ children }: { children: JSX.Element }) => {
+export const RequireAdmin = ({ children }: { children: JSX.Element }) => {
   const { user } = useAuth();
-  if (!user || user.role !== "driver") return <Navigate to="/login" replace />;
+  if (!user || user.role !== "admin") return <Navigate to="/login" replace />;
   return children;
 };

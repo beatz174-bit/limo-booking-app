@@ -56,7 +56,7 @@ export default function SetupPage() {
     settings: {
       flagfall: form.settings.flagfall,
       per_km_rate: form.settings.per_km_rate,
-      per_min_rate: form.settings.per_min_rate,
+      per_minute_rate: form.settings.per_min_rate,
       google_maps_api_key: form.settings.google_maps_api_key,
       allow_public_registration: form.settings.allow_public_registration, // or a value from form if you support toggling
     },
@@ -88,9 +88,9 @@ export default function SetupPage() {
           <input type="checkbox" name="allow_public_registration" onChange={handleChange} /> Allow Public Registration
         </label>
         <div className="flex gap-2">
-          <input name="flagfall" type="number" placeholder="Flagfall" className="border p-2 w-full" onChange={handleChange} />
-          <input name="per_km_rate" type="number" placeholder="Per KM" className="border p-2 w-full" onChange={handleChange} />
-          <input name="per_min_rate" type="number" placeholder="Per Min" className="border p-2 w-full" onChange={handleChange} />
+          <input name="flagfall" type="number" placeholder="Flagfall" className="border p-2 w-full" onChange={handleChange} step="0.01" />
+          <input name="per_km_rate" type="number" placeholder="Per KM" className="border p-2 w-full" onChange={handleChange} step="0.01" />
+          <input name="per_min_rate" type="number" placeholder="Per Min" className="border p-2 w-full" onChange={handleChange} step="0.01" />
         </div>
         <button className="bg-blue-600 text-white px-4 py-2 rounded">Create Admin Account</button>
       </form>
