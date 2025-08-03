@@ -1,5 +1,5 @@
 # models.py
-from sqlalchemy import Column, Integer, String, Boolean, Float
+from sqlalchemy import Column, Integer, String, Boolean, Float, ForeignKey
 from database import Base
 
 class User(Base):
@@ -20,3 +20,26 @@ class AdminConfig(Base):
     flagfall = Column(Float, default=10.0)
     per_km_rate = Column(Float, default=2.0)
     per_min_rate = Column(Float, default=1.0)
+
+class Booking(Base):
+    __tablename__ = "bookings"
+    id = Column(Integer, primary_key=True, index=True)
+#    customer_name = Column(String)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    pickup_location = Column(String)
+    dropoff_location = Column(String)
+    time = Column(String)
+    status = Column(String, default="pending")
+    price: Column[float] = Column(Float, nullable=False) 
+
+    def as_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "pickup_location": self.pickup_location,
+            "dropoff_location": self.dropoff_location,
+            "status": self.status,
+            "time": self.time,
+            "price": self.price
+            # add any other fields you need to expose
+        }

@@ -5,6 +5,9 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import User
 from ..security import hash_password, verify_password, create_jwt_token
+from fastapi.security import OAuth2PasswordBearer
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 

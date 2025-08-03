@@ -1,9 +1,7 @@
 // src/pages/BookingPage.tsx
 import React, { useEffect, useState } from "react";
-import usePlacesAutocomplete, {
-  getGeocode,
-  getLatLng,
-} from "use-places-autocomplete";
+import usePlacesAutocomplete, { getGeocode, getLatLng } from "use-places-autocomplete";
+import { useAuth } from "../AuthContext";
 
 interface Location {
   address: string;
@@ -11,7 +9,15 @@ interface Location {
   lng: number;
 }
 
-function AutocompleteInput({ label, value, onSelect }: { label: string; value: string; onSelect: (location: Location) => void }) {
+function AutocompleteInput({
+  label,
+  value,
+  onSelect,
+}: {
+  label: string;
+  value: string;
+  onSelect: (location: Location) => void;
+}) {
   const {
     ready,
     value: inputValue,
@@ -21,9 +27,9 @@ function AutocompleteInput({ label, value, onSelect }: { label: string; value: s
   } = usePlacesAutocomplete({
     requestOptions: {
       componentRestrictions: { country: "au" },
-      types: ["address"]
+      types: ["address"],
     },
-    debounce: 300
+    debounce: 300,
   });
 
   useEffect(() => {
@@ -66,8 +72,8 @@ function AutocompleteInput({ label, value, onSelect }: { label: string; value: s
 }
 
 export default function BookingPage() {
-  const [date, setDate] = useState<string>("");
-  const [time, setTime] = useState<string>("");
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [quote, setQuote] = useState<number | null>(null);
   const [bookingId, setBookingId] = useState<string | null>(null);
@@ -78,45 +84,17 @@ export default function BookingPage() {
   const [perMinRate, setPerMinRate] = useState(0);
   const [distance, setDistance] = useState<number | null>(null);
   const [duration, setDuration] = useState<number | null>(null);
+  const { axiosInstance, user, token, loading } = useAuth();
 
   useEffect(() => {
-    fetch("http://localhost:8000/setup")
-      .then(res => res.ok ? res.json() : Promise.reject("Failed to fetch pricing"))
-      .then(data => {
-        setFlagfall(data.flagfall || 0);
-        setPerKmRate(data.per_km_rate || 0);
-        setPerMinRate(data.per_min_rate || 0);
+    axiosInstance.get("/setup")
+      .then(res => {
+        setFlagfall(res.data.flagfall || 0);
+        setPerKmRate(res.data.per_km_rate || 0);
+        setPerMinRate(res.data.per_min_rate || 0);
       })
-      .catch(err => console.error(err));
+      .catch(err => console.error("Failed to fetch pricing:", err));
   }, []);
-
-  useEffect(() => {
-    const generateAvailableTimes = () => {
-      const now = new Date();
-      const selectedDate = new Date(date);
-      const times: string[] = [];
-
-      for (let hour = 0; hour < 24; hour++) {
-        for (let min = 0; min < 60; min += 15) {
-          const optionTime = new Date(selectedDate);
-          optionTime.setHours(hour, min, 0, 0);
-
-          // Only include times in the future
-          if (optionTime > now) {
-            times.push(optionTime.toTimeString().slice(0, 5)); // "HH:MM"
-          }
-        }
-      }
-
-      setAvailableTimes(times);
-    };
-
-    if (date) {
-      generateAvailableTimes();
-    } else {
-      setAvailableTimes([]);
-    }
-  }, [date]);
 
   useEffect(() => {
     if (!pickup && "geolocation" in navigator) {
@@ -138,6 +116,32 @@ export default function BookingPage() {
       );
     }
   }, [pickup]);
+
+  useEffect(() => {
+    const generateAvailableTimes = () => {
+      const now = new Date();
+      const selectedDate = new Date(date);
+      const times: string[] = [];
+
+      for (let hour = 0; hour < 24; hour++) {
+        for (let min = 0; min < 60; min += 15) {
+          const optionTime = new Date(selectedDate);
+          optionTime.setHours(hour, min, 0, 0);
+          if (optionTime > now) {
+            times.push(optionTime.toTimeString().slice(0, 5)); // HH:MM
+          }
+        }
+      }
+
+      setAvailableTimes(times);
+    };
+
+    if (date) {
+      generateAvailableTimes();
+    } else {
+      setAvailableTimes([]);
+    }
+  }, [date]);
 
   const handleQuote = async () => {
     if (!pickup || !dropoff || !window.google?.maps?.DistanceMatrixService) {
@@ -170,29 +174,38 @@ export default function BookingPage() {
         const price = flagfall + distanceKm.toFixed(1) * perKmRate + durationMin.toFixed(1) * perMinRate;
         setQuote(Number(price.toFixed(2)));
         setDistance(distanceKm);
-        setDuration(durationMin)
+        setDuration(durationMin);
       }
     );
-
   };
 
-
   const handleBooking = async () => {
+    if (loading) {
+      alert("Still restoring session. Please wait...");
+      return;
+    }
+
+    if (!user || !token) {
+      alert("You must be logged in to make a booking.");
+      return;
+    }
+
     const bookingDateTime = `${date}T${time}:00`;
-    const res = await fetch("http://localhost:8000/booking", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        customer_name: "John Smith",
-        customer_email: "test@example.com",
+
+    try {
+      const res = await axiosInstance.post("/booking", {
+        user_id: user.id,
         pickup,
         dropoff,
         datetime: bookingDateTime,
         quoted_price: quote,
-      }),
-    });
-    const data = await res.json();
-    setBookingId(data.booking_id);
+      });
+
+      setBookingId(res.data.booking_id);
+    } catch (err: any) {
+      console.error("Booking failed:", err);
+      alert("Booking failed: " + (err?.response?.data?.detail || err.message));
+    }
   };
 
   return (
@@ -216,7 +229,7 @@ export default function BookingPage() {
         type="date"
         value={date}
         onChange={(e) => setDate(e.target.value)}
-        min={new Date().toISOString().split("T")[0]} // only future dates
+        min={new Date().toISOString().split("T")[0]}
         className="border px-2 py-1 rounded mb-4 w-full"
       />
 
@@ -246,8 +259,8 @@ export default function BookingPage() {
 
       {quote !== null && (
         <div className="mt-4">
-          <p className="mb-2">Estimated Distance: <strong>{distance.toFixed(1)} Km</strong></p>
-          <p className="mb-2">Estimated Travel time: <strong>{duration.toFixed(1)} Min</strong></p>
+          <p className="mb-2">Estimated Distance: <strong>{distance?.toFixed(1)} Km</strong></p>
+          <p className="mb-2">Estimated Travel time: <strong>{duration?.toFixed(1)} Min</strong></p>
           <p className="mb-2">Estimated Price: <strong>${quote.toFixed(2)}</strong></p>
           <button
             onClick={handleBooking}

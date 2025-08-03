@@ -15,6 +15,7 @@ export default function AdminDashboard() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const { axiosInstance, user } = useAuth();
 
   useEffect(() => {
     if (token) {
