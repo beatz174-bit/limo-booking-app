@@ -13,3 +13,8 @@ backend/.env
 backend/*.db
 backend/new.*.py
 backend/old.*.py
+data/*.db
+*.sqlite
+backend/routes/new.*.py
+backend/routes/old.*.py
+backend/archive/*
