@@ -1,12 +1,10 @@
 from sqlalchemy import Boolean
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import Text
 from typing import Literal
+from app.db.database import Base
 
 Status = Literal["pending", "accepted", "completed", "cancelled"]
-
-class Base(DeclarativeBase):
-    pass
 
 class User(Base):
     __tablename__ = "users"

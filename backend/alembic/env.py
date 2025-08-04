@@ -15,12 +15,14 @@ from app.db.database import Base
 # import them here to include them in autogeneration:
 from app.models import user, booking, settings
 
+
 config = context.config
 
 # optionally override sqlalchemy.url loaded from alembic.ini:
 # config.set_main_option("sqlalchemy.url", os.getenv("DATABASE_URL"))
 
 fileConfig(config.config_file_name)
+print(Base.metadata.tables.keys())
 target_metadata = Base.metadata
 
 def run_migrations_offline():
@@ -43,7 +45,8 @@ def run_migrations_online():
     with connectable.connect() as conn:
         context.configure(
             connection=conn,
-            target_metadata=target_metadata
+            target_metadata=target_metadata,
+            render_as_batch=True
         )
         with context.begin_transaction():
             context.run_migrations()

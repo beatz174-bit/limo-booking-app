@@ -1,5 +1,5 @@
 // src/pages/BookingPage.tsx
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import usePlacesAutocomplete, { getGeocode, getLatLng } from "use-places-autocomplete";
 import { useAuth } from "../AuthContext";
 

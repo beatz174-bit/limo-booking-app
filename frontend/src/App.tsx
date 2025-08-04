@@ -1,48 +1,52 @@
-// src/App.tsx
-import React from "react";
-import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from "react-router-dom";
-import { AuthProvider, useAuth } from "./AuthContext";
-// import Header from "./components/Header";
-import HomePage from "./pages/HomePage";
-import BookingPage from "./pages/BookingPage";
-import ConfirmationPage from "./pages/ConfirmationPage";
-import HistoryPage from "./pages/HistoryPage";
-import SetupPage from "./pages/SetupPage";
-import LoginPage from "./pages/LoginPage";
-import AdminDashboard from "./pages/AdminDashboard";
-import { RequireAuth, RequireAdmin } from "./ProtectedRoute";
-import AppLayout from "./layouts/AppLayout";
-import NotFoundPage from "./pages/NotFoundPage";
+import { Navigate, useRoutes } from "react-router-dom";
+import RequireSetup from './components/RequireSetup';
+import AppLayout from './layouts/AppLayout';
+import SetupPage from './pages/SetupPage';
+import LoginPage from './pages/LoginPage';
+import HomePage from './pages/HomePage';
+import BookingPage from './pages/BookingPage';
+import ConfirmationPage from './pages/ConfirmationPage';
+import HistoryPage from './pages/HistoryPage';
+import AdminDashboard from './pages/AdminDashboard';
+import RequireAuth from './components/RequireAuth'; // your existing component
+import { useAuth } from "./AuthContext";
 
-function AppRoutes() {
-  const { loading, setupRequired } = useAuth();
+export default function AppRoutes() {
+  const { setupRequired } = useAuth();
 
-  if (loading) {
-    return <div className="p-4 text-center text-gray-600">Loading...</div>;
-  }
+  const routing = useRoutes([
+       {
+      element: <AppLayout />, // 🔥 always wrap all routes in AppLayout
+      children: [
+    {
+      element: <RequireSetup />, // Setup guard
+      children: [
+        { path: "/setup", element: <SetupPage /> },
+        { path: "/login", element: <LoginPage /> },
+      ],
+    },
+    {
+      // element: <AppLayout />, // Layout wrapper
+      children: [
+        {
+          // Root index route logic:
+          index: true,
+          element: setupRequired
+            ? <Navigate to="/setup" replace />
+            : <HomePage />,
+        },
+        { element: <RequireAuth />, children: [
+            { path: "book", element: <BookingPage /> },
+            { path: "confirmation", element: <ConfirmationPage /> },
+            { path: "history", element: <HistoryPage /> },
+            { path: "admin", element: <AdminDashboard /> },
+        ]},
+        { path: "*", element: <Navigate to="/" replace /> },
+      ],
+    },
+  ],
+},
+]);
 
-  return (
-    <Routes>
-      <Route path="/" element={setupRequired ? <Navigate to="/setup" replace /> : <HomePage />} />
-      <Route path="/setup" element={<SetupPage />} />
-      <Route path="/login" element={setupRequired ? <Navigate to="/setup" replace /> : <LoginPage />} />
-      <Route path="/book" element={<RequireAuth><BookingPage /></RequireAuth>} />
-      <Route path="/confirmation" element={<RequireAuth><ConfirmationPage /></RequireAuth>} />
-      <Route path="/history" element={<RequireAuth><HistoryPage /></RequireAuth>} />
-      <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
-      <Route path="*" element={<div className="p-4">404 - Page not found</div>} />
-    </Routes>
-  );
-}
-
-export default function App() {
-  return (
-    <AuthProvider>
-      <Router>
-        <AppLayout>
-          <AppRoutes />
-        </AppLayout>
-      </Router>
-    </AuthProvider>
-  );
+  return routing;
 }

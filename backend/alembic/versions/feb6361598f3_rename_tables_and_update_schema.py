@@ -1,8 +1,8 @@
 """Rename tables and update schema
 
-Revision ID: 54aae5235202
-Revises: e616cf383100
-Create Date: 2025-08-03 22:30:20.014796
+Revision ID: feb6361598f3
+Revises: b9516c750b29
+Create Date: 2025-08-04 19:44:03.332651
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '54aae5235202'
-down_revision = 'e616cf383100'
+revision = 'feb6361598f3'
+down_revision = 'b9516c750b29'
 branch_labels = None
 depends_on = None
 

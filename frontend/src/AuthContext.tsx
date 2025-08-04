@@ -1,5 +1,12 @@
 // src/AuthContext.tsx
-import React, { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+  useRef
+} from "react";
 import axios from "axios";
 import type { AxiosInstance } from "axios";
 
@@ -19,38 +26,40 @@ interface Settings {
   account_mode: "open" | "staged";
 }
 
-interface AuthContextType {
+export type AuthContextType = {
   user: User | null;
   token: string | null;
+  settings: Settings | null;
+  setupRequired: boolean;
+  loading: boolean;
+  axiosInstance: AxiosInstance;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  loading: boolean;
-  setupRequired: boolean;
-  settings: Settings | null;
-  refreshSettings: () => void;
-  completeSetup: (payload: any) => Promise<void>;
-  axiosInstance: AxiosInstance;
-}
+  completeSetup: (payload: Partial<Settings> & { admin_email: string; password: string }) => Promise<void>;
+  refreshSettings: () => Promise<void>;
+};
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType>(null as any);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem("token"));
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    const stored = localStorage.getItem("user");
+    return stored ? JSON.parse(stored) : null;
+  });
   const [settings, setSettings] = useState<Settings | null>(null);
-  const [loading, setLoading] = useState(true);
   const [setupRequired, setSetupRequired] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const initCalled = useRef(false);
 
-  // ✅ Create Axios instance locally
   const axiosInstance: AxiosInstance = axios.create({
     baseURL: "http://localhost:8000",
   });
 
-  // ✅ Attach token to requests automatically
   axiosInstance.interceptors.request.use(
     (config) => {
-      const token = localStorage.getItem("token");
       if (token) {
+        config.headers = config.headers ?? {};
         config.headers.Authorization = `Bearer ${token}`;
       }
       return config;
@@ -58,9 +67,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     (error) => Promise.reject(error)
   );
 
+  /** Refresh settings from backend (only used after setup completes or manually) */
   const refreshSettings = async () => {
     try {
-      const res = await fetch("http://localhost:8000/setup");
+      const res = await fetch("http://localhost:8000/setup", {
+        credentials: "include",
+      });
       if (res.ok) {
         const data = await res.json();
         setSettings(data);
@@ -70,17 +82,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  /** Called by the setup form after successful completion */
   const completeSetup = async (payload: any) => {
     try {
       const res = await fetch("http://localhost:8000/setup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
         const detail = await res.text();
         throw new Error(`Setup failed: ${detail}`);
       }
+
       setSetupRequired(false);
       await refreshSettings();
     } catch (err) {
@@ -90,147 +105,151 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const login = async (email: string, password: string) => {
-    console.log("Login started with", email, password);
     const res = await fetch("http://localhost:8000/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ email, password }),
     });
-
     if (!res.ok) {
       const detail = await res.text();
       throw new Error(`Login failed: ${detail}`);
     }
-
-    const data = await res.json();
-    console.log("Login successful. Response data:", data);
-    const token = data.token
-    const user = data.user
-        console.log("Setting token to:", token);
-console.log("Setting user to:", user);
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(user));
-    setToken(token);
-    // setUser({
-    //   id: data.user_id,
-    //   email,
-    //   full_name: data.full_name,
-    //   role: data.role,
-    //   is_approved: true,
-    // });
-    setUser({
-      id: user.id,
-      email: user.email,
-      full_name: user.full_name,
-      role: user.role,
-      is_approved: user.is_approved,
-});
-    console.log("Context state after login - token:", token, "user:", user);
-console.log("localStorage token now:", localStorage.getItem("token"));
-console.log("localStorage user now:", localStorage.getItem("user"));
-
-
-console.log("Login successful. Response data:", res.body);
-
+    const { token: tok, user: u } = await res.json();
+    localStorage.setItem("token", tok);
+    localStorage.setItem("user", JSON.stringify(u));
+    setToken(tok);
+    setUser(u);
   };
-
-  const restoreUser = async () => {
-    const storedToken = localStorage.getItem("token");
-    if (!storedToken) return;
-
-    try {
-      const res = await fetch("http://localhost:8000/users/me", {
-        headers: {
-          Authorization: `Bearer ${storedToken}`,
-        },
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setToken(storedToken);
-        setUser(data);
-      } else {
-        localStorage.removeItem("token");
-        setToken(null);
-        setUser(null);
-      }
-    } catch (err) {
-      console.error("Failed to restore user:", err);
-      setToken(null);
-      setUser(null);
-    }
-  };
-
-  useEffect(() => {
-    restoreUser();
-    const storedToken = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("user");
-    console.log("Loading from localStorage:", storedToken, storedUser);
-  }, []);
-
-  useEffect(() => {
-    const checkSetup = async () => {
-      try {
-        const res = await fetch("http://localhost:8000/setup");
-        if (!res.ok) {
-          setSetupRequired(true);
-        } else {
-          const data = await res.json();
-          setSettings(data);
-        }
-      } catch (err) {
-        console.warn("Setup check failed:", err);
-        setSetupRequired(true);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (!token) {
-      checkSetup();
-    } else {
-      fetch("http://localhost:8000/users/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((res) => (res.ok ? res.json() : Promise.reject("unauthorized")))
-        .then((data) => {
-          setUser(data);
-          checkSetup();
-        })
-        .catch(() => {
-          setUser(null);
-          setToken(null);
-          localStorage.removeItem("token");
-          checkSetup();
-        });
-    }
-  }, [token]);
 
   const logout = () => {
     setToken(null);
     setUser(null);
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
   };
-  console.log("AuthContext.Provider render: token =", token, "user =", user);
+
+  // useEffect(() => {
+  //   if (initCalled.current) return;
+  //   initCalled.current = true;
+
+  //   (async () => {
+  //     // If there's a token, attempt to restore the user
+  //     if (token) {
+  //       try {
+  //         const res = await fetch("http://localhost:8000/users/me", {
+  //           headers: { Authorization: `Bearer ${token}` },
+  //           credentials: "include",
+  //         });
+  //         if (res.ok) {
+  //           const userData = await res.json();
+  //           setUser(userData);
+  //         } else {
+  //           logout();
+  //         }
+  //       } catch (err) {
+  //         console.error("Failed to restore user:", err);
+  //         logout();
+  //       }
+  //     }
+
+  //     // Check whether setup is required
+  //     try {
+  //       const res = await fetch("http://localhost:8000/setup", {
+  //         credentials: "include",
+  //       });
+
+  //       if (!res.ok) {
+  //         setSetupRequired(true);
+  //       } else {
+  //         const data = await res.json();
+  //         if (data === null) {
+  //           setSetupRequired(true);
+  //         } else {
+  //           setSettings(data);
+  //           setSetupRequired(false);
+  //         }
+  //       }
+  //     } catch (err) {
+  //       console.warn("GET /setup failed:", err);
+  //       setSetupRequired(true);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   })();
+  // }, [token]);
+  useEffect(() => {
+  // only run once
+    if (initCalled.current) return;
+    initCalled.current = true;
+
+    (async () => {
+      let config: Settings | null = null;
+
+      // restore user if token exists
+      if (token) {
+        await fetchUserFromToken();
+      }
+
+      try {
+        const res = await fetch(`${apiBase}/setup`, { credentials: "include" });
+        if (!res.ok) {
+          setSetupRequired(true);
+        } else {
+          const data = await res.json();
+          if (data === null) {
+            setSetupRequired(true);
+          } else {
+            config = data;
+            setSettings(data);
+            setSetupRequired(false);
+          }
+          console.log("Setup fetch result:", data);
+console.log("setupRequired now:", setupRequired);
+console.log("RequireSetup, loading:", loading, "setupRequired:", setupRequired, "pathname:", pathname);
+
+        }
+        
+      } catch {
+        setSetupRequired(true);
+      } finally {
+        setLoading(false);
+      }
+      
+    })();
+  }, []);
+
   return (
-    
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        login,
-        logout,
-        loading,
-        setupRequired,
-        settings,
-        refreshSettings,
-        completeSetup,
-        axiosInstance, // ✅ Provided here
-      }}
-    >
+    // <AuthContext.Provider
+    //   value={{
+    //     user,
+    //     token,
+    //     settings,
+    //     setupRequired,
+    //     loading,
+    //     axiosInstance,
+    //     login,
+    //     logout,
+    //     completeSetup,
+    //     refreshSettings,
+    //   }}
+    // >
+    //   {children}
+    // </AuthContext.Provider>
+    <AuthContext.Provider value={{
+      user,
+      token,
+      settings,
+      setupRequired,
+      loading,
+      login,
+      logout,
+      completeSetup,
+      axiosInstance,
+      refreshSettings,
+    }}>
       {children}
     </AuthContext.Provider>
-    
   );
 };
 

@@ -12,11 +12,11 @@ from app.models.user import User
 
 router = APIRouter(prefix="/users", tags=["users"])
 
-@router.post("/", response_model=UserRead, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 def api_create_user(data: UserCreate, db: Session = Depends(get_db)):
     return create_user(db, data)
 
-@router.get("/", response_model=List[UserRead])
+@router.get("", response_model=List[UserRead])
 def api_list_users(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),

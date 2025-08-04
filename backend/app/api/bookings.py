@@ -14,11 +14,11 @@ router = APIRouter(
     dependencies=[Depends(get_current_user)]  # ensures auth on all routes
 )
 
-@router.post("/", response_model=BookingRead, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=BookingRead, status_code=status.HTTP_201_CREATED)
 def api_create_booking(data: BookingCreate, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> BookingRead:
     return create_booking(db, data)
 
-@router.get("/", response_model=List[BookingRead])
+@router.get("", response_model=List[BookingRead])
 def api_list_bookings(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: User  = Depends(get_current_user)):
     return list_bookings(db, user.id, skip, limit)
 

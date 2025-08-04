@@ -1,7 +1,8 @@
 // src/pages/ConfirmationPage.tsx
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 // import axios from "axios";
 import { useAuth } from "../AuthContext";
+import axios from "axios"
 
 interface Booking {
   id: string;
@@ -19,20 +20,7 @@ export default function ConfirmationPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectAll, setSelectAll] = useState(false);
 
-  // useEffect(() => {
-  //   fetchBookings();
-  // }, []);
-
-  // const fetchBookings = async () => {
-  //   try {
-  //     const response = await axios.get("/api/bookings/pending");
-  //     setBookings(response.data);
-  //   } catch (error) {
-  //     console.error("Failed to fetch pending bookings", error);
-  //   }
-  // };
-
-    useEffect(() => {
+  useEffect(() => {
     const fetchBookings = async () => {
       try {
         const response = await axiosInstance.get("/bookings/pending");
@@ -45,20 +33,6 @@ export default function ConfirmationPage() {
 
     fetchBookings();
   }, [axiosInstance]);
-
-  // const fetchBookings = async () => {
-  //   try {
-  //     const response = await axios.get("/bookings/pending");
-
-  //     // 👇 Defensive fix: ensure array
-  //     const data = Array.isArray(response.data) ? response.data : response.data.bookings || [];
-
-  //     setBookings(data);
-  //   } catch (error) {
-  //     console.error("Failed to fetch pending bookings", error);
-  //     setBookings([]); // fallback to avoid crashing UI
-  //   }
-  // };
 
   const handleSelect = (id: string) => {
     setSelectedIds(prev => {
