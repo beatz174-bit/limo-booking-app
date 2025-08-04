@@ -18,3 +18,4 @@ data/*.db
 backend/routes/new.*.py
 backend/routes/old.*.py
 backend/archive/*
+backend/openapi.json
