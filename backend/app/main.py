@@ -9,6 +9,10 @@ from app.db.database import database
 
 from app.api import auth as auth_router, users as users_router, bookings as bookings_router, setup as setup_router
 
+def get_app() -> FastAPI:
+    """For pytest: returns the singleton `app`."""
+    return app
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await database.connect()

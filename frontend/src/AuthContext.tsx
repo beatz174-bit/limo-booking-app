@@ -9,6 +9,7 @@ import {
 } from "react";
 import axios from "axios";
 import type { AxiosInstance } from "axios";
+import { type AdminSetupForm, type Settings } from "./types";
 
 interface User {
   id: number;
@@ -18,13 +19,14 @@ interface User {
   is_approved: boolean;
 }
 
-interface Settings {
-  flagfall: number;
-  per_km_rate: number;
-  per_minute_rate: number;
-  google_maps_api_key: string;
-  account_mode: "open" | "staged";
-}
+// interface Settings {
+//   flagfall: number;
+//   per_km_rate: number;
+//   per_minute_rate: number;
+//   google_maps_api_key: string;
+//   account_mode: "open" | "staged";
+// }
+
 
 export type AuthContextType = {
   user: User | null;
@@ -35,7 +37,8 @@ export type AuthContextType = {
   axiosInstance: AxiosInstance;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  completeSetup: (payload: Partial<Settings> & { admin_email: string; password: string }) => Promise<void>;
+  // completeSetup: (payload: Partial<Settings> & { admin_email: string; admin_password: string; full_name: string }) => Promise<void>;
+  completeSetup: (payload: Settings) => Promise<void>;
   refreshSettings: () => Promise<void>;
 };
 
@@ -83,8 +86,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   /** Called by the setup form after successful completion */
-  const completeSetup = async (payload: any) => {
+  const completeSetup = async (form: AdminSetupForm) => {
     try {
+      const payload = {
+          admin_email: form.admin_email,
+          full_name: form.full_name,
+          admin_password: form.admin_password,
+          settings: form.settings,
+        };
       const res = await fetch("http://localhost:8000/setup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

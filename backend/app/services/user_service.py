@@ -8,6 +8,9 @@ from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate, UserRead
 from app.core.security import hash_password
 
+class UserService:
+    def __init__(self, db_session): # type: ignore
+        self.db = db_session
 
 def create_user(db: Session, data: UserCreate) -> UserRead:
     stmt = select(User).where(User.email == data.email)

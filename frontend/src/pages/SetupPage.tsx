@@ -2,17 +2,17 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext";
-
+import { type AdminSetupForm, type Settings } from "../types";
 
 export default function SetupPage() {
   const { loading, setupRequired, completeSetup } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<AdminSetupForm>({
     admin_email: "",
     admin_password: "",
     full_name: "",
     settings: {
-      allow_public_registration: false,
+      account_mode: "open",
       google_maps_api_key: "",
       flagfall: 10,
       per_km_rate: 2,
@@ -35,7 +35,7 @@ export default function SetupPage() {
     return <div>Initial setup already performed. Redirecting…</div>;
   }
 
-  // const [form, setForm] = useState({
+  // const [form, setForm] = useState<AdminSetupForm>({
   //   admin_email: "",
   //   admin_password: "",
   //   full_name: "",
@@ -48,7 +48,7 @@ export default function SetupPage() {
   //   },
   // });
 
-  const handleSubmit = async (payload) => {
+  const handleSubmit = async (payload: Settings) => {
     try {
       await completeSetup(payload);
       // after setup is saved, you can navigate
