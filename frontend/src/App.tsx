@@ -1,52 +1,35 @@
-import { Navigate, useRoutes } from "react-router-dom";
-import RequireSetup from './components/RequireSetup';
-import AppLayout from './layouts/AppLayout';
-import SetupPage from './pages/SetupPage';
-import LoginPage from './pages/LoginPage';
-import HomePage from './pages/HomePage';
-import BookingPage from './pages/BookingPage';
-import ConfirmationPage from './pages/ConfirmationPage';
-import HistoryPage from './pages/HistoryPage';
-import AdminDashboard from './pages/AdminDashboard';
-import RequireAuth from './components/RequireAuth'; // your existing component
-import { useAuth } from "./AuthContext";
+import { useState } from 'react'
+import reactLogo from './assets/react.svg'
+import viteLogo from '/vite.svg'
+import './App.css'
 
-export default function AppRoutes() {
-  const { setupRequired } = useAuth();
+function App() {
+  const [count, setCount] = useState(0)
 
-  const routing = useRoutes([
-       {
-      element: <AppLayout />, // 🔥 always wrap all routes in AppLayout
-      children: [
-    {
-      element: <RequireSetup />, // Setup guard
-      children: [
-        { path: "/setup", element: <SetupPage /> },
-        { path: "/login", element: <LoginPage /> },
-      ],
-    },
-    {
-      // element: <AppLayout />, // Layout wrapper
-      children: [
-        {
-          // Root index route logic:
-          index: true,
-          element: setupRequired
-            ? <Navigate to="/setup" replace />
-            : <HomePage />,
-        },
-        { element: <RequireAuth />, children: [
-            { path: "book", element: <BookingPage /> },
-            { path: "confirmation", element: <ConfirmationPage /> },
-            { path: "history", element: <HistoryPage /> },
-            { path: "admin", element: <AdminDashboard /> },
-        ]},
-        { path: "*", element: <Navigate to="/" replace /> },
-      ],
-    },
-  ],
-},
-]);
-
-  return routing;
+  return (
+    <>
+      <div>
+        <a href="https://vite.dev" target="_blank">
+          <img src={viteLogo} className="logo" alt="Vite logo" />
+        </a>
+        <a href="https://react.dev" target="_blank">
+          <img src={reactLogo} className="logo react" alt="React logo" />
+        </a>
+      </div>
+      <h1>Vite + React</h1>
+      <div className="card">
+        <button onClick={() => setCount((count) => count + 1)}>
+          count is {count}
+        </button>
+        <p>
+          Edit <code>src/App.tsx</code> and save to test HMR
+        </p>
+      </div>
+      <p className="read-the-docs">
+        Click on the Vite and React logos to learn more
+      </p>
+    </>
+  )
 }
+
+export default App
