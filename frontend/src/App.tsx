@@ -1,35 +1,44 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Routes, Route, Navigate } from 'react-router-dom';
+import LoginPage from './pages/Auth/LoginPage';
+import BookingPage from './pages/Booking/BookingPage';
+import AdminDashboard from './pages/Admin/AdminDashboard';
+import RideHistoryPage from './pages/Booking/RideHistoryPage';
+import RegisterPage from "./pages/Auth/RegisterPage";
+import { useAuth } from "./contexts/AuthContext"
+// ... other imports
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { token, userRole } = useAuth(); // custom hook to get AuthContext
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+
+      {/* Protected user routes */}
+      <Route 
+        path="/book" 
+        element={ token ? <BookingPage /> : <Navigate to="/login" /> } 
+      />
+      <Route 
+        path="/history" 
+        element={ token ? <RideHistoryPage /> : <Navigate to="/login" /> } 
+      />
+
+      {/* Protected admin/driver route */}
+      <Route 
+        path="/admin" 
+        element={
+          token && userRole==="driver" 
+          ? <AdminDashboard /> 
+          : <Navigate to="/login" />
+        } 
+      />
+
+      {/* Default/fallback route */}
+      <Route path="*" element={<Navigate to={token ? "/book" : "/login"} />} />
+    </Routes>
+  );
 }
 
 export default App
