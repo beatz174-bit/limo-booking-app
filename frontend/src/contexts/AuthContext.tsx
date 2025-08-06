@@ -5,6 +5,11 @@ import {
   useContext 
 } from 'react';
 import { type AuthContextType } from "../types/AuthContextType"
+import {
+    AuthApi,
+    Configuration,
+    LoginRequest
+} from '../api-client/api';
 
 interface AuthState {
   token: string | null;
@@ -26,6 +31,14 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
   const login = async (email: string, password: string) => {
     // call authService.login(email, password) to get token & user data
     // then set state: setToken(token), setUserRole(role), setUserName(name)
+    const configuration = new Configuration();
+    const apiInstance = new AuthApi(configuration);
+
+    let loginRequest: LoginRequest; //
+
+    const { status, data } = await apiInstance.loginAuthLoginPost(
+        loginRequest
+    );
   };
   const logout = () => {
     setToken(null);
