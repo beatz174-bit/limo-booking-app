@@ -45,7 +45,7 @@ def run_migrations_offline():
 def run_migrations_online():
     section = config.get_section(config.config_ini_section)
     if DATABASE_PATH and section:
-        section["sqlalchemy.url"] = f"sqlite:///{DATABASE_PATH}"
+        section["sqlalchemy.url"] = f"sqlite:////{DATABASE_PATH}"
         connectable = engine_from_config(
             section,
             prefix="sqlalchemy.",
