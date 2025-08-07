@@ -15,7 +15,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=sqlite:///./app.db  # or your production DB
+      - DATABASE_URL=sqlite+aiosqlite:///./app.db  # or your production DB
       - JWT_SECRET_KEY="${JWT_SECRET_KEY}"
       - ORS_API_KEY="${ORS_API_KEY}"
     volumes:
