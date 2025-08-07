@@ -10,7 +10,7 @@ services:
       - backend
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=proxy"
+#      - "traefik.docker.network=proxy"
       - "traefik.http.routers.dev.rule=Host(`dev.lan.ddnsgeek.com`)"
       - "traefik.http.routers.dev.entrypoints=websecure"
       - "traefik.http.routers.dev.tls=true"
