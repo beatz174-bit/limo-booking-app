@@ -7,6 +7,7 @@ import RegisterPage from "./pages/Auth/RegisterPage";
 import { useAuth } from "./contexts/AuthContext"
 import NavBar from './components/NavBar';
 import CircularProgress from "@mui/material/CircularProgress";
+import PageNotFound from './pages/PageNotFound';
 
 // ... other imports
 
@@ -41,7 +42,7 @@ function App() {
       />
 
       {/* Default/fallback route */}
-      <Route path="*" element={<Navigate to={token ? "/book" : "/login"} />} />
+      <Route path="*" element={<PageNotFound />} />
     </Routes>
     </>
   );
