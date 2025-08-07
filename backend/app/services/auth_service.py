@@ -1,5 +1,6 @@
 # app/services/auth_service.py
-from sqlalchemy.orm import Session, Query
+from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 from typing import Optional, Any
 from sqlalchemy import select
@@ -11,18 +12,24 @@ from app.models.user import User
 from app.core.security import hash_password, verify_password, create_jwt_token
 
 
-def authenticate_user(
-    db: Session,
+async def authenticate_user(
+    db: AsyncSession,
     data: LoginRequest
 ) -> LoginResponse:
     # Explicit generic annotation helps Pylance infer types:
-    query: Query[User] = db.query(User) # type: ignore[reportUnknownMemberType]
+    # query: Query[User] = db.query(User) # type: ignore[reportUnknownMemberType]
 
-    # And this narrows `.filter(...)` and `.first()` to Optional[User]
-    user: Optional[User] = (
-        query.filter(User.email == data.email) # type: ignore
-             .first()
-    )
+    # # And this narrows `.filter(...)` and `.first()` to Optional[User]
+    # user: Optional[User] = (
+    #     query.filter(User.email == data.email) # type: ignore
+    #          .first()
+    # )
+
+    # After: Use select() and await the execution on AsyncSession
+    stmt = select(User).filter(User.email == data.email)
+    # result = await db.execute(stmt)              # await the AsyncSession execution
+    # user: Optional[User] = result.scalars().first()  # get first User or None
+    user = (await db.execute(stmt)).scalar_one_or_none()
 
     if user is None or not verify_password(data.password, user.hashed_password):
         raise HTTPException(

@@ -5,11 +5,8 @@ import {
   useContext 
 } from 'react';
 import { type AuthContextType } from "../types/AuthContextType"
-import {
-    AuthApi,
-    Configuration,
-    LoginRequest
-} from '../api-client/api';
+import { AuthApi } from '../api-client/api';
+import type { LoginRequest } from '../api-client/api'
 
 interface AuthState {
   token: string | null;

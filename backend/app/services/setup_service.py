@@ -1,4 +1,3 @@
-from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from app.models.user import User
 from app.models.settings import AdminConfig
@@ -11,9 +10,11 @@ from sqlalchemy.engine import ScalarResult
 from typing import Union
 
 
-def complete_initial_setup(db: Session, data: SetupPayload):
+async def complete_initial_setup(db: AsyncSession, data: SetupPayload):
     # Prevent running setup more than once
-    existing_admin = db.query(User).filter(User.role == "admin").first()
+    # existing_admin = db.query(User).filter(User.role == "admin").first()
+    stmt = select(User).filter(User.role == "admin")
+    existing_admin = (await db.execute(stmt)).scalar_one_or_none()
     if existing_admin:
         raise HTTPException(status_code=400, detail="Setup already completed.")
 
@@ -38,7 +39,7 @@ def complete_initial_setup(db: Session, data: SetupPayload):
     )
     db.add(config)
 
-    db.commit()
+    await db.commit()
     return {"message": "Setup complete"}
 
 async def is_setup_complete(db: AsyncSession) -> Union[AdminConfig, None]:
