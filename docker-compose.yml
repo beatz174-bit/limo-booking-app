@@ -5,7 +5,7 @@ services:
     build:
       context: ./frontend
     ports:
-      - "3030:80"
+      - "3000:80"
     depends_on:
       - backend
     labels:
@@ -15,7 +15,7 @@ services:
       - "traefik.http.routers.dev.entrypoints=websecure"
       - "traefik.http.routers.dev.tls=true"
       - "traefik.http.routers.dev.tls.certresolver=myresolver"
-      - "traefik.http.services.dev.loadbalancer.server.port=3030"
+      - "traefik.http.services.dev.loadbalancer.server.port=3000"
       - "io.portainer.accesscontrol.public"
       - "traefik.http.routers.dev.middlewares=error-pages-middleware"
     networks:
