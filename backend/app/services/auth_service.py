@@ -7,28 +7,16 @@ from sqlalchemy import select
 from sqlalchemy.sql import Select
 
 from app.schemas.auth import RegisterRequest, LoginRequest, TokenResponse, LoginResponse
-from app.schemas.user import UserRead
+from app.schemas.user import UserCreate
 from app.models.user import User
-from app.core.security import hash_password, verify_password, create_jwt_token
+from app.core.security import verify_password, create_jwt_token
 
 
 async def authenticate_user(
     db: AsyncSession,
     data: LoginRequest
 ) -> LoginResponse:
-    # Explicit generic annotation helps Pylance infer types:
-    # query: Query[User] = db.query(User) # type: ignore[reportUnknownMemberType]
-
-    # # And this narrows `.filter(...)` and `.first()` to Optional[User]
-    # user: Optional[User] = (
-    #     query.filter(User.email == data.email) # type: ignore
-    #          .first()
-    # )
-
-    # After: Use select() and await the execution on AsyncSession
     stmt = select(User).filter(User.email == data.email)
-    # result = await db.execute(stmt)              # await the AsyncSession execution
-    # user: Optional[User] = result.scalars().first()  # get first User or None
     user = (await db.execute(stmt)).scalar_one_or_none()
 
     if user is None or not verify_password(data.password, user.hashed_password):
@@ -37,11 +25,11 @@ async def authenticate_user(
             detail="Invalid credentials",
         )
 
-    if not user.is_approved:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User not approved yet",
-        )
+    # if not user.is_approved:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_403_FORBIDDEN,
+    #         detail="User not approved yet",
+    #     )
 
     return LoginResponse(
         token=create_jwt_token(user.id, user.role),
@@ -52,28 +40,25 @@ async def authenticate_user(
         is_approved=user.is_approved,
     )
 
-def register_user( db: Session, data: RegisterRequest ) -> UserRead:
-    stmt: Select = select(User).where(User.email == data.email) # type: ignore
-    result: Any = db.scalars(stmt) # type: ignore
-    existing: Optional[User] = result.first() # type: ignore
-
+async def register_user( db: AsyncSession, data: RegisterRequest ) -> UserCreate:
+    stmt = select(User).where(User.email == data.email) # type: ignore
+    existing = (await db.execute(stmt)).scalar_one_or_none()
+ 
     if existing:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Email already registered")
 
-    hashed = hash_password(data.password)
-    user = User(
+    # hashed = hash_password(data.password)
+    user = UserCreate(
         email=data.email,
         full_name=data.full_name,
-        hash_password=hashed,
-        role="rider",
-        is_approved=False
+        password=data.password,
     )
     db.add(user) # type: ignore
-    db.commit()
+    await db.commit()
     db.refresh(user) # type: ignore
 
-    return UserRead.model_validate(user)
+    return UserCreate.model_validate(user)
 
 def login_user(db: Session, data: LoginRequest) -> TokenResponse:
     stmt: Select = select(User).where(User.email == data.email) # type: ignore
@@ -84,11 +69,6 @@ def login_user(db: Session, data: LoginRequest) -> TokenResponse:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials",
-        )
-    if not user.is_approved: # type: ignore
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User not approved yet",
         )
 
     token: str = create_jwt_token(user_id=user.id, role=user.role) # type: ignore
