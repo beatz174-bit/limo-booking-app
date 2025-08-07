@@ -9,6 +9,9 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from alembic import context  # essential – must be here before using `context.config`
 
+import os
+from sqlalchemy.engine import URL
+
 # Load the DATABASE_URL from the environment
 DATABASE_URL = os.getenv("DATABASE_URL")
 
@@ -32,9 +35,14 @@ print(Base.metadata.tables.keys())
 target_metadata = Base.metadata
 
 def run_migrations_offline():
-    url = config.get_main_option("sqlalchemy.url")
+    # config.set_main_option("sqlalchemy.url", DATABASE_URL)
+    # url = config.get_main_option("sqlalchemy.url")
+    section = config.get_section(config.config_ini_section)
+    if DATABASE_URL and section: 
+        section["sqlalchemy.url"] = DATABASE_URL
+        # config.set_main_option("sqlalchemy.url", DATABASE_URL)
     context.configure(
-        url=url,
+        url=config.get_main_option("sqlalchemy.url"),
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"}
@@ -43,22 +51,19 @@ def run_migrations_offline():
         context.run_migrations()
 
 def run_migrations_online():
-    section = config.get_section(config.config_ini_section)
-    if DATABASE_URL and section:
-        section["sqlalchemy.url"] = DATABASE_URL
-        connectable = engine_from_config(
-            section,
-            prefix="sqlalchemy.",
-            poolclass=pool.NullPool
+    connectable = engine_from_config(
+        section,
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool
+    )
+    with connectable.connect() as conn:
+        context.configure(
+            connection=conn,
+            target_metadata=target_metadata,
+            render_as_batch=True
         )
-        with connectable.connect() as conn:
-            context.configure(
-                connection=conn,
-                target_metadata=target_metadata,
-                render_as_batch=True
-            )
-            with context.begin_transaction():
-                context.run_migrations()
+        with context.begin_transaction():
+            context.run_migrations()
 
 if context.is_offline_mode():
     run_migrations_offline()
