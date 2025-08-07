@@ -5,28 +5,41 @@ import {
   useContext 
 } from 'react';
 import { type AuthContextType } from "../types/AuthContextType"
-// import { AuthApi } from '../api-client/api';
 import type { LoginRequest } from '../api-client/api'
-// import { Configuration } from "../api-client/configuration"
 import { authApi } from "../components/ApiConfig"
 
 
 interface AuthState {
   token: string | null;
-  userRole: string | null;  // e.g., "driver" or "rider"
+  userID: string | null;  // e.g., "driver" or "rider"
   userName: string;
   // ... any other user info you need globally
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  loading: boolean;
 }
 
 export const AuthContext = createContext<AuthState | undefined>(undefined);
 
 export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
   const [token, setToken] = useState<string|null>(null);
-  const [userRole, setUserRole] = useState<string|null>(null);
+  const [userID, setUserID] = useState<string|null>(null);
   const [userName, setUserName] = useState<string>('');
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
+    const storedID = localStorage.getItem("userID");
+    const storedName = localStorage.getItem("userName");
+
+    if (storedToken) {
+      setToken(storedToken);
+      setUserID(storedID);
+      if (storedName) { setUserName(storedName) };
+    }
+    setLoading(false);
+  }, []);
+
 
   // Define login function (calls API, gets token & user info)
   const login = async (email: string, password: string) => {
@@ -45,6 +58,8 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
 
         // Store token and user info in localStorage
         localStorage.setItem("token", data.token);
+        localStorage.setItem("userID", data.id)
+        localStorage.setItem("userName", data.full_name)
         localStorage.setItem("user", JSON.stringify({
             id: data.id,
             email: data.email,
@@ -52,29 +67,25 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
             role: data.role,
             is_approved: data.is_approved,
         }));
-
-        } catch (err: any) {
-        if (err?.response?.status === 422) {
-            setError("Validation failed. Please check your email and password.");
-        } else if (err?.response?.status === 401) {
-            setError("Invalid credentials.");
-        } else if (err?.response?.data?.detail) {
-            setError(err.response.data.detail);
-        } else {
-            setError("Login failed. Please try again.");
-        }
-        console.error("Login error:", err);
-    }
+        setUserName(data.full_name);
+        setToken(data.token);
+        setUserID(data.id)
+    } catch (err: any) {
+      throw err;
+  }
 
   };
   const logout = () => {
     setToken(null);
-    setUserRole(null);
+    setUserID(null);
     setUserName('');
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("userID");
     // also remove token from storage if stored
   };
 
-  const value = { token, userRole, userName, login, logout };
+  const value = { token, userID, userName, login, logout, loading };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 

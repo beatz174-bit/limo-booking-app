@@ -10,8 +10,8 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
 
-def create_jwt_token(user_id: int, role: str) -> str:
-    to_encode: Dict[str, Any] = {"sub": user_id, "role": role}
+def create_jwt_token(user_id: int) -> str:
+    to_encode: Dict[str, Any] = {"sub": user_id}
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.ALGORITHM)

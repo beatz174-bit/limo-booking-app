@@ -5,15 +5,24 @@ import AdminDashboard from './pages/Admin/AdminDashboard';
 import RideHistoryPage from './pages/Booking/RideHistoryPage';
 import RegisterPage from "./pages/Auth/RegisterPage";
 import { useAuth } from "./contexts/AuthContext"
+import NavBar from './components/NavBar';
+import CircularProgress from "@mui/material/CircularProgress";
+
 // ... other imports
 
 function App() {
-  const { token, userRole } = useAuth(); // custom hook to get AuthContext
+  const { token, loading, userID } = useAuth(); // custom hook to get AuthContext
+  
+  if (loading) {
+    return <CircularProgress size="large" title='Loading' />; // or <Spin />, <Skeleton />, or a splash screen
+  }
 
   return (
+    <>
+    {token && <NavBar />}
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/login" element={ !token ? <LoginPage />: <Navigate to="/book" />} />
+      <Route path="/register" element={ !token ? <RegisterPage /> : <Navigate to="/book" />} />
 
       {/* Protected user routes */}
       <Route 
@@ -28,16 +37,13 @@ function App() {
       {/* Protected admin/driver route */}
       <Route 
         path="/admin" 
-        element={
-          token && userRole==="driver" 
-          ? <AdminDashboard /> 
-          : <Navigate to="/login" />
-        } 
+        element={ token && userID == '1' ? <AdminDashboard /> : <Navigate to="/login" /> } 
       />
 
       {/* Default/fallback route */}
       <Route path="*" element={<Navigate to={token ? "/book" : "/login"} />} />
     </Routes>
+    </>
   );
 }
 

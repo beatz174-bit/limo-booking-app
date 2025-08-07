@@ -32,12 +32,10 @@ async def authenticate_user(
     #     )
 
     return LoginResponse(
-        token=create_jwt_token(user.id, user.role),
-        role=user.role,
+        token=create_jwt_token(user.id),
         full_name=user.full_name,
         email=user.email,
         id=user.id,
-        is_approved=user.is_approved,
     )
 
 async def register_user( db: AsyncSession, data: RegisterRequest ) -> UserCreate:
@@ -72,4 +70,4 @@ def login_user(db: Session, data: LoginRequest) -> TokenResponse:
         )
 
     token: str = create_jwt_token(user_id=user.id, role=user.role) # type: ignore
-    return TokenResponse(token=token)
+    return TokenResponse(token=token) # type: ignore

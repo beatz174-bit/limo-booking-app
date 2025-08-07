@@ -1,9 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext"
-import {  AuthApi } from '../../api-client/api';
-import type { LoginRequest } from "../../api-client/api";
-import { Configuration } from '../../api-client/configuration'
+
 import {
   Container,
   Box,
@@ -24,12 +22,24 @@ function LoginPage() {
       e.preventDefault();
       setError("");
 
-  // Optionally call your context login method if needed
-  await login(email, password);
+  try {
+    // Optionally call your context login method if needed
+    await login(email, password);
 
-  // Redirect or do something on success
-  // navigate("/"); // adjust as needed
-
+    // Redirect or do something on success
+    navigate("/"); // adjust as needed    
+  } catch (err: any) {
+      if (err?.response?.status === 422) {
+          setError("Invalid input. Please check all fields.");
+      } else if (err?.response?.status === 401) {
+          setError(err?.response?.data?.detail)
+      } else if (err?.response?.data?.detail) {
+          setError(err.response.data.detail);
+      } else {
+          setError("Login failed. Please try again.");
+      }
+      console.error("Login error:", err);
+  }
 
     };
 return (
@@ -78,6 +88,14 @@ return (
           sx={{ mt: 2 }}
         >
           Log In
+        </Button>
+        <Button
+          fullWidth
+          variant="outlined"
+          sx={{ mt: 2 }}
+          onClick={() => navigate("/register")}
+        >
+          Create an Account
         </Button>
       </Box>
     </Box>

@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean
+# from sqlalchemy import Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import Text
 from typing import Literal
@@ -13,5 +13,5 @@ class User(Base):
     email:           Mapped[str]    = mapped_column(Text, unique=True, index=True)
     full_name:       Mapped[str]    = mapped_column(Text)
     hashed_password: Mapped[str]    = mapped_column(Text, name="password_hash")
-    is_approved:     Mapped[bool]   = mapped_column(Boolean, default=False)
-    role:            Mapped[Status] = mapped_column(Text, default="pending")
+    # is_approved:     Mapped[bool]   = mapped_column(Boolean, default=False)
+    # role:            Mapped[Status] = mapped_column(Text, default="pending")

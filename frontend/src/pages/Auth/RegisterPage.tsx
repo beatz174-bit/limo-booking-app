@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-// import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext"
 // import {  AuthApi } from '../../api-client/api';
 import type { RegisterRequest } from "../../api-client/api";
@@ -20,14 +20,15 @@ function RegisterPage() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const { login } = useAuth();
-
+    const navigate = useNavigate();
+    
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
 
         // const config = new Configuration({ basePath: "http://localhost:8000" });
         // const authApi = new AuthApi(config);
-        // const navigate = useNavigate();
+
         
 
         const registerRequest: RegisterRequest = {
@@ -44,11 +45,13 @@ function RegisterPage() {
             await login(email, password);
 
             // Redirect to dashboard or desired page
-            // navigate("/dashboard");
+            navigate("/admin");
 
         } catch (err: any) {
             if (err?.response?.status === 422) {
                 setError("Invalid input. Please check all fields.");
+            } else if (err?.response?.status === 400) {
+                setError(err?.response?.data?.detail)
             } else if (err?.response?.data?.detail) {
                 setError(err.response.data.detail);
             } else {
@@ -113,6 +116,14 @@ function RegisterPage() {
               sx={{ mt: 2 }}
             >
               Register
+            </Button>
+            <Button
+              fullWidth
+              variant="outlined"
+              sx={{ mt: 2 }}
+              onClick={() => navigate("/login")}
+            >
+              Back to Login
             </Button>
           </Box>
         </Box>

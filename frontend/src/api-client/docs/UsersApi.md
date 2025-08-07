@@ -208,7 +208,7 @@ This endpoint does not have any parameters.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **apiUpdateUserUsersUserIdPatch**
-> UserRead apiUpdateUserUsersUserIdPatch(userUpdate)
+> UserRead apiUpdateUserUsersUserIdPatch(body)
 
 
 ### Example
@@ -216,19 +216,18 @@ This endpoint does not have any parameters.
 ```typescript
 import {
     UsersApi,
-    Configuration,
-    UserUpdate
+    Configuration
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new UsersApi(configuration);
 
 let userId: number; // (default to undefined)
-let userUpdate: UserUpdate; //
+let body: object; //
 
 const { status, data } = await apiInstance.apiUpdateUserUsersUserIdPatch(
     userId,
-    userUpdate
+    body
 );
 ```
 
@@ -236,7 +235,7 @@ const { status, data } = await apiInstance.apiUpdateUserUsersUserIdPatch(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **userUpdate** | **UserUpdate**|  | |
+| **body** | **object**|  | |
 | **userId** | [**number**] |  | defaults to undefined|
 
 

@@ -165,49 +165,6 @@ export interface LoginRequest {
 /**
  * 
  * @export
- * @interface LoginResponse
- */
-export interface LoginResponse {
-    /**
-     * 
-     * @type {string}
-     * @memberof LoginResponse
-     */
-    'token': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof LoginResponse
-     */
-    'role': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof LoginResponse
-     */
-    'full_name': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof LoginResponse
-     */
-    'email': string;
-    /**
-     * 
-     * @type {number}
-     * @memberof LoginResponse
-     */
-    'id': number;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof LoginResponse
-     */
-    'is_approved': boolean;
-}
-/**
- * 
- * @export
  * @interface RegisterRequest
  */
 export interface RegisterRequest {
@@ -355,37 +312,6 @@ export interface UserRead {
      * @memberof UserRead
      */
     'id': number;
-    /**
-     * 
-     * @type {string}
-     * @memberof UserRead
-     */
-    'role': string;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof UserRead
-     */
-    'is_approved': boolean;
-}
-/**
- * 
- * @export
- * @interface UserUpdate
- */
-export interface UserUpdate {
-    /**
-     * 
-     * @type {string}
-     * @memberof UserUpdate
-     */
-    'role': string | null;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof UserUpdate
-     */
-    'is_approved': boolean | null;
 }
 /**
  * 
@@ -515,7 +441,7 @@ export const AuthApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async endpointRegisterAuthRegisterPost(registerRequest: RegisterRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<UserRead>> {
+        async endpointRegisterAuthRegisterPost(registerRequest: RegisterRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.endpointRegisterAuthRegisterPost(registerRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AuthApi.endpointRegisterAuthRegisterPost']?.[localVarOperationServerIndex]?.url;
@@ -528,7 +454,7 @@ export const AuthApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async loginAuthLoginPost(loginRequest: LoginRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<LoginResponse>> {
+        async loginAuthLoginPost(loginRequest: LoginRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.loginAuthLoginPost(loginRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AuthApi.loginAuthLoginPost']?.[localVarOperationServerIndex]?.url;
@@ -551,7 +477,7 @@ export const AuthApiFactory = function (configuration?: Configuration, basePath?
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        endpointRegisterAuthRegisterPost(registerRequest: RegisterRequest, options?: RawAxiosRequestConfig): AxiosPromise<UserRead> {
+        endpointRegisterAuthRegisterPost(registerRequest: RegisterRequest, options?: RawAxiosRequestConfig): AxiosPromise<any> {
             return localVarFp.endpointRegisterAuthRegisterPost(registerRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -561,7 +487,7 @@ export const AuthApiFactory = function (configuration?: Configuration, basePath?
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        loginAuthLoginPost(loginRequest: LoginRequest, options?: RawAxiosRequestConfig): AxiosPromise<LoginResponse> {
+        loginAuthLoginPost(loginRequest: LoginRequest, options?: RawAxiosRequestConfig): AxiosPromise<any> {
             return localVarFp.loginAuthLoginPost(loginRequest, options).then((request) => request(axios, basePath));
         },
     };
@@ -1280,15 +1206,15 @@ export const UsersApiAxiosParamCreator = function (configuration?: Configuration
          * 
          * @summary Api Update User
          * @param {number} userId 
-         * @param {UserUpdate} userUpdate 
+         * @param {object} body 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiUpdateUserUsersUserIdPatch: async (userId: number, userUpdate: UserUpdate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiUpdateUserUsersUserIdPatch: async (userId: number, body: object, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'userId' is not null or undefined
             assertParamExists('apiUpdateUserUsersUserIdPatch', 'userId', userId)
-            // verify required parameter 'userUpdate' is not null or undefined
-            assertParamExists('apiUpdateUserUsersUserIdPatch', 'userUpdate', userUpdate)
+            // verify required parameter 'body' is not null or undefined
+            assertParamExists('apiUpdateUserUsersUserIdPatch', 'body', body)
             const localVarPath = `/users/{user_id}`
                 .replace(`{${"user_id"}}`, encodeURIComponent(String(userId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -1313,7 +1239,7 @@ export const UsersApiAxiosParamCreator = function (configuration?: Configuration
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(userUpdate, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1385,12 +1311,12 @@ export const UsersApiFp = function(configuration?: Configuration) {
          * 
          * @summary Api Update User
          * @param {number} userId 
-         * @param {UserUpdate} userUpdate 
+         * @param {object} body 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiUpdateUserUsersUserIdPatch(userId: number, userUpdate: UserUpdate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<UserRead>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiUpdateUserUsersUserIdPatch(userId, userUpdate, options);
+        async apiUpdateUserUsersUserIdPatch(userId: number, body: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<UserRead>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiUpdateUserUsersUserIdPatch(userId, body, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['UsersApi.apiUpdateUserUsersUserIdPatch']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -1448,12 +1374,12 @@ export const UsersApiFactory = function (configuration?: Configuration, basePath
          * 
          * @summary Api Update User
          * @param {number} userId 
-         * @param {UserUpdate} userUpdate 
+         * @param {object} body 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiUpdateUserUsersUserIdPatch(userId: number, userUpdate: UserUpdate, options?: RawAxiosRequestConfig): AxiosPromise<UserRead> {
-            return localVarFp.apiUpdateUserUsersUserIdPatch(userId, userUpdate, options).then((request) => request(axios, basePath));
+        apiUpdateUserUsersUserIdPatch(userId: number, body: object, options?: RawAxiosRequestConfig): AxiosPromise<UserRead> {
+            return localVarFp.apiUpdateUserUsersUserIdPatch(userId, body, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -1516,13 +1442,13 @@ export class UsersApi extends BaseAPI {
      * 
      * @summary Api Update User
      * @param {number} userId 
-     * @param {UserUpdate} userUpdate 
+     * @param {object} body 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof UsersApi
      */
-    public apiUpdateUserUsersUserIdPatch(userId: number, userUpdate: UserUpdate, options?: RawAxiosRequestConfig) {
-        return UsersApiFp(this.configuration).apiUpdateUserUsersUserIdPatch(userId, userUpdate, options).then((request) => request(this.axios, this.basePath));
+    public apiUpdateUserUsersUserIdPatch(userId: number, body: object, options?: RawAxiosRequestConfig) {
+        return UsersApiFp(this.configuration).apiUpdateUserUsersUserIdPatch(userId, body, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

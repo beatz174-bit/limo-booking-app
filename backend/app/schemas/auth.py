@@ -8,21 +8,17 @@ class LoginRequest(BaseModel):
 
 class LoginResponse(BaseModel):
     token: str
-    role: str
     full_name: str
     email: EmailStr
     id: int
-    is_approved: bool
 
     class Config:
         json_schema_extra: ClassVar[Dict[str, Any]] = {
             "example": {
                 "token": "your.jwt.token",
-                "role": "driver",
                 "full_name": "Naomi Bertrand",
                 "email": "naomi@example.com",
                 "id": 123,
-                "is_approved": True
             }
         }
 
