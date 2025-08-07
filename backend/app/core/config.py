@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings
 from pydantic import Field
 
 class Settings(BaseSettings):
-    DATABASE_URL: str = Field(default="sqlite+aiosqlite:///../data/dev.db")
+    DATABASE_PATH: str = Field(default="../data/dev.db")
     JWT_SECRET_KEY: str = Field(default=..., validation_alias="JWT_SECRET_KEY") # type: ignore[reportUnknownArgumentType]
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=60)
     ORS_API_KEY: str = Field(default=..., validation_alias="ORS_API_KEY") # type: ignore[reportUnknownArgumentType]

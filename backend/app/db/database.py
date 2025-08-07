@@ -16,7 +16,7 @@ from app.core.config import settings
 # --------------------------------------------------------------------
 # 🚀 1. Build engine URL and detect async driver
 
-url = make_url(settings.DATABASE_URL)
+url = make_url(f"sqlite+aiosqlite:///{settings.DATABASE_PATH}")
 if url.drivername == "sqlite":
     # Automatic fix: wrap sqlite into sqlite+aiosqlite
     warnings.warn(

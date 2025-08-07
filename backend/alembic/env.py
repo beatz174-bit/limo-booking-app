@@ -10,10 +10,10 @@ from sqlalchemy import engine_from_config, pool
 from alembic import context  # essential – must be here before using `context.config`
 
 # Load the DATABASE_URL from the environment
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_PATH = os.getenv("DATABASE_PATH")
 
-if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL environment variable is not set")
+if not DATABASE_PATH:
+    raise RuntimeError("DATABASE_PATH environment variable is not set")
 
 # Now that path is set, import your Base metadata
 from app.db.database import Base
@@ -44,8 +44,8 @@ def run_migrations_offline():
 
 def run_migrations_online():
     section = config.get_section(config.config_ini_section)
-    if DATABASE_URL and section:
-        section["sqlalchemy.url"] = DATABASE_URL
+    if DATABASE_PATH and section:
+        section["sqlalchemy.url"] = f"sqlite:///{DATABASE_PATH}"
         connectable = engine_from_config(
             section,
             prefix="sqlalchemy.",
