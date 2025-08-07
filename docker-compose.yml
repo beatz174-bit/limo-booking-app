@@ -20,9 +20,9 @@ services:
       - "traefik.http.services.dev.loadbalancer.server.port=3000"
       - "io.portainer.accesscontrol.public"
       - "traefik.http.routers.dev.middlewares=error-pages-middleware"
-    networks:
-#      - proxy
-      - traefik_default
+#     networks:
+# #      - proxy
+#       - traefik_default
   backend:
     build:
       context: ./backend
@@ -34,9 +34,9 @@ services:
       - ORS_API_KEY="${ORS_API_KEY}"
     volumes:
       - ./data/app.db:/data/app.db  # If using SQLite
-    networks:
-#      - proxy
-      - traefik_default
+#     networks:
+# #      - proxy
+#       - traefik_default
 
 #volumes:
 #  gitea_data:

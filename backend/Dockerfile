@@ -1,5 +1,6 @@
 # Step 1: Build environment
 FROM python:3.11-slim AS builder
+
 WORKDIR /app
 COPY ./requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
@@ -19,8 +20,10 @@ ENV JWT_SECRET_KEY=${JWT_SECRET_KEY}
 ENV ORS_API_KEY=${ORS_API_KEY}
 # Copy your app code
 COPY . .
+#USER 1000:1000
 RUN mkdir /data
 RUN chmod +x /data
+RUN chown 1000:1000 /data
 # Expose API port
 EXPOSE 8000
 
