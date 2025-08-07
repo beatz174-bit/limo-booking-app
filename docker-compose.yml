@@ -8,7 +8,18 @@ services:
       - "3030:80"
     depends_on:
       - backend
-
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.dev.rule=Host(`dev.lan.ddnsgeek.com`)"
+      - "traefik.http.routers.dev.entrypoints=websecure"
+      - "traefik.http.routers.dev.tls=true"
+      - "traefik.http.routers.dev.tls.certresolver=myresolver"
+      - "traefik.http.services.dev.loadbalancer.server.port=3030"
+      - "io.portainer.accesscontrol.public"
+    networks:
+#      - proxy
+      - traefik_default
   backend:
     build:
       context: ./backend
@@ -20,16 +31,9 @@ services:
       - ORS_API_KEY="${ORS_API_KEY}"
     volumes:
       - ./backend/app.db:/app/app.db  # If using SQLite
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=proxy"
-      - "traefik.http.routers.dev.rule=Host(`dev.lan.ddnsgeek.com`)"
-      - "traefik.http.routers.dev.entrypoints=websecure"
-      - "traefik.http.routers.dev.tls=true"
-      - "traefik.http.routers.dev.tls.certresolver=myresolver"
-      - "traefik.http.services.dev.loadbalancer.server.port=3030"
-      - "io.portainer.accesscontrol.public"
-
+    networks:
+#      - proxy
+      - traefik_default
 
 #volumes:
 #  gitea_data:
