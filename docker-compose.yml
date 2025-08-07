@@ -17,6 +17,7 @@ services:
       - "traefik.http.routers.dev.tls.certresolver=myresolver"
       - "traefik.http.services.dev.loadbalancer.server.port=3030"
       - "io.portainer.accesscontrol.public"
+      - "traefik.http.routers.dev.middlewares=error-pages-middleware"
     networks:
 #      - proxy
       - traefik_default
