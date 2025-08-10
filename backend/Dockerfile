@@ -15,15 +15,15 @@ RUN pip install --no-cache-dir gunicorn uvicorn[standard]
 # Copy installed deps from builder
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
-ENV DATABASE_PATH=data/app.db
+ENV DATABASE_PATH=/data/app.db
 ENV JWT_SECRET_KEY=${JWT_SECRET_KEY}
 ENV ORS_API_KEY=${ORS_API_KEY}
 # Copy your app code
 COPY . .
 #USER 1000:1000
-RUN mkdir /data
-RUN chmod +x /data
-RUN chown 1000:1000 /data
+# RUN mkdir /data
+# RUN chmod +x /data
+# RUN chown 1000:1000 /data
 # Expose API port
 EXPOSE 8000
 

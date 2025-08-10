@@ -2,7 +2,9 @@
 import os
 import sys
 from logging.config import fileConfig
+from dotenv import load_dotenv
 
+load_dotenv("/mnt/server/github-repos/limo-booking-app/backend/.env")
 # Ensure your app module (root project directory) is on sys.path
 #sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -14,7 +16,9 @@ DATABASE_PATH = os.getenv("DATABASE_PATH")
 
 if not DATABASE_PATH:
     raise RuntimeError("DATABASE_PATH environment variable is not set")
-
+print("*********************************")
+print(DATABASE_PATH)
+print("***********************************")
 # Now that path is set, import your Base metadata
 from app.db.database import Base
 # If you have custom types/models,
@@ -45,7 +49,7 @@ def run_migrations_offline():
 def run_migrations_online():
     section = config.get_section(config.config_ini_section)
     if DATABASE_PATH and section:
-        section["sqlalchemy.url"] = f"sqlite:////{DATABASE_PATH}"
+        section["sqlalchemy.url"] = f"sqlite:///{DATABASE_PATH}"
         connectable = engine_from_config(
             section,
             prefix="sqlalchemy.",

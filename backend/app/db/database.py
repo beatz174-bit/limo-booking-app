@@ -25,7 +25,7 @@ if url.drivername == "sqlite":
     )
     url = URL.create(
         drivername="sqlite+aiosqlite",
-        database=url.database or ":memory:",
+        database=url.database or ":memory:", 
     )
 
 # --------------------------------------------------------------------
