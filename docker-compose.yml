@@ -21,9 +21,9 @@ services:
       - "traefik.http.services.dev.loadbalancer.server.port=3000"
       - "io.portainer.accesscontrol.public"
       - "traefik.http.routers.dev.middlewares=error-pages-middleware"
-#     networks:
-# #      - proxy
-#       - traefik_default
+    networks:
+#      - proxy
+      - traefik_default
   backend:
     hostname: limo-booking-app-backend
     build:
@@ -36,9 +36,9 @@ services:
       - ORS_API_KEY=${ORS_API_KEY}
     volumes:
      - ./data:/data:rw  # If using SQLite
-#     networks:
-# #      - proxy
-#       - traefik_default
+    networks:
+#      - proxy
+      - traefik_default
 
 #volumes:
 #  gitea_data:
