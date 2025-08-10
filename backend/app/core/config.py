@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     ALGORITHM: str = Field(default="HS256")
     PROJECT_NAME: str = Field(default="Limo Booking App")
     PROJECT_VERSION: str = Field(default="0.1")
-    ALLOW_ORIGINS: str = Field(default="http://localhost:3000")
+    ALLOW_ORIGINS: str = Field(default="https://dev.lan.ddnsgeek.com")
     API_PREFIX: str = Field(default="")
     env: str = Field(default="development")
     DB_POOL_SIZE: int = 10
