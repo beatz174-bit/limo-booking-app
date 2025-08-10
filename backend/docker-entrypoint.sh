@@ -1,20 +1,20 @@
 #!/bin/bash
 set -Eeuo pipefail
 
-# Ensure /data exists
-mkdir -p /data
+# # Ensure /data exists
+# mkdir -p /data
 
-# Fix ownership if a host bind mount made it root:root
-chown -R 1000:1000 /data
-
-alembic upgrade head
-
-# Drop to appuser and exec the server
-exec gosu appuser "$@"
-
+# # Fix ownership if a host bind mount made it root:root
+# chown -R 1000:1000 /data
 
 # alembic upgrade head
-# exec "$@"
+
+# # Drop to appuser and exec the server
+# exec gosu appuser "$@"
+
+
+alembic upgrade head
+exec "$@"
 
 
 # #!/usr/bin/env bash
