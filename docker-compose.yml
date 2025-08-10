@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   frontend:
+    hostname: limo-booking-app-frontend
     build:
       context: ./frontend
     ports:
@@ -24,6 +25,7 @@ services:
 # #      - proxy
 #       - traefik_default
   backend:
+    hostname: limo-booking-app-backend
     build:
       context: ./backend
     ports:
