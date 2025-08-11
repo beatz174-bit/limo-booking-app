@@ -28,10 +28,12 @@ services:
     hostname: limo-booking-app-backend
     build:
       context: ./backend
+    env_file:
+      - ./.env.production
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_PATH=/data/app.db  # or your production DB
+      # - DATABASE_PATH=/data/app.db  # or your production DB
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - ORS_API_KEY=${ORS_API_KEY}
     volumes:
