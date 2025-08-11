@@ -4,6 +4,8 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from pathlib import Path
+
 
 from alembic.config import Config
 from alembic import command  # for migrations
@@ -14,8 +16,12 @@ from app.dependencies import get_db
 from app.core.config import get_settings
 
 settings = get_settings()
+TEST_DATABASE_URL = f"sqlite:///{settings.database_path}"
+cfg = Config(os.getenv("ALEMBIC_INI_PATH", "alembic.ini"))
+cfg.set_main_option("sqlalchemy.url", TEST_DATABASE_URL)
 
-TEST_DATABASE_URL = settings.database_path
+print(TEST_DATABASE_URL)
+
 engine = create_engine(
     TEST_DATABASE_URL, connect_args={"check_same_thread": False}
 )
@@ -24,9 +30,19 @@ TestingSessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=Fals
 @pytest.fixture(scope="session", autouse=True)
 def apply_migrations():
     cfg = Config(os.getenv("ALEMBIC_INI_PATH", "alembic.ini"))
+    cfg.set_main_option("sqlalchemy.url", TEST_DATABASE_URL)
     command.upgrade(cfg, "head")
     yield
-    command.downgrade(cfg, "base")
+    # command.downgrade(cfg, "base")
+    # Teardown: dispose connections and delete DB file instead of downgrade
+    try:
+        create_engine(TEST_DATABASE_URL).dispose()
+    except Exception:
+        pass
+    try:
+        Path(settings.database_path).unlink(missing_ok=True)
+    except Exception:
+        pass
 
 @pytest.fixture
 def db_session():

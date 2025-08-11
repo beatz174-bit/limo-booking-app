@@ -9,7 +9,7 @@ def test_login_success(db_session):
                 password_hash="$2b$12$...bcrypt-hash...",  # pre-hashed
                 role="rider", is_approved=True)
     db_session.add(user)
-    db_session.commit()
+    db_session.refresh()
 
     login_req = LoginRequest(email="user@example.com", password="correct")  
     # Act

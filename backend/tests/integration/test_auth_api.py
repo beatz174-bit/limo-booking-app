@@ -4,7 +4,7 @@ def test_login_endpoint_success(client, db_session):
     from app.core.security import pwd_context
     hashed = pwd_context.hash("secret")
     u = User(email="inttest@example.com", full_name="Int Test",
-             password_hash=hashed, role="driver", is_approved=True)
+             hashed_password=hashed)
     db_session.add(u)
     db_session.commit()
 
