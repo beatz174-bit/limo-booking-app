@@ -19,7 +19,7 @@ import type { Configuration } from './configuration';
 import type { AxiosPromise, AxiosInstance, RawAxiosRequestConfig } from 'axios';
 import globalAxios from 'axios';
 
-export const BASE_PATH = "http://limo-booking-app-backend:8000".replace(/\/+$/, "");
+export const BASE_PATH = "http://backend:8000".replace(/\/+$/, "");
 
 /**
  *
