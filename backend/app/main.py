@@ -29,7 +29,7 @@ app = FastAPI(
     dependencies=[],
 )
 
-if settings.env == "development":
+if not settings.env == "production":
     # Global CORS configuration
     app.add_middleware(
         CORSMiddleware,
