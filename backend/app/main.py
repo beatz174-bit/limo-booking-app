@@ -30,13 +30,13 @@ app = FastAPI(
 )
 
 # Global CORS configuration
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=settings.cors_origins,
-#     allow_credentials=settings.allow_credentials,
-#     allow_methods=settings.allow_methods,
-#     allow_headers=settings.allow_headers,
-# )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=settings.allow_credentials,
+    allow_methods=settings.allow_methods,
+    allow_headers=settings.allow_headers,
+)
 
 app.include_router(auth_router.router)
 app.include_router(users_router.router)
