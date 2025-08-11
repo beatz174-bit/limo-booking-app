@@ -10,13 +10,27 @@ from sqlalchemy.ext.asyncio import (
     AsyncSession,
 )
 from sqlalchemy.orm import DeclarativeBase
+from pathlib import Path
+from app.core.config import get_settings
 
-from app.core.config import settings
+settings = get_settings()
 
 # --------------------------------------------------------------------
 # 🚀 1. Build engine URL and detect async driver
 
-url = make_url(f"sqlite+aiosqlite:///{settings.DATABASE_PATH}")
+
+
+raw = settings.database_path
+path = Path(raw) #type: ignore
+if not path.is_absolute():
+    # choose your root; e.g., repo root or backend dir
+    repo_root = Path(__file__).resolve().parents[3]  # adjust as needed
+    full_path = (repo_root / path).resolve()
+else:
+    full_path = settings.database_path
+
+
+url = make_url(f"sqlite+aiosqlite:///{full_path}")
 if url.drivername == "sqlite":
     # Automatic fix: wrap sqlite into sqlite+aiosqlite
     warnings.warn(
@@ -37,10 +51,10 @@ engine_kwargs: Dict[str, Union[int, bool, Dict[str, bool]]] = {
 }
 
 if not is_sqlite_async:
-    engine_kwargs["pool_size"] = settings.DB_POOL_SIZE
-    engine_kwargs["max_overflow"] = settings.DB_MAX_OVERFLOW
+    engine_kwargs["pool_size"] = settings.database_pool_size
+    engine_kwargs["max_overflow"] = settings.database_max_overflow
     engine_kwargs["pool_pre_ping"] = True
-    engine_kwargs["pool_recycle"] = settings.DB_POOL_RECYCLE
+    engine_kwargs["pool_recycle"] = settings.database_pool_recycle
 
 # --------------------------------------------------------------------
 # 🧰 3. Create actual AsyncEngine

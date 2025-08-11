@@ -13,7 +13,7 @@ from typing import Union
 async def complete_initial_setup(db: AsyncSession, data: SetupPayload):
     # Prevent running setup more than once
     # existing_admin = db.query(User).filter(User.role == "admin").first()
-    stmt = select(User).filter(User.role == "admin")
+    stmt = select(User).filter(User.id == 1)
     existing_admin = (await db.execute(stmt)).scalar_one_or_none()
     if existing_admin:
         raise HTTPException(status_code=400, detail="Setup already completed.")

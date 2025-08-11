@@ -11,9 +11,11 @@ from alembic import command  # for migrations
 from app.main import app as _app
 from app.db.database import Base
 from app.dependencies import get_db
-from app.core.config import settings
+from app.core.config import get_settings
 
-TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "sqlite+aiosqlite:///../data/test.db:")
+settings = get_settings()
+
+TEST_DATABASE_URL = settings.database_path
 engine = create_engine(
     TEST_DATABASE_URL, connect_args={"check_same_thread": False}
 )

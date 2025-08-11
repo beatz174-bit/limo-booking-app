@@ -4,10 +4,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from contextlib import asynccontextmanager
 
-from app.core.config import settings
+from app.core.config import get_settings
 from app.db.database import database
 
 from app.api import auth as auth_router, users as users_router, bookings as bookings_router, setup as setup_router
+settings = get_settings()
 
 def get_app() -> FastAPI:
     """For pytest: returns the singleton `app`."""
@@ -20,9 +21,9 @@ async def lifespan(app: FastAPI):
     await database.disconnect()
 
 app = FastAPI(
-    title=settings.PROJECT_NAME,
-    version=settings.PROJECT_VERSION,
-    openapi_prefix=settings.API_PREFIX,
+    title=settings.app_name,
+    version=settings.app_version,
+    openapi_prefix=settings.api_prefix,
     docs_url="/docs",
     redoc_url="/redoc",
     dependencies=[],
@@ -31,10 +32,10 @@ app = FastAPI(
 # Global CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOW_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=settings.cors_origins,
+    allow_credentials=settings.allow_credentials,
+    allow_methods=settings.allow_methods,
+    allow_headers=settings.allow_headers,
 )
 
 app.include_router(auth_router.router)
