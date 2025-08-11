@@ -4,7 +4,7 @@ import sys
 from logging.config import fileConfig
 from dotenv import load_dotenv
 
-load_dotenv("/mnt/server/github-repos/limo-booking-app/backend/.env")
+load_dotenv()
 # Ensure your app module (root project directory) is on sys.path
 #sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
