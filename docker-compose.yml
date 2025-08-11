@@ -7,8 +7,8 @@ services:
       - ./.env.production
     build:
       context: ./frontend
-    ports:
-      - "3000:3000"
+    # ports:
+    #   - "3000:3000"
     # environment:
     #   - VITE_API_BASE_URL=https://dev.lan.ddnsgeek.com
     depends_on:
@@ -32,14 +32,26 @@ services:
       context: ./backend
     env_file:
       - ./.env.production
-    ports:
-      - "8000:8000"
+    # ports:
+    #   - "8000:8000"
     environment:
       # - DATABASE_PATH=/data/app.db  # or your production DB
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - ORS_API_KEY=${ORS_API_KEY}
     volumes:
      - ./data:/data:rw  # If using SQLite
+    labels:
+      - traefik.enable=true
+      # Router for the API on the SAME host, but only when path starts with /api
+      - traefik.http.routers.api.rule=Host(`dev.lan.ddnsgeek.com`) && PathPrefix(`/api`)
+      - traefik.http.routers.api.entrypoints=websecure
+      - traefik.http.routers.api.tls=true
+      - traefik.http.routers.api.tls.certresolver=myresolver
+      # Strip the /api prefix before forwarding to FastAPI (so /api/auth -> /auth)
+      - traefik.http.middlewares.api-strip.stripprefix.prefixes=/api
+      - traefik.http.routers.api.middlewares=api-strip
+      # Traefik should talk to port 8000 inside the container
+      - traefik.http.services.api.loadbalancer.server.port=8000
     networks:
 #      - proxy
       - traefik_default
