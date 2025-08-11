@@ -3,12 +3,14 @@ version: '3.8'
 services:
   frontend:
     hostname: limo-booking-app-frontend
+    env_file:
+      - ./.env.production
     build:
       context: ./frontend
     ports:
       - "3000:3000"
-    environment:
-      - VITE_API_BASE_URL=https://dev.lan.ddnsgeek.com
+    # environment:
+    #   - VITE_API_BASE_URL=https://dev.lan.ddnsgeek.com
     depends_on:
       - backend
     labels:
