@@ -13,7 +13,7 @@ def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
 
 def create_jwt_token(user_id: int) -> str:
-    to_encode: Dict[str, Any] = {"sub": user_id}
+    to_encode: Dict[str, Any] = {"sub": str(user_id)}
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
