@@ -1,6 +1,5 @@
 # app/api/users.py
 from fastapi import APIRouter, Depends, status
-from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 

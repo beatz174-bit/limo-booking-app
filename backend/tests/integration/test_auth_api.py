@@ -30,7 +30,8 @@ async def test_login_invalid_password(client, async_session):
     hashed_pwd = hash_password("correctpass")
     user = User(email="wrongpass@example.com", full_name="Wrong Pass", hashed_password=hashed_pwd)
     async_session.add(user)
-    async_session.commit()
+    await async_session.commit()
+    await async_session.refresh(user)
 
     # Attempt to login with incorrect password
     response = await client.post("/auth/login", json={"email": "wrongpass@example.com", "password": "incorrect"})

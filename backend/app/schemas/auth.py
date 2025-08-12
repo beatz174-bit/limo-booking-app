@@ -1,5 +1,5 @@
 # app/schemas/auth.py
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 from typing import ClassVar, Dict, Any
 
 class LoginRequest(BaseModel):
@@ -12,8 +12,8 @@ class LoginResponse(BaseModel):
     email: EmailStr
     id: int
 
-    class Config:
-        json_schema_extra: ClassVar[Dict[str, Any]] = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "token": "your.jwt.token",
                 "full_name": "Naomi Bertrand",
@@ -21,7 +21,7 @@ class LoginResponse(BaseModel):
                 "id": 123,
             }
         }
-
+    )
 class RegisterRequest(BaseModel):
     email: EmailStr
     full_name: str

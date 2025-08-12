@@ -17,7 +17,7 @@ def test_create_and_decode_jwt_token():
     assert token.count(".") == 2
     # Decoding the token should yield the original user id in the payload
     payload = decode_token(token)
-    assert payload.get("sub") == user_id
+    assert int(payload.get("sub")) == user_id
     assert "exp" in payload
 
 def test_decode_token_invalid():
