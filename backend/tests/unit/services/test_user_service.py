@@ -71,6 +71,7 @@ async def test_update_user_success(async_session: AsyncSession):
     assert result.full_name == "After Update"
     # Database should reflect the change
     updated = await async_session.get(User, user.id)
+    assert updated is not None
     assert updated.full_name == "After Update"
 
 async def test_update_user_not_found(async_session: AsyncSession):

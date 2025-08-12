@@ -1,6 +1,6 @@
 # alembic/env.py
 import os
-import sys
+import sys # type: ignore
 from logging.config import fileConfig
 from dotenv import load_dotenv
 
@@ -16,14 +16,11 @@ DATABASE_PATH = os.getenv("DATABASE_PATH")
 
 if not DATABASE_PATH:
     raise RuntimeError("DATABASE_PATH environment variable is not set")
-print("*********************************")
-print(DATABASE_PATH)
-print("***********************************")
 # Now that path is set, import your Base metadata
 from app.db.database import Base
 # If you have custom types/models,
 # import them here to include them in autogeneration:
-from app.models import user, booking, settings
+from app.models import user, booking, settings # type: ignore
 
 
 config = context.config
@@ -31,7 +28,7 @@ config = context.config
 # optionally override sqlalchemy.url loaded from alembic.ini:
 # config.set_main_option("sqlalchemy.url", os.getenv("DATABASE_URL"))
 
-fileConfig(config.config_file_name)
+fileConfig(config.config_file_name) # type: ignore
 print(Base.metadata.tables.keys())
 target_metadata = Base.metadata
 

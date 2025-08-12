@@ -1,19 +1,20 @@
-from sqlalchemy import Column, Integer, Float, String, ForeignKey, Text
+from sqlalchemy import Column, Integer, Float, String, ForeignKey, Text, DateTime
 from app.db.database import Base
 from decimal import Decimal
 from typing import Dict, Any, Literal
 from sqlalchemy.orm import Mapped, mapped_column
+from  datetime import datetime
 
 
 Status = Literal["pending", "accepted", "completed", "cancelled"]
 
 class Booking(Base): # type: ignore[reportUntypedBaseClass]
     __tablename__ = "bookings"
-    id = Column(Integer, primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'))
-    pickup_location = Column(String)
-    dropoff_location = Column(String)
-    time = Column(String)
+    pickup_location: Mapped[str] = mapped_column(String, nullable=False)
+    dropoff_location: Mapped[str] = mapped_column(String, nullable=False)
+    time: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     status: Mapped[Status] = mapped_column(Text, default="pending")
     price: Column[Decimal] = Column(Float, nullable=False) 
 

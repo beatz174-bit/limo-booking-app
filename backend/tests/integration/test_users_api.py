@@ -2,9 +2,12 @@ import pytest
 from app.models.user import User
 from app.core.security import create_jwt_token, hash_password
 from sqlalchemy import select
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Any, Dict, List, cast
 
 @pytest.mark.asyncio
-async def test_create_user_success(client):
+async def test_create_user_success(client: AsyncClient):
     # Create a new user via the public endpoint (no auth required)
     payload = {"email": "testcreate@example.com", "full_name": "Test Create", "password": "createpass"}
     response = await client.post("/users", json=payload)
@@ -18,7 +21,7 @@ async def test_create_user_success(client):
     assert "password" not in data and "hashed_password" not in data
 
 @pytest.mark.asyncio
-async def test_create_user_duplicate_email(client, async_session):
+async def test_create_user_duplicate_email(client: AsyncClient, async_session: AsyncSession):
     # Insert a user directly into the DB
     user = User(email="exists@example.com", full_name="Exists User", hashed_password=hash_password("pass"))
     async_session.add(user)
@@ -32,14 +35,14 @@ async def test_create_user_duplicate_email(client, async_session):
     assert data["detail"] == "Email exists"
 
 @pytest.mark.asyncio
-async def test_list_users_unauthorized(client):
+async def test_list_users_unauthorized(client: AsyncClient):
     # Requesting the users list without a token should be unauthorized
     response = await client.get("/users")
     assert response.status_code == 401
     assert response.json()["detail"] == "Not authenticated"
 
 @pytest.mark.asyncio
-async def test_list_users_success(client, async_session):
+async def test_list_users_success(client: AsyncClient, async_session: AsyncSession):
     # Prepare multiple users in the database
     user1 = User(email="list1@example.com", full_name="List One", hashed_password=hash_password("pass1"))
     user2 = User(email="list2@example.com", full_name="List Two", hashed_password=hash_password("pass2"))
@@ -52,7 +55,7 @@ async def test_list_users_success(client, async_session):
     headers = {"Authorization": f"Bearer {token}"}
     response = await client.get("/users", headers=headers)
     assert response.status_code == 200
-    users = response.json()
+    users = cast(List[Dict[str, Any]],response.json())
     # Should return a list of users (at least the two created)
     assert isinstance(users, list)
     emails = [u["email"] for u in users]
@@ -61,7 +64,7 @@ async def test_list_users_success(client, async_session):
     assert all("hashed_password" not in u for u in users)
 
 @pytest.mark.asyncio
-async def test_get_user_unauthorized(client, async_session):
+async def test_get_user_unauthorized(client: AsyncClient, async_session: AsyncSession):
     # Create a user but do not authenticate
     user = User(email="getme@example.com", full_name="Get Me", hashed_password=hash_password("getpass"))
     async_session.add(user)
@@ -72,7 +75,7 @@ async def test_get_user_unauthorized(client, async_session):
     assert response.status_code == 401
 
 @pytest.mark.asyncio
-async def test_get_user_not_found(client, async_session):
+async def test_get_user_not_found(client: AsyncClient, async_session: AsyncSession):
     # Create and authenticate a user
     user = User(email="findme@example.com", full_name="Find Me", hashed_password=hash_password("findpass"))
     async_session.add(user)
@@ -86,7 +89,7 @@ async def test_get_user_not_found(client, async_session):
     assert response.json()["detail"] == "User not found"
 
 @pytest.mark.asyncio
-async def test_get_user_success(client, async_session):
+async def test_get_user_success(client: AsyncClient, async_session: AsyncSession):
     # Create two users and authenticate as one
     user1 = User(email="owner@example.com", full_name="Owner User", hashed_password=hash_password("ownerpass"))
     user2 = User(email="target@example.com", full_name="Target User", hashed_password=hash_password("targetpass"))
@@ -108,7 +111,7 @@ async def test_get_user_success(client, async_session):
     assert "hashed_password" not in data
 
 @pytest.mark.asyncio
-async def test_update_user_unauthorized(client, async_session):
+async def test_update_user_unauthorized(client: AsyncClient, async_session: AsyncSession):
     user = User(email="upd@example.com", full_name="To Update", hashed_password=hash_password("updpass"))
     async_session.add(user)
     await async_session.commit()
@@ -118,7 +121,7 @@ async def test_update_user_unauthorized(client, async_session):
     assert response.status_code == 401
 
 @pytest.mark.asyncio
-async def test_update_user_not_found(client, async_session):
+async def test_update_user_not_found(client: AsyncClient, async_session: AsyncSession):
     # Create and authenticate a user
     user = User(email="upder@example.com", full_name="Updater", hashed_password=hash_password("upd2pass"))
     async_session.add(user)
@@ -132,7 +135,7 @@ async def test_update_user_not_found(client, async_session):
     assert response.json()["detail"] == "User not found"
 
 @pytest.mark.asyncio
-async def test_update_user_success(client, async_session):
+async def test_update_user_success(client: AsyncClient, async_session: AsyncSession):
     # Create a user and authenticate
     user = User(email="updme@example.com", full_name="Before Update", hashed_password=hash_password("updatepass"))
     async_session.add(user)
@@ -150,10 +153,11 @@ async def test_update_user_success(client, async_session):
     # Ensure change persisted in database
     updated = await async_session.get(User, user.id)
     await async_session.refresh(user)
+    assert updated is not None
     assert updated.full_name == "After Update"
 
 @pytest.mark.asyncio
-async def test_delete_user_unauthorized(client, async_session):
+async def test_delete_user_unauthorized(client: AsyncClient, async_session: AsyncSession):
     user = User(email="delme@example.com", full_name="Delete Me", hashed_password=hash_password("delpass"))
     async_session.add(user)
     await async_session.commit()
@@ -163,7 +167,7 @@ async def test_delete_user_unauthorized(client, async_session):
     assert response.status_code == 401
 
 @pytest.mark.asyncio
-async def test_delete_user_not_found(client, async_session):
+async def test_delete_user_not_found(client: AsyncClient, async_session: AsyncSession):
     # Create and authenticate a user
     user = User(email="deleter@example.com", full_name="Deleter", hashed_password=hash_password("delpass2"))
     async_session.add(user)
@@ -177,7 +181,7 @@ async def test_delete_user_not_found(client, async_session):
     assert response.json()["detail"] == "User not found"
 
 @pytest.mark.asyncio
-async def test_delete_user_success(client, async_session):
+async def test_delete_user_success(client: AsyncClient, async_session: AsyncSession):
     # Create two users and authenticate as one
     user1 = User(email="delowner@example.com", full_name="Del Owner", hashed_password=hash_password("ownerpass"))
     user2 = User(email="deltarget@example.com", full_name="Del Target", hashed_password=hash_password("targetpass"))

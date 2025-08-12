@@ -6,7 +6,6 @@ from pathlib import Path
 import httpx
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy import text
 from sqlalchemy import create_engine
 
 
@@ -59,7 +58,7 @@ AsyncSessionLocal = async_sessionmaker(bind=async_engine, expire_on_commit=False
 # --- Run Alembic migrations ONCE per test session (against the sync URL your env already uses) ---
 
 @pytest.fixture(scope="session", autouse=True)
-def _migrate_db():
+def _migrate_db(): # type: ignore
     """
     Your app already runs migrations automatically in test logs, but we ensure the DB is migrated
     before tests that open AsyncSession. If your app's startup runs Alembic, you can drop this.
@@ -85,7 +84,7 @@ def _migrate_db():
     except Exception:
         pass
     try:
-        Path(settings.database_path).unlink(missing_ok=True)
+        Path(settings.database_path).unlink(missing_ok=True) # type: ignore
     except Exception:
         pass
 
@@ -115,7 +114,7 @@ async def async_session():
 @pytest_asyncio.fixture(autouse=True, scope="function")
 async def override_get_db():
     async def _get_db():
-        async with AsyncSessionLocal() as session:  # type: AsyncSession
+        async with AsyncSessionLocal() as session: 
             try:
                 yield session          # endpoint runs here
                 await session.commit()  # commit on success
@@ -136,5 +135,5 @@ async def override_get_db():
 @pytest_asyncio.fixture
 async def client():
     transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://test") as ac:
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac

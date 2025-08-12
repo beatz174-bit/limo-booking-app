@@ -14,7 +14,7 @@ async def test_create_booking_success(async_session: AsyncSession):
     async_session.add(user)
     await async_session.commit()
     await async_session.refresh(user)
-    data = BookingCreate(pickup_location="LocA", destination="LocB", ride_time="2025-12-31T23:59:00")
+    data = BookingCreate(pickup_location="LocA", destination="LocB", ride_time=datetime.fromisoformat("2025-12-31T23:59:00"))
     result = await booking_service.create_booking(db=async_session, data=data, user_id=user.id)
     assert result.pickup_location == "LocA"
     assert result.destination == "LocB"
@@ -33,8 +33,8 @@ async def test_list_bookings_filters_by_user(async_session: AsyncSession):
     await async_session.commit()
     await async_session.refresh(user1)
     await async_session.refresh(user2)
-    booking1 = Booking(user_id=user1.id, pickup_location="X1", dropoff_location="Y1", time="2025-01-01T00:00:00", status="pending", price=10.0)
-    booking2 = Booking(user_id=user2.id, pickup_location="X2", dropoff_location="Y2", time="2025-01-02T00:00:00", status="pending", price=20.0)
+    booking1 = Booking(user_id=user1.id, pickup_location="X1", dropoff_location="Y1", time=datetime(2025, 1, 1, 0, 0, 0), status="pending", price=10.0)
+    booking2 = Booking(user_id=user2.id, pickup_location="X2", dropoff_location="Y2", time=datetime(2025, 1, 2, 0, 0, 0), status="pending", price=20.0)
     async_session.add_all([booking1, booking2])
     await async_session.commit()
     await async_session.refresh(booking1)
@@ -78,7 +78,7 @@ async def test_update_booking_status_not_found(async_session: AsyncSession):
     assert excinfo.value.status_code == 404
 
 async def test_delete_booking_success(async_session: AsyncSession):
-    booking = Booking(pickup_location="D1", dropoff_location="D2", time="2030-07-07T07:00:00", status="pending", price=15.0)
+    booking = Booking(pickup_location="D1", dropoff_location="D2", time=datetime(2030, 7, 7, 7, 0, 0), status="pending", price=15.0)
     async_session.add(booking)
     await async_session.commit()
     await async_session.refresh(booking)

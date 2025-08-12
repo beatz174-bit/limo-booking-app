@@ -1,9 +1,11 @@
 import pytest
 from app.models.user import User
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.security import hash_password, decode_token
 
 @pytest.mark.asyncio
-async def test_login_success(client, async_session):
+async def test_login_success(client: AsyncClient, async_session: AsyncSession):
     raw_password = "secret123"
     hashed_pwd = hash_password(raw_password)
 
@@ -25,7 +27,7 @@ async def test_login_success(client, async_session):
     assert payload.get("sub") == str(user.id)
 
 @pytest.mark.asyncio
-async def test_login_invalid_password(client, async_session):
+async def test_login_invalid_password(client: AsyncClient, async_session: AsyncSession):
     # Prepare a user with known password
     hashed_pwd = hash_password("correctpass")
     user = User(email="wrongpass@example.com", full_name="Wrong Pass", hashed_password=hashed_pwd)
@@ -40,7 +42,7 @@ async def test_login_invalid_password(client, async_session):
     assert data["detail"] == "Invalid credentials"
 
 @pytest.mark.asyncio
-async def test_login_user_not_found(client):
+async def test_login_user_not_found(client: AsyncClient):
     # No user is created for this email
     response = await client.post("/auth/login", json={"email": "nouser@example.com", "password": "irrelevant"})
     assert response.status_code == 401
@@ -48,7 +50,7 @@ async def test_login_user_not_found(client):
     assert data["detail"] == "Invalid credentials"
 
 @pytest.mark.asyncio
-async def test_register_success(client, async_session):
+async def test_register_success(client: AsyncClient, async_session: AsyncSession):
     # Register a new user
     new_user = {"email": "newuser@example.com", "full_name": "New User", "password": "newpass123"}
     response = await client.post("/auth/register", json=new_user)
@@ -86,7 +88,7 @@ async def test_register_success(client, async_session):
     assert login_resp.status_code == 200
 
 @pytest.mark.asyncio
-async def test_register_duplicate_email(client, async_session):
+async def test_register_duplicate_email(client: AsyncClient, async_session: AsyncSession):
     # Create an initial user directly
     hashed_pwd = hash_password("somepass")
     user = User(email="dup@example.com", full_name="Dup User", hashed_password=hashed_pwd)
