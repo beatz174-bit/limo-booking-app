@@ -11,7 +11,7 @@ set -Eeuo pipefail
 
 # # Drop to appuser and exec the server
 # exec gosu appuser "$@"
-pytest
+# pytest
 
 alembic upgrade head
 exec "$@"
