@@ -1,5 +1,4 @@
 # app/services/user_service.py
-from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 from typing import Optional
