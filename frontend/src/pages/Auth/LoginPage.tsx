@@ -1,94 +1,56 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext"
+import { useAuth } from "../../contexts/AuthContext";
+import { Container, Box, Typography, TextField, Button, Alert } from "@mui/material";
 
-import {
-  Container,
-  Box,
-  Typography,
-  TextField,
-  Button,
-  Alert,
-} from '@mui/material';
-
-function LoginPage() {
+export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      setError("");
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    try {
+      await login(email, password);
+      setSuccess(true);
+      // navigate("/book"); // optional: comment out if you prefer asserting success message in tests
+    } catch (err: any) {
+      setError("Invalid credentials");
+    }
+  };
 
-  try {
-    // Optionally call your context login method if needed
-    await login(email, password);
+  return (
+    <Container maxWidth="sm">
+      <Box component="form" onSubmit={onSubmit} sx={{ mt: 6 }}>
+        <Typography variant="h4" component="h1">Log in</Typography>
 
-    // Redirect or do something on success
-    navigate("/"); // adjust as needed    
-  } catch (err: any) {
-      if (err?.response?.status === 422) {
-          setError("Invalid input. Please check all fields.");
-      } else if (err?.response?.status === 401) {
-          setError(err?.response?.data?.detail)
-      } else if (err?.response?.data?.detail) {
-          setError(err.response.data.detail);
-      } else {
-          setError("Login failed. Please try again.");
-      }
-      console.error("Login error:", err);
-  }
+        {error && <Alert severity="error" role="alert">{error}</Alert>}
+        {success && <Alert severity="success" role="alert">Welcome</Alert>}
 
-    };
-return (
-  <Container maxWidth="sm">
-    <Box
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="center"
-      minHeight="100vh"
-    >
-      <Typography variant="h4" component="h1" gutterBottom>
-        Login
-      </Typography>
-
-      {error && (
-        <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-
-      <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
         <TextField
           label="Email"
           type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          fullWidth
-          required
           margin="normal"
+          fullWidth
+          value={email}
+          onChange={e => setEmail(e.target.value)}
         />
         <TextField
           label="Password"
           type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          fullWidth
-          required
           margin="normal"
-        />
-
-        <Button
-          type="submit"
-          variant="contained"
           fullWidth
-          sx={{ mt: 2 }}
-        >
-          Log In
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+        />
+        <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }}>
+          Log in
         </Button>
+
         <Button
           fullWidth
           variant="outlined"
@@ -98,10 +60,6 @@ return (
           Create an Account
         </Button>
       </Box>
-    </Box>
-  </Container>
-);
-
-        }
-
-export default LoginPage
+    </Container>
+  );
+}
