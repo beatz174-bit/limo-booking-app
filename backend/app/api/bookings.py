@@ -1,6 +1,6 @@
 # app/api/bookings.py
 from fastapi import APIRouter, Depends, status
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
 from app.schemas.booking import BookingCreate, BookingRead, BookingUpdate
@@ -15,17 +15,20 @@ router = APIRouter(
 )
 
 @router.post("", response_model=BookingRead, status_code=status.HTTP_201_CREATED)
-def api_create_booking(data: BookingCreate, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> BookingRead:
-    return create_booking(db, data)
+async def api_create_booking(data: BookingCreate, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)) -> BookingRead:
+    booking = await create_booking(db=db, data=data, user_id=user.id)
+    return booking
 
 @router.get("", response_model=List[BookingRead])
-def api_list_bookings(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user: User  = Depends(get_current_user)):
-    return list_bookings(db, user.id, skip, limit)
+async def api_list_bookings(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db), user: User  = Depends(get_current_user)):
+    bookings = await list_bookings(db, user.id, skip, limit)
+    return bookings
 
 @router.patch("/{booking_id}/status", response_model=BookingRead)
-def api_update_status(booking_id: int, data: BookingUpdate, db: Session = Depends(get_db), user: User  = Depends(get_current_user)):
-    return update_booking_status(db, booking_id, data)
+async def api_update_status(booking_id: int, data: BookingUpdate, db: AsyncSession = Depends(get_db), user: User  = Depends(get_current_user)):
+    booking_status = await update_booking_status(db, booking_id, data)
+    return booking_status
 
 @router.delete("/{booking_id}", status_code=status.HTTP_204_NO_CONTENT)
-def api_delete_booking(booking_id: int, db: Session = Depends(get_db), user: User  = Depends(get_current_user)):
-    delete_booking(db, booking_id)
+async def api_delete_booking(booking_id: int, db: AsyncSession = Depends(get_db), user: User  = Depends(get_current_user)):
+    await delete_booking(db, booking_id)
