@@ -22,3 +22,4 @@ backend/openapi.json
 frontend/archive/
 archive/
 old.*
+frontend/playwright-report
