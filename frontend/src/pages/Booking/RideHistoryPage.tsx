@@ -3,7 +3,7 @@
 
 function RideHistoryPage() {
 
-    return ("Ride History Page")
+    return <h1>Ride History Page</h1>;
 }
 
 
