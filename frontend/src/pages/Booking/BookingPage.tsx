@@ -5,7 +5,7 @@
 
 function BookingPage() {
 
-    return ("Booking Page")
+    return <h1>Booking Page</h1>;
 }
 
 
