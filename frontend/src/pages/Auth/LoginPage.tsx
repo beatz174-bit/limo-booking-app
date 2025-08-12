@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { Container, Box, Typography, TextField, Button, Alert } from "@mui/material";
@@ -10,6 +10,9 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  const onEmail = (e: ChangeEvent<HTMLInputElement>) => setEmail(e.currentTarget.value);
+  const onPassword = (e: ChangeEvent<HTMLInputElement>) => setPassword(e.currentTarget.value);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +40,7 @@ export default function LoginPage() {
           margin="normal"
           fullWidth
           value={email}
-          onChange={e => setEmail(e.target.value)}
+          onChange={onEmail}
         />
         <TextField
           label="Password"
@@ -45,7 +48,7 @@ export default function LoginPage() {
           margin="normal"
           fullWidth
           value={password}
-          onChange={e => setPassword(e.target.value)}
+          onChange={onPassword}
         />
         <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }}>
           Log in
