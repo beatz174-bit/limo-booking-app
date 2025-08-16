@@ -29,3 +29,6 @@ class RegisterRequest(BaseModel):
 class TokenResponse(BaseModel):
     token: str
 
+class OAuth2Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"

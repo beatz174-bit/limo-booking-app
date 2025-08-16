@@ -33,3 +33,4 @@ pytest
 pytest-asyncio
 pytest-mock
 httpx
+python-multipart==0.0.9
