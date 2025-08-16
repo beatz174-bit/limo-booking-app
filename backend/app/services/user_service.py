@@ -9,12 +9,10 @@ from app.schemas.user import UserCreate, UserUpdate, UserRead
 from app.core.security import hash_password
 
 class UserService:
-    def __init__(self, db_session): # type: ignore
+    def __init__(self, db_session: AsyncSession): #
         self.db = db_session
 
 async def create_user(db: AsyncSession, data: UserCreate) -> UserRead:
-    # stmt = select(User).where(User.email == data.email)
-    # existing: Optional[User] = await db.execute(stmt).scalars().first()
     result = await db.execute(select(User).where(User.email == data.email))
     existing: Optional[User] = result.scalar_one_or_none()
     if existing:
@@ -39,8 +37,6 @@ async def get_user(db: AsyncSession, user_id: int) -> UserRead:
     return UserRead.model_validate(user)
 
 async def list_users(db: AsyncSession, skip: int = 0, limit: int = 100) -> list[UserRead]:
-    # stmt = select(User).offset(skip).limit(limit)
-    # users = await db.scalars(stmt).all()
     result = await db.execute(select(User).offset(skip).limit(limit))
     users = result.scalars().all()
     return [UserRead.model_validate(u) for u in users]
@@ -49,9 +45,6 @@ async def update_user(db: AsyncSession, user_id: int, data: UserUpdate) -> UserR
     user = await db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    # for field, value in data.model_dump(exclude_unset=True).items():
-    #     setattr(user, field, value)
-
 
     update_data = data.model_dump(exclude_unset=True)
 

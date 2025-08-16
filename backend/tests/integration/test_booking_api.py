@@ -148,7 +148,5 @@ async def test_delete_booking_success(client: AsyncClient, async_session: AsyncS
     response = await client.delete(url, headers=headers)
     assert response.status_code == 204
     # Verify deletion
-    # gone = await async_session.get(Booking, booking.id)
-    # assert gone is None
     res = await async_session.execute(select(Booking).where(Booking.id == booking.id))
     assert res.scalar_one_or_none() is None

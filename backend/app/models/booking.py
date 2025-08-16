@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Float, String, ForeignKey, Text, DateTime
+from sqlalchemy import Integer, Float, String, ForeignKey, Text, DateTime
 from app.db.database import Base
 from decimal import Decimal
 from typing import Dict, Any, Literal
@@ -8,15 +8,15 @@ from  datetime import datetime
 
 Status = Literal["pending", "accepted", "completed", "cancelled"]
 
-class Booking(Base): # type: ignore[reportUntypedBaseClass]
+class Booking(Base):
     __tablename__ = "bookings"
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'), nullable=False)
     pickup_location: Mapped[str] = mapped_column(String, nullable=False)
     dropoff_location: Mapped[str] = mapped_column(String, nullable=False)
     time: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     status: Mapped[Status] = mapped_column(Text, default="pending")
-    price: Column[Decimal] = Column(Float, nullable=False) 
+    price: Mapped[Decimal] = mapped_column(Float, nullable=False) 
 
     def as_dict(self) -> Dict[str, Any]:
         return {

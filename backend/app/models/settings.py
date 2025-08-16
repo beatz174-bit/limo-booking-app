@@ -1,12 +1,14 @@
-from sqlalchemy import Column, Integer, Float, String, Boolean
+from sqlalchemy import Float, String, Boolean
 from app.db.database import Base
+from sqlalchemy.orm import Mapped, mapped_column
 
-
-class AdminConfig(Base): # type: ignore[reportUntypedBaseClass]
+class AdminConfig(Base): 
     __tablename__ = "admin_config"
-    id = Column(Integer, primary_key=True, index=True)
-    allow_public_registration = Column(Boolean, default=False)
-    google_maps_api_key = Column(String, default="")
-    flagfall = Column(Float, default=10.0) # type: ignore
-    per_km_rate = Column(Float, default=2.0) # type: ignore
-    per_min_rate = Column(Float, default=1.0) # type: ignore
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    allow_public_registration: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    google_maps_api_key: Mapped[str] = mapped_column(String, nullable=False)
+    flagfall: Mapped[float] = mapped_column(Float, nullable=False)
+    per_km_rate: Mapped[float] = mapped_column(Float, nullable=False)
+    per_min_rate: Mapped[float] = mapped_column(Float, nullable=False)
+

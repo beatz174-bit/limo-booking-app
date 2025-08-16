@@ -6,6 +6,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import List, Optional
 from pydantic_settings import BaseSettings
+from pydantic_settings import SettingsConfigDict
 
 
 # --- Resolve which .env to load ------------------------------------------------
@@ -35,7 +36,7 @@ def _find_upwards(filename: str) -> Optional[Path]:
 # Load the chosen .env early so BaseSettings reads from os.environ.
 # By default load_dotenv() does NOT override already-set OS env vars (what we want).
 try:
-    from dotenv import load_dotenv  # type: ignore
+    from dotenv import load_dotenv
 
     dotenv_path = _find_upwards(_ENV_FILE)
     if dotenv_path:
@@ -51,16 +52,11 @@ except Exception:
 # --- Pydantic BaseSettings import (v1 and v2 compatible) -----------------------
 
 try:
-    # Pydantic v2
-    from pydantic_settings import BaseSettings, SettingsConfigDict  # type: ignore
 
     _P2 = True
 except Exception:
-    # Pydantic v1
-    from pydantic import BaseSettings  # type: ignore
 
     _P2 = False # type: ignore
-
 
 def _project_root() -> Path:
     """
@@ -145,7 +141,6 @@ class Settings(BaseSettings):
         # Sensible default for dev if nothing is provided
         default_path = (_project_root() / "data" / "app.db").resolve()
         return f"sqlite:///{default_path}"
-
 
 @lru_cache
 def get_settings() -> Settings:

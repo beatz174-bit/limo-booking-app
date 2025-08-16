@@ -15,7 +15,6 @@ async def test_create_user_success(async_session: AsyncSession):
     assert result.full_name == "Unit Test"
     assert hasattr(result, "id")
     # The user should be persisted in the database with hashed password
-    # user = async_session.query(User).filter_by(email="unit@example.com").first()
     res = await async_session.execute(select(User).filter_by(email="unit@example.com"))
     user = res.scalar_one_or_none()
     assert user is not None

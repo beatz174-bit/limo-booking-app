@@ -2,50 +2,43 @@ from fastapi import HTTPException
 from app.models.user import User
 from app.models.settings import AdminConfig
 from app.core.security import hash_password
-from app.schemas.setup import SetupPayload
+from app.schemas.setup import SetupPayload, SetupSummary
 from sqlalchemy.sql import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.engine import Result
-from sqlalchemy.engine import ScalarResult
 from typing import Union
 
-
 async def complete_initial_setup(db: AsyncSession, data: SetupPayload):
-    # Prevent running setup more than once
-    # existing_admin = db.query(User).filter(User.role == "admin").first()
-    stmt = select(User).filter(User.id == 1)
-    existing_admin = (await db.execute(stmt)).scalar_one_or_none()
-    if existing_admin:
-        raise HTTPException(status_code=400, detail="Setup already completed.")
+    if await is_setup_complete(db):
+        raise HTTPException(status_code=400, detail="Setup already completed")
 
-    # Create admin user
     admin_user = User(
         email=data.admin_email,
         full_name=data.full_name,
-        hashed_password=hash_password(data.admin_password),
-        role="admin",
-        is_approved=True,
+        hashed_password=hash_password(data.admin_password)
     )
     db.add(admin_user)
 
-    # Save settings
-    s = data.settings
-    config = AdminConfig(
-        allow_public_registration=(s.account_mode == "open"),
-        google_maps_api_key=s.google_maps_api_key,
-        flagfall=s.flagfall,
-        per_km_rate=s.per_km_rate,
-        per_min_rate=s.per_minute_rate,
+    cfg = AdminConfig(
+        allow_public_registration=(data.settings.account_mode == "open"),
+        google_maps_api_key=data.settings.google_maps_api_key,
+        flagfall=data.settings.flagfall,
+        per_km_rate=data.settings.per_km_rate,
+        per_min_rate=data.settings.per_minute_rate,
     )
-    db.add(config)
+    db.add(cfg)
 
     await db.commit()
     return {"message": "Setup complete"}
 
-async def is_setup_complete(db: AsyncSession) -> Union[AdminConfig, None]:
-    result: Result = await db.execute( # type: ignore
-        select(AdminConfig).limit(1)
-    )
-    scalars: ScalarResult[AdminConfig] = result.scalars() # type: ignore
-    first_record: Union[AdminConfig, None] = scalars.first()
-    return first_record
+async def is_setup_complete(db: AsyncSession) -> Union[SetupSummary, None]:
+    res = await db.execute(select(AdminConfig).limit(1))
+    cfg = res.scalars().first()
+    if not cfg:
+        return None
+    return {
+        "allow_public_registration": cfg.allow_public_registration,
+        "google_maps_api_key": cfg.google_maps_api_key,
+        "flagfall": cfg.flagfall,
+        "per_km_rate": cfg.per_km_rate,
+        "per_min_rate": cfg.per_min_rate,
+    }

@@ -32,11 +32,9 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
     except JWTError:
         raise HTTPException(status_code=401, detail="Could not validate credentials")
 
-    # user = db.query(User).filter(User.id == user_id).first()
     stmt = select(User).filter(User.id == user_id)
     user = (await db.execute(stmt)).scalar_one_or_none()
-    # result = await db.execute(stmt)
-    # user = result.scalars().first()
+
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 

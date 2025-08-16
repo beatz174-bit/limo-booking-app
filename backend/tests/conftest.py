@@ -71,7 +71,9 @@ def _migrate_db(): # type: ignore
     # from alembic.config import Config
     # cfg = Config("alembic.ini")
     # command.upgrade(cfg, "head")
-    TEST_DATABASE_URL = f"sqlite:///{settings.database_path}"
+    # TEST_DATABASE_URL = f"sqlite:///{settings.database_path}"
+    db_path = settings.database_path or os.getenv("DATABASE_PATH") or ".pytest.db"
+    TEST_DATABASE_URL = f"sqlite:///{db_path}"
 
     cfg = Config(os.getenv("ALEMBIC_INI_PATH", "alembic.ini"))
     cfg.set_main_option("sqlalchemy.url", TEST_DATABASE_URL)
@@ -84,7 +86,7 @@ def _migrate_db(): # type: ignore
     except Exception:
         pass
     try:
-        Path(settings.database_path).unlink(missing_ok=True) # type: ignore
+        Path(db_path).unlink(missing_ok=True) #
     except Exception:
         pass
 
