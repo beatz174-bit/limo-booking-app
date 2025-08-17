@@ -27,11 +27,6 @@ function RegisterPage() {
         e.preventDefault();
         setError("");
 
-        // const config = new Configuration({ basePath: "http://localhost:8000" });
-        // const authApi = new AuthApi(config);
-
-        
-
         const registerRequest: RegisterRequest = {
             email,
             full_name,

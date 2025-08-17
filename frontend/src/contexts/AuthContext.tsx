@@ -17,15 +17,6 @@ type AuthState = {
   userName: string;
 };
 
-// export type AuthContextType = AuthState & {
-//   loginWithPassword: (email: string, password: string) => Promise<void>;
-//   registerWithPassword: (fullName: string, email: string, password: string) => Promise<void>;
-//   loginWithOAuth: () => void;
-//   finishOAuthIfCallback: () => Promise<void>;
-//   logout: () => void;
-//   ensureFreshToken: () => Promise<string | null>;
-// };
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const oauthCfg: OAuthConfig = {

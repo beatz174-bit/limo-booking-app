@@ -1,19 +1,27 @@
-import { ReactNode } from 'react';
+// tests/utils/renderWithProviders.tsx
 import { render } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { AuthProvider } from '@/contexts/AuthContext'; // adjust import
-import BookingPage from '@/pages/Booking/BookingPage';  // path you navigate to on success
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from '@/contexts/AuthContext';
+import React from 'react';
 
-export function renderWithProviders(ui: ReactNode, route = '/login') {
-  window.history.pushState({}, 'Test', route);
+type Options = {
+  initialPath?: string;
+  /** Optional extra routes (e.g. stub pages like /admin or /login) for navigation assertions */
+  extraRoutes?: React.ReactNode;
+};
 
+export function renderWithProviders(
+  ui: React.ReactElement,
+  { initialPath = '/', extraRoutes }: Options = {}
+) {
   return render(
     <AuthProvider>
-      <MemoryRouter initialEntries={[route]}>
+      <MemoryRouter initialEntries={[initialPath]}>
         <Routes>
-          <Route path="/login" element={ui} />
-          <Route path="/book" element={<div>Welcome</div>} />
-          {/* add other minimal routes as needed */}
+          {/* Mount the component under test for whatever path we're on */}
+          <Route path="*" element={ui} />
+          {/* Optional stubs for destinations the test wants to assert */}
+          {extraRoutes}
         </Routes>
       </MemoryRouter>
     </AuthProvider>
