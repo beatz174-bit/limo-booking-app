@@ -1,30 +1,67 @@
-import { useState, ChangeEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, ChangeEvent, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { Container, Box, Typography, TextField, Button, Alert } from "@mui/material";
 
 export default function LoginPage() {
-  const { login } = useAuth();
+
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const { loginWithPassword, finishOAuthIfCallback } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-
   const onEmail = (e: ChangeEvent<HTMLInputElement>) => setEmail(e.currentTarget.value);
   const onPassword = (e: ChangeEvent<HTMLInputElement>) => setPassword(e.currentTarget.value);
 
+  // const navigate = useNavigate();
+  // const [params] = useSearchParams();
+  // const { loginWithPassword, finishOAuthIfCallback } = useAuth();
+
+  // const [errorText, setErrorText] = useState<string | null>(null);
+  // const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    // only if you finish OAuth on /login; harmless otherwise
+    (async () => {
+      try {
+        await finishOAuthIfCallback?.();
+        if (/\bcode=/.test(window.location.search)) {
+          const dest = params.get("from") || "/book";
+          navigate(dest, { replace: true });
+        }
+      } catch {
+        /* ignore */
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // in your existing <form onSubmit=...> handler:
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
     setError(null);
     try {
-      await login(email, password);
-      setSuccess(true);
-      // navigate("/book"); // optional: comment out if you prefer asserting success message in tests
+      // use your existing state values for email/password
+      await loginWithPassword(email, password);
+      const dest = params.get("from") || "/book";
+      navigate(dest, { replace: true });
     } catch (err: any) {
-      setError("Invalid credentials");
-    }
+    //   setError(err?.message || "Login failed");
+    // } finally {
+    //   setSubmitting(false);
+    // }
+      if (err instanceof Response) {
+        const data = await err.json().catch(() => ({}));
+        setError(data.detail ?? 'Login failed');
+      } else {
+        setError('Login failed');
+      }
   };
+}
 
   return (
     <Container maxWidth="sm">
@@ -50,7 +87,7 @@ export default function LoginPage() {
           value={password}
           onChange={onPassword}
         />
-        <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }}>
+        <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }} disabled={submitting}>
           Log in
         </Button>
 

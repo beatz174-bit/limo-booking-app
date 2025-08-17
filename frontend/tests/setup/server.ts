@@ -1,16 +1,10 @@
-// tests/setup/server.ts
-import { setupServer } from "msw/node";
-import { http, HttpResponse } from "msw";
-
-export const handlers = [
-  // Example: auth login mock
-  http.post("/auth/login", async ({ request }) => {
-    const body = await request.json();
-    if (body.email === "test@example.com" && body.password === "pw") {
-      return HttpResponse.json({ token: "fake-token", userID: 1 }, { status: 200 });
-    }
-    return HttpResponse.json({ detail: "Invalid credentials" }, { status: 401 });
-  }),
-];
+// src/test/server.ts
+import { setupServer } from 'msw/node';
+import { handlers } from '../msw/handlers';
 
 export const server = setupServer(...handlers);
+
+// In tests, keep strict mode so missing mocks fail loudly
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());

@@ -12,14 +12,15 @@ import {
   Button,
   Alert,
 } from '@mui/material';
-import { authApi } from "../../components/ApiConfig"
+import cfg, { AuthApi, UsersApi } from "../../components/ApiConfig"
+const authApi = new AuthApi(cfg);
 
 function RegisterPage() {
     const [email, setEmail] = useState("");
     const [full_name, setName] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
-    const { login } = useAuth();
+    const { loginWithPassword } = useAuth();
     const navigate = useNavigate();
     
     const handleSubmit = async (e: React.FormEvent) => {
@@ -42,7 +43,7 @@ function RegisterPage() {
             await authApi.endpointRegisterAuthRegisterPost(registerRequest);
 
              // Optionally use context login to update global state
-            await login(email, password);
+            await loginWithPassword(email, password);
 
             // Redirect to dashboard or desired page
             navigate("/admin");
