@@ -16,13 +16,6 @@ export default function LoginPage() {
   const onEmail = (e: ChangeEvent<HTMLInputElement>) => setEmail(e.currentTarget.value);
   const onPassword = (e: ChangeEvent<HTMLInputElement>) => setPassword(e.currentTarget.value);
 
-  // const navigate = useNavigate();
-  // const [params] = useSearchParams();
-  // const { loginWithPassword, finishOAuthIfCallback } = useAuth();
-
-  // const [errorText, setErrorText] = useState<string | null>(null);
-  // const [submitting, setSubmitting] = useState(false);
-
   useEffect(() => {
     // only if you finish OAuth on /login; harmless otherwise
     (async () => {
@@ -87,7 +80,7 @@ export default function LoginPage() {
           value={password}
           onChange={onPassword}
         />
-        <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }} disabled={submitting}>
+        <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }}>
           Log in
         </Button>
 
