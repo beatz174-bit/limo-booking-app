@@ -23,7 +23,7 @@ async def create_booking(db: AsyncSession, user_id: int, data: BookingCreate) ->
     )
 
     db.add(booking) #
-    await db.commit()
+    await db.flush()
     await db.refresh(booking) #
 
     return BookingRead.model_validate(booking)
