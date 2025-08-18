@@ -2,10 +2,10 @@ export type UserShape = { email?: string; full_name?: string } | null;
 
 export type AuthContextType = {
   accessToken: string | null;
-  user: UserShape;
+  user: UserShape | null;
   loading: boolean;
   
-  userName: string;
+  userName: string | null;
   userID: string | null;
 
   loginWithPassword: (email: string, password: string) => Promise<void>;
