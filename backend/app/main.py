@@ -9,11 +9,14 @@ from app.db.database import database
 
 from app.api import (
     auth as auth_router,
-    bookings as bookings_router,
-    geocode as geocode_router,
-    settings as settings_router,
-    setup as setup_router,
     users as users_router,
+    bookings as bookings_router,
+    setup as setup_router,
+    settings as settings_router,
+    route_metrics as route_metrics_router,
+    geocode as geocode_router,
+    users as users_router,
+
 )
 settings = get_settings()
 
@@ -53,7 +56,9 @@ app.include_router(bookings_router.router)
 app.include_router(geocode_router.router)
 app.include_router(setup_router.router)
 app.include_router(settings_router.router)
+app.include_router(route_metrics_router.router)
 app.include_router(users_router.router)
+
 
 @app.get("/", include_in_schema=False)
 async def docs_redirect():
