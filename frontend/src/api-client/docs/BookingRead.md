@@ -10,6 +10,7 @@ Name | Type | Description | Notes
 **pickup_location** | **string** |  | [default to undefined]
 **dropoff_location** | **string** |  | [default to undefined]
 **time** | **string** |  | [default to undefined]
+**price** | **string** |  | [default to undefined]
 **status** | **string** |  | [default to undefined]
 **created_at** | **string** |  | [optional] [default to undefined]
 
@@ -24,6 +25,7 @@ const instance: BookingRead = {
     pickup_location,
     dropoff_location,
     time,
+    price,
     status,
     created_at,
 };

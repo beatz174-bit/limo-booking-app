@@ -18,8 +18,8 @@ async def create_booking(db: AsyncSession, user_id: int, data: BookingCreate) ->
         pickup_location=payload["pickup_location"],
         dropoff_location=payload["destination"],  # map to ORM field
         time=payload["ride_time"],                 # map to ORM field
-        status="pending",
-        price=0,
+        status=payload["status"],
+        price=payload["price"],
     )
 
     db.add(booking) #
