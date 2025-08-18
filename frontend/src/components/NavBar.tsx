@@ -49,7 +49,7 @@ const NavBar: React.FC = () => {
   return (
     <AppBar position="static" color="primary">
       <Toolbar>
-        {/* App name/Logo on the left */}
+        {/* Displays a welcome message including the user's name */}
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
           { userName ? `Welcome, ${userName}` : 'userName is missing...'} {/* or your app name/brand */}
         </Typography>
