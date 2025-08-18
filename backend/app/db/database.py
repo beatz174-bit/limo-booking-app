@@ -84,6 +84,13 @@ async def connect() -> None:
     Called on app startup; creates all tables if not exist.
     Automatically handles AsyncEngine.
     """
+    # Import all model modules so that `Base.metadata` is populated before
+    # invoking ``create_all``.  Without these imports SQLAlchemy would see an
+    # empty metadata collection and skip table creation, leading to runtime
+    # errors such as "no such table: users" when the API is exercised during
+    # tests.
+    from app.models import booking, settings, user  # noqa: F401
+
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 

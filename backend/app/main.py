@@ -35,6 +35,7 @@ app = FastAPI(
     redoc_url="/redoc",
     dependencies=[],
     swagger_ui_parameters={"persistAuthorization": True},
+    lifespan=lifespan,
 )
 
 if not settings.env == "production":
