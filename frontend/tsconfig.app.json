@@ -1,29 +1,22 @@
-// tsconfig.app.json
 {
-  "extends": "./tsconfig.json",
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2020",  
-    "jsx": "react-jsx",
-    "lib": ["ES2021", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "isolatedModules": true,
-    "noEmit": true,
-    "types": ["vite/client"],
-    "skipLibCheck": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"],
-      "@tests/*": ["tests/*"]
-    },
+    // App build shouldn’t pull in vitest or node test globals
+    "types": []
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "env.d.ts"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "vite-env.d.ts"
+  ],
   "exclude": [
-    "node_modules",
-    "tests",
-    "**/*.test.*",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/__tests__/**",
+    "tests/**",
     "playwright.config.*",
-    "vitest.config.*",
-    "src/api-client/**"
+    "vite.config.*",
+    "vitest.setup.*",
+    "src/__tests__/**"
   ]
 }
