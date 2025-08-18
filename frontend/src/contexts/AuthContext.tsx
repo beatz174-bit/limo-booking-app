@@ -11,10 +11,10 @@ type UserShape = { email?: string; full_name?: string } | null;
 
 type AuthState = {
   accessToken: string | null;
-  user: UserShape;
+  user: UserShape | null;
   loading: boolean;
   userID: string| null;
-  userName: string;
+  userName: string | null;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
