@@ -28,11 +28,11 @@ async def test_get_setup_status_after_setup(monkeypatch: MonkeyPatch, client: As
     async def fake_is_setup_complete(db: AsyncSession) -> Dict[str, object]:
         # Minimal config shape the router exposes today
         return {
-            "allow_public_registration": True,
+            "account_mode": True,
             "google_maps_api_key": "XYZ",
             "flagfall": 10.5,
             "per_km_rate": 2.75,
-            "per_min_rate": 1.1,
+            "per_minute_rate": 1.1,
         }
 
     monkeypatch.setattr(setup_router, "is_setup_complete", fake_is_setup_complete)
@@ -40,11 +40,11 @@ async def test_get_setup_status_after_setup(monkeypatch: MonkeyPatch, client: As
     resp = await client.get("/setup")
     assert resp.status_code == 200
     data = resp.json()
-    assert data["allow_public_registration"] is True
+    assert data["account_mode"] is True
     assert data["google_maps_api_key"] == "XYZ"
     assert data["flagfall"] == 10.5
     assert data["per_km_rate"] == 2.75
-    assert data["per_min_rate"] == 1.1
+    assert data["per_minute_rate"] == 1.1
 
 
 async def test_post_setup_success_forwards_payload(monkeypatch: MonkeyPatch, client: AsyncClient):
@@ -64,7 +64,7 @@ async def test_post_setup_success_forwards_payload(monkeypatch: MonkeyPatch, cli
         "full_name": "Admin User",
         "admin_password": "supersecret",
         "settings": {
-            "account_mode": "open",
+            "account_mode": True,
             "google_maps_api_key": "XYZ",
             "flagfall": 10.5,
             "per_km_rate": 2.75,
@@ -81,7 +81,7 @@ async def test_post_setup_success_forwards_payload(monkeypatch: MonkeyPatch, cli
     p = SetupPayload.model_validate(recorded["payload"])
     assert p.admin_email == "admin@example.com" #
     assert p.full_name == "Admin User" #
-    assert p.settings.account_mode == "open" #
+    assert p.settings.account_mode == True #
     assert p.settings.flagfall == 10.5 #
     assert p.settings.per_km_rate == 2.75 #
     assert p.settings.per_minute_rate == 1.1 #

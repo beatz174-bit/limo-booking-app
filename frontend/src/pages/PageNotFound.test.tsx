@@ -1,5 +1,5 @@
 // src/pages/PageNotFound.test.tsx
-import { renderWithProviders } from '../../tests/utils/renderWithProviders';
+import { renderWithProviders } from '@/__tests__/setup/renderWithProviders';
 import { screen } from '@testing-library/react';
 import PageNotFound from './PageNotFound';
 

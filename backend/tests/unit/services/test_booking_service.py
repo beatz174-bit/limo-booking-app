@@ -78,9 +78,12 @@ async def test_update_booking_status_not_found(async_session: AsyncSession):
     assert excinfo.value.status_code == 404
 
 async def test_delete_booking_success(async_session: AsyncSession):
-    booking = Booking(pickup_location="D1", dropoff_location="D2", time=datetime(2030, 7, 7, 7, 0, 0), status="pending", price=15.0)
+    user = User(email="d@example.com", full_name="D User", hashed_password="x")
+    async_session.add(user)
+    await async_session.flush()
+    booking = Booking(user_id=user.id,pickup_location="D1", dropoff_location="D2", time=datetime(2030, 7, 7, 7, 0, 0), status="pending", price=15.0)
     async_session.add(booking)
-    await async_session.commit()
+    await async_session.flush()
     await async_session.refresh(booking)
     await booking_service.delete_booking(async_session, booking.id)
     # Booking should be removed

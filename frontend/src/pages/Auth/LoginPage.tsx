@@ -1,6 +1,6 @@
 import { useState, ChangeEvent, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Container, Box, Typography, TextField, Button, Alert } from "@mui/material";
 
 export default function LoginPage() {

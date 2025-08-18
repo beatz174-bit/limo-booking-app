@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext"
-// import {  AuthApi } from '../../api-client/api';
-import type { RegisterRequest } from "../../api-client/api";
-// import { Configuration } from '../../api-client/configuration'
+import { useAuth } from "@/contexts/AuthContext"
+
+import type { RegisterRequest } from "@/api-client/api";
+
 import {
   Container,
   Box,
@@ -12,7 +12,7 @@ import {
   Button,
   Alert,
 } from '@mui/material';
-import cfg, { AuthApi, UsersApi } from "../../components/ApiConfig"
+import cfg, { AuthApi, UsersApi } from "@/components/ApiConfig"
 const authApi = new AuthApi(cfg);
 
 function RegisterPage() {

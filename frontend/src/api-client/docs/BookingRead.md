@@ -8,10 +8,10 @@ Name | Type | Description | Notes
 **id** | **number** |  | [default to undefined]
 **user_id** | **number** |  | [default to undefined]
 **pickup_location** | **string** |  | [default to undefined]
-**destination** | **string** |  | [default to undefined]
-**ride_time** | **string** |  | [default to undefined]
+**dropoff_location** | **string** |  | [default to undefined]
+**time** | **string** |  | [default to undefined]
 **status** | **string** |  | [default to undefined]
-**created_at** | **string** |  | [default to undefined]
+**created_at** | **string** |  | [optional] [default to undefined]
 
 ## Example
 
@@ -22,8 +22,8 @@ const instance: BookingRead = {
     id,
     user_id,
     pickup_location,
-    destination,
-    ride_time,
+    dropoff_location,
+    time,
     status,
     created_at,
 };

@@ -1,6 +1,6 @@
 # BookingsApi
 
-All URIs are relative to *http://localhost:8000*
+All URIs are relative to *http://localhost*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|

@@ -1,13 +1,13 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import LoginPage from './pages/Auth/LoginPage';
-import BookingPage from './pages/Booking/BookingPage';
-import AdminDashboard from './pages/Admin/AdminDashboard';
-import RideHistoryPage from './pages/Booking/RideHistoryPage';
-import RegisterPage from "./pages/Auth/RegisterPage";
-import { useAuth } from "./contexts/AuthContext"
-import NavBar from './components/NavBar';
+import LoginPage from '@/pages/Auth/LoginPage';
+import BookingPage from '@/pages/Booking/BookingPage';
+import AdminDashboard from '@/pages/Admin/AdminDashboard';
+import RideHistoryPage from '@/pages/Booking/RideHistoryPage';
+import RegisterPage from "@/pages/Auth/RegisterPage";
+import { useAuth } from "@/contexts/AuthContext"
+import NavBar from '@/components/NavBar';
 import CircularProgress from "@mui/material/CircularProgress";
-import PageNotFound from './pages/PageNotFound';
+import PageNotFound from '@/pages/PageNotFound';
 
 // ... other imports
 

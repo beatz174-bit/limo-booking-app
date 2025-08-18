@@ -1,12 +1,12 @@
 // src/pages/Auth/RegisterPage.test.tsx
-import { renderWithProviders } from '../../../tests/utils/renderWithProviders';
+import { renderWithProviders } from '@/__tests__/setup/renderWithProviders';
 import { Route } from 'react-router-dom';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import RegisterPage from './RegisterPage';
 import { http, HttpResponse } from 'msw';
-import { server } from '../../../tests/setup/server';
-import { apiUrl } from '../../../tests/msw/handlers';
+import { server } from '@/__tests__/setup/msw.server';
+import { apiUrl } from '@/__tests__/setup/msw.handlers';
 
 const label = (re: RegExp | string) => screen.getByLabelText(re, { selector: 'input' });
 

@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 
 from app.services import setup_service
-from app.schemas.setup import SetupPayload, SettingsPayload, SetupSummary
+from app.schemas.setup import SetupPayload, SettingsPayload
 from app.models.user import User
 from app.models.settings import AdminConfig
 from typing import Union
@@ -29,7 +29,7 @@ async def test_complete_initial_setup_success(async_session: AsyncSession):
         full_name="Admin User",
         admin_password="supersecret",
         settings=SettingsPayload(
-            account_mode="open",
+            account_mode=True,
             google_maps_api_key="XYZ",
             flagfall=10.5,
             per_km_rate=2.75,
@@ -49,12 +49,12 @@ async def test_complete_initial_setup_success(async_session: AsyncSession):
     cfg = (await async_session.execute(select(AdminConfig).limit(1))).scalars().first()
     assert cfg is not None
 
-    assert cfg.allow_public_registration is True
+    assert cfg.account_mode is True
     assert cfg.google_maps_api_key == "XYZ"
     assert cfg.flagfall == 10.5
     assert cfg.per_km_rate == 2.75
     # Model uses per_min_rate, payload uses per_minute_rate
-    assert cfg.per_min_rate == 1.1
+    assert cfg.per_minute_rate == 1.1
 
 
 async def test_complete_initial_setup_idempotent(async_session: AsyncSession):
@@ -63,7 +63,7 @@ async def test_complete_initial_setup_idempotent(async_session: AsyncSession):
         full_name="Admin Two",
         admin_password="pw",
         settings=SettingsPayload(
-            account_mode="open",
+            account_mode=True,
             google_maps_api_key="ABC",
             flagfall=1.0,
             per_km_rate=2.0,
@@ -72,7 +72,7 @@ async def test_complete_initial_setup_idempotent(async_session: AsyncSession):
     )
 
     # If setup is already complete from a prior test, we should immediately get a 400.
-    already: Union[SetupSummary, None] = await setup_service.is_setup_complete(async_session)
+    already: Union[SettingsPayload, None] = await setup_service.is_setup_complete(async_session)
     if already:
         with pytest.raises(Exception) as excinfo:
             await setup_service.complete_initial_setup(async_session, payload)
