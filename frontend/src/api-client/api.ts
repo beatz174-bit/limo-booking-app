@@ -47,7 +47,29 @@ export interface BookingCreate {
      * @memberof BookingCreate
      */
     'ride_time': string;
+    /**
+     * 
+     * @type {Price}
+     * @memberof BookingCreate
+     */
+    'price': Price;
+    /**
+     * 
+     * @type {string}
+     * @memberof BookingCreate
+     */
+    'status': BookingCreateStatusEnum;
 }
+
+export const BookingCreateStatusEnum = {
+    Pending: 'pending',
+    Accepted: 'accepted',
+    Completed: 'completed',
+    Cancelled: 'cancelled'
+} as const;
+
+export type BookingCreateStatusEnum = typeof BookingCreateStatusEnum[keyof typeof BookingCreateStatusEnum];
+
 /**
  * 
  * @export
@@ -84,6 +106,12 @@ export interface BookingRead {
      * @memberof BookingRead
      */
     'time': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BookingRead
+     */
+    'price': string;
     /**
      * 
      * @type {string}
@@ -180,6 +208,13 @@ export interface OAuth2Token {
      * @memberof OAuth2Token
      */
     'token_type'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface Price
+ */
+export interface Price {
 }
 /**
  * 
