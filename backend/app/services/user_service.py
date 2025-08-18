@@ -9,7 +9,7 @@ from app.schemas.user import UserCreate, UserUpdate, UserRead
 from app.core.security import hash_password
 
 class UserService:
-    def __init__(self, db_session: AsyncSession): #
+    def __init__(self, db_session: AsyncSession):
         self.db = db_session
 
 async def create_user(db: AsyncSession, data: UserCreate) -> UserRead:
