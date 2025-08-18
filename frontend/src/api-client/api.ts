@@ -52,13 +52,13 @@ export interface BookingCreate {
      * @type {Price}
      * @memberof BookingCreate
      */
-    'price': Price;
+    'price'?: Price;
     /**
      * 
      * @type {string}
      * @memberof BookingCreate
      */
-    'status': BookingCreateStatusEnum;
+    'status'?: BookingCreateStatusEnum;
 }
 
 export const BookingCreateStatusEnum = {
