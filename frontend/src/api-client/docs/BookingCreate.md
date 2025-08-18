@@ -8,8 +8,8 @@ Name | Type | Description | Notes
 **pickup_location** | **string** |  | [default to undefined]
 **destination** | **string** |  | [default to undefined]
 **ride_time** | **string** |  | [default to undefined]
-**price** | [**Price**](Price.md) |  | [default to undefined]
-**status** | **string** |  | [default to undefined]
+**price** | [**Price**](Price.md) |  | [optional] [default to undefined]
+**status** | **string** |  | [optional] [default to StatusEnum_Pending]
 
 ## Example
 
