@@ -5,8 +5,9 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**role** | **string** |  | [default to undefined]
-**is_approved** | **boolean** |  | [default to undefined]
+**email** | **string** |  | [optional] [default to undefined]
+**full_name** | **string** |  | [optional] [default to undefined]
+**password** | **string** |  | [optional] [default to undefined]
 
 ## Example
 
@@ -14,8 +15,9 @@ Name | Type | Description | Notes
 import { UserUpdate } from './api';
 
 const instance: UserUpdate = {
-    role,
-    is_approved,
+    email,
+    full_name,
+    password,
 };
 ```
 

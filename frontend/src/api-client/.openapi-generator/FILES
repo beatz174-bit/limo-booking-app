@@ -11,12 +11,15 @@ docs/BookingUpdate.md
 docs/BookingsApi.md
 docs/HTTPValidationError.md
 docs/LoginRequest.md
+docs/OAuth2Token.md
 docs/RegisterRequest.md
+docs/SettingsApi.md
 docs/SettingsPayload.md
 docs/SetupApi.md
 docs/SetupPayload.md
 docs/UserCreate.md
 docs/UserRead.md
+docs/UserUpdate.md
 docs/UsersApi.md
 docs/ValidationError.md
 docs/ValidationErrorLocInner.md

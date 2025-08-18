@@ -1,80 +1,28 @@
-# SetupApi
+# SettingsApi
 
 All URIs are relative to *http://localhost*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**setupSetupPost**](#setupsetuppost) | **POST** /setup | Setup|
-|[**setupStatusSetupGet**](#setupstatussetupget) | **GET** /setup | Setup Status|
+|[**apiGetSettingsSettingsGet**](#apigetsettingssettingsget) | **GET** /settings | Api Get Settings|
+|[**apiUpdateSettingsSettingsPut**](#apiupdatesettingssettingsput) | **PUT** /settings | Api Update Settings|
 
-# **setupSetupPost**
-> any setupSetupPost(setupPayload)
-
-
-### Example
-
-```typescript
-import {
-    SetupApi,
-    Configuration,
-    SetupPayload
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new SetupApi(configuration);
-
-let setupPayload: SetupPayload; //
-
-const { status, data } = await apiInstance.setupSetupPost(
-    setupPayload
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **setupPayload** | **SetupPayload**|  | |
-
-
-### Return type
-
-**any**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Successful Response |  -  |
-|**422** | Validation Error |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **setupStatusSetupGet**
-> SettingsPayload setupStatusSetupGet()
+# **apiGetSettingsSettingsGet**
+> SettingsPayload apiGetSettingsSettingsGet()
 
 
 ### Example
 
 ```typescript
 import {
-    SetupApi,
+    SettingsApi,
     Configuration
 } from './api';
 
 const configuration = new Configuration();
-const apiInstance = new SetupApi(configuration);
+const apiInstance = new SettingsApi(configuration);
 
-const { status, data } = await apiInstance.setupStatusSetupGet();
+const { status, data } = await apiInstance.apiGetSettingsSettingsGet();
 ```
 
 ### Parameters
@@ -87,7 +35,7 @@ This endpoint does not have any parameters.
 
 ### Authorization
 
-No authorization required
+[OAuth2PasswordBearer](../README.md#OAuth2PasswordBearer)
 
 ### HTTP request headers
 
@@ -99,6 +47,58 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**200** | Successful Response |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **apiUpdateSettingsSettingsPut**
+> SettingsPayload apiUpdateSettingsSettingsPut(settingsPayload)
+
+
+### Example
+
+```typescript
+import {
+    SettingsApi,
+    Configuration,
+    SettingsPayload
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new SettingsApi(configuration);
+
+let settingsPayload: SettingsPayload; //
+
+const { status, data } = await apiInstance.apiUpdateSettingsSettingsPut(
+    settingsPayload
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **settingsPayload** | **SettingsPayload**|  | |
+
+
+### Return type
+
+**SettingsPayload**
+
+### Authorization
+
+[OAuth2PasswordBearer](../README.md#OAuth2PasswordBearer)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Successful Response |  -  |
+|**422** | Validation Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

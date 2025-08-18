@@ -1,14 +1,13 @@
-from pydantic import BaseModel, EmailStr
-from typing import Literal
-from typing_extensions import TypedDict
+from pydantic import BaseModel, EmailStr, ConfigDict
 
 
 class SettingsPayload(BaseModel):
-    account_mode: Literal["open", "closed"]
+    account_mode: bool
     google_maps_api_key: str
     flagfall: float
     per_km_rate: float
     per_minute_rate: float
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SetupPayload(BaseModel):
@@ -17,9 +16,9 @@ class SetupPayload(BaseModel):
     admin_password: str
     settings: SettingsPayload
 
-class SetupSummary(TypedDict):
-    allow_public_registration: bool
-    google_maps_api_key: str
-    flagfall: float
-    per_km_rate: float
-    per_min_rate: float
+# class SetupSummary(TypedDict):
+#     account_mode: bool
+#     google_maps_api_key: str
+#     flagfall: float
+#     per_km_rate: float
+#     per_minute_rate: float

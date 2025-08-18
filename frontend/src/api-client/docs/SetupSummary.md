@@ -1,11 +1,11 @@
-# SettingsPayload
+# SetupSummary
 
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**account_mode** | **boolean** |  | [default to undefined]
+**allow_public_registration** | **boolean** |  | [default to undefined]
 **google_maps_api_key** | **string** |  | [default to undefined]
 **flagfall** | **number** |  | [default to undefined]
 **per_km_rate** | **number** |  | [default to undefined]
@@ -14,10 +14,10 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { SettingsPayload } from './api';
+import { SetupSummary } from './api';
 
-const instance: SettingsPayload = {
-    account_mode,
+const instance: SetupSummary = {
+    allow_public_registration,
     google_maps_api_key,
     flagfall,
     per_km_rate,

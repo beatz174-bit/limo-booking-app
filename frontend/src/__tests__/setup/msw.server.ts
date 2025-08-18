@@ -1,6 +1,6 @@
 // src/test/server.ts
 import { setupServer } from 'msw/node';
-import { handlers } from '../msw/handlers';
+import { handlers } from '@/__tests__/setup/msw.handlers';
 
 export const server = setupServer(...handlers);
 

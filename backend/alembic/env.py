@@ -1,5 +1,5 @@
 # alembic/env.py
-import os
+import os # type: ignore
 import sys # type: ignore
 from logging.config import fileConfig
 from dotenv import load_dotenv
@@ -8,12 +8,18 @@ load_dotenv()
 # Ensure your app module (root project directory) is on sys.path
 #sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+from app.core.config import get_settings
+env_settings = get_settings()
+
 from sqlalchemy import engine_from_config, pool
 from alembic import context  # essential – must be here before using `context.config`
 
-# Load the DATABASE_URL from the environment
-DATABASE_PATH = os.getenv("DATABASE_PATH")
 
+
+# Load the DATABASE_URL from the environment
+# DATABASE_PATH = os.getenv("DATABASE_PATH")
+DATABASE_PATH = env_settings.database_path
+print(DATABASE_PATH)
 if not DATABASE_PATH:
     raise RuntimeError("DATABASE_PATH environment variable is not set")
 # Now that path is set, import your Base metadata

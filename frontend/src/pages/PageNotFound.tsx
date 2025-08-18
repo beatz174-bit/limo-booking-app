@@ -1,6 +1,6 @@
 // src/pages/PageNotFound.tsx
 import { Link } from 'react-router-dom';
-import taxi404 from '../assets/404.png'; // adjust path as needed
+import taxi404 from '@/assets/404.png'; // adjust path as needed
 
 const cdnBase = import.meta.env.VITE_CDN_BASE_URL;
 const PageNotFound = () => {

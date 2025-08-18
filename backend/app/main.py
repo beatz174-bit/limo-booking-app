@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from app.core.config import get_settings
 from app.db.database import database
 
-from app.api import auth as auth_router, users as users_router, bookings as bookings_router, setup as setup_router
+from app.api import auth as auth_router, users as users_router, bookings as bookings_router, setup as setup_router, settings as settings_router
 settings = get_settings()
 
 def get_app() -> FastAPI:
@@ -44,6 +44,7 @@ app.include_router(auth_router.router)
 app.include_router(users_router.router)
 app.include_router(bookings_router.router)
 app.include_router(setup_router.router)
+app.include_router(settings_router.router)
 
 @app.get("/", include_in_schema=False)
 async def docs_redirect():

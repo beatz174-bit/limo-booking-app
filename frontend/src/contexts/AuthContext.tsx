@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import cfg, { AuthApi, UsersApi } from "../components/ApiConfig";
-import { CONFIG } from "../config";
+import cfg, { AuthApi, UsersApi } from "@/components/ApiConfig";
+import { CONFIG } from "@/config";
 import { setTokens, getRefreshToken } from "../services/tokenStore";
 import { beginLogin, completeLoginFromRedirect, refreshTokens, TokenResponse, OAuthConfig } from "../services/oauth";
 import { useLocation, useNavigate } from "react-router-dom";
-import { type AuthContextType } from "../types/AuthContextType";
+import { type AuthContextType } from "@/types/AuthContextType";
 
 const authApi = new AuthApi(cfg);
 type UserShape = { email?: string; full_name?: string } | null;

@@ -1,6 +1,6 @@
 # UsersApi
 
-All URIs are relative to *http://localhost:8000*
+All URIs are relative to *http://localhost*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
@@ -208,7 +208,7 @@ This endpoint does not have any parameters.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **apiUpdateUserUsersUserIdPatch**
-> UserRead apiUpdateUserUsersUserIdPatch(body)
+> UserRead apiUpdateUserUsersUserIdPatch(userUpdate)
 
 
 ### Example
@@ -216,18 +216,19 @@ This endpoint does not have any parameters.
 ```typescript
 import {
     UsersApi,
-    Configuration
+    Configuration,
+    UserUpdate
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new UsersApi(configuration);
 
 let userId: number; // (default to undefined)
-let body: object; //
+let userUpdate: UserUpdate; //
 
 const { status, data } = await apiInstance.apiUpdateUserUsersUserIdPatch(
     userId,
-    body
+    userUpdate
 );
 ```
 
@@ -235,7 +236,7 @@ const { status, data } = await apiInstance.apiUpdateUserUsersUserIdPatch(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **body** | **object**|  | |
+| **userUpdate** | **UserUpdate**|  | |
 | **userId** | [**number**] |  | defaults to undefined|
 
 

@@ -8,7 +8,7 @@ import MenuItem from '@mui/material/MenuItem';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import { useNavigate } from 'react-router-dom';
 
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const NavBar: React.FC = () => {
   const { logout, userName, userID } = useAuth();  // get logout (and maybe user info) from context
