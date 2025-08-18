@@ -54,30 +54,20 @@ async def test_register_success(client: AsyncClient, async_session: AsyncSession
     # Register a new user
     new_user = {"email": "newuser@example.com", "full_name": "New User", "password": "newpass123"}
     response = await client.post("/auth/register", json=new_user)
+    assert response.status_code == 200
 
-
-
-    # 1) Inspect what register returns
-    print("REGISTER:", response.status_code, response.json())
-
-    # 2) Verify what actually got persisted and that the hash matches
+    # Verify what actually got persisted and that the hash matches
     from sqlalchemy import select
     from app.models.user import User
     from app.core.security import verify_password
-    
+
     row = (await async_session.execute(select(User).where(User.email == new_user["email"]))).scalars().first()
     assert row is not None, "User not in DB after register()"
-    print("DB USER:", {"id": row.id, "email": row.email, "full_name": row.full_name})
 
     # If your model uses row.password_hash / row.hashed_password adjust the attr accordingly
     stored_hash = getattr(row, "password_hash", None) or getattr(row, "hashed_password", None)
     assert stored_hash, "No password hash stored on user row"
     assert verify_password(new_user["password"], stored_hash), "Stored password hash does not verify"
-
-
-
-
-    assert response.status_code == 200
     data = response.json()
     # Should return the created user's data
     assert data["email"] == "newuser@example.com"
