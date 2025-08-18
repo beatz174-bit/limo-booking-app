@@ -1,0 +1,11 @@
+// tsconfig.playwright.json
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node", "playwright"],
+    "moduleResolution": "Bundler",
+    "noEmit": true
+  },
+  "include": ["tests/**/*.ts", "tests/**/*.tsx", "playwright.config.ts"],
+  "exclude": ["node_modules", "dist", "src/**"]
+}
