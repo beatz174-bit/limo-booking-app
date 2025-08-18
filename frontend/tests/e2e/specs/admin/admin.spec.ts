@@ -1,5 +1,6 @@
 // tests/e2e/specs/admin/admin.spec.ts
-import { test, expect, Page, APIResponse } from '@playwright/test';
+import { test, expect } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 /* ====================== Helpers ====================== */
 
