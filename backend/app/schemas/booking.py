@@ -10,8 +10,8 @@ class BookingCreate(BaseModel):
     pickup_location: str
     destination: str
     ride_time: datetime
-    price: Decimal
-    status: Status
+    price: Decimal = Decimal("0")
+    status: Status = "pending"
 
     model_config = {
         "from_attributes": True

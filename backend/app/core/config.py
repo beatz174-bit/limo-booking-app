@@ -5,6 +5,7 @@ import os
 from functools import lru_cache
 from pathlib import Path
 from typing import List, Optional
+from pydantic import model_validator
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
@@ -110,6 +111,27 @@ class Settings(BaseSettings):
             case_sensitive = False
 
     # ---------- Convenience helpers ----------
+
+    @model_validator(mode="after")
+    def _create_database_dir(self) -> "Settings":
+        """Ensure the directory for the SQLite database exists.
+
+        Tests load ``database_path`` from ``.env`` and expect that the
+        corresponding directory is present.  When the folder is missing, SQLite
+        cannot create the database file and every test fails with
+        ``sqlite3.OperationalError: unable to open database file``.  By
+        resolving the path relative to the project root and creating the parent
+        directory here, we make the settings object robust for first-time
+        execution.
+        """
+        if self.database_path:
+            path = Path(self.database_path)
+            if not path.is_absolute():
+                path = (_project_root() / path).resolve()
+            # ``mkdir`` succeeds even if the directory already exists
+            path.parent.mkdir(parents=True, exist_ok=True)
+            self.database_path = str(path)
+        return self
 
     @property
     def cors_origins(self) -> List[str]:
