@@ -1,13 +1,13 @@
+// tsconfig.vitest.json
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "types": ["vitest", "node", "@testing-library/jest-dom"]
+    "types": ["vitest", "@testing-library/jest-dom", "vite/client"],
+    "verbatimModuleSyntax": false
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/__tests__/**/*.ts",
-    "src/__tests__/**/*.tsx",
+    "src/**/*.ts", "src/**/*.tsx",
+    "src/__tests__/**/*.ts", "src/__tests__/**/*.tsx",
     "vitest.setup.*"
   ]
 }
