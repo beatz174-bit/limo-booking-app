@@ -12,6 +12,7 @@ docs/BookingsApi.md
 docs/HTTPValidationError.md
 docs/LoginRequest.md
 docs/OAuth2Token.md
+docs/Price.md
 docs/RegisterRequest.md
 docs/SettingsApi.md
 docs/SettingsPayload.md
