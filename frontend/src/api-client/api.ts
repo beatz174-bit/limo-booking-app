@@ -161,6 +161,19 @@ export type BookingUpdateStatusEnum = typeof BookingUpdateStatusEnum[keyof typeo
 /**
  * 
  * @export
+ * @interface GeocodeResponse
+ */
+export interface GeocodeResponse {
+    /**
+     * 
+     * @type {string}
+     * @memberof GeocodeResponse
+     */
+    'address': string;
+}
+/**
+ * 
+ * @export
  * @interface HTTPValidationError
  */
 export interface HTTPValidationError {
@@ -1180,6 +1193,248 @@ export class BookingsApi extends BaseAPI {
      */
     public apiUpdateStatusBookingsBookingIdStatusPatch(bookingId: number, bookingUpdate: BookingUpdate, options?: RawAxiosRequestConfig) {
         return BookingsApiFp(this.configuration).apiUpdateStatusBookingsBookingIdStatusPatch(bookingId, bookingUpdate, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * GeocodeApi - axios parameter creator
+ * @export
+ */
+export const GeocodeApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Api Reverse Geocode
+         * @param {number} lat 
+         * @param {number} lon 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiReverseGeocodeGeocodeReverseGet: async (lat: number, lon: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'lat' is not null or undefined
+            assertParamExists('apiReverseGeocodeGeocodeReverseGet', 'lat', lat)
+            // verify required parameter 'lon' is not null or undefined
+            assertParamExists('apiReverseGeocodeGeocodeReverseGet', 'lon', lon)
+            const localVarPath = `/geocode/reverse`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (lat !== undefined) {
+                localVarQueryParameter['lat'] = lat;
+            }
+
+            if (lon !== undefined) {
+                localVarQueryParameter['lon'] = lon;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * GeocodeApi - functional programming interface
+ * @export
+ */
+export const GeocodeApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = GeocodeApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Api Reverse Geocode
+         * @param {number} lat 
+         * @param {number} lon 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiReverseGeocodeGeocodeReverseGet(lat: number, lon: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GeocodeResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiReverseGeocodeGeocodeReverseGet(lat, lon, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['GeocodeApi.apiReverseGeocodeGeocodeReverseGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * GeocodeApi - factory interface
+ * @export
+ */
+export const GeocodeApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = GeocodeApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Api Reverse Geocode
+         * @param {number} lat 
+         * @param {number} lon 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiReverseGeocodeGeocodeReverseGet(lat: number, lon: number, options?: RawAxiosRequestConfig): AxiosPromise<GeocodeResponse> {
+            return localVarFp.apiReverseGeocodeGeocodeReverseGet(lat, lon, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * GeocodeApi - object-oriented interface
+ * @export
+ * @class GeocodeApi
+ * @extends {BaseAPI}
+ */
+export class GeocodeApi extends BaseAPI {
+    /**
+     * 
+     * @summary Api Reverse Geocode
+     * @param {number} lat 
+     * @param {number} lon 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GeocodeApi
+     */
+    public apiReverseGeocodeGeocodeReverseGet(lat: number, lon: number, options?: RawAxiosRequestConfig) {
+        return GeocodeApiFp(this.configuration).apiReverseGeocodeGeocodeReverseGet(lat, lon, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * RouteMetricsApi - axios parameter creator
+ * @export
+ */
+export const RouteMetricsApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Compute distance and duration between two addresses
+         * @param {string} pickup 
+         * @param {string} dropoff 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiRouteMetricsRouteMetricsGet: async (pickup: string, dropoff: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'pickup' is not null or undefined
+            assertParamExists('apiRouteMetricsRouteMetricsGet', 'pickup', pickup)
+            // verify required parameter 'dropoff' is not null or undefined
+            assertParamExists('apiRouteMetricsRouteMetricsGet', 'dropoff', dropoff)
+            const localVarPath = `/route-metrics`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (pickup !== undefined) {
+                localVarQueryParameter['pickup'] = pickup;
+            }
+
+            if (dropoff !== undefined) {
+                localVarQueryParameter['dropoff'] = dropoff;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * RouteMetricsApi - functional programming interface
+ * @export
+ */
+export const RouteMetricsApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = RouteMetricsApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Compute distance and duration between two addresses
+         * @param {string} pickup 
+         * @param {string} dropoff 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiRouteMetricsRouteMetricsGet(pickup: string, dropoff: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiRouteMetricsRouteMetricsGet(pickup, dropoff, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['RouteMetricsApi.apiRouteMetricsRouteMetricsGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * RouteMetricsApi - factory interface
+ * @export
+ */
+export const RouteMetricsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = RouteMetricsApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Compute distance and duration between two addresses
+         * @param {string} pickup 
+         * @param {string} dropoff 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiRouteMetricsRouteMetricsGet(pickup: string, dropoff: string, options?: RawAxiosRequestConfig): AxiosPromise<any> {
+            return localVarFp.apiRouteMetricsRouteMetricsGet(pickup, dropoff, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * RouteMetricsApi - object-oriented interface
+ * @export
+ * @class RouteMetricsApi
+ * @extends {BaseAPI}
+ */
+export class RouteMetricsApi extends BaseAPI {
+    /**
+     * 
+     * @summary Compute distance and duration between two addresses
+     * @param {string} pickup 
+     * @param {string} dropoff 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof RouteMetricsApi
+     */
+    public apiRouteMetricsRouteMetricsGet(pickup: string, dropoff: string, options?: RawAxiosRequestConfig) {
+        return RouteMetricsApiFp(this.configuration).apiRouteMetricsRouteMetricsGet(pickup, dropoff, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
