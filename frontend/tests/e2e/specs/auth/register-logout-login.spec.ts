@@ -20,7 +20,7 @@ test('register then logout then login', async ({ page }) => {
     page.getByRole('button', { name: /register/i }).click(),
   ]);
   await expect(page).toHaveURL(/\/book$/);
-  await expect(page.getByRole("heading", { name: /booking page/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /make a booking/i })).toBeVisible();
 
   // Logout (open account menu → click Logout)
   await page.getByRole("button", { name: /account/i }).click();  // prefer role; or add data-testid
@@ -39,5 +39,5 @@ test('register then logout then login', async ({ page }) => {
     page.getByRole("button", { name: /log.?in|sign.?in/i }).click(),
   ]);
   await expect(page).toHaveURL(/\/book$/);
-  await expect(page.getByRole("heading", { name: /booking page/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /make a booking/i })).toBeVisible();
 });
