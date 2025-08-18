@@ -14,6 +14,9 @@ from app.api import (
     setup as setup_router,
     settings as settings_router,
     route_metrics as route_metrics_router,
+    geocode as geocode_router,
+    users as users_router,
+
 )
 settings = get_settings()
 
@@ -35,6 +38,7 @@ app = FastAPI(
     redoc_url="/redoc",
     dependencies=[],
     swagger_ui_parameters={"persistAuthorization": True},
+    lifespan=lifespan,
 )
 
 if not settings.env == "production":
@@ -48,11 +52,13 @@ if not settings.env == "production":
     )
 
 app.include_router(auth_router.router)
-app.include_router(users_router.router)
 app.include_router(bookings_router.router)
+app.include_router(geocode_router.router)
 app.include_router(setup_router.router)
 app.include_router(settings_router.router)
 app.include_router(route_metrics_router.router)
+app.include_router(users_router.router)
+
 
 @app.get("/", include_in_schema=False)
 async def docs_redirect():
