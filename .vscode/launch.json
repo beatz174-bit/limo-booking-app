@@ -37,7 +37,7 @@
 
     {
       "name": "Development Backend",
-      "type": "debugpy",
+      "type": "python",
       "request": "launch",
       "module": "uvicorn",
       "args": [
