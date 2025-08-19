@@ -19,6 +19,9 @@ async def get_route_metrics(pickup: str, dropoff: str) -> dict:
         res = await client.get(GOOGLE_DISTANCE_MATRIX_URL, params=params)
         res.raise_for_status()
         data = res.json()
+    if data.get("status") != "OK":
+        message = data.get("error_message") or data.get("status", "error")
+        raise RuntimeError(message)
     try:
         element = data["rows"][0]["elements"][0]
         if element.get("status") != "OK":
