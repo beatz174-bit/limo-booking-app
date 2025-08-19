@@ -1,6 +1,7 @@
 // src/pages/Booking/components/MapRoute.tsx
 import { useEffect, useRef } from "react";
 import { useRouteMetrics } from "@/hooks/useRouteMetrics";
+import { CONFIG } from "@/config";
 
 // Google Maps JavaScript API exposes a global `google` object
 declare const google: any;
@@ -8,13 +9,13 @@ declare const google: any;
 type Props = {
   pickup: string;
   dropoff: string;
-  apiKey?: string;
   onMetrics?: (km: number, minutes: number) => void;
 };
 
-export function MapRoute({ pickup, dropoff, apiKey, onMetrics }: Props) {
+export function MapRoute({ pickup, dropoff, onMetrics }: Props) {
   const getMetrics = useRouteMetrics();
   const mapRef = useRef<HTMLDivElement>(null);
+  const apiKey = CONFIG.GOOGLE_MAPS_API_KEY;
 
   // Compute distance & duration via backend proxy (Distance Matrix)
   useEffect(() => {

@@ -26,24 +26,24 @@ afterEach(() => {
 
 describe("MapRoute", () => {
   test("calls onMetrics when both pickup and dropoff are set", async () => {
-    vi.mock("@/config", () => ({ CONFIG: { API_BASE_URL: "http://api" } }));
+    vi.mock("@/config", () => ({ CONFIG: { API_BASE_URL: "http://api", GOOGLE_MAPS_API_KEY: "KEY" } }));
     const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ km: 10, min: 15 }) })) as any;
     vi.stubGlobal("fetch", fetchMock);
     const onMetrics = vi.fn();
-    render(<MapRoute pickup="A" dropoff="B" apiKey="KEY" onMetrics={onMetrics} />);
+    render(<MapRoute pickup="A" dropoff="B" onMetrics={onMetrics} />);
     await waitFor(() => expect(onMetrics).toHaveBeenCalledWith(10, 15));
   });
 
   test("does not call onMetrics when either address missing", async () => {
-    vi.mock("@/config", () => ({ CONFIG: { API_BASE_URL: "http://api" } }));
+    vi.mock("@/config", () => ({ CONFIG: { API_BASE_URL: "http://api", GOOGLE_MAPS_API_KEY: "KEY" } }));
     const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ km: 10, min: 15 }) })) as any;
     vi.stubGlobal("fetch", fetchMock);
     const onMetrics = vi.fn();
-    const { rerender } = render(<MapRoute pickup="" dropoff="B" apiKey="KEY" onMetrics={onMetrics} />);
+    const { rerender } = render(<MapRoute pickup="" dropoff="B" onMetrics={onMetrics} />);
     await new Promise((r) => setTimeout(r, 20));
     expect(onMetrics).not.toHaveBeenCalled();
 
-    rerender(<MapRoute pickup="A" dropoff="" apiKey="KEY" onMetrics={onMetrics} />);
+    rerender(<MapRoute pickup="A" dropoff="" onMetrics={onMetrics} />);
     await new Promise((r) => setTimeout(r, 20));
     expect(onMetrics).not.toHaveBeenCalled();
   });
