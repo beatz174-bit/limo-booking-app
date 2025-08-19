@@ -29,4 +29,15 @@ describe("useRouteMetrics", () => {
     expect(await result.current("A", "B")).toBeNull();
     expect(await result.current("", "B")).toBeNull();
   });
+
+  test("encodes spaces in params", async () => {
+    vi.mock("@/config", () => ({ CONFIG: { API_BASE_URL: "http://api" } }));
+    const fetchMock = vi.fn(async (url: string) => {
+      expect(url).toBe("http://api/route-metrics?pickup=A%20B&dropoff=C%20D");
+      return { ok: true, json: async () => ({ km: 1, min: 2 }) } as any;
+    });
+    vi.stubGlobal("fetch", fetchMock as any);
+    const { result } = renderHook(() => useRouteMetrics());
+    await result.current("A B", "C D");
+  });
 });
