@@ -23,6 +23,13 @@ The application relies on several external services. Set these variables in a `.
 | `JWT_SECRET_KEY` | Secret used to sign access tokens. |
 | `VITE_API_BASE_URL` | (frontend) Base URL of the backend API. |
 | `VITE_GOOGLE_MAPS_API_KEY` | (frontend) Google Maps key for map rendering. |
+| `LOG_LEVEL` | (backend) Logging verbosity (`DEBUG`, `INFO`, etc.). Defaults to `INFO`. |
+
+## Logging
+
+The backend uses Python's standard logging. Set the `LOG_LEVEL` environment
+variable to control verbosity and view structured messages in Docker logs. Each
+HTTP request is logged with its method, path, status code, and processing time.
 
 ## Setup
 

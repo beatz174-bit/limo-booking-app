@@ -83,6 +83,7 @@ class Settings(BaseSettings):
     api_prefix: str = os.getenv("API_PREFIX","undefined")
     env: str = _ENV
     debug: bool = os.getenv("DEBUG", "false").lower() in {"1", "true", "yes", "on"}
+    log_level: str = os.getenv("LOG_LEVEL", "INFO")
 
     # CORS (allow multiple origins via comma-separated list)
     allow_origins: str = os.getenv("CORS_ALLOW_ORIGINS", "undefined")
