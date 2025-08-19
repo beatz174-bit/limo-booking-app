@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { AxiosError } from "axios";
-import { useAuth } from "@/contexts/AuthContext"
 // Use the SAME shared API client that RegisterPage uses so we hit the correct backend/db
 // Update the path below to exactly match RegisterPage's import if different
 // import { SettingsApi } from "../../api-client/api";
@@ -46,7 +45,6 @@ export default function AdminDashboard() {
 
   // Form fields
   const [accountMode, setAccountMode] = useState<boolean>(true); // true=open, false=closed
-  const [googleKey, setGoogleKey] = useState("");
   const [flagfall, setFlagfall] = useState<string>("0");
   const [perKm, setPerKm] = useState<string>("0");
   const [perMinute, setPerMinute] = useState<string>("0");
@@ -62,7 +60,6 @@ export default function AdminDashboard() {
         const data: SettingsPayload = (res?.data ?? res) as SettingsPayload;
         if (!mounted) return;
         setAccountMode(!!data.account_mode);
-        setGoogleKey(data.google_maps_api_key ?? "");
         setFlagfall(String(data.flagfall ?? 0));
         setPerKm(String(data.per_km_rate ?? 0));
         setPerMinute(String(data.per_minute_rate ?? 0));
@@ -96,7 +93,7 @@ export default function AdminDashboard() {
   const flagfallError = validateNumeric(flagfall);
   const perKmError = validateNumeric(perKm);
   const perMinuteError = validateNumeric(perMinute);
-  const formInvalid = !!(flagfallError || perKmError || perMinuteError || !googleKey);
+  const formInvalid = !!(flagfallError || perKmError || perMinuteError);
 
   async function handleSave() {
     setSaving(true);
@@ -105,7 +102,6 @@ export default function AdminDashboard() {
     try {
       const payload: SettingsPayload = {
         account_mode: accountMode,
-        google_maps_api_key: googleKey,
         flagfall: Number(flagfall),
         per_km_rate: Number(perKm),
         per_minute_rate: Number(perMinute),
@@ -160,17 +156,6 @@ export default function AdminDashboard() {
                 <MenuItem value="closed">Closed (invite/admin only)</MenuItem>
               </Select>
             </FormControl>
-
-            <TextField
-              label="Google Maps API key"
-              value={googleKey}
-              onChange={(e) => setGoogleKey(e.target.value)}
-              inputProps={{ "data-testid": "settings-maps-api" }}
-              required
-              fullWidth
-              autoComplete="off"
-            />
-
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
               <TextField
                 label="Flagfall"

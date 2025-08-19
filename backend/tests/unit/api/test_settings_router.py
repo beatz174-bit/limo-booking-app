@@ -21,7 +21,6 @@ async def test_get_settings_router(monkeypatch: MonkeyPatch, client: AsyncClient
     async def fake_get_settings(*_args, **_kwargs): # type: ignore
         return SettingsPayload(
             account_mode=True,
-            google_maps_api_key="XYZ",
             flagfall=10.5,
             per_km_rate=2.75,
             per_minute_rate=1.1,
@@ -36,7 +35,6 @@ async def test_get_settings_router(monkeypatch: MonkeyPatch, client: AsyncClient
         assert res.status_code == 200
         assert res.json() == {
             "account_mode": True,
-            "google_maps_api_key": "XYZ",
             "flagfall": 10.5,
             "per_km_rate": 2.75,
             "per_minute_rate": 1.1,
@@ -51,7 +49,6 @@ async def test_put_settings_router(monkeypatch: MonkeyPatch, client: AsyncClient
 
     body = SettingsPayload(
         account_mode=False,
-        google_maps_api_key="ABC-123",
         flagfall=12.0,
         per_km_rate=3.0,
         per_minute_rate=1.25,
@@ -78,7 +75,6 @@ async def test_put_settings_router_validation_error(client: AsyncClient):
     try:
         bad_body = { # type: ignore
             "account_mode": "open",  # wrong type: should be boolean
-            "google_maps_api_key": "XYZ",
             "flagfall": 10.5,
             "per_km_rate": 2.75,
             "per_minute_rate": 1.1,

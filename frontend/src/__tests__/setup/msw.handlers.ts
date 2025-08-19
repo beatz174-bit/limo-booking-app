@@ -6,7 +6,6 @@ type LoginBody = { email: string; password: string };
 type RegisterBody = { full_name: string; email: string; password: string };
 type SettingsBody = {
   account_mode: boolean;
-  google_maps_api_key: string;
   flagfall: number;
   per_km_rate: number;
   per_minute_rate: number;
@@ -18,7 +17,6 @@ export const apiUrl = (path: string) => `${BASE_URL}/${path.replace(/^\/+/, '')}
 // Default in-memory settings for tests; individual tests can override with server.use(...)
 let __settings: SettingsBody = {
   account_mode: true,
-  google_maps_api_key: "XYZ",
   flagfall: 10.5,
   per_km_rate: 2.75,
   per_minute_rate: 1.1,

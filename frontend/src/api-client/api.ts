@@ -266,17 +266,6 @@ export interface SettingsPayload {
      * @memberof SettingsPayload
      */
     'account_mode': boolean;
-    /**
-     * 
-     * @type {string}
-     * @memberof SettingsPayload
-     */
-    'google_maps_api_key': string;
-    /**
-     * 
-     * @type {number}
-     * @memberof SettingsPayload
-     */
     'flagfall': number;
     /**
      * 

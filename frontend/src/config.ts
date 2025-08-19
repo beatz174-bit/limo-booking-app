@@ -9,4 +9,5 @@ export const CONFIG = {
   OAUTH_TOKEN_URL: import.meta.env.VITE_OAUTH_TOKEN_URL || '',
   // decide if you finish OAuth on /login or /oauth/callback
   OAUTH_REDIRECT_URI: import.meta.env.VITE_OAUTH_REDIRECT_URI || '',
+  GOOGLE_MAPS_API_KEY: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
 };
