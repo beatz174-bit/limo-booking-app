@@ -30,7 +30,6 @@ async def test_complete_initial_setup_success(async_session: AsyncSession):
         admin_password="supersecret",
         settings=SettingsPayload(
             account_mode=True,
-            google_maps_api_key="XYZ",
             flagfall=10.5,
             per_km_rate=2.75,
             per_minute_rate=1.1,
@@ -50,7 +49,6 @@ async def test_complete_initial_setup_success(async_session: AsyncSession):
     assert cfg is not None
 
     assert cfg.account_mode is True
-    assert cfg.google_maps_api_key == "XYZ"
     assert cfg.flagfall == 10.5
     assert cfg.per_km_rate == 2.75
     # Model uses per_min_rate, payload uses per_minute_rate
@@ -64,7 +62,6 @@ async def test_complete_initial_setup_idempotent(async_session: AsyncSession):
         admin_password="pw",
         settings=SettingsPayload(
             account_mode=True,
-            google_maps_api_key="ABC",
             flagfall=1.0,
             per_km_rate=2.0,
             per_minute_rate=3.0,

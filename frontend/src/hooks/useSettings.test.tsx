@@ -3,7 +3,7 @@ import { describe, expect, test, vi } from "vitest";
 import { useSettings } from "./useSettings";
 
 class FakeSettingsApi {
-  apiGetSettingsSettingsGet = vi.fn(async () => ({ data: { flagfall: 3, per_km_rate: 2, per_minute_rate: 1, account_mode: false, google_maps_api_key: "KEY" } }));
+  apiGetSettingsSettingsGet = vi.fn(async () => ({ data: { flagfall: 3, per_km_rate: 2, per_minute_rate: 1, account_mode: false } }));
 }
 
 describe("useSettings", () => {
@@ -14,7 +14,7 @@ describe("useSettings", () => {
     expect(result.current.loading).toBe(true);
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(api.apiGetSettingsSettingsGet).toHaveBeenCalled();
-    expect(result.current.data).toEqual({ flagfall: 3, per_km_rate: 2, per_minute_rate: 1, account_mode: false, google_maps_api_key: "KEY" });
+    expect(result.current.data).toEqual({ flagfall: 3, per_km_rate: 2, per_minute_rate: 1, account_mode: false });
     expect(result.current.error).toBeNull();
   });
 

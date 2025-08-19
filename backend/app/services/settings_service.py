@@ -18,7 +18,6 @@ async def get_settings(db: AsyncSession = Depends(get_db), user: UserRead=Depend
         raise HTTPException(status_code=404, detail="No settings yet")
     return SettingsPayload(
         account_mode=row.account_mode,
-        google_maps_api_key=row.google_maps_api_key,
         flagfall=row.flagfall,
         per_km_rate=row.per_km_rate,
         per_minute_rate=row.per_minute_rate,
@@ -34,7 +33,6 @@ async def update_settings(data: SettingsPayload, db: AsyncSession, user: UserRea
         db.add(row)
 
     row.account_mode      = data.account_mode
-    row.google_maps_api_key = data.google_maps_api_key
     row.flagfall          = data.flagfall
     row.per_km_rate       = data.per_km_rate
     row.per_minute_rate   = data.per_minute_rate
