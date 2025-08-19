@@ -29,6 +29,7 @@ export function AddressField(props: {
       options={suggestions.map((s) => s.display)}
       inputValue={props.value}
       onInputChange={(_e, val) => props.onChange(val)}
+      onBlur={() => props.onBlur?.(props.value)}
       renderInput={(params) => (
         <TextField
           {...params}
