@@ -10,12 +10,13 @@ type Props = {
   pickup: string;
   dropoff: string;
   onMetrics?: (km: number, minutes: number) => void;
+  apiKey?: string;
 };
 
-export function MapRoute({ pickup, dropoff, onMetrics }: Props) {
+export function MapRoute({ pickup, dropoff, onMetrics, apiKey: overrideKey }: Props) {
   const getMetrics = useRouteMetrics();
   const mapRef = useRef<HTMLDivElement>(null);
-  const apiKey = CONFIG.GOOGLE_MAPS_API_KEY;
+  const apiKey = overrideKey ?? CONFIG.GOOGLE_MAPS_API_KEY;
 
   // Compute distance & duration via backend proxy (Distance Matrix)
   useEffect(() => {
