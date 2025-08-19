@@ -1,5 +1,5 @@
 // src/pages/Booking/components/MapRoute.tsx
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useRouteMetrics } from "@/hooks/useRouteMetrics";
 import { CONFIG } from "@/config";
 
@@ -16,7 +16,6 @@ type Props = {
    */
   apiKey?: string;
   onMetrics?: (km: number, minutes: number) => void;
-  apiKey?: string;
 };
 
 export function MapRoute({ pickup, dropoff, onMetrics, apiKey }: Props) {
@@ -94,12 +93,5 @@ export function MapRoute({ pickup, dropoff, onMetrics, apiKey }: Props) {
 
   }, [pickup, dropoff, resolvedKey]);
 
-  if (failed) {
-    return (
-      <div id="map" style={{ width: "100%", height: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "#eee" }}>
-        Map unavailable
-      </div>
-    );
-  }
   return <div id="map" ref={mapRef} style={{ width: "100%", height: 300 }} />;
 }
