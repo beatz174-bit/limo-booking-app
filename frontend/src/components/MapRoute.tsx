@@ -86,10 +86,10 @@ export function MapRoute({ pickup, dropoff, onMetrics, apiKey }: Props) {
               destination: dropoff,
               travelMode: g.maps.TravelMode.DRIVING,
             })
-            .then((result) => {
+            .then((result: any) => {
               if (!cancelled) renderer.setDirections(result);
             })
-            .catch((err) => console.error(err));
+            .catch((err: any) => console.error(err));
         } catch (err) {
           console.error(err);
           if (mapRef.current) mapRef.current.textContent = "Map failed to load";
@@ -105,6 +105,24 @@ export function MapRoute({ pickup, dropoff, onMetrics, apiKey }: Props) {
     };
 
   }, [pickup, dropoff, resolvedKey]);
+
+  if (failed) {
+    return (
+      <div
+        id="map"
+        style={{
+          width: "100%",
+          height: 300,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#eee",
+        }}
+      >
+        Map failed to load
+      </div>
+    );
+  }
 
   return <div id="map" ref={mapRef} style={{ width: "100%", height: 300 }} />;
 }
