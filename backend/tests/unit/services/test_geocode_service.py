@@ -23,7 +23,7 @@ async def test_reverse_geocode_parses_label(monkeypatch: MonkeyPatch):
         async def __aexit__(self, *exc_info):
             return None
 
-        async def get(self, url: str, params: dict | None = None, headers: dict | None = None):
+        async def get(self, url, params=None, headers=None):
             assert "reverse" in url
             assert params["point.lat"] == 1.0
             assert params["point.lon"] == 2.0
