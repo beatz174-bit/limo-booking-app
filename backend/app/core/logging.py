@@ -1,6 +1,6 @@
 import logging
 from logging.config import dictConfig
-from typing import Callable
+from typing import Callable, Optional
 from uuid import uuid4
 from contextvars import ContextVar
 
@@ -12,7 +12,7 @@ from starlette.responses import Response
 
 
 # context variable for per-request correlation IDs
-request_id_ctx_var: ContextVar[str | None] = ContextVar("request_id", default=None)
+request_id_ctx_var: ContextVar[Optional[str]] = ContextVar("request_id", default=None)
 
 
 class RequestIdFilter(logging.Filter):
