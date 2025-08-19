@@ -1,5 +1,5 @@
 // src/pages/Booking/components/MapRoute.tsx
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouteMetrics } from "@/hooks/useRouteMetrics";
 import { CONFIG } from "@/config";
 
@@ -80,13 +80,11 @@ export function MapRoute({ pickup, dropoff, onMetrics, apiKey }: Props) {
             .catch((err) => console.error(err));
         } catch (err) {
           console.error(err);
-          if (mapRef.current) mapRef.current.textContent = "Map failed to load";
           setFailed(true);
         }
       })
       .catch((err) => {
         console.error(err);
-        if (mapRef.current) mapRef.current.textContent = "Map failed to load";
         setFailed(true);
       });
 
@@ -95,6 +93,24 @@ export function MapRoute({ pickup, dropoff, onMetrics, apiKey }: Props) {
     };
 
   }, [pickup, dropoff, resolvedKey]);
+
+  if (failed) {
+    return (
+      <div
+        id="map"
+        style={{
+          width: "100%",
+          height: 300,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#eee",
+        }}
+      >
+        Map failed to load
+      </div>
+    );
+  }
 
   return <div id="map" ref={mapRef} style={{ width: "100%", height: 300 }} />;
 }
