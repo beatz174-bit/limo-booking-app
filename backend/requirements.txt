@@ -5,6 +5,7 @@ anyio
 bcrypt
 click
 dnspython
+debugpy
 ecdsa
 email_validator
 exceptiongroup
