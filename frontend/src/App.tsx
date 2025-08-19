@@ -5,16 +5,15 @@ import AdminDashboard from '@/pages/Admin/AdminDashboard';
 import RideHistoryPage from '@/pages/Booking/RideHistoryPage';
 import RideDetailsPage from '@/pages/Booking/RideDetailsPage';
 import RegisterPage from "@/pages/Auth/RegisterPage";
-import { useAuth } from "@/contexts/AuthContext"
+import { useAuth } from "@/contexts/AuthContext";
 import NavBar from '@/components/NavBar';
 import CircularProgress from "@mui/material/CircularProgress";
 import PageNotFound from '@/pages/PageNotFound';
-
-// ... other imports
+import DevNotes from '@/components/DevNotes';
 
 function App() {
   const { accessToken, loading, user, userID } = useAuth(); // custom hook to get AuthContext
-  
+
   if (loading) {
     return <CircularProgress size="large" title='Loading' />; // or <Spin />, <Skeleton />, or a splash screen
   }
@@ -28,9 +27,9 @@ function App() {
       <Route path="/register" element={ !accessToken ? <RegisterPage /> : <Navigate to="/book" />} />
 
       {/* Protected user routes */}
-      <Route 
-        path="/book" 
-        element={ accessToken ? <BookingPage /> : <Navigate to="/login" /> } 
+      <Route
+        path="/book"
+        element={ accessToken ? <BookingPage /> : <Navigate to="/login" /> }
       />
       <Route
         path="/history"
@@ -42,10 +41,12 @@ function App() {
       />
 
       {/* Protected admin/driver route */}
-      <Route 
-        path="/admin" 
-        element={ accessToken && userID == '1' ? <AdminDashboard /> : <Navigate to="/login" /> } 
+      <Route
+        path="/admin"
+        element={ accessToken && userID == '1' ? <AdminDashboard /> : <Navigate to="/login" /> }
       />
+
+      <Route path="/devnotes" element={<DevNotes />} />
 
       {/* Default/fallback route */}
       <Route path="*" element={<PageNotFound />} />

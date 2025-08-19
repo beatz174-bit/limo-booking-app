@@ -46,6 +46,11 @@ const NavBar: React.FC = () => {
     navigate('/admin')
   }
 
+  const navDevNotes = () => {
+    handleMenuClose();
+    navigate('/devnotes');
+  };
+
   return (
     <AppBar position="static" color="primary">
       <Toolbar>
@@ -55,7 +60,7 @@ const NavBar: React.FC = () => {
         </Typography>
 
         {/* Account icon button on right */}
-        <IconButton 
+        <IconButton
           size="large"
           edge="end"
           color="inherit"
@@ -73,14 +78,17 @@ const NavBar: React.FC = () => {
           anchorEl={anchorEl}
           open={open}
           onClose={handleMenuClose}
-          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}     
-          transformOrigin={{ vertical: 'top', horizontal: 'right' }}  
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         >
           <MenuItem onClick={handleLogout}>Logout</MenuItem>
           <MenuItem onClick={navBook}>Book</MenuItem>
           <MenuItem onClick={navHistory}>History</MenuItem>
           {userID == '1' && (
             <MenuItem onClick={navAdmin}>Administration</MenuItem>
+          )}
+          {import.meta.env.DEV && (
+            <MenuItem onClick={navDevNotes}>Dev Notes</MenuItem>
           )}
         </Menu>
       </Toolbar>
