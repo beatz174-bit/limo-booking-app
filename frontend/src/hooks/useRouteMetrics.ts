@@ -1,5 +1,6 @@
 // src/hooks/useRouteMetrics.ts
 import { CONFIG } from "@/config";
+import { useCallback } from "react";
 
 export function useRouteMetrics() {
   return async function getMetrics(

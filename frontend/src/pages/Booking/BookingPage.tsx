@@ -1,5 +1,5 @@
 // src/pages/Booking/BookingPage.tsx
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { Alert, Box, Button, Card, CardContent, Grid, Stack, Typography } from "@mui/material";
 
 // Adapt these to your actual exports
@@ -44,6 +44,11 @@ export default function BookingPage() {
 
   const [distanceKm, setDistanceKm] = useState<number | undefined>(undefined);
   const [durationMin, setDurationMin] = useState<number | undefined>(undefined);
+
+  const handleMetrics = useCallback((km: number, min: number) => {
+    setDistanceKm(km);
+    setDurationMin(min);
+  }, []);
 
   const geo = usePickupFromGeolocation();
 
@@ -152,10 +157,7 @@ export default function BookingPage() {
                   pickup={pickupRoute}
                   dropoff={dropoffRoute}
                   apiKey={settings?.google_maps_api_key}
-                  onMetrics={(km, min) => {
-                    setDistanceKm(km);
-                    setDurationMin(min);
-                  }}
+                  onMetrics={handleMetrics}
                 />
 
                 <Stack direction="row" spacing={1}>

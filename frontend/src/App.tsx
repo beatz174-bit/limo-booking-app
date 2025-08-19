@@ -3,6 +3,7 @@ import LoginPage from '@/pages/Auth/LoginPage';
 import BookingPage from '@/pages/Booking/BookingPage';
 import AdminDashboard from '@/pages/Admin/AdminDashboard';
 import RideHistoryPage from '@/pages/Booking/RideHistoryPage';
+import RideDetailsPage from '@/pages/Booking/RideDetailsPage';
 import RegisterPage from "@/pages/Auth/RegisterPage";
 import { useAuth } from "@/contexts/AuthContext"
 import NavBar from '@/components/NavBar';
@@ -31,9 +32,13 @@ function App() {
         path="/book" 
         element={ accessToken ? <BookingPage /> : <Navigate to="/login" /> } 
       />
-      <Route 
-        path="/history" 
-        element={ accessToken ? <RideHistoryPage /> : <Navigate to="/login" /> } 
+      <Route
+        path="/history"
+        element={ accessToken ? <RideHistoryPage /> : <Navigate to="/login" /> }
+      />
+      <Route
+        path="/history/:id"
+        element={ accessToken ? <RideDetailsPage /> : <Navigate to="/login" /> }
       />
 
       {/* Protected admin/driver route */}
