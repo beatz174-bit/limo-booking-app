@@ -1,5 +1,7 @@
 """Business logic for authentication and user registration."""
 
+import logging
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status, Depends
@@ -11,15 +13,20 @@ from app.models.user import User       # <- ORM model
 from app.core.security import verify_password, create_jwt_token, hash_password
 from app.dependencies import get_db
 
+logger = logging.getLogger(__name__)
+
 
 async def authenticate_user(db: AsyncSession, data: LoginRequest) -> LoginResponse:
     """Verify credentials and return a JWT token on success."""
+    logger.debug("authenticating user email=%s", data.email)
     stmt = select(User).where(User.email == data.email)
     user = (await db.execute(stmt)).scalar_one_or_none()
 
     if user is None or not verify_password(data.password, user.hashed_password):
+        logger.warning("invalid login attempt email=%s", data.email)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
+    logger.info("user %s authenticated", user.id)
     return LoginResponse(
         token=create_jwt_token(user.id),
         full_name=user.full_name,
@@ -30,8 +37,10 @@ async def authenticate_user(db: AsyncSession, data: LoginRequest) -> LoginRespon
 
 async def register_user(db: AsyncSession, data: RegisterRequest) -> UserRead:
     """Create a new user after checking email uniqueness."""
+    logger.info("registering user email=%s", data.email)
     existing = (await db.execute(select(User).where(User.email == data.email))).scalar_one_or_none()
     if existing:
+        logger.warning("registration failed email exists %s", data.email)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
 
     # Build ORM entity (not a Pydantic schema)
@@ -60,7 +69,10 @@ async def generate_token(form: OAuth2PasswordRequestForm = Depends(), db: AsyncS
     """OAuth2 password grant endpoint for Swagger's Authorize button."""
     # Reuse existing authenticate_user (expects email+password)
     # OAuth2PasswordRequestForm provides 'username' — treat as email.
+    logger.debug("token request for user=%s", form.username)
     res = await authenticate_user(db, LoginRequest(email=form.username, password=form.password))
     if not res or not getattr(res, "token", None):
+        logger.warning("token generation failed user=%s", form.username)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+    logger.info("token issued for user=%s", form.username)
     return {"access_token": res.token, "token_type": "bearer"}
