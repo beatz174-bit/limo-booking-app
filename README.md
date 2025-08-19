@@ -1,5 +1,75 @@
 # Limo Booking App
 
+A full-stack application for scheduling limousine rides. The backend is built with FastAPI and the frontend uses React, TypeScript and Vite.
+
+## Project structure
+
+- `backend/` – FastAPI service and REST API (see `backend/README.md` for auto-generated API docs).
+- `frontend/` – React application for customers and administrators.
+
+## Prerequisites
+
+- Python 3.11+
+- Node.js 18+
+
+## Environment variables
+
+The application relies on several external services. Set these variables in a `.env` file or your environment:
+
+| Variable | Purpose |
+| --- | --- |
+| `GOOGLE_MAPS_API_KEY` | Distance and duration metrics via Google Distance Matrix. |
+| `ORS_API_KEY` | Geocoding via the OpenRouteService API. |
+| `JWT_SECRET_KEY` | Secret used to sign access tokens. |
+| `VITE_API_BASE_URL` | (frontend) Base URL of the backend API. |
+| `VITE_GOOGLE_MAPS_API_KEY` | (frontend) Google Maps key for map rendering. |
+
+## Setup
+
+1. Install backend dependencies:
+   ```bash
+   cd backend
+   pip install -r requirements.txt
+   ```
+2. Install frontend dependencies:
+   ```bash
+   cd ../frontend
+   npm install
+   ```
+
+## Running
+
+### Using Docker
+
+From the repository root run:
+
+```bash
+docker-compose up --build
+```
+
+This starts both backend and frontend services.
+
+### Local development
+
+Run the backend:
+
+```bash
+cd backend
+uvicorn app.main:app --reload
+```
+
+Run the frontend:
+
+```bash
+cd frontend
+npm run dev
+```
+
+## Testing
+
+- Backend: `cd backend && pytest`
+- Frontend: `cd frontend && npm test`
+
 ## Google Maps API Setup
 
 1. Create a Google Cloud project and enable the **Maps JavaScript**, **Distance Matrix**, and **Directions** APIs.
