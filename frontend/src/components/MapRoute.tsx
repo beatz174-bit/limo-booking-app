@@ -9,13 +9,18 @@ declare const google: any;
 type Props = {
   pickup: string;
   dropoff: string;
+  /**
+   * Optional Google Maps API key. Falls back to CONFIG.GOOGLE_MAPS_API_KEY
+   * for backwards compatibility.
+   */
+  apiKey?: string;
   onMetrics?: (km: number, minutes: number) => void;
 };
 
-export function MapRoute({ pickup, dropoff, onMetrics }: Props) {
+export function MapRoute({ pickup, dropoff, apiKey, onMetrics }: Props) {
   const getMetrics = useRouteMetrics();
   const mapRef = useRef<HTMLDivElement>(null);
-  const apiKey = CONFIG.GOOGLE_MAPS_API_KEY;
+  const effectiveApiKey = apiKey || CONFIG.GOOGLE_MAPS_API_KEY;
 
   // Compute distance & duration via backend proxy (Distance Matrix)
   useEffect(() => {
@@ -33,7 +38,12 @@ export function MapRoute({ pickup, dropoff, onMetrics }: Props) {
 
   // Load Google Maps script & render route using Directions API
   useEffect(() => {
-    if (!pickup || !dropoff || !apiKey || !mapRef.current) return;
+    if (!pickup || !dropoff || !mapRef.current) return;
+    if (!effectiveApiKey) {
+      // show a message when key missing rather than failing silently
+      if (mapRef.current) mapRef.current.textContent = "Map unavailable";
+      return;
+    }
     let cancelled = false;
 
     function loadScript(): Promise<typeof google> {
@@ -42,7 +52,7 @@ export function MapRoute({ pickup, dropoff, onMetrics }: Props) {
       return new Promise((resolve, reject) => {
         const script = document.createElement("script");
         w.gm_authFailure = () => reject(new Error("Invalid Google Maps API key"));
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${effectiveApiKey}`;
         script.async = true;
         script.onload = () => (w.google?.maps ? resolve(w.google) : reject(new Error("Google Maps failed to load")));
         script.onerror = () => reject(new Error("Google Maps script error"));
@@ -84,7 +94,7 @@ export function MapRoute({ pickup, dropoff, onMetrics }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [pickup, dropoff, apiKey]);
+  }, [pickup, dropoff, effectiveApiKey]);
 
   return <div id="map" ref={mapRef} style={{ width: "100%", height: 300 }} />;
 }
