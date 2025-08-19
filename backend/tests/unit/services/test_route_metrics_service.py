@@ -1,5 +1,7 @@
 import pytest
 import httpx
+
+from app.core.config import get_settings
 from app.services import route_metrics_service
 
 @pytest.mark.asyncio
@@ -23,6 +25,7 @@ async def test_get_route_metrics(monkeypatch):
                 }
         return Resp()
     monkeypatch.setenv("GOOGLE_MAPS_API_KEY", "test")
+    get_settings.cache_clear()
     monkeypatch.setattr(httpx.AsyncClient, "get", fake_get)
     result = await route_metrics_service.get_route_metrics("A", "B")
     assert result == pytest.approx({"km": 1.234, "min": 9.45})
