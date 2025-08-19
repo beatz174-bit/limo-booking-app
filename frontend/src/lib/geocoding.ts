@@ -1,5 +1,4 @@
-// src/lib/geocoding.ts
-// Reverse geocode helper. Prefer your backend proxy if available; fall back to Nominatim in dev.
+// Reverse geocode helper. Prefer backend proxy; fall back to Nominatim in dev.
 import { CONFIG } from "@/config";
 import { formatAddress } from "@/lib/formatAddress";
 

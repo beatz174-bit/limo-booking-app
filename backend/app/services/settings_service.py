@@ -1,17 +1,22 @@
+"""Service to manage global application pricing settings."""
+
 from fastapi import Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas.setup import SettingsPayload
 from app.schemas.user import UserRead
 from app.models.settings import AdminConfig
-from app.dependencies import get_db, get_current_user 
+from app.dependencies import get_db, get_current_user
 from sqlalchemy import select
 
+
 def ensure_admin(user: UserRead):
-    # Example: only user_id == 1 is admin in your current setup
+    """Allow only the designated admin (user_id 1) to modify settings."""
     if getattr(user, "id", None) != 1:
         raise HTTPException(status_code=403, detail="Admin only")
 
+
 async def get_settings(db: AsyncSession = Depends(get_db), user: UserRead=Depends(get_current_user)) -> SettingsPayload:
+    """Fetch pricing configuration from the database."""
     ensure_admin(user)
     row = await db.get(AdminConfig, 1)
     if not row:
@@ -23,7 +28,9 @@ async def get_settings(db: AsyncSession = Depends(get_db), user: UserRead=Depend
         per_minute_rate=row.per_minute_rate,
     )
 
+
 async def update_settings(data: SettingsPayload, db: AsyncSession, user: UserRead):
+    """Persist updated pricing configuration."""
     ensure_admin(user)
 
     result = await db.execute(select(AdminConfig).where(AdminConfig.id == 1))
@@ -32,10 +39,10 @@ async def update_settings(data: SettingsPayload, db: AsyncSession, user: UserRea
         row = AdminConfig(id=1)
         db.add(row)
 
-    row.account_mode      = data.account_mode
-    row.flagfall          = data.flagfall
-    row.per_km_rate       = data.per_km_rate
-    row.per_minute_rate   = data.per_minute_rate
+    row.account_mode = data.account_mode
+    row.flagfall = data.flagfall
+    row.per_km_rate = data.per_km_rate
+    row.per_minute_rate = data.per_minute_rate
 
     await db.commit()      # commit first
     # await db.refresh(row)  # then refresh (transaction is open for read)

@@ -1,4 +1,6 @@
 # app/api/settings.py
+"""Routes for reading and updating admin settings."""
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas.setup import SettingsPayload
@@ -12,10 +14,14 @@ router = APIRouter(
     dependencies=[Depends(get_current_user)]
     )
 
+
 @router.get("", response_model=SettingsPayload)
 async def api_get_settings(db: AsyncSession = Depends(get_db), user: UserRead=Depends(get_current_user)):
+    """Return current pricing and configuration."""
     return await get_settings(db, user)
+
 
 @router.put("", response_model=SettingsPayload, status_code=status.HTTP_200_OK)
 async def api_update_settings(payload: SettingsPayload, db: AsyncSession = Depends(get_db), user: UserRead = Depends(get_current_user)):
+    """Persist updated configuration values."""
     return await update_settings(payload, db, user)

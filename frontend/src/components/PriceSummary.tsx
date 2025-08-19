@@ -1,4 +1,4 @@
-// src/pages/Booking/components/PriceSummary.tsx
+// Displays calculated fare or loading/error states.
 import { Alert, Box, CircularProgress, Typography } from "@mui/material";
 
 export function PriceSummary(props: { price: number | null; loading?: boolean; error?: string | null }) {

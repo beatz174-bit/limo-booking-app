@@ -1,4 +1,4 @@
-// Authorization Code + PKCE helper (no cookies)
+// Authorization Code + PKCE helper for OAuth flows.
 // Requires envs via src/config.ts (we’ll wire that below)
 export type TokenResponse = {
   access_token: string;

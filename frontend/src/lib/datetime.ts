@@ -1,3 +1,4 @@
+// Helpers for working with HTML datetime-local inputs.
 export function toLocalInputValue(date: Date): string {
   // returns `YYYY-MM-DDTHH:mm` for <input type="datetime-local">
   const pad = (n: number) => String(n).padStart(2, "0");

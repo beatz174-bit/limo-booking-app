@@ -1,4 +1,4 @@
-// src/hooks/usePriceCalculator.ts
+// Hook that computes trip price based on distance and duration.
 import { useEffect, useMemo, useRef, useState } from "react";
 
 export type PriceInputs = {

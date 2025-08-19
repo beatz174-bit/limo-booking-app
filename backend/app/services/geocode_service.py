@@ -1,6 +1,8 @@
 # app/services/geocode_service.py
 from __future__ import annotations
 
+"""Service functions wrapping OpenRouteService geocoding APIs."""
+
 import httpx
 
 from app.core.config import get_settings

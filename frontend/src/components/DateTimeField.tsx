@@ -1,4 +1,4 @@
-// src/pages/Booking/components/DateTimeField.tsx
+// Simple wrapper around a datetime-local input.
 import { TextField } from "@mui/material";
 
 export function DateTimeField(props: {

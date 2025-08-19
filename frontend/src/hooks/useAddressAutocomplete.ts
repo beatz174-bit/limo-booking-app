@@ -1,3 +1,4 @@
+// Hook to fetch address suggestions as the user types.
 import { useEffect, useState } from "react";
 import { CONFIG } from "@/config";
 import { formatAddress } from "@/lib/formatAddress";

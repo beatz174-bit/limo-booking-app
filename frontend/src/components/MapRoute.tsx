@@ -1,4 +1,4 @@
-// src/pages/Booking/components/MapRoute.tsx
+// Renders a Google Map showing the route between pickup and dropoff.
 import { useEffect, useRef, useState } from "react";
 import { useRouteMetrics } from "@/hooks/useRouteMetrics";
 import { CONFIG } from "@/config";
@@ -23,6 +23,7 @@ export function MapRoute({ pickup, dropoff, onMetrics, apiKey }: Props) {
   const getMetrics = useRouteMetrics();
   const mapRef = useRef<HTMLDivElement>(null);
   const resolvedKey = apiKey ?? CONFIG.GOOGLE_MAPS_API_KEY;
+  const [failed, setFailed] = useState(false);
 
   // Compute distance & duration via backend proxy (Distance Matrix)
   useEffect(() => {
@@ -85,6 +86,7 @@ export function MapRoute({ pickup, dropoff, onMetrics, apiKey }: Props) {
       })
       .catch((err) => {
         console.error(err);
+        setFailed(true);
         if (mapRef.current) mapRef.current.textContent = "Map failed to load";
       });
 

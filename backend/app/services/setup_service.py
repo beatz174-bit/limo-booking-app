@@ -1,3 +1,5 @@
+"""Service functions for initial application setup."""
+
 from fastapi import HTTPException
 from app.models.user import User
 from app.models.settings import AdminConfig
@@ -6,6 +8,7 @@ from app.schemas.setup import SetupPayload, SettingsPayload
 from sqlalchemy.sql import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Union
+
 
 async def complete_initial_setup(db: AsyncSession, data: SetupPayload):
     if await is_setup_complete(db):

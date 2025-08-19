@@ -1,4 +1,5 @@
-# app/api/geocode.py
+"""Endpoints for geocoding and reverse geocoding."""
+
 from fastapi import APIRouter, Query
 
 from app.schemas.geocode import GeocodeResponse, GeocodeSearchResponse
@@ -9,6 +10,7 @@ router = APIRouter(prefix="/geocode", tags=["geocode"])
 
 @router.get("/reverse", response_model=GeocodeResponse)
 async def api_reverse_geocode(lat: float = Query(...), lon: float = Query(...)) -> GeocodeResponse:
+    """Look up an address from latitude and longitude."""
     address = await reverse_geocode(lat, lon)
     return GeocodeResponse(address=address)
 
@@ -22,5 +24,6 @@ async def api_geocode_search(
     q: str = Query(..., min_length=1),
     limit: int = Query(5, ge=1, le=20),
 ) -> GeocodeSearchResponse:
+    """Search for addresses matching a query string."""
     results = await search_geocode(q, limit)
     return GeocodeSearchResponse(results=results)
