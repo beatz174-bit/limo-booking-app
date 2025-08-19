@@ -10,6 +10,7 @@ import {
 import { bookingsApi } from '@/components/ApiConfig';
 import type { BookingRead } from '@/api-client';
 import { MapRoute } from '@/components/MapRoute';
+import { MapProvider } from '@/components/MapProvider';
 
 function RideDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -97,7 +98,9 @@ function RideDetailsPage() {
         </Typography>
       </Stack>
 
-      <MapRoute pickup={booking.pickup_location} dropoff={booking.dropoff_location} />
+      <MapProvider>
+        <MapRoute pickup={booking.pickup_location} dropoff={booking.dropoff_location} />
+      </MapProvider>
     </Box>
   );
 }
