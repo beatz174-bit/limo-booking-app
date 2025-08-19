@@ -19,6 +19,7 @@ import { AddressField } from "@/components/AddressField";
 import { DateTimeField } from "@/components/DateTimeField";
 import { PriceSummary } from "@/components/PriceSummary";
 import { MapRoute } from "@/components/MapRoute";
+import { MapProvider } from "@/components/MapProvider";
 
 export default function BookingPage() {
   // Acquire API instances once (e.g., from context or a helper factory)
@@ -157,12 +158,13 @@ export default function BookingPage() {
                   min={minFutureDateTime(5)}
                 />
 
-                <MapRoute
-                  pickup={pickupRoute}
-                  dropoff={dropoffRoute}
-                  apiKey={settings?.google_maps_api_key}
-                  onMetrics={handleMetrics}
-                />
+                <MapProvider apiKey={settings?.google_maps_api_key}>
+                  <MapRoute
+                    pickup={pickupRoute}
+                    dropoff={dropoffRoute}
+                    onMetrics={handleMetrics}
+                  />
+                </MapProvider>
 
                 <Stack direction="row" spacing={1}>
                   <Button variant="contained" onClick={submitBooking} disabled={settingsLoading}>
