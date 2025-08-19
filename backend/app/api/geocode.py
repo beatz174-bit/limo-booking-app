@@ -10,6 +10,7 @@ router = APIRouter(prefix="/geocode", tags=["geocode"])
 
 @router.get("/reverse", response_model=GeocodeResponse)
 async def api_reverse_geocode(lat: float = Query(...), lon: float = Query(...)) -> GeocodeResponse:
+    """Look up an address from latitude and longitude."""
     try:
         address = await reverse_geocode(lat, lon)
     except httpx.TimeoutException as exc:
@@ -28,6 +29,7 @@ async def api_geocode_search(
     q: str = Query(..., min_length=1),
     limit: int = Query(5, ge=1, le=20),
 ) -> GeocodeSearchResponse:
+    """Search for addresses matching a query string."""
     try:
         results = await search_geocode(q, limit)
     except httpx.TimeoutException as exc:

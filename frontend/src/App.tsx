@@ -1,3 +1,4 @@
+// Main application component setting up routes.
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from '@/pages/Auth/LoginPage';
 import BookingPage from '@/pages/Booking/BookingPage';

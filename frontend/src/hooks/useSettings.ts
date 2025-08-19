@@ -1,4 +1,4 @@
-// src/hooks/useSettings.ts
+// Hook to fetch admin pricing settings from the API.
 import { useEffect, useState } from "react";
 
 // Adapt these imports to your generated client / ApiConfig

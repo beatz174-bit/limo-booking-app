@@ -1,4 +1,4 @@
-// src/pages/Booking/components/AddressField.tsx
+// Text field with autocomplete and optional geolocation button.
 import { TextField, InputAdornment, IconButton, CircularProgress, Autocomplete } from "@mui/material";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
 import { useAddressAutocomplete } from "@/hooks/useAddressAutocomplete";

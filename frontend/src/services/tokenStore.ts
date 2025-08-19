@@ -1,4 +1,4 @@
-// Tiny global token store for the API client + anywhere else
+// Tiny in-memory store for OAuth access and refresh tokens.
 let accessToken: string | null = null;
 let refreshToken: string | null = null;
 let listeners: Array<() => void> = [];

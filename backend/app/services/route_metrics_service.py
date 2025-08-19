@@ -1,3 +1,5 @@
+"""Utilities for computing route distance and duration via Google APIs."""
+
 import httpx
 
 from app.core.config import get_settings

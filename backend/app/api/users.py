@@ -1,4 +1,5 @@
-# app/api/users.py
+"""User management API routes."""
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
@@ -12,26 +13,36 @@ from app.models.user import User
 
 router = APIRouter(prefix="/users", tags=["users"])
 
+
 @router.post("", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 async def api_create_user(data: UserCreate, db: AsyncSession = Depends(get_db)):
+    """Register a new user in the system."""
     user = await create_user(db, data)
     return user
 
+
 @router.get("", response_model=List[UserRead])
 async def api_list_users(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Return all existing users."""
     users = await list_users(db)
     return users
 
+
 @router.get("/{user_id}", response_model=UserRead)
 async def api_get_user(user_id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Fetch a single user by ID."""
     user = await get_user(db, user_id)
     return user
 
+
 @router.patch("/{user_id}", response_model=UserRead)
 async def api_update_user(user_id: int, data: UserUpdate, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Update selected fields of a user."""
     user = await update_user(db, user_id, data)
     return user
 
+
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def api_delete_user(user_id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Remove a user permanently."""
     await delete_user(db, user_id)
