@@ -16,14 +16,14 @@ type Props = {
    */
   apiKey?: string;
   onMetrics?: (km: number, minutes: number) => void;
+  apiKey?: string;
 };
-
 
 export function MapRoute({ pickup, dropoff, onMetrics, apiKey }: Props) {
   const getMetrics = useRouteMetrics();
   const mapRef = useRef<HTMLDivElement>(null);
-  // Allow injection of API key via prop but fall back to config
-  const key = apiKey ?? CONFIG.GOOGLE_MAPS_API_KEY;
+  const resolvedKey = apiKey ?? CONFIG.GOOGLE_MAPS_API_KEY;
+
   // Compute distance & duration via backend proxy (Distance Matrix)
   useEffect(() => {
     let cancelled = false;
@@ -40,7 +40,7 @@ export function MapRoute({ pickup, dropoff, onMetrics, apiKey }: Props) {
 
   // Load Google Maps script & render route using Directions API
   useEffect(() => {
-    if (!pickup || !dropoff || !key || !mapRef.current) return;
+    if (!pickup || !dropoff || !resolvedKey || !mapRef.current) return;
     let cancelled = false;
 
     function loadScript(): Promise<typeof google> {
@@ -49,7 +49,7 @@ export function MapRoute({ pickup, dropoff, onMetrics, apiKey }: Props) {
       return new Promise((resolve, reject) => {
         const script = document.createElement("script");
         w.gm_authFailure = () => reject(new Error("Invalid Google Maps API key"));
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${key}`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${resolvedKey}`;
         script.async = true;
         script.onload = () => (w.google?.maps ? resolve(w.google) : reject(new Error("Google Maps failed to load")));
         script.onerror = () => reject(new Error("Google Maps script error"));
@@ -92,7 +92,7 @@ export function MapRoute({ pickup, dropoff, onMetrics, apiKey }: Props) {
       cancelled = true;
     };
 
-  }, [pickup, dropoff, key]);
+  }, [pickup, dropoff, resolvedKey]);
 
   return <div id="map" ref={mapRef} style={{ width: "100%", height: 300 }} />;
 }

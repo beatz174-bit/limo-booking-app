@@ -36,6 +36,22 @@ describe("MapRoute", () => {
     await waitFor(() => expect(onMetrics).toHaveBeenCalledWith(10, 15));
   });
 
+  test("does not refetch metrics on rerender with same addresses", async () => {
+    vi.mock("@/config", () => ({ CONFIG: { API_BASE_URL: "http://api", GOOGLE_MAPS_API_KEY: "KEY" } }));
+    const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ km: 10, min: 15 }) })) as any;
+    vi.stubGlobal("fetch", fetchMock);
+    const onMetrics = vi.fn();
+    const { rerender } = render(<MapRoute pickup="A" dropoff="B" onMetrics={onMetrics} />);
+    await waitFor(() => expect(onMetrics).toHaveBeenCalledWith(10, 15));
+    fetchMock.mockClear();
+    onMetrics.mockClear();
+
+    rerender(<MapRoute pickup="A" dropoff="B" onMetrics={onMetrics} />);
+    await new Promise((r) => setTimeout(r, 20));
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(onMetrics).not.toHaveBeenCalled();
+  });
+
   test("does not call onMetrics when either address missing", async () => {
     vi.mock("@/config", () => ({ CONFIG: { API_BASE_URL: "http://api", GOOGLE_MAPS_API_KEY: "KEY" } }));
     const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ km: 10, min: 15 }) })) as any;
@@ -58,7 +74,7 @@ describe("MapRoute", () => {
     // @ts-ignore
     delete (globalThis as any).google;
     const { container } = render(<MapRoute pickup="A" dropoff="B" apiKey="BAD" />);
-    await waitFor(() => typeof (window as any).gm_authFailure === "function");
+    await waitFor(() => expect(typeof (window as any).gm_authFailure).toBe("function"));
     (window as any).gm_authFailure();
     await waitFor(() => expect(container.textContent).toContain("Map failed to load"));
   });
