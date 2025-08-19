@@ -1,5 +1,5 @@
 // tests/e2e/global-setup.ts
-import { request, type FullConfig } from "@playwright/test";
+import { request, type APIResponse } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
 import * as dotenv from "dotenv";
@@ -16,11 +16,11 @@ const ADMIN_FULLNAME = process.env.ADMIN_FULLNAME ?? "Admin User";
 
 const STORAGE_PATH = path.join(process.cwd(), "storage", "admin.json");
 
-async function bodyText(res: any) {
+async function bodyText(res: APIResponse) {
   try { return await res.text(); } catch { return ""; }
 }
 
-export default async function globalSetup(_config: FullConfig) {
+export default async function globalSetup(): Promise<void> {
   // Ensure storage dir
   fs.mkdirSync(path.dirname(STORAGE_PATH), { recursive: true });
 

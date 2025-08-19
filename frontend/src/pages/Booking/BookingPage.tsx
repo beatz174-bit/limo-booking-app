@@ -52,11 +52,23 @@ export default function BookingPage() {
 
   const geo = usePickupFromGeolocation();
 
-  const tariff = useMemo(() => ({
-    flagfall: Number(settings?.flagfall ?? 0),
-    perKm:    Number((settings as any)?.per_km_rate  ?? (settings as any)?.perKm  ?? 0),
-    perMin:   Number((settings as any)?.per_minute_rate ?? (settings as any)?.perMin ?? 0),
-  }), [settings]);
+  interface SettingsAliases {
+    flagfall?: number;
+    per_km_rate?: number;
+    perKm?: number;
+    per_minute_rate?: number;
+    perMin?: number;
+    google_maps_api_key?: string;
+  }
+
+  const tariff = useMemo(() => {
+    const s = settings as SettingsAliases | null;
+    return {
+      flagfall: Number(s?.flagfall ?? 0),
+      perKm: Number(s?.per_km_rate ?? s?.perKm ?? 0),
+      perMin: Number(s?.per_minute_rate ?? s?.perMin ?? 0),
+    };
+  }, [settings]);
 
 
   useEffect(() => {
@@ -103,9 +115,9 @@ export default function BookingPage() {
       // TODO: Replace with your actual request object + API call
       await bookingsApi.apiCreateBookingBookingsPost(payload)
       alert("Booking submitted");
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error(e);
-      alert(e?.message ?? "Failed to submit booking");
+      alert(e instanceof Error ? e.message : "Failed to submit booking");
     }
   }
 

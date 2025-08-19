@@ -5,12 +5,13 @@ import { usePickupFromGeolocation } from "./usePickupFromGeolocation";
 vi.mock("@/lib/geocoding", () => ({ reverseGeocode: vi.fn(async () => "123 Fake St") }));
 
 beforeEach(() => {
-  (globalThis as any).navigator = (globalThis as any).navigator || ({} as any);
-  (globalThis as any).navigator.geolocation = {
-    getCurrentPosition: (success: any, _error: any) => {
-      success({ coords: { latitude: -27.5, longitude: 153.0 } });
-    }
-  } as any;
+  const g = globalThis as unknown as { navigator?: Partial<Navigator> };
+  g.navigator = g.navigator || {};
+  g.navigator.geolocation = {
+    getCurrentPosition: (success: PositionCallback) => {
+      success({ coords: { latitude: -27.5, longitude: 153.0 } } as GeolocationPosition);
+    },
+  } as Geolocation;
 });
 
 describe("usePickupFromGeolocation", () => {
@@ -22,7 +23,10 @@ describe("usePickupFromGeolocation", () => {
   });
 
   test("error path sets error message", async () => {
-    (globalThis as any).navigator.geolocation.getCurrentPosition = (_ok: any, err: any) => err(new Error("nope"));
+    (globalThis as { navigator: { geolocation: Geolocation } }).navigator.geolocation.getCurrentPosition = (
+      _ok: PositionCallback,
+      err: PositionErrorCallback,
+    ) => err(new Error("nope") as GeolocationPositionError);
     const { result } = renderHook(() => usePickupFromGeolocation());
     await act(async () => { await result.current.locate(); });
     await waitFor(() => expect(result.current.error).toBeTruthy());

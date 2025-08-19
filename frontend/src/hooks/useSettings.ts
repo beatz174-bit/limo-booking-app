@@ -22,8 +22,8 @@ export function useSettings(api: SettingsApi) {
       try {
         const res = await api.apiGetSettingsSettingsGet();
         if (alive) setData(res.data as unknown as AppSettings);
-      } catch (e: any) {
-        if (alive) setError(e?.message ?? "Failed to load settings");
+      } catch (e: unknown) {
+        if (alive) setError(e instanceof Error ? e.message : "Failed to load settings");
       } finally {
         if (alive) setLoading(false);
       }

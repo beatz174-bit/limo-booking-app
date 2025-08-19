@@ -3,13 +3,20 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { describe, test, expect } from "vitest";
 import { usePriceCalculator } from "./usePriceCalculator";
 
-function Host(props: any) {
+interface HostProps {
+  args: Parameters<typeof usePriceCalculator>[0];
+  kick?: boolean;
+}
+
+function Host(props: HostProps) {
   const { price, error, compute } = usePriceCalculator(props.args);
   useEffect(() => { if (props.kick) compute(); }, [compute, props.kick]);
-  return <>
-    <div data-testid="price">{price ?? ""}</div>
-    <div data-testid="error">{error ?? ""}</div>
-  </>;
+  return (
+    <>
+      <div data-testid="price">{price ?? ""}</div>
+      <div data-testid="error">{error ?? ""}</div>
+    </>
+  );
 }
 
 describe("usePriceCalculator", () => {
