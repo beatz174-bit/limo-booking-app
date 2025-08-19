@@ -1,6 +1,7 @@
 // src/lib/geocoding.ts
 // Reverse geocode helper. Prefer your backend proxy if available; fall back to Nominatim in dev.
 import { CONFIG } from "@/config";
+import { formatAddress } from "@/lib/formatAddress";
 
 export async function reverseGeocode(lat: number, lon: number): Promise<string> {
     
@@ -25,5 +26,5 @@ export async function reverseGeocode(lat: number, lon: number): Promise<string> 
   );
   if (!res.ok) throw new Error(`Reverse geocode failed: ${res.status}`);
   const json = await res.json();
-  return json.display_name ?? `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+  return formatAddress(json.address) || json.display_name || `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
 }
