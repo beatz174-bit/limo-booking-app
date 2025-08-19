@@ -144,6 +144,7 @@ export default function BookingPage() {
                 <MapRoute
                   pickup={pickupValue}
                   dropoff={dropoff}
+                  apiKey={settings?.google_maps_api_key}
                   onMetrics={(km, min) => {
                     setDistanceKm(km);
                     setDurationMin(min);
