@@ -1,5 +1,5 @@
-// src/pages/Booking/components/MapRoute.tsx
-import { useEffect, useRef } from "react";
+// Renders a Google Map showing the route between pickup and dropoff.
+import { useEffect, useRef, useState } from "react";
 import { useRouteMetrics } from "@/hooks/useRouteMetrics";
 import { CONFIG } from "@/config";
 
@@ -86,6 +86,7 @@ export function MapRoute({ pickup, dropoff, onMetrics, apiKey }: Props) {
       })
       .catch((err) => {
         console.error(err);
+        setFailed(true);
         if (mapRef.current) mapRef.current.textContent = "Map failed to load";
         setFailed(true);
       });

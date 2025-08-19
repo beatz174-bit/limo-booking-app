@@ -1,3 +1,4 @@
+// React context providing authentication state and helpers.
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import cfg, { AuthApi, UsersApi } from "@/components/ApiConfig";
 import { CONFIG } from "@/config";

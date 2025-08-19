@@ -1,4 +1,4 @@
-// src/pages/PageNotFound.tsx
+// Simple 404 error page.
 import { Link } from 'react-router-dom';
 import taxi404 from '@/assets/404.png'; // adjust path as needed
 

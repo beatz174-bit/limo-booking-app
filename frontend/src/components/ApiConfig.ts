@@ -1,6 +1,4 @@
-// src/api/index.ts
-// import { AuthApi, Configuration } from "../api-client";
-
+// Shared configuration and API client singletons.
 import { Configuration, AuthApi, BookingsApi, UsersApi, SetupApi, SettingsApi } from "@/api-client";
 import { CONFIG } from "@/config";
 import { getAccessToken, onTokenChange } from "@/services/tokenStore";

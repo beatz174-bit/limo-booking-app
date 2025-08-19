@@ -1,3 +1,4 @@
+// Condense address component object into a readable string.
 export function formatAddress(addr: any): string {
   if (!addr) return "";
   const unit = addr.unit || addr.flat_number || "";

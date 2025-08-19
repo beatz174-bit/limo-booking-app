@@ -1,5 +1,7 @@
 # app/db/database.py
 import warnings
+"""Database connection and session management utilities."""
+
 from typing import Awaitable, Dict, Union, Protocol
 
 from sqlalchemy.engine.url import make_url, URL

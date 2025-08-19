@@ -1,4 +1,6 @@
 # app/schemas/booking.py
+"""Pydantic schemas for booking operations."""
+
 from datetime import datetime
 from typing import Literal, Optional
 from pydantic import BaseModel, Field, ConfigDict
@@ -6,7 +8,9 @@ from decimal import Decimal
 
 Status = Literal["pending", "accepted", "completed", "cancelled"]
 
+
 class BookingCreate(BaseModel):
+    """Payload to create a new booking."""
     pickup_location: str
     destination: str
     ride_time: datetime
@@ -17,7 +21,9 @@ class BookingCreate(BaseModel):
         "from_attributes": True
     }
 
+
 class BookingRead(BaseModel):
+    """Representation of a booking returned from API."""
     id: int
     user_id: int
     pickup_location: str
@@ -32,6 +38,8 @@ class BookingRead(BaseModel):
         populate_by_name=True,   # ensures aliases are used when serializing
     )
 
+
 class BookingUpdate(BaseModel):
+    """Allowed fields when updating a booking."""
     status: Status
 
