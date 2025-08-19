@@ -15,15 +15,15 @@ vi.mock("@/services/tokenStore", () => ({
 vi.mock("@/api-client", () => {
   class Configuration {
     basePath: string;
-    accessToken: any;
-    constructor(opts: any) {
+    accessToken: () => Promise<string>;
+    constructor(opts: { basePath: string; accessToken: () => Promise<string> }) {
       this.basePath = opts.basePath;
       this.accessToken = opts.accessToken;
     }
   }
   class FakeApi {
     cfg: Configuration;
-    constructor(cfg: any) {
+    constructor(cfg: Configuration) {
       this.cfg = cfg;
     }
   }
@@ -46,14 +46,16 @@ describe("ApiConfig", () => {
     const { authApi, bookingsApi, usersApi, setupApi, settingsApi } = mod;
 
     // config assertions
-    expect((cfg as any).basePath).toBe("https://api.example.test");
-    expect(typeof (cfg as any).accessToken).toBe("function");
-    await expect((cfg as any).accessToken()).resolves.toBe("token-abc");
+    const cfgTyped = cfg as Configuration;
+    expect(cfgTyped.basePath).toBe("https://api.example.test");
+    expect(typeof cfgTyped.accessToken).toBe("function");
+    await expect(cfgTyped.accessToken()).resolves.toBe("token-abc");
 
     // clients share same Configuration
     for (const api of [authApi, bookingsApi, usersApi, setupApi, settingsApi]) {
-      expect(api).toBeTruthy();
-      expect((api as any).cfg.basePath).toBe("https://api.example.test");
+      const client = api as FakeApi;
+      expect(client).toBeTruthy();
+      expect(client.cfg.basePath).toBe("https://api.example.test");
     }
   });
 });

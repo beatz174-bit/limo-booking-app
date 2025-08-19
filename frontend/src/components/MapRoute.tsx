@@ -1,10 +1,23 @@
 // Renders a Google Map showing the route between pickup and dropoff.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useRouteMetrics } from "@/hooks/useRouteMetrics";
 import { CONFIG } from "@/config";
 
-// Google Maps JavaScript API exposes a global `google` object
-declare const google: any;
+interface GoogleMaps {
+  maps: {
+    Map: new (el: HTMLElement, opts: unknown) => unknown;
+    DirectionsService: new () => { route: (req: unknown) => Promise<unknown> };
+    DirectionsRenderer: new () => { setMap: (map: unknown) => void; setDirections: (res: unknown) => void };
+    TravelMode: { DRIVING: string };
+  };
+}
+
+declare global {
+  interface Window {
+    google?: GoogleMaps;
+    gm_authFailure?: () => void;
+  }
+}
 
 type Props = {
   pickup: string;
@@ -22,7 +35,6 @@ export function MapRoute({ pickup, dropoff, onMetrics, apiKey }: Props) {
   const getMetrics = useRouteMetrics();
   const mapRef = useRef<HTMLDivElement>(null);
   const resolvedKey = apiKey ?? CONFIG.GOOGLE_MAPS_API_KEY;
-  const [failed, setFailed] = useState(false);
 
   // Compute distance & duration via backend proxy (Distance Matrix)
   useEffect(() => {
@@ -43,8 +55,8 @@ export function MapRoute({ pickup, dropoff, onMetrics, apiKey }: Props) {
     if (!pickup || !dropoff || !resolvedKey || !mapRef.current) return;
     let cancelled = false;
 
-    function loadScript(): Promise<typeof google | undefined> {
-      const w = window as any;
+    function loadScript(): Promise<GoogleMaps | undefined> {
+      const w = window as Window;
       if (w.google?.maps) return Promise.resolve(w.google);
       return new Promise((resolve, reject) => {
         const script = document.createElement("script");
@@ -80,13 +92,12 @@ export function MapRoute({ pickup, dropoff, onMetrics, apiKey }: Props) {
             .catch((err: any) => console.error(err));
         } catch (err) {
           console.error(err);
-          setFailed(true);
+          if (mapRef.current) mapRef.current.textContent = "Map failed to load";
         }
       })
       .catch((err) => {
         console.error(err);
         if (mapRef.current) mapRef.current.textContent = "Map failed to load";
-        setFailed(true);
       });
 
     return () => {

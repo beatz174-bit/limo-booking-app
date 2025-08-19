@@ -13,7 +13,7 @@ import PageNotFound from '@/pages/PageNotFound';
 import DevNotes from '@/components/DevNotes';
 
 function App() {
-  const { accessToken, loading, user, userID } = useAuth(); // custom hook to get AuthContext
+  const { accessToken, loading, userID } = useAuth(); // custom hook to get AuthContext
 
   if (loading) {
     return <CircularProgress size="large" title='Loading' />; // or <Spin />, <Skeleton />, or a splash screen

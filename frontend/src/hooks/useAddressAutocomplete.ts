@@ -35,7 +35,9 @@ export function useAddressAutocomplete(query: string, options?: { debounceMs?: n
         const list = Array.isArray(data) ? data : data?.results || [];
         setSuggestions(
           list
-            .map((item: any) => ({ display: formatAddress(item.address || item) }))
+            .map((item: Record<string, unknown>) => ({
+              display: formatAddress((item as { address?: Record<string, unknown> }).address || item),
+            }))
             .filter((s: AddressSuggestion) => !!s.display)
         );
       } catch (e) {
