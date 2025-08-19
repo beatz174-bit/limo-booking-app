@@ -56,7 +56,13 @@ export const handlers = [
       id: 1,
       full_name: 'Test User',
       email: 'test@example.com',
+      default_pickup_address: '123 Street',
     });
+  }),
+
+  http.patch(apiUrl('/users/me'), async ({ request }) => {
+    const body = await request.json();
+    return HttpResponse.json({ id: 1, full_name: body.full_name ?? 'Test User', email: body.email ?? 'test@example.com', default_pickup_address: body.default_pickup_address ?? '123 Street' });
   }),
 
   // ---- Settings endpoints used by AdminDashboard ----

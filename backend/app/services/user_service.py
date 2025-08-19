@@ -31,6 +31,7 @@ async def create_user(db: AsyncSession, data: UserCreate) -> UserRead:
         email=data.email,
         full_name=data.full_name,
         hashed_password=hash_password(data.password),
+        default_pickup_address=data.default_pickup_address,
     )
     db.add(user)
     await db.commit()
