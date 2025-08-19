@@ -35,7 +35,6 @@ async def test_update_then_get_returns_values(monkeypatch: MonkeyPatch, async_se
 
     payload: SettingsPayload = SettingsPayload(
         account_mode=False,
-        google_maps_api_key="ABC-123",
         flagfall=12.0,
         per_km_rate=3.0,
         per_minute_rate=1.25,

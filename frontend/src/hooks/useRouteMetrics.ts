@@ -1,5 +1,6 @@
 // src/hooks/useRouteMetrics.ts
 import { CONFIG } from "@/config";
+import { useCallback } from "react";
 
 export function useRouteMetrics() {
   return async function getMetrics(
@@ -9,11 +10,14 @@ export function useRouteMetrics() {
     if (!pickup || !dropoff) return null;
     try {
       const base = CONFIG.API_BASE_URL || "";
-      const url = new URL("/route-metrics", base || window.location.origin);
-      url.searchParams.set("pickup", pickup);
-      url.searchParams.set("dropoff", dropoff);
+      const origin = base || window.location.origin;
+      const url = new URL("/route-metrics", origin);
+      url.search = `pickup=${encodeURIComponent(pickup)}&dropoff=${encodeURIComponent(dropoff)}`;
       const res = await fetch(url.toString());
-      if (!res.ok) return null;
+      if (!res.ok) {
+        console.error("Route metrics request failed", res.status);
+        return null;
+      }
       const data = await res.json();
       const km = Number(data?.km);
       const min = Number(data?.min);

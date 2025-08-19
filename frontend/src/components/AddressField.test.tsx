@@ -12,6 +12,19 @@ describe("AddressField", () => {
     expect(onChange).toHaveBeenCalled();
   });
 
+  test("calls onBlur with latest value", async () => {
+    const onBlur = vi.fn();
+    function Wrapper() {
+      const [v, setV] = React.useState("");
+      return <AddressField id="a" label="A" value={v} onChange={setV} onBlur={onBlur} />;
+    }
+    render(<Wrapper />);
+    const input = screen.getByLabelText(/a/i);
+    await userEvent.type(input, "12");
+    await userEvent.tab();
+    expect(onBlur).toHaveBeenCalledWith("12");
+  });
+
   test("shows location button when onUseLocation provided and handles click/disabled", async () => {
     const onUseLocation = vi.fn();
     const { rerender } = render(

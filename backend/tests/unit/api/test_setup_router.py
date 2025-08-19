@@ -29,7 +29,6 @@ async def test_get_setup_status_after_setup(monkeypatch: MonkeyPatch, client: As
         # Minimal config shape the router exposes today
         return {
             "account_mode": True,
-            "google_maps_api_key": "XYZ",
             "flagfall": 10.5,
             "per_km_rate": 2.75,
             "per_minute_rate": 1.1,
@@ -41,7 +40,6 @@ async def test_get_setup_status_after_setup(monkeypatch: MonkeyPatch, client: As
     assert resp.status_code == 200
     data = resp.json()
     assert data["account_mode"] is True
-    assert data["google_maps_api_key"] == "XYZ"
     assert data["flagfall"] == 10.5
     assert data["per_km_rate"] == 2.75
     assert data["per_minute_rate"] == 1.1
@@ -65,7 +63,6 @@ async def test_post_setup_success_forwards_payload(monkeypatch: MonkeyPatch, cli
         "admin_password": "supersecret",
         "settings": {
             "account_mode": True,
-            "google_maps_api_key": "XYZ",
             "flagfall": 10.5,
             "per_km_rate": 2.75,
             "per_minute_rate": 1.1,
@@ -95,7 +92,6 @@ async def test_post_setup_validation_error(monkeypatch: MonkeyPatch, client: Asy
         "admin_password": "supersecret",
         "settings": {
             # "account_mode": "open",  # missing on purpose
-            "google_maps_api_key": "XYZ",
             "flagfall": 10.5,
             "per_km_rate": 2.75,
             "per_minute_rate": 1.1,

@@ -1,5 +1,5 @@
 // src/pages/Booking/BookingPage.tsx
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { Alert, Box, Button, Card, CardContent, Grid, Stack, Typography } from "@mui/material";
 
 // Adapt these to your actual exports
@@ -38,10 +38,17 @@ export default function BookingPage() {
 
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
+  const [pickupRoute, setPickupRoute] = useState("");
+  const [dropoffRoute, setDropoffRoute] = useState("");
   const [rideTime, setRideTime] = useState(minFutureDateTime(5));
 
   const [distanceKm, setDistanceKm] = useState<number | undefined>(undefined);
   const [durationMin, setDurationMin] = useState<number | undefined>(undefined);
+
+  const handleMetrics = useCallback((km: number, min: number) => {
+    setDistanceKm(km);
+    setDurationMin(min);
+  }, []);
 
   const geo = usePickupFromGeolocation();
 
@@ -62,6 +69,9 @@ export default function BookingPage() {
   useEffect(() => {
     if (!pickup && geo.address) {
       setPickup(geo.address);
+    }
+    if (geo.address) {
+      setPickupRoute(geo.address);
     }
   }, [geo.address, pickup]);
 
@@ -121,6 +131,7 @@ export default function BookingPage() {
                     // stop the derived value from overriding user input after first set
                     if (geo.address) geo.setAddress("");
                   }}
+                  onBlur={setPickupRoute}
                   onUseLocation={geo.locate}
                   locating={geo.locating}
                   errorText={geo.error ?? undefined}
@@ -131,6 +142,7 @@ export default function BookingPage() {
                   label="Dropoff address"
                   value={dropoff}
                   onChange={setDropoff}
+                  onBlur={setDropoffRoute}
                 />
 
                 <DateTimeField
@@ -142,13 +154,10 @@ export default function BookingPage() {
                 />
 
                 <MapRoute
-                  pickup={pickupValue}
-                  dropoff={dropoff}
+                  pickup={pickupRoute}
+                  dropoff={dropoffRoute}
                   apiKey={settings?.google_maps_api_key}
-                  onMetrics={(km, min) => {
-                    setDistanceKm(km);
-                    setDurationMin(min);
-                  }}
+                  onMetrics={handleMetrics}
                 />
 
                 <Stack direction="row" spacing={1}>

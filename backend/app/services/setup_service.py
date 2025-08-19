@@ -20,7 +20,6 @@ async def complete_initial_setup(db: AsyncSession, data: SetupPayload):
 
     cfg = AdminConfig(
         account_mode=(data.settings.account_mode),
-        google_maps_api_key=data.settings.google_maps_api_key,
         flagfall=data.settings.flagfall,
         per_km_rate=data.settings.per_km_rate,
         per_minute_rate=data.settings.per_minute_rate,
@@ -37,7 +36,6 @@ async def is_setup_complete(db: AsyncSession) -> Union[SettingsPayload, None]:
         return None
     return SettingsPayload(
         account_mode=cfg.account_mode,
-        google_maps_api_key=cfg.google_maps_api_key,
         flagfall=cfg.flagfall,
         per_km_rate=cfg.per_km_rate,
         per_minute_rate=cfg.per_minute_rate,

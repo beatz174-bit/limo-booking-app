@@ -11,7 +11,6 @@ const labelInput = (re: RegExp | string) => screen.getByLabelText(re, { selector
 
 const defaultSettings = {
   account_mode: true,
-  google_maps_api_key: 'XYZ',
   flagfall: 10.5,
   per_km_rate: 2.75,
   per_minute_rate: 1.1,
@@ -40,7 +39,7 @@ async function awaitLoaded() {
     await waitForElementToBeRemoved(maybeSpinner);
   }
   // Wait for any of the known controls to exist
-  await screen.findByLabelText(/google maps/i, undefined, { timeout: 3000 });
+  await screen.findByLabelText(/flagfall/i, undefined, { timeout: 3000 });
 }
 
 test('loads and displays current settings', async () => {
@@ -49,7 +48,6 @@ test('loads and displays current settings', async () => {
 
   await awaitLoaded();
 
-  expect(labelInput(/google maps/i)).toHaveValue('XYZ');
   expect(labelInput(/flagfall/i)).toHaveValue(10.5);
   expect(labelInput(/per km rate/i)).toHaveValue(2.75);
   expect(labelInput(/per minute rate/i)).toHaveValue(1.1);
@@ -62,8 +60,6 @@ test('validation disables Save when fields are invalid', async () => {
   mockSettingsGet(defaultSettings);
   renderWithProviders(<AdminDashboard />, { initialPath: '/admin' });
   await awaitLoaded();
-
-  await userEvent.clear(labelInput(/google maps/i));
   await userEvent.clear(labelInput(/flagfall/i));
   await userEvent.type(labelInput(/flagfall/i), '-1');
   await userEvent.clear(labelInput(/per km rate/i));
@@ -80,9 +76,6 @@ test('saves settings (PUT /settings) with correct payload and shows success', as
   renderWithProviders(<AdminDashboard />, { initialPath: '/admin' });
 
   await awaitLoaded();
-
-  await userEvent.clear(labelInput(/google maps/i));
-  await userEvent.type(labelInput(/google maps/i), 'NEWKEY');
   await userEvent.clear(labelInput(/flagfall/i));
   await userEvent.type(labelInput(/flagfall/i), '12.34');
   await userEvent.clear(labelInput(/per km rate/i));
@@ -96,7 +89,6 @@ test('saves settings (PUT /settings) with correct payload and shows success', as
 
   expect(seen).toMatchObject({
     account_mode: true,
-    google_maps_api_key: 'NEWKEY',
     flagfall: 12.34,
     per_km_rate: 3.21,
     per_minute_rate: 0.9,
