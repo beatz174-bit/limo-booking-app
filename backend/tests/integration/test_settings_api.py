@@ -37,7 +37,6 @@ async def test_settings_requires_auth(client: AsyncClient):
         "/settings",
         json={
             "account_mode": True,
-            "google_maps_api_key": "XYZ",
             "flagfall": 10.5,
             "per_km_rate": 2.75,
             "per_minute_rate": 1.1,
@@ -55,7 +54,6 @@ async def test_get_settings_after_setup(client: AsyncClient, async_session: Asyn
         "admin_password": "supersecret",
         "settings": {
             "account_mode": True,
-            "google_maps_api_key": "XYZ",
             "flagfall": 10.5,
             "per_km_rate": 2.75,
             "per_minute_rate": 1.1,
@@ -74,7 +72,6 @@ async def test_get_settings_after_setup(client: AsyncClient, async_session: Asyn
     data = resp.json()
     assert data == {
         "account_mode": True,
-        "google_maps_api_key": "XYZ",
         "flagfall": 10.5,
         "per_km_rate": 2.75,
         "per_minute_rate": 1.1,
@@ -90,7 +87,6 @@ async def test_put_settings_updates_values(client: AsyncClient, async_session: A
         "admin_password": "supersecret",
         "settings": {
             "account_mode": True,
-            "google_maps_api_key": "XYZ",
             "flagfall": 10.5,
             "per_km_rate": 2.75,
             "per_minute_rate": 1.1,
@@ -107,7 +103,6 @@ async def test_put_settings_updates_values(client: AsyncClient, async_session: A
     # Update settings
     new_values: SettingsPayload = SettingsPayload(
         account_mode=False,
-        google_maps_api_key="ABC-123",
         flagfall=12.0,
         per_km_rate=3.0,
         per_minute_rate=1.25,

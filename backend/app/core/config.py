@@ -101,6 +101,7 @@ class Settings(BaseSettings):
 
     # Third-party APIs
     ors_api_key: Optional[str] = os.getenv("ORS_API_KEY","undefined")
+    google_maps_api_key: Optional[str] = os.getenv("GOOGLE_MAPS_API_KEY")
 
     # Pydantic config (v1 vs v2)
     if _P2:

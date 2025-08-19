@@ -8,6 +8,7 @@ export function AddressField(props: {
   label: string;
   value: string;
   onChange: (v: string) => void;
+  onBlur?: (v: string) => void;
   onUseLocation?: () => void;
   locating?: boolean;
   errorText?: string;

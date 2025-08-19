@@ -21,6 +21,12 @@ headingLevel: 2
 
 <h1 id="limo-booking-app">Limo Booking App v0.1</h1>
 
+## Configuration
+
+Set required environment variables before running the backend. For route metrics
+support, create a Google Maps API key and expose it as `GOOGLE_MAPS_API_KEY`
+in the appropriate `.env.*` file or your deployment environment.
+
 > Scroll down for code samples, example requests and responses. Select a language for code samples from the tabs above or the mobile navigation menu.
 
 # Authentication

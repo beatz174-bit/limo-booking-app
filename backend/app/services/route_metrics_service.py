@@ -1,10 +1,12 @@
-import os
 import httpx
+
+from app.core.config import get_settings
 
 GOOGLE_DISTANCE_MATRIX_URL = "https://maps.googleapis.com/maps/api/distancematrix/json"
 
 async def get_route_metrics(pickup: str, dropoff: str) -> dict:
-    api_key = os.getenv("GOOGLE_MAPS_API_KEY")
+    settings = get_settings()
+    api_key = settings.google_maps_api_key
     if not api_key:
         raise RuntimeError("GOOGLE_MAPS_API_KEY not configured")
     params = {
@@ -17,6 +19,9 @@ async def get_route_metrics(pickup: str, dropoff: str) -> dict:
         res = await client.get(GOOGLE_DISTANCE_MATRIX_URL, params=params)
         res.raise_for_status()
         data = res.json()
+    if data.get("status") != "OK":
+        message = data.get("error_message") or data.get("status", "error")
+        raise RuntimeError(message)
     try:
         element = data["rows"][0]["elements"][0]
         if element.get("status") != "OK":

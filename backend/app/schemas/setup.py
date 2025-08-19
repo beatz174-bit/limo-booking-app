@@ -3,7 +3,6 @@ from pydantic import BaseModel, EmailStr, ConfigDict
 
 class SettingsPayload(BaseModel):
     account_mode: bool
-    google_maps_api_key: str
     flagfall: float
     per_km_rate: float
     per_minute_rate: float
@@ -18,7 +17,6 @@ class SetupPayload(BaseModel):
 
 # class SetupSummary(TypedDict):
 #     account_mode: bool
-#     google_maps_api_key: str
 #     flagfall: float
 #     per_km_rate: float
 #     per_minute_rate: float

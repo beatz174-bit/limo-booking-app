@@ -84,17 +84,6 @@ async function selectAccountMode(page: Page, optionLabel: string) {
   await chooseAccountModeFlexible(page, optionLabel);
 }
 
-async function setGoogleMapsKey(page: Page, value: string) {
-  const byTestId = page.getByTestId('settings-google-maps-api-key');
-  if (await byTestId.count()) {
-    await byTestId.fill(value);
-    await byTestId.blur();
-    return;
-  }
-  const byLabel = page.getByLabel(/google maps api key/i);
-  await byLabel.fill(value);
-  await byLabel.blur();
-}
 
 async function readNumber(page: Page, testId: string): Promise<number> {
   const loc = page.getByTestId(testId);
@@ -183,7 +172,6 @@ test.describe('[admin] Admin Dashboard', () => {
     const curPerMinute = await readNumber(page, 'settings-per-minute');
 
     // REQUIRED field
-    await setGoogleMapsKey(page, 'FAKE-KEY-FOR-TESTS-XYZ');
 
     // New values
     const newFlagfall = (curFlagfall + 0.13).toFixed(2);
@@ -240,7 +228,6 @@ test.describe('[admin] Admin Dashboard', () => {
     await page.goto('/admin');
     await expect(page.getByRole('heading', { name: /admin dashboard/i })).toBeVisible({ timeout: 10000 });
 
-    await setGoogleMapsKey(page, 'FAKE-KEY-FOR-TESTS-XYZ');
 
     const curFlagfall = await readNumber(page, 'settings-flagfall');
     const curPerKm = await readNumber(page, 'settings-per-km');
