@@ -2,7 +2,6 @@
 
 import logging
 from contextlib import asynccontextmanager
-
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, JSONResponse

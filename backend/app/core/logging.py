@@ -81,4 +81,3 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             process_time,
         )
         return response
-

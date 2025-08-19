@@ -27,6 +27,7 @@ The application relies on several external services. Set these variables in a `.
 
 ## Logging
 
+
 The backend emits JSON-formatted logs to stdout. Set the `LOG_LEVEL` environment
 variable to control verbosity. Each log line includes a `request_id` so related
 events can be correlated in Docker or a centralized aggregator. HTTP requests,
