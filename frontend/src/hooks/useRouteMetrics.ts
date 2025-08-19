@@ -3,7 +3,7 @@ import { CONFIG } from "@/config";
 import { useCallback } from "react";
 
 export function useRouteMetrics() {
-  return async function getMetrics(
+  return useCallback(async function getMetrics(
     pickup: string,
     dropoff: string
   ): Promise<{ km: number; min: number } | null> {
@@ -27,5 +27,5 @@ export function useRouteMetrics() {
       console.error(err);
       return null;
     }
-  };
+  }, []);
 }

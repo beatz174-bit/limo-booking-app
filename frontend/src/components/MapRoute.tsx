@@ -13,16 +13,16 @@ type Props = {
    * Optional API key to override the default from configuration.
    * Primarily used in tests or when the key is provided dynamically
    * (e.g. fetched from backend settings).
-   */
+  */
   apiKey?: string;
   onMetrics?: (km: number, minutes: number) => void;
-  apiKey?: string;
 };
 
 export function MapRoute({ pickup, dropoff, onMetrics, apiKey }: Props) {
   const getMetrics = useRouteMetrics();
   const mapRef = useRef<HTMLDivElement>(null);
   const resolvedKey = apiKey ?? CONFIG.GOOGLE_MAPS_API_KEY;
+  const [failed, setFailed] = useState(false);
 
   // Compute distance & duration via backend proxy (Distance Matrix)
   useEffect(() => {
@@ -81,11 +81,13 @@ export function MapRoute({ pickup, dropoff, onMetrics, apiKey }: Props) {
         } catch (err) {
           console.error(err);
           if (mapRef.current) mapRef.current.textContent = "Map failed to load";
+          setFailed(true);
         }
       })
       .catch((err) => {
         console.error(err);
         if (mapRef.current) mapRef.current.textContent = "Map failed to load";
+        setFailed(true);
       });
 
     return () => {
