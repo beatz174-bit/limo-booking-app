@@ -1,6 +1,7 @@
 // src/pages/Booking/components/AddressField.tsx
-import { TextField, InputAdornment, IconButton, CircularProgress } from "@mui/material";
+import { TextField, InputAdornment, IconButton, CircularProgress, Autocomplete } from "@mui/material";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
+import { useAddressAutocomplete } from "@/hooks/useAddressAutocomplete";
 
 export function AddressField(props: {
   id: string;
@@ -19,16 +20,34 @@ export function AddressField(props: {
     </InputAdornment>
   ) : undefined;
 
+  const { suggestions, loading } = useAddressAutocomplete(props.value);
+
   return (
-    <TextField
-      id={props.id}
-      label={props.label}
-      value={props.value}
-      onChange={(e) => props.onChange(e.target.value)}
-      fullWidth
-      error={!!props.errorText}
-      helperText={props.errorText}
-      InputProps={{ endAdornment: adornment }}
+    <Autocomplete
+      freeSolo
+      options={suggestions.map((s) => s.display)}
+      inputValue={props.value}
+      onInputChange={(_e, val) => props.onChange(val)}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          id={props.id}
+          label={props.label}
+          fullWidth
+          error={!!props.errorText}
+          helperText={props.errorText}
+          InputProps={{
+            ...params.InputProps,
+            endAdornment: (
+              <>
+                {loading && <CircularProgress size={18} />}
+                {adornment}
+                {params.InputProps.endAdornment}
+              </>
+            ),
+          }}
+        />
+      )}
     />
   );
 }
