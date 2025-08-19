@@ -1,4 +1,4 @@
-// src/hooks/usePickupFromGeolocation.ts
+// Hook that gets a pickup address based on the user's geolocation.
 import { useCallback, useState } from "react";
 import { reverseGeocode } from "@/lib/geocoding";
 

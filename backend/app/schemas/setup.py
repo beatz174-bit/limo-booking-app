@@ -1,7 +1,12 @@
 from pydantic import BaseModel, EmailStr, ConfigDict
 
+"""Schemas for initial application setup."""
+
+from pydantic import BaseModel, EmailStr, ConfigDict
+
 
 class SettingsPayload(BaseModel):
+    """Configuration values provided during setup."""
     account_mode: bool
     flagfall: float
     per_km_rate: float
@@ -10,6 +15,7 @@ class SettingsPayload(BaseModel):
 
 
 class SetupPayload(BaseModel):
+    """Payload containing admin user and settings."""
     admin_email: EmailStr
     full_name: str
     admin_password: str

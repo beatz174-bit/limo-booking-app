@@ -1,4 +1,4 @@
-// src/hooks/useRouteMetrics.ts
+// Hook to fetch distance and duration between two addresses.
 import { CONFIG } from "@/config";
 import { useCallback } from "react";
 

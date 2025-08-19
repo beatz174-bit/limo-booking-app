@@ -1,4 +1,5 @@
-# app/main.py
+"""Application entry point and API router configuration."""
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse

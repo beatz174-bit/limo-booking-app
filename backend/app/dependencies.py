@@ -1,3 +1,5 @@
+"""Shared dependency functions for FastAPI routes."""
+
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer
 from typing import AsyncGenerator, Union

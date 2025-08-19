@@ -23,9 +23,12 @@ headingLevel: 2
 
 ## Configuration
 
-Set required environment variables before running the backend. For route metrics
-support, create a Google Maps API key and expose it as `GOOGLE_MAPS_API_KEY`
-in the appropriate `.env.*` file or your deployment environment.
+Set required environment variables before running the backend:
+
+- `GOOGLE_MAPS_API_KEY` – used for distance and duration metrics via Google Distance Matrix.
+- `ORS_API_KEY` – used for geocoding with the OpenRouteService API.
+
+Expose these in the appropriate `.env.*` files or your deployment environment.
 
 > Scroll down for code samples, example requests and responses. Select a language for code samples from the tabs above or the mobile navigation menu.
 
