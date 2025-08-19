@@ -7,6 +7,7 @@ export function AddressField(props: {
   label: string;
   value: string;
   onChange: (v: string) => void;
+  onBlur?: (v: string) => void;
   onUseLocation?: () => void;
   locating?: boolean;
   errorText?: string;
@@ -25,6 +26,7 @@ export function AddressField(props: {
       label={props.label}
       value={props.value}
       onChange={(e) => props.onChange(e.target.value)}
+      onBlur={(e) => props.onBlur?.(e.target.value)}
       fullWidth
       error={!!props.errorText}
       helperText={props.errorText}
