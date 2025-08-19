@@ -22,6 +22,8 @@ afterEach(() => {
   vi.clearAllMocks();
   // @ts-ignore
   delete (globalThis as any).google;
+  // @ts-ignore
+  delete (globalThis as any).gm_authFailure;
 });
 
 describe("MapRoute", () => {
@@ -46,5 +48,18 @@ describe("MapRoute", () => {
     rerender(<MapRoute pickup="A" dropoff="" apiKey="KEY" onMetrics={onMetrics} />);
     await new Promise((r) => setTimeout(r, 20));
     expect(onMetrics).not.toHaveBeenCalled();
+  });
+
+  test("handles invalid API key gracefully", async () => {
+    vi.mock("@/config", () => ({ CONFIG: { API_BASE_URL: "http://api" } }));
+    const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ km: 10, min: 15 }) })) as any;
+    vi.stubGlobal("fetch", fetchMock);
+    // simulate no google maps loaded
+    // @ts-ignore
+    delete (globalThis as any).google;
+    const { container } = render(<MapRoute pickup="A" dropoff="B" apiKey="BAD" />);
+    await waitFor(() => typeof (window as any).gm_authFailure === "function");
+    (window as any).gm_authFailure();
+    await waitFor(() => expect(container.textContent).toContain("Map failed to load"));
   });
 });
