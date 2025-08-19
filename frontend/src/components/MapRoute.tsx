@@ -9,6 +9,12 @@ declare const google: any;
 type Props = {
   pickup: string;
   dropoff: string;
+  /**
+   * Optional API key to override the default from configuration.
+   * Primarily used in tests or when the key is provided dynamically
+   * (e.g. fetched from backend settings).
+   */
+  apiKey?: string;
   onMetrics?: (km: number, minutes: number) => void;
   apiKey?: string;
 };
@@ -85,6 +91,7 @@ export function MapRoute({ pickup, dropoff, onMetrics, apiKey }: Props) {
     return () => {
       cancelled = true;
     };
+
   }, [pickup, dropoff, resolvedKey]);
 
   return <div id="map" ref={mapRef} style={{ width: "100%", height: 300 }} />;
