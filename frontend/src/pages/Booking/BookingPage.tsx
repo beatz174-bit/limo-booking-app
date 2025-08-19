@@ -6,6 +6,7 @@ import { Alert, Box, Button, Card, CardContent, Grid, Stack, Typography } from "
 // import apiConfig, {  SettingsApi, BookingsApi } from "@/components/ApiConfig";
 
 import { settingsApi, bookingsApi } from "@/components/ApiConfig";
+import type { BookingCreate } from "@/api-client";
 // const { data: settings } = useSettings(settingsApi);
 
 
@@ -24,15 +25,6 @@ export default function BookingPage() {
   // const settingsApi = useMemo(() => new SettingsApi(apiConfig), []);
   // const bookingsApi = useMemo(() => new BookingsApi(apiConfig), []);
   // const { data: settings } = useSettings(settingsApi);
-
-  type BookingCreate = {
-    pickup_location: string;
-    destination: string;
-    ride_time: string; // ISO
-    price: number;
-    status?: "pending" | "confirmed" | "completed" | "cancelled";
-    // notes?: string | null;
-  };
 
   const { data: settings, loading: settingsLoading, error: settingsError } = useSettings(settingsApi);
 
@@ -99,7 +91,7 @@ export default function BookingPage() {
         destination: dropoff.trim(),
         ride_time: new Date(rideTime).toISOString(),
         price: pricing.price || 0,
-      }
+      };
       // TODO: Replace with your actual request object + API call
       await bookingsApi.apiCreateBookingBookingsPost(payload)
       alert("Booking submitted");
@@ -118,7 +110,7 @@ export default function BookingPage() {
       {settingsError && <Alert severity="error">{settingsError}</Alert>}
 
       <Grid container spacing={2}>
-        <Grid item xs={12} md={7}>
+        <Grid size={{ xs: 12, md: 7 }}>
           <Card>
             <CardContent>
               <Stack spacing={2}>
@@ -173,7 +165,7 @@ export default function BookingPage() {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={5}>
+        <Grid size={{ xs: 12, md: 5 }}>
           <Card>
             <CardContent>
               <PriceSummary

@@ -9,6 +9,7 @@ export type AppSettings = {
   per_km_rate: number;
   per_minute_rate: number;
   account_mode: boolean;
+  google_maps_api_key?: string;
 };
 
 export function useSettings(api: SettingsApi) {

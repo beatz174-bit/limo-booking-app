@@ -74,10 +74,10 @@ export function MapRoute({ pickup, dropoff, onMetrics, apiKey }: Props) {
               destination: dropoff,
               travelMode: g.maps.TravelMode.DRIVING,
             })
-            .then((result) => {
+            .then((result: any) => {
               if (!cancelled) renderer.setDirections(result);
             })
-            .catch((err) => console.error(err));
+            .catch((err: any) => console.error(err));
         } catch (err) {
           console.error(err);
           setFailed(true);
