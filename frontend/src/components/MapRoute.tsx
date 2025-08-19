@@ -1,5 +1,5 @@
 // src/pages/Booking/components/MapRoute.tsx
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouteMetrics } from "@/hooks/useRouteMetrics";
 import { CONFIG } from "@/config";
 
@@ -43,7 +43,7 @@ export function MapRoute({ pickup, dropoff, onMetrics, apiKey }: Props) {
     if (!pickup || !dropoff || !resolvedKey || !mapRef.current) return;
     let cancelled = false;
 
-    function loadScript(): Promise<typeof google> {
+    function loadScript(): Promise<typeof google | undefined> {
       const w = window as any;
       if (w.google?.maps) return Promise.resolve(w.google);
       return new Promise((resolve, reject) => {
@@ -94,5 +94,12 @@ export function MapRoute({ pickup, dropoff, onMetrics, apiKey }: Props) {
 
   }, [pickup, dropoff, resolvedKey]);
 
+  if (failed) {
+    return (
+      <div id="map" style={{ width: "100%", height: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "#eee" }}>
+        Map unavailable
+      </div>
+    );
+  }
   return <div id="map" ref={mapRef} style={{ width: "100%", height: 300 }} />;
 }
