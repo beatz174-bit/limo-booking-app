@@ -1,11 +1,14 @@
 """Application entry point and API router configuration."""
 
+import logging
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
-from contextlib import asynccontextmanager
 
 from app.core.config import get_settings
+from app.core.logging import RequestLoggingMiddleware, setup_logging
 from app.db.database import database
 
 from app.api import (
@@ -19,7 +22,9 @@ from app.api import (
     users as users_router,
 
 )
+setup_logging()
 settings = get_settings()
+logger = logging.getLogger(__name__)
 
 def get_app() -> FastAPI:
     """For pytest: returns the singleton `app`."""
@@ -41,6 +46,8 @@ app = FastAPI(
     swagger_ui_parameters={"persistAuthorization": True},
     lifespan=lifespan,
 )
+app.add_middleware(RequestLoggingMiddleware)
+logger.info("Application startup complete", extra={"env": settings.env})
 
 if not settings.env == "production":
     # Global CORS configuration
