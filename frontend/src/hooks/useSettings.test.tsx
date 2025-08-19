@@ -8,7 +8,7 @@ class FakeSettingsApi {
 
 describe("useSettings", () => {
   test("loads settings and exposes data/loading/error", async () => {
-    const api = new FakeSettingsApi() as any;
+    const api = new FakeSettingsApi();
     const { result } = renderHook(() => useSettings(api));
 
     expect(result.current.loading).toBe(true);
@@ -20,7 +20,7 @@ describe("useSettings", () => {
 
   test("propagates error state on failure", async () => {
     class BadApi { apiGetSettingsSettingsGet = vi.fn(async () => { throw new Error("boom"); }); }
-    const api = new BadApi() as any;
+    const api = new BadApi();
     const { result } = renderHook(() => useSettings(api));
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.error).toBeTruthy();

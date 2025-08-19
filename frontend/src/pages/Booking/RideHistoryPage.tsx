@@ -28,8 +28,8 @@ function RideHistoryPage() {
       try {
         const res = await bookingsApi.apiListBookingsBookingsGet();
         if (alive) setBookings(res.data as BookingRead[]);
-      } catch (e: any) {
-        if (alive) setError(e?.message ?? 'Failed to load bookings');
+      } catch (e: unknown) {
+        if (alive) setError(e instanceof Error ? e.message : 'Failed to load bookings');
       } finally {
         if (alive) setLoading(false);
       }

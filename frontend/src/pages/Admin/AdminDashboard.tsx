@@ -3,7 +3,7 @@ import { AxiosError } from "axios";
 // Use the SAME shared API client that RegisterPage uses so we hit the correct backend/db
 // Update the path below to exactly match RegisterPage's import if different
 // import { SettingsApi } from "../../api-client/api";
-import config, { AuthApi, UsersApi, SettingsApi} from "@/components/ApiConfig"
+import config, { SettingsApi } from "@/components/ApiConfig"
 import type { SettingsPayload } from "@/api-client";
 import {
   Box,
@@ -79,7 +79,7 @@ export default function AdminDashboard() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [settingsApi]);
 
   // Validation helpers
   function validateNumeric(value: string): string | null {

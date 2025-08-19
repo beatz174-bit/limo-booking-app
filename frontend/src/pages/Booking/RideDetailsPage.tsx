@@ -37,8 +37,8 @@ function RideDetailsPage() {
             setError('Ride not found');
           }
         }
-      } catch (e: any) {
-        if (alive) setError(e?.message ?? 'Failed to load ride');
+      } catch (e: unknown) {
+        if (alive) setError(e instanceof Error ? e.message : 'Failed to load ride');
       } finally {
         if (alive) setLoading(false);
       }

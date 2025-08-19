@@ -19,7 +19,7 @@ describe("useAddressAutocomplete", () => {
     vi.stubGlobal("fetch", vi.fn(async () => ({
       ok: true,
       json: async () => sample,
-    }) as any));
+    })));
 
     const { result } = renderHook(() => useAddressAutocomplete("123", { debounceMs: 0 }));
 

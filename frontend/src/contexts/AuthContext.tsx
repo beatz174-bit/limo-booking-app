@@ -1,13 +1,12 @@
 // React context providing authentication state and helpers.
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import cfg, { AuthApi, UsersApi } from "@/components/ApiConfig";
+import cfg, { AuthApi } from "@/components/ApiConfig";
 import { CONFIG } from "@/config";
 import { setTokens, getRefreshToken } from "../services/tokenStore";
 import { beginLogin, completeLoginFromRedirect, refreshTokens, TokenResponse, OAuthConfig } from "../services/oauth";
 import { useLocation, useNavigate } from "react-router-dom";
 import { type AuthContextType } from "@/types/AuthContextType";
 
-const authApi = new AuthApi(cfg);
 type UserShape = { email?: string; full_name?: string } | null;
 
 type AuthState = {
@@ -50,7 +49,7 @@ useEffect(() => {
         userName: storeduserName ?? null,
       });
       return;
-    } catch {}
+    } catch { /* ignore parse errors */ }
   }
   setState((s) => ({ ...s, loading: false }));
 }, []);
@@ -159,12 +158,13 @@ const loginWithPassword = async (email: string, password: string) => {
       logout,
       ensureFreshToken,
     }),
-    [state, loginWithPassword, registerWithPassword]
+    [state, loginWithPassword, registerWithPassword, loginWithOAuth, finishOAuthIfCallback, logout, ensureFreshToken]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");

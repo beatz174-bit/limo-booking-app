@@ -20,8 +20,8 @@ export function usePickupFromGeolocation() {
       );
       const addr = await reverseGeocode(position.coords.latitude, position.coords.longitude);
       setAddress(addr);
-    } catch (e: any) {
-      setError(e?.message ?? "Unable to retrieve your location");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unable to retrieve your location");
     } finally {
       setLocating(false);
     }

@@ -2,11 +2,11 @@
 import { test as base } from '@playwright/test';
 
 export const test = base.extend({
-  context: async ({ browser }, use) => {
+  context: async ({ browser }, usefixture) => {
     // Use storage state produced by global-setup:
     const storage = './storage/admin.json';
     const context = await browser.newContext({ storageState: storage });
-    await use(context);
+    await usefixture(context);
     await context.close();
   },
 });

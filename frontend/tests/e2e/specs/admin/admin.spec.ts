@@ -116,7 +116,7 @@ async function sawSuccessUI(page: Page): Promise<boolean> {
     try {
       await expect(loc.first()).toBeVisible({ timeout: 1200 });
       return true;
-    } catch {}
+    } catch { /* ignore visibility errors */ }
   }
   return false;
 }
@@ -144,7 +144,7 @@ test.describe('[admin] Admin Dashboard', () => {
 
   test('updates settings successfully', async ({ page }) => {
     // Stub ONLY the write so this test is independent of admin privileges/persistence
-    let capturedBody: any | null = null;
+    let capturedBody: unknown | null = null;
     await page.route('**/settings', async (route) => {
       const req = route.request();
       const m = req.method();

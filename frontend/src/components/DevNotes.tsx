@@ -76,7 +76,7 @@ const DevNotes: React.FC = () => {
           <ListItemText primary="OAuth redirect URI" secondary={CONFIG.OAUTH_REDIRECT_URI || '(not set)'} />
         </ListItem>
         <ListItem>
-          <ListItemText primary="Google Maps API key" secondary={CONFIG.GOOGLE_MAPS_API_KEY ? 'configured' : '(not set)'} />
+          <ListItemText primary="Google Maps API key" secondary={CONFIG.GOOGLE_MAPS_API_KEY || '(not set)'} />
         </ListItem>
       </List>
       <Divider sx={{ my: 2 }} />

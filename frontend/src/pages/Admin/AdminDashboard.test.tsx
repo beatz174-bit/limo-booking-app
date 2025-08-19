@@ -20,7 +20,7 @@ function mockSettingsGet(data = defaultSettings) {
   server.use(http.get(apiUrl('/settings'), () => HttpResponse.json(data)));
 }
 
-function mockSettingsPut(assertBody?: (b: any) => void, status = 200) {
+function mockSettingsPut(assertBody?: (b: unknown) => void, status = 200) {
   server.use(
     http.put(apiUrl('/settings'), async ({ request }) => {
       const body = await request.json();
@@ -70,7 +70,7 @@ test('validation disables Save when fields are invalid', async () => {
 
 test('saves settings (PUT /settings) with correct payload and shows success', async () => {
   mockSettingsGet(defaultSettings);
-  let seen: any | null = null;
+  let seen: unknown | null = null;
   mockSettingsPut((b) => (seen = b));
 
   renderWithProviders(<AdminDashboard />, { initialPath: '/admin' });

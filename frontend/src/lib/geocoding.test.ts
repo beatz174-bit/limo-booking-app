@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test, vi } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 
 afterEach(() => {
   vi.clearAllMocks();
@@ -13,18 +13,18 @@ test("reverseGeocode prefers backend when API_BASE_URL is set (tolerant to alias
   const fetchMock = vi.fn(async (url: string) => {
     const u = String(url);
     if (u.startsWith("http://backend/")) {
-      return { ok: true, json: async () => ({ address: "Backend St" }) } as any;
+      return { ok: true, json: async () => ({ address: "Backend St" }) };
     }
     if (u.startsWith("https://nominatim.openstreetmap.org")) {
-      return { ok: true, json: async () => ({ display_name: "Nominatim Rd" }) } as any;
+      return { ok: true, json: async () => ({ display_name: "Nominatim Rd" }) };
     }
-    return { ok: true, json: async () => ({}) } as any;
+    return { ok: true, json: async () => ({}) };
   }) as unknown as typeof fetch;
 
   vi.stubGlobal("fetch", fetchMock);
 
   const { reverseGeocode } = await import("./geocoding");
-  const addr = await reverseGeocode(-27.5, 153.0);
+  await reverseGeocode(-27.5, 153.0);
 
   // Primary check: we called something sane
   expect(fetchMock).toHaveBeenCalled();
@@ -50,9 +50,9 @@ test("reverseGeocode falls back to Nominatim when backend missing", async () => 
   const fetchMock = vi.fn(async (url: string) => {
     const u = String(url);
     if (!u.startsWith("https://nominatim.openstreetmap.org")) {
-      return { ok: false, json: async () => ({}) } as any;
+      return { ok: false, json: async () => ({}) };
     }
-    return { ok: true, json: async () => ({ display_name: "Nominatim Rd" }) } as any;
+    return { ok: true, json: async () => ({ display_name: "Nominatim Rd" }) };
   }) as unknown as typeof fetch;
 
   vi.stubGlobal("fetch", fetchMock);

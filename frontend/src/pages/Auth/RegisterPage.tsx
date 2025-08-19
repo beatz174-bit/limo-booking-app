@@ -12,7 +12,7 @@ import {
   Button,
   Alert,
 } from '@mui/material';
-import cfg, { AuthApi, UsersApi } from "@/components/ApiConfig"
+import cfg, { AuthApi } from "@/components/ApiConfig"
 const authApi = new AuthApi(cfg);
 
 function RegisterPage() {
@@ -43,13 +43,14 @@ function RegisterPage() {
             // Redirect to dashboard or desired page
             navigate("/admin");
 
-        } catch (err: any) {
-            if (err?.response?.status === 422) {
+        } catch (err: unknown) {
+            const e = err as { response?: { status?: number; data?: { detail?: string } } };
+            if (e.response?.status === 422) {
                 setError("Invalid input. Please check all fields.");
-            } else if (err?.response?.status === 400) {
-                setError(err?.response?.data?.detail)
-            } else if (err?.response?.data?.detail) {
-                setError(err.response.data.detail);
+            } else if (e.response?.status === 400) {
+                setError(e.response?.data?.detail);
+            } else if (e.response?.data?.detail) {
+                setError(e.response.data.detail);
             } else {
                 setError("Registration failed. Please try again.");
             }
@@ -57,7 +58,8 @@ function RegisterPage() {
         }
     };
 
-    return (  <Container maxWidth="sm">
+    return (
+      <Container maxWidth="sm">
         <Box
           display="flex"
           flexDirection="column"
@@ -68,14 +70,14 @@ function RegisterPage() {
           <Typography variant="h4" component="h1" gutterBottom>
             Register
           </Typography>
-    
+
           {error && (
-            <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
+            <Alert severity="error" sx={{ width: "100%", mb: 2 }}>
               {error}
             </Alert>
           )}
-    
-          <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+
+          <Box component="form" onSubmit={handleSubmit} sx={{ width: "100%" }}>
             <TextField
               label="Full Name"
               type="text"
@@ -85,7 +87,7 @@ function RegisterPage() {
               required
               margin="normal"
             />
-    
+
             <TextField
               label="Email"
               type="email"
@@ -104,13 +106,8 @@ function RegisterPage() {
               required
               margin="normal"
             />
-    
-            <Button
-              type="submit"
-              variant="contained"
-              fullWidth
-              sx={{ mt: 2 }}
-            >
+
+            <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }}>
               Register
             </Button>
             <Button
@@ -123,7 +120,8 @@ function RegisterPage() {
             </Button>
           </Box>
         </Box>
-      </Container>)
+      </Container>
+    );
 }
 
-export default RegisterPage
+export default RegisterPage;

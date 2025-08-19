@@ -1,6 +1,6 @@
 // @ts-check
 // tsconfig: ./tsconfig.playwright.json
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig } from "@playwright/test";
 import path from 'node:path';
 import dotenv from 'dotenv';
 

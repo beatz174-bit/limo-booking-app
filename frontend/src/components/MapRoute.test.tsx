@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { MapRoute } from "./MapRoute";
 
 beforeEach(() => {
-  (globalThis as any).google = {
+  (globalThis as Record<string, unknown>).google = {
     maps: {
       Map: vi.fn(),
       DirectionsService: vi.fn(() => ({
@@ -13,23 +13,23 @@ beforeEach(() => {
       DirectionsRenderer: vi.fn(() => ({ setMap: vi.fn(), setDirections: vi.fn() })),
       TravelMode: { DRIVING: "DRIVING" },
     },
-  } as any;
+  } as unknown;
 });
 
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.resetModules();
   vi.clearAllMocks();
-  // @ts-ignore
-  delete (globalThis as any).google;
-  // @ts-ignore
-  delete (globalThis as any).gm_authFailure;
+  // @ts-expect-error cleanup test globals
+  delete (globalThis as Record<string, unknown>).google;
+  // @ts-expect-error cleanup test globals
+  delete (globalThis as Record<string, unknown>).gm_authFailure;
 });
 
 describe("MapRoute", () => {
   test("calls onMetrics when both pickup and dropoff are set", async () => {
     vi.mock("@/config", () => ({ CONFIG: { API_BASE_URL: "http://api", GOOGLE_MAPS_API_KEY: "KEY" } }));
-    const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ km: 10, min: 15 }) })) as any;
+    const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ km: 10, min: 15 }) }));
     vi.stubGlobal("fetch", fetchMock);
     const onMetrics = vi.fn();
     render(<MapRoute pickup="A" dropoff="B" onMetrics={onMetrics} />);
@@ -38,7 +38,7 @@ describe("MapRoute", () => {
 
   test("does not refetch metrics on rerender with same addresses", async () => {
     vi.mock("@/config", () => ({ CONFIG: { API_BASE_URL: "http://api", GOOGLE_MAPS_API_KEY: "KEY" } }));
-    const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ km: 10, min: 15 }) })) as any;
+    const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ km: 10, min: 15 }) }));
     vi.stubGlobal("fetch", fetchMock);
     const onMetrics = vi.fn();
     const { rerender } = render(<MapRoute pickup="A" dropoff="B" onMetrics={onMetrics} />);
@@ -54,7 +54,7 @@ describe("MapRoute", () => {
 
   test("does not call onMetrics when either address missing", async () => {
     vi.mock("@/config", () => ({ CONFIG: { API_BASE_URL: "http://api", GOOGLE_MAPS_API_KEY: "KEY" } }));
-    const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ km: 10, min: 15 }) })) as any;
+    const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ km: 10, min: 15 }) }));
     vi.stubGlobal("fetch", fetchMock);
     const onMetrics = vi.fn();
     const { rerender } = render(<MapRoute pickup="" dropoff="B" onMetrics={onMetrics} />);
@@ -68,14 +68,16 @@ describe("MapRoute", () => {
 
   test("handles invalid API key gracefully", async () => {
     vi.mock("@/config", () => ({ CONFIG: { API_BASE_URL: "http://api" } }));
-    const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ km: 10, min: 15 }) })) as any;
+    const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ km: 10, min: 15 }) }));
     vi.stubGlobal("fetch", fetchMock);
     // simulate no google maps loaded
-    // @ts-ignore
-    delete (globalThis as any).google;
+    // @ts-expect-error removing global test stub
+    delete (globalThis as Record<string, unknown>).google;
     const { container } = render(<MapRoute pickup="A" dropoff="B" apiKey="BAD" />);
-    await waitFor(() => expect(typeof (window as any).gm_authFailure).toBe("function"));
-    (window as any).gm_authFailure();
+    await waitFor(() => expect(typeof (window as Record<string, unknown>).gm_authFailure).toBe("function"));
+    if (typeof (window as Record<string, unknown>).gm_authFailure === "function") {
+      ((window as Record<string, unknown>).gm_authFailure as () => void)();
+    }
     await waitFor(() => expect(container.textContent).toContain("Map failed to load"));
   });
 });

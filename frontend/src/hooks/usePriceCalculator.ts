@@ -26,7 +26,7 @@ export function usePriceCalculator(
   } = args;
 
   const [price, setPrice] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);      // stays false for local calc
+  const [loading] = useState(false);      // stays false for local calc
   const [error, setError] = useState<string | null>(null);
 
   const argsKey = useMemo(
@@ -76,7 +76,7 @@ export function usePriceCalculator(
 
     const t = setTimeout(() => { void compute(); }, debounceMs ?? 300);
     return () => clearTimeout(t);
-  }, [auto, debounceMs, argsKey]);
+  }, [auto, debounceMs, argsKey, compute]);
 
   return { price, loading, error, compute } as const;
 }
