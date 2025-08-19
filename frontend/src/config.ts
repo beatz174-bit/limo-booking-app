@@ -9,5 +9,12 @@ export const CONFIG = {
   OAUTH_TOKEN_URL: import.meta.env.VITE_OAUTH_TOKEN_URL || '',
   // decide if you finish OAuth on /login or /oauth/callback
   OAUTH_REDIRECT_URI: import.meta.env.VITE_OAUTH_REDIRECT_URI || '',
-  GOOGLE_MAPS_API_KEY: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
+  // Allow either GOOGLE_MAPS_API_KEY or VITE_GOOGLE_MAPS_API_KEY.
+  // Vite only exposes variables prefixed with VITE_, but users may have
+  // configured the key without that prefix. Check both names so either
+  // environment variable will work.
+  GOOGLE_MAPS_API_KEY:
+    import.meta.env.GOOGLE_MAPS_API_KEY ||
+    import.meta.env.VITE_GOOGLE_MAPS_API_KEY ||
+    '',
 };
