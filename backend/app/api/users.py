@@ -34,6 +34,23 @@ async def api_list_users(db: AsyncSession = Depends(get_db), current_user: User 
     return users
 
 
+@router.get("/me", response_model=UserRead)
+async def api_get_me(current_user: User = Depends(get_current_user)):
+    """Return the currently authenticated user's profile."""
+    return UserRead.model_validate(current_user)
+
+
+@router.patch("/me", response_model=UserRead)
+async def api_update_me(
+    data: UserUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Allow the current user to update their profile."""
+    user = await update_user(db, current_user.id, data)
+    return user
+
+
 @router.get("/{user_id}", response_model=UserRead)
 async def api_get_user(user_id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Fetch a single user by ID."""

@@ -21,5 +21,7 @@ class User(Base):
     full_name:       Mapped[str]    = mapped_column(Text)
     # Password hashed with chosen algorithm
     hashed_password: Mapped[str]    = mapped_column(Text, name="password_hash")
+    # Optional default pickup address for quick bookings
+    default_pickup_address: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
     # is_approved:     Mapped[bool]   = mapped_column(Boolean, default=False)
     # role:            Mapped[Status] = mapped_column(Text, default="pending")

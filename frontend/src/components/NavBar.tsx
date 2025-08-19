@@ -42,6 +42,11 @@ const NavBar: React.FC = () => {
     navigate('/history');
   };
 
+  const navProfile = () => {
+    handleMenuClose();
+    navigate('/me');
+  };
+
   const navAdmin = () => {
     handleMenuClose();
     navigate('/admin')
@@ -85,6 +90,7 @@ const NavBar: React.FC = () => {
           <MenuItem onClick={handleLogout}>Logout</MenuItem>
           <MenuItem onClick={navBook}>Book</MenuItem>
           <MenuItem onClick={navHistory}>History</MenuItem>
+          <MenuItem onClick={navProfile}>Profile</MenuItem>
           {userID == '1' && (
             <MenuItem onClick={navAdmin}>Administration</MenuItem>
           )}

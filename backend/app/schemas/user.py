@@ -8,6 +8,7 @@ class UserBase(BaseModel):
     """Shared fields for user representations."""
     email: EmailStr
     full_name: str
+    default_pickup_address: Optional[str] = None
 
 
 class UserCreate(UserBase):
@@ -28,4 +29,5 @@ class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
     full_name: Optional[str] = None
     password: Optional[str] = None
+    default_pickup_address: Optional[str] = None
     model_config = ConfigDict(from_attributes=True, extra="ignore")
