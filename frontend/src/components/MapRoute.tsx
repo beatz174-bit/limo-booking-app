@@ -9,13 +9,20 @@ declare const google: any;
 type Props = {
   pickup: string;
   dropoff: string;
+  /**
+   * Optional API key to override the default from configuration.
+   * Primarily used in tests or when the key is provided dynamically
+   * (e.g. fetched from backend settings).
+   */
+  apiKey?: string;
   onMetrics?: (km: number, minutes: number) => void;
 };
 
-export function MapRoute({ pickup, dropoff, onMetrics }: Props) {
+export function MapRoute({ pickup, dropoff, onMetrics, apiKey }: Props) {
   const getMetrics = useRouteMetrics();
   const mapRef = useRef<HTMLDivElement>(null);
-  const apiKey = CONFIG.GOOGLE_MAPS_API_KEY;
+  // Allow injection of API key via prop but fall back to config
+  const key = apiKey ?? CONFIG.GOOGLE_MAPS_API_KEY;
 
   // Compute distance & duration via backend proxy (Distance Matrix)
   useEffect(() => {
@@ -33,7 +40,7 @@ export function MapRoute({ pickup, dropoff, onMetrics }: Props) {
 
   // Load Google Maps script & render route using Directions API
   useEffect(() => {
-    if (!pickup || !dropoff || !apiKey || !mapRef.current) return;
+    if (!pickup || !dropoff || !key || !mapRef.current) return;
     let cancelled = false;
 
     function loadScript(): Promise<typeof google> {
@@ -42,7 +49,7 @@ export function MapRoute({ pickup, dropoff, onMetrics }: Props) {
       return new Promise((resolve, reject) => {
         const script = document.createElement("script");
         w.gm_authFailure = () => reject(new Error("Invalid Google Maps API key"));
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${key}`;
         script.async = true;
         script.onload = () => (w.google?.maps ? resolve(w.google) : reject(new Error("Google Maps failed to load")));
         script.onerror = () => reject(new Error("Google Maps script error"));
@@ -84,7 +91,7 @@ export function MapRoute({ pickup, dropoff, onMetrics }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [pickup, dropoff, apiKey]);
+  }, [pickup, dropoff, key]);
 
   return <div id="map" ref={mapRef} style={{ width: "100%", height: 300 }} />;
 }
