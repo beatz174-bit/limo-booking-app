@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, test, expect, vi } from 'vitest';
 import DevNotes from './DevNotes';
-import { DevFeaturesProvider } from '@/contexts/DevFeaturesContext';
 
 vi.mock('@/config', () => ({
   CONFIG: {
