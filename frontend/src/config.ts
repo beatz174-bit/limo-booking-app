@@ -17,4 +17,8 @@ export const CONFIG = {
     import.meta.env.GOOGLE_MAPS_API_KEY ||
     import.meta.env.VITE_GOOGLE_MAPS_API_KEY ||
     '',
+  ORS_API_KEY: import.meta.env.VITE_ORS_API_KEY || '',
+  JWT_SECRET_KEY: import.meta.env.VITE_JWT_SECRET_KEY || '',
+  ENV: import.meta.env.ENV || 'development',
 };
+

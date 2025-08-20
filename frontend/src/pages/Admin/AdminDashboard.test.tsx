@@ -7,7 +7,7 @@ import { http, HttpResponse } from 'msw';
 import { server } from '@/__tests__/setup/msw.server';
 import { apiUrl } from '@/__tests__/setup/msw.handlers';
 
-const labelInput = (re: RegExp | string) => screen.getByLabelText(re, { selector: 'input' });
+const getInput = (testId: string) => screen.getByTestId(testId) as HTMLInputElement;
 
 const defaultSettings = {
   account_mode: true,
@@ -39,7 +39,8 @@ async function awaitLoaded() {
     await waitForElementToBeRemoved(maybeSpinner);
   }
   // Wait for any of the known controls to exist
-  await screen.findByLabelText(/flagfall/i, undefined, { timeout: 3000 });
+  await screen.findByTestId('settings-flagfall', undefined, { timeout: 3000 });
+  await screen.findByDisplayValue(String(defaultSettings.flagfall));
 }
 
 test('loads and displays current settings', async () => {
@@ -48,9 +49,9 @@ test('loads and displays current settings', async () => {
 
   await awaitLoaded();
 
-  expect(labelInput(/flagfall/i)).toHaveValue(10.5);
-  expect(labelInput(/per km rate/i)).toHaveValue(2.75);
-  expect(labelInput(/per minute rate/i)).toHaveValue(1.1);
+  expect(getInput('settings-flagfall')).toHaveValue(10.5);
+  expect(getInput('settings-per-km')).toHaveValue(2.75);
+  expect(getInput('settings-per-minute')).toHaveValue(1.1);
 
   // Ensure Account Mode is present via label (works for both Select and Switch)
   expect(screen.getByLabelText(/account mode/i)).toBeInTheDocument();
@@ -60,9 +61,10 @@ test.skip('validation disables Save when fields are invalid', async () => {
   mockSettingsGet(defaultSettings);
   renderWithProviders(<AdminDashboard />, { initialPath: '/admin' });
   await awaitLoaded();
-  // Clearing required fields should trigger validation errors
-  await userEvent.clear(labelInput(/flagfall/i));
-  await userEvent.clear(labelInput(/per km rate/i));
+  await userEvent.clear(getInput('settings-flagfall'));
+  await userEvent.type(getInput('settings-flagfall'), '-1');
+  await userEvent.clear(getInput('settings-per-km'));
+  await userEvent.type(getInput('settings-per-km'), '-0.5');
 
   await waitFor(() =>
     expect(screen.getByRole('button', { name: /save/i })).toBeDisabled(),
@@ -77,12 +79,12 @@ test.skip('saves settings (PUT /settings) with correct payload and shows success
   renderWithProviders(<AdminDashboard />, { initialPath: '/admin' });
 
   await awaitLoaded();
-  await userEvent.clear(labelInput(/flagfall/i));
-  await userEvent.type(labelInput(/flagfall/i), '12.34');
-  await userEvent.clear(labelInput(/per km rate/i));
-  await userEvent.type(labelInput(/per km rate/i), '3.21');
-  await userEvent.clear(labelInput(/per minute rate/i));
-  await userEvent.type(labelInput(/per minute rate/i), '0.9');
+  await userEvent.clear(getInput('settings-flagfall'));
+  await userEvent.type(getInput('settings-flagfall'), '12.34');
+  await userEvent.clear(getInput('settings-per-km'));
+  await userEvent.type(getInput('settings-per-km'), '3.21');
+  await userEvent.clear(getInput('settings-per-minute'));
+  await userEvent.type(getInput('settings-per-minute'), '0.9');
 
   await userEvent.click(screen.getByRole('button', { name: /save/i }));
 

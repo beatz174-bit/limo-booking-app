@@ -2,6 +2,7 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { DevFeaturesProvider } from '@/contexts/DevFeaturesContext';
 import NavBar from './NavBar';
 import { render } from '@testing-library/react';
 
@@ -13,14 +14,16 @@ function seedAuth({ id, name }: { id: string; name: string }) {
 
 function renderWithAuth(initialPath = '/book') {
   return render(
-    <AuthProvider>
-      <MemoryRouter initialEntries={[initialPath]}>
-        <Routes>
-          <Route path="/login" element={<h1>Log in</h1>} />
-          <Route path="*" element={<NavBar />} />
-        </Routes>
-      </MemoryRouter>
-    </AuthProvider>
+    <DevFeaturesProvider>
+      <AuthProvider>
+        <MemoryRouter initialEntries={[initialPath]}>
+          <Routes>
+            <Route path="/login" element={<h1>Log in</h1>} />
+            <Route path="*" element={<NavBar />} />
+          </Routes>
+        </MemoryRouter>
+      </AuthProvider>
+    </DevFeaturesProvider>
   );
 }
 

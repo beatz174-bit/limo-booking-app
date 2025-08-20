@@ -7,8 +7,8 @@ import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 
 import { CONFIG } from '@/config';
+import { useDevFeatures } from '@/contexts/DevFeaturesContext';
 
-const DevNotes: React.FC = () => {
   return (
     <Box p={2}>
       <Typography variant="h4" gutterBottom>
@@ -38,6 +38,12 @@ const DevNotes: React.FC = () => {
         </ListItem>
         <ListItem>
           <ListItemText primary="Google Maps API key" secondary={CONFIG.GOOGLE_MAPS_API_KEY || '(not set)'} />
+        </ListItem>
+        <ListItem>
+          <ListItemText primary="ORS API key" secondary={CONFIG.ORS_API_KEY || '(not set)'} />
+        </ListItem>
+        <ListItem>
+          <ListItemText primary="JWT SECRET key" secondary={CONFIG.JWT_SECRET_KEY || '(not set)'} />
         </ListItem>
       </List>
       <Typography variant="body2" color="text.secondary">
