@@ -2,6 +2,7 @@
 
 import logging
 from datetime import datetime
+from typing import Union
 
 import httpx
 
@@ -15,7 +16,7 @@ GOOGLE_DISTANCE_MATRIX_URL = "https://maps.googleapis.com/maps/api/distancematri
 async def get_route_metrics(
     pickup: str,
     dropoff: str,
-    ride_time: datetime | None = None,
+    ride_time: Union[datetime, None] = None,
 ) -> dict:
     """Fetch distance and duration between two addresses.
 

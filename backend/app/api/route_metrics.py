@@ -3,6 +3,7 @@
 import logging
 
 from datetime import datetime
+from typing import Union
 
 from fastapi import APIRouter, HTTPException, Query
 
@@ -17,7 +18,7 @@ router = APIRouter(prefix="/route-metrics", tags=["route-metrics"])
 async def api_route_metrics(
     pickup: str = Query(...),
     dropoff: str = Query(...),
-    ride_time: datetime | None = Query(
+    ride_time: Union[datetime, None] = Query(
         None, description="Desired pickup time to account for traffic"
     ),
 ):

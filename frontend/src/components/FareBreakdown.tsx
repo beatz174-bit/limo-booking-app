@@ -23,9 +23,9 @@ export function FareBreakdown({ price, flagfall, perKm, perMin, distanceKm = 0, 
     <Box mt={2}>
       <Typography variant="h6">Fare Breakdown</Typography>
       <Typography variant="body2">Flagfall: ${flagfall.toFixed(2)}</Typography>
-      <Typography variant="body2">Distance: ${distanceCost.toFixed(2)}</Typography>
-      <Typography variant="body2">Duration: ${durationCost.toFixed(2)}</Typography>
-      <Typography variant="body2">Total: ${total.toFixed(2)}</Typography>
+      <Typography variant="body2">Distance: {distanceKm.toFixed(0)} km @ ${perKm} per km = ${distanceCost.toFixed(2)}</Typography>
+      <Typography variant="body2">Duration: {durationMin.toFixed(0)} minutes @ ${perMin} per minute = ${durationCost.toFixed(2)}</Typography>
+      <Typography variant="body2">Total: ${flagfall} + ${distanceCost.toFixed(2)} + ${durationCost.toFixed(2)} = ${total.toFixed(2)}</Typography>
     </Box>
   );
 }

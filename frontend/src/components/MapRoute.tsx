@@ -49,8 +49,8 @@ export function MapRoute({ pickup, dropoff, rideTime, onMetrics }: Props) {
     };
   }, [pickup, dropoff, rideTime, onMetrics, getMetrics]);
 
-  if (loadError) return <Placeholder />;
-  if (!isLoaded) return <Placeholder text="loading..." />;
+  // if (loadError) return <Placeholder />;
+  // if (!isLoaded) return <Placeholder text="loading..." />;
   if (!valid || !directions) return <Placeholder />;
 
   return (
