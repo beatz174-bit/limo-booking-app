@@ -1,0 +1,124 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Pytest Backend",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "-s",                // show stdout
+        "-v"                // verbose
+        // "backend/tests"      // path to your backend tests
+      ],
+      "cwd": "${workspaceFolder}/backend",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "env": {
+        "ENVIRONMENT": "test"
+      },
+    },
+    {
+      "name": "Test Frontend",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "test"
+      ],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/frontend",
+      "env": {
+        "ENVIRONMENT": "test"
+      },
+      "internalConsoleOptions": "neverOpen"
+    },
+
+    {
+      "name": "Development Backend",
+      "type": "python",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": [
+        "app.main:app",
+        "--reload",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8000"
+      ],
+      "cwd": "${workspaceFolder}/backend",
+      "jinja": true,
+      "justMyCode": true,
+      "env": {
+        "ENVIRONMENT": "development"
+      },
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Development Frontend",
+      "type": "chrome",
+      "request": "launch",  
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/frontend/src",
+      "preLaunchTask": "npm: dev",
+      "presentation": {
+        "group": "frontend"
+      },
+      "runtimeExecutable": "${workspaceFolder}/.vscode/flatpak-chrome.sh"
+    },
+        {
+      "name": "Test Backend",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": [
+        "app.main:app",
+        "--reload",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8000"
+      ],
+      "cwd": "${workspaceFolder}/backend",
+      "jinja": true,
+      "justMyCode": true,
+      "env": {
+        "ENVIRONMENT": "test"
+      },
+      "console": "integratedTerminal",
+      "preLaunchTask": "alembic-upgrade-test"
+    },
+    {
+      "name": "Playwright Tests",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/frontend/node_modules/@playwright/test/cli.js",
+      "args": ["test"],
+      "cwd": "${workspaceFolder}/frontend",
+      "console": "integratedTerminal",
+      "preLaunchTask": "npm: dev",
+      "envFile": "${workspaceFolder}/frontend/.env.e2e"
+    }
+  ],
+  
+  "compounds": [
+    {
+      "name": "Development Full Stack",
+      "configurations": ["Development Backend", "Development Frontend"],
+      "stopAll": true
+    },
+    {
+      "name": "Testing Playwright Full Stack",
+      "configurations": ["Test Backend", "Playwright Tests"],
+      "stopAll": true
+    },
+    {
+      "name": "Testing Vitest Full Stack",
+      "configurations": ["Test Backend", "Test Frontend"],
+      "stopAll": true
+    }
+  ]
+  
+}

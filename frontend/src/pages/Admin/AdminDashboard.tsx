@@ -3,8 +3,9 @@ import { AxiosError } from "axios";
 // Use the SAME shared API client that RegisterPage uses so we hit the correct backend/db
 // Update the path below to exactly match RegisterPage's import if different
 // import { SettingsApi } from "../../api-client/api";
-import config, { SettingsApi } from "@/components/ApiConfig"
+import config, { SettingsApi } from "@/components/ApiConfig";
 import type { SettingsPayload } from "@/api-client";
+import { useDevFeatures } from '@/contexts/DevFeaturesContext';
 import {
   Box,
   Button,
@@ -23,6 +24,9 @@ import {
   TextField,
   Typography,
   CircularProgress,
+  FormControlLabel,
+  Checkbox,
+  Tooltip,
 } from "@mui/material";
 
 
@@ -36,6 +40,7 @@ export default function AdminDashboard() {
   //   accessToken: () => localStorage.getItem("access_token") || "",
   // });
   const settingsApi = new SettingsApi(config);
+  const { enabled: devEnabled, setEnabled: setDevEnabled, isProd } = useDevFeatures();
 
   // Local UI state
   const [initialLoading, setInitialLoading] = useState(true);
@@ -141,6 +146,20 @@ export default function AdminDashboard() {
         <Divider />
         <CardContent>
           <Stack spacing={2}>
+            <Tooltip title={!isProd ? 'In development mode; switch to production to toggle' : ''}>
+              <span>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={devEnabled}
+                      onChange={(e) => setDevEnabled(e.target.checked)}
+                      disabled={!isProd}
+                    />
+                  }
+                  label="Enable development features"
+                />
+              </span>
+            </Tooltip>
             <FormControl fullWidth>
               <InputLabel id="account-mode-label">Account Mode</InputLabel>
               <Select
@@ -224,3 +243,4 @@ export default function AdminDashboard() {
     </Box>
   );
 }
+

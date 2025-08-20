@@ -7,7 +7,7 @@ import { MapProvider } from './MapProvider';
 vi.mock('@react-google-maps/api', () => ({
   GoogleMap: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   DirectionsRenderer: () => null,
-  LoadScript: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  useJsApiLoader: () => ({ isLoaded: true, loadError: undefined }),
 }));
 
 beforeEach(() => {

@@ -11,6 +11,7 @@ export default defineConfig({
       "@tests": fileURLToPath(new URL("./tests", import.meta.url)),
     },
   },
+  envPrefix: ["VITE_", "ENV"],
   test: {
     environment: "jsdom",
     globals: true,

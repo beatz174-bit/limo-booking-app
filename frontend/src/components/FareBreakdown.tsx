@@ -1,6 +1,9 @@
-import { Box, Typography } from "@mui/material";
+// Displays a simple fare calculation breakdown (development only).
+import { Box, Typography } from '@mui/material';
+import { useDevFeatures } from '@/contexts/DevFeaturesContext';
 
-export interface FareBreakdownProps {
+interface Props {
+  price: number | null;
   flagfall: number;
   perKm: number;
   perMin: number;
@@ -8,26 +11,23 @@ export interface FareBreakdownProps {
   durationMin?: number;
 }
 
-export function FareBreakdown({
-  flagfall,
-  perKm,
-  perMin,
-  distanceKm,
-  durationMin,
-}: FareBreakdownProps) {
-  const dist = distanceKm ?? 0;
-  const dur = durationMin ?? 0;
+export function FareBreakdown({ price, flagfall, perKm, perMin, distanceKm = 0, durationMin = 0 }: Props) {
+  const { enabled } = useDevFeatures();
+  if (!enabled) return null;
+
+  const distanceCost = distanceKm * perKm;
+  const durationCost = durationMin * perMin;
+  const total = price ?? flagfall + distanceCost + durationCost;
 
   return (
     <Box mt={2}>
-      <Typography variant="subtitle1">Fare Breakdown</Typography>
-      <Typography>flagfall: ${flagfall.toFixed(2)}</Typography>
-      <Typography>
-        {dist.toFixed(2)} km x ${perKm.toFixed(2)}
-      </Typography>
-      <Typography>
-        {dur.toFixed(2)} min x ${perMin.toFixed(2)}
-      </Typography>
+      <Typography variant="h6">Fare Breakdown</Typography>
+      <Typography variant="body2">Flagfall: ${flagfall.toFixed(2)}</Typography>
+      <Typography variant="body2">Distance: ${distanceCost.toFixed(2)}</Typography>
+      <Typography variant="body2">Duration: ${durationCost.toFixed(2)}</Typography>
+      <Typography variant="body2">Total: ${total.toFixed(2)}</Typography>
     </Box>
   );
 }
+
+export default FareBreakdown;

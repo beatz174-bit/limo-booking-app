@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useParams } from 'react-router-dom';
 import {
   Box,
   CircularProgress,
   Stack,
   Typography,
+  IconButton,
 } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 import { bookingsApi } from '@/components/ApiConfig';
 import type { BookingRead } from '@/api-client';
@@ -76,9 +78,16 @@ function RideDetailsPage() {
 
   return (
     <Box sx={{ p: 2 }}>
-      <Typography variant="h4" gutterBottom>
-        Ride Details
-      </Typography>
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+        <IconButton
+          component={RouterLink}
+          to="/history"
+          aria-label="Back to history"
+        >
+          <ArrowBackIcon />
+        </IconButton>
+        <Typography variant="h4">Ride Details</Typography>
+      </Stack>
 
       <Stack spacing={1} sx={{ mb: 2 }}>
         <Typography>

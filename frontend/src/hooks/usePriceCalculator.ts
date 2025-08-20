@@ -54,11 +54,14 @@ export function usePriceCalculator(
       }
     }
 
-    // Basic local fare model
-    const km = typeof distanceKm === "number" ? distanceKm : 0;
-    const min = typeof durationMin === "number" ? durationMin : 0;
+    // Ensure we have distance and duration metrics before computing
+    if (typeof distanceKm !== "number" || typeof durationMin !== "number") {
+      setPrice(null);
+      return;
+    }
 
-    const p = Number(flagfall) + Number(perKm) * km + Number(perMin) * min;
+    // Basic local fare model
+    const p = Number(flagfall) + Number(perKm) * distanceKm + Number(perMin) * durationMin;
 
     if (!Number.isFinite(p)) {
       setPrice(null);
