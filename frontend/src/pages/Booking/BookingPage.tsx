@@ -179,16 +179,9 @@ export default function BookingPage() {
                 durationMin={durationMin}
                 onPrice={setPrice}
               />
-              <FareBreakdown
-                flagfall={tariff.flagfall}
-                perKm={tariff.perKm}
-                perMin={tariff.perMin}
-                distanceKm={distanceKm}
-                durationMin={durationMin}
-              />
               <DevOnly>
                 <FareBreakdown
-                  price={pricing.price}
+                  price={price}
                   flagfall={tariff.flagfall}
                   perKm={tariff.perKm}
                   perMin={tariff.perMin}
