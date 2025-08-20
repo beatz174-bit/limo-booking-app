@@ -11,9 +11,11 @@ import NavBar from '@/components/NavBar';
 import CircularProgress from "@mui/material/CircularProgress";
 import PageNotFound from '@/pages/PageNotFound';
 import DevNotes from '@/components/DevNotes';
+import { useDevFeatures } from '@/contexts/DevFeaturesContext';
 
 function App() {
   const { accessToken, loading, userID } = useAuth(); // custom hook to get AuthContext
+  const { enabled: devEnabled } = useDevFeatures();
 
   if (loading) {
     return <CircularProgress size="large" title='Loading' />; // or <Spin />, <Skeleton />, or a splash screen
@@ -47,7 +49,7 @@ function App() {
         element={ accessToken && userID == '1' ? <AdminDashboard /> : <Navigate to="/login" /> }
       />
 
-      <Route path="/devnotes" element={<DevNotes />} />
+      {devEnabled && <Route path="/devnotes" element={<DevNotes />} />}
 
       {/* Default/fallback route */}
       <Route path="*" element={<PageNotFound />} />
@@ -56,4 +58,4 @@ function App() {
   );
 }
 
-export default App
+export default App;

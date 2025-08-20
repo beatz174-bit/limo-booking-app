@@ -18,6 +18,8 @@ import { minFutureDateTime } from "@/lib/datetime";
 import { AddressField } from "@/components/AddressField";
 import { DateTimeField } from "@/components/DateTimeField";
 import { PriceSummary } from "@/components/PriceSummary";
+import FareBreakdown from "@/components/FareBreakdown";
+import { DevOnly } from "@/contexts/DevFeaturesContext";
 import { MapRoute } from "@/components/MapRoute";
 import { MapProvider } from "@/components/MapProvider";
 
@@ -187,6 +189,16 @@ export default function BookingPage() {
                 loading={pricing.loading || settingsLoading}
                 error={pricing.error}
               />
+              <DevOnly>
+                <FareBreakdown
+                  price={pricing.price}
+                  flagfall={tariff.flagfall}
+                  perKm={tariff.perKm}
+                  perMin={tariff.perMin}
+                  distanceKm={distanceKm}
+                  durationMin={durationMin}
+                />
+              </DevOnly>
             </CardContent>
           </Card>
         </Grid>
@@ -194,3 +206,4 @@ export default function BookingPage() {
     </Box>
   );
 }
+

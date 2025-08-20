@@ -8,6 +8,7 @@ import ListItemText from '@mui/material/ListItemText';
 import Divider from '@mui/material/Divider';
 
 import { CONFIG } from '@/config';
+import { useDevFeatures } from '@/contexts/DevFeaturesContext';
 
 const FRONTEND_ENV_VARS = [
   'ENV',
@@ -47,6 +48,8 @@ const BACKEND_ENV_VARS = [
 
 const DevNotes: React.FC = () => {
   const env = import.meta.env as Record<string, string | undefined>;
+  const { enabled } = useDevFeatures();
+  if (!enabled) return null;
 
   return (
     <Box p={2}>
