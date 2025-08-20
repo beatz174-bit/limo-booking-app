@@ -31,4 +31,3 @@ export function FareBreakdown({ price, flagfall, perKm, perMin, distanceKm = 0, 
 }
 
 export default FareBreakdown;
-

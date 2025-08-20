@@ -16,7 +16,7 @@ async def test_update_user_unauthorized(client: AsyncClient, async_session: Asyn
 
 @pytest.mark.asyncio
 async def test_update_user_not_found(client: AsyncClient, async_session: AsyncSession):
-    me = User(email="me@example.com", full_name="Me", hashed_password=hash_password("pw"))
+    me = User(email="notfound@example.com", full_name="Me", hashed_password=hash_password("pw"), default_pickup_address="Home")
     async_session.add(me)
     await async_session.commit()
 

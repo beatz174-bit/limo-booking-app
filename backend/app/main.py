@@ -1,11 +1,13 @@
 """Application entry point and API router configuration."""
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+import logging
 from contextlib import asynccontextmanager
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse, JSONResponse
 
 from app.core.config import get_settings
+from app.core.logging import RequestLoggingMiddleware, setup_logging
 from app.db.database import database
 
 from app.api import (
@@ -16,10 +18,10 @@ from app.api import (
     settings as settings_router,
     route_metrics as route_metrics_router,
     geocode as geocode_router,
-    users as users_router,
-
 )
+setup_logging()
 settings = get_settings()
+logger = logging.getLogger(__name__)
 
 def get_app() -> FastAPI:
     """For pytest: returns the singleton `app`."""
@@ -41,6 +43,8 @@ app = FastAPI(
     swagger_ui_parameters={"persistAuthorization": True},
     lifespan=lifespan,
 )
+app.add_middleware(RequestLoggingMiddleware)
+logger.info("Application startup complete", extra={"env": settings.env})
 
 if not settings.env == "production":
     # Global CORS configuration
@@ -64,3 +68,25 @@ app.include_router(users_router.router)
 @app.get("/", include_in_schema=False)
 async def docs_redirect():
     return RedirectResponse(url="/docs")
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Log handled HTTP errors."""
+    logger = logging.getLogger("app.error")
+    logger.warning(
+        "HTTPException status=%s detail=%s path=%s",
+        exc.status_code,
+        exc.detail,
+        request.url.path,
+    )
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    """Log unexpected errors and return a generic message."""
+    logger = logging.getLogger("app.error")
+    logger.exception("Unhandled exception path=%s", request.url.path)
+    return JSONResponse(status_code=500, content={"detail": "Internal Server Error"})
+

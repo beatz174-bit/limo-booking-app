@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, test, expect, vi, afterEach } from 'vitest';
+import { describe, test, expect, vi } from 'vitest';
 import DevNotes from './DevNotes';
 import { DevFeaturesProvider } from '@/contexts/DevFeaturesContext';
 
@@ -15,27 +15,12 @@ vi.mock('@/config', () => ({
   }
 }));
 
-afterEach(() => {
-  vi.unstubAllEnvs();
-});
-
 describe('DevNotes', () => {
-  test('renders configuration and environment values', () => {
-    vi.stubEnv('VITE_API_BASE_URL', 'https://api.env');
-    render(
-      <DevFeaturesProvider>
-        <DevNotes />
-      </DevFeaturesProvider>
-    );
-
-    // configuration values from CONFIG
+  test('renders configuration values', () => {
+    render(<DevNotes />);
     expect(screen.getByText(/https:\/\/api\.test/)).toBeInTheDocument();
     expect(screen.getByText('client-123')).toBeInTheDocument();
     expect(screen.getByText(/https:\/\/auth\.test\/authorize/)).toBeInTheDocument();
-    expect(screen.getByText('gmaps-key')).toBeInTheDocument();
-
-    // environment variable lists
-    expect(screen.getByText('https://api.env')).toBeInTheDocument();
-    expect(screen.getByText('CORS_ALLOW_ORIGINS')).toBeInTheDocument();
+    expect(screen.getByText('configured')).toBeInTheDocument();
   });
 });

@@ -3,9 +3,12 @@ from __future__ import annotations
 
 """Service functions wrapping OpenRouteService geocoding APIs."""
 
+import logging
 import httpx
 
 from app.core.config import get_settings
+
+logger = logging.getLogger(__name__)
 
 
 async def reverse_geocode(lat: float, lon: float) -> str:
@@ -30,6 +33,7 @@ async def reverse_geocode(lat: float, lon: float) -> str:
         returned.
     """
 
+    logger.info("reverse geocode lat=%s lon=%s", lat, lon)
     settings = get_settings()
     api_key = settings.ors_api_key
 
@@ -80,6 +84,7 @@ async def search_geocode(query: str, limit: int = 5) -> list[dict]:
         ``postcode``) when available.
     """
 
+    logger.info("search geocode query=%s limit=%s", query, limit)
     settings = get_settings()
     api_key = settings.ors_api_key
 

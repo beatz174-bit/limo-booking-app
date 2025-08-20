@@ -1,5 +1,7 @@
 """Service functions for initial application setup."""
 
+import logging
+
 from fastapi import HTTPException
 from app.models.user import User
 from app.models.settings import AdminConfig
@@ -9,9 +11,12 @@ from sqlalchemy.sql import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Union
 
+logger = logging.getLogger(__name__)
+
 
 async def complete_initial_setup(db: AsyncSession, data: SetupPayload):
     if await is_setup_complete(db):
+        logger.warning("setup already completed")
         raise HTTPException(status_code=400, detail="Setup already completed")
 
     admin_user = User(
@@ -30,9 +35,11 @@ async def complete_initial_setup(db: AsyncSession, data: SetupPayload):
     db.add(cfg)
 
     await db.commit()
+    logger.info("setup complete")
     return {"message": "Setup complete"}
 
 async def is_setup_complete(db: AsyncSession) -> Union[SettingsPayload, None]:
+    logger.debug("checking setup status")
     res = await db.execute(select(AdminConfig).limit(1))
     cfg = res.scalars().first()
     if not cfg:
@@ -43,3 +50,4 @@ async def is_setup_complete(db: AsyncSession) -> Union[SettingsPayload, None]:
         per_km_rate=cfg.per_km_rate,
         per_minute_rate=cfg.per_minute_rate,
     )
+

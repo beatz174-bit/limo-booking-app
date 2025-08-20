@@ -6,6 +6,7 @@ import AdminDashboard from '@/pages/Admin/AdminDashboard';
 import RideHistoryPage from '@/pages/Booking/RideHistoryPage';
 import RideDetailsPage from '@/pages/Booking/RideDetailsPage';
 import RegisterPage from "@/pages/Auth/RegisterPage";
+import ProfilePage from '@/pages/Profile/ProfilePage';
 import { useAuth } from "@/contexts/AuthContext";
 import NavBar from '@/components/NavBar';
 import CircularProgress from "@mui/material/CircularProgress";
@@ -41,6 +42,10 @@ function App() {
       <Route
         path="/history/:id"
         element={ accessToken ? <RideDetailsPage /> : <Navigate to="/login" /> }
+      />
+      <Route
+        path="/me"
+        element={ accessToken ? <ProfilePage /> : <Navigate to="/login" /> }
       />
 
       {/* Protected admin/driver route */}

@@ -3,7 +3,7 @@
 # from sqlalchemy import Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import Text
-from typing import Literal
+from typing import Literal, Union
 from app.db.database import Base
 
 Status = Literal["pending", "accepted", "completed", "cancelled"]
@@ -21,5 +21,7 @@ class User(Base):
     full_name:       Mapped[str]    = mapped_column(Text)
     # Password hashed with chosen algorithm
     hashed_password: Mapped[str]    = mapped_column(Text, name="password_hash")
+    # Optional default pickup address for quick bookings
+    default_pickup_address: Mapped[Union[str, None]] = mapped_column(Text, nullable=True, default=None)
     # is_approved:     Mapped[bool]   = mapped_column(Boolean, default=False)
     # role:            Mapped[Status] = mapped_column(Text, default="pending")
