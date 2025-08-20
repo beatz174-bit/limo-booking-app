@@ -2,9 +2,6 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { Alert, Box, Button, Card, CardContent, Grid, Stack, Typography } from "@mui/material";
 
-// Adapt these to your actual exports
-// import apiConfig, {  SettingsApi, BookingsApi } from "@/components/ApiConfig";
-
 import { settingsApi, bookingsApi } from "@/components/ApiConfig";
 import type { BookingCreate } from "@/api-client";
 // const { data: settings } = useSettings(settingsApi);
@@ -88,14 +85,14 @@ export default function BookingPage() {
   async function submitBooking() {
     if (!settings) return;
     try {
-      const payload: BookingCreate = {
-        pickup_location: pickup.trim(),
-        destination: dropoff.trim(),
-        ride_time: new Date(rideTime).toISOString(),
-        price: price || 0,
-      };
-      // TODO: Replace with your actual request object + API call
-      await bookingsApi.apiCreateBookingBookingsPost(payload)
+        const payload: BookingCreate = {
+          pickup_location: pickup.trim(),
+          destination: dropoff.trim(),
+          ride_time: new Date(rideTime).toISOString(),
+          price: pricing.price || 0,
+        };
+        // Send the booking details to the backend API
+        await bookingsApi.apiCreateBookingBookingsPost(payload);
       alert("Booking submitted");
     } catch (e: unknown) {
       console.error(e);
