@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Box, Button, TextField, Typography } from '@mui/material';
+import { Box, Button, TextField, Typography, Tooltip } from '@mui/material';
+import { AddressField } from '@/components/AddressField';
 import { useAuth } from '@/contexts/AuthContext';
 import { CONFIG } from '@/config';
 
@@ -7,8 +8,11 @@ const ProfilePage = () => {
   const { ensureFreshToken } = useAuth();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [defaultPickup, setDefaultPickup] = useState('');
+  const [oldPassword, setOldPassword] = useState('');
+  const [oldPasswordValid, setOldPasswordValid] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   useEffect(() => {
     const load = async () => {
@@ -27,6 +31,26 @@ const ProfilePage = () => {
     load();
   }, [ensureFreshToken]);
 
+  useEffect(() => {
+    setOldPasswordValid(false);
+    setNewPassword('');
+    setConfirmPassword('');
+  }, [oldPassword]);
+
+  const verifyOldPassword = async () => {
+    if (!oldPassword) return;
+    const form = new URLSearchParams({
+      username: email,
+      password: oldPassword,
+    });
+    const res = await fetch(`${CONFIG.API_BASE_URL}/auth/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: form.toString(),
+    });
+    setOldPasswordValid(res.ok);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const token = await ensureFreshToken();
@@ -36,8 +60,8 @@ const ProfilePage = () => {
       email,
       default_pickup_address: defaultPickup,
     };
-    if (password) {
-      body.password = password;
+    if (newPassword && newPassword === confirmPassword && oldPasswordValid) {
+      body.password = newPassword;
     }
     const res = await fetch(`${CONFIG.API_BASE_URL}/users/me`, {
       method: 'PATCH',
@@ -51,7 +75,9 @@ const ProfilePage = () => {
       const data = await res.json();
       localStorage.setItem('userName', data.full_name);
     }
-    setPassword('');
+    setOldPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
   };
 
   return (
@@ -61,11 +87,43 @@ const ProfilePage = () => {
       </Typography>
       <TextField label="Full Name" value={fullName} onChange={e => setFullName(e.target.value)} margin="normal" fullWidth />
       <TextField label="Email" value={email} onChange={e => setEmail(e.target.value)} margin="normal" fullWidth />
-      <TextField label="Default Pickup Address" value={defaultPickup} onChange={e => setDefaultPickup(e.target.value)} margin="normal" fullWidth />
-      <TextField label="New Password" type="password" value={password} onChange={e => setPassword(e.target.value)} margin="normal" fullWidth />
-      <Button type="submit" variant="contained" sx={{ mt: 2 }}>
-        Save
-      </Button>
+      <AddressField id="defaultPickup" label="Default Pickup Address" value={defaultPickup} onChange={setDefaultPickup} />
+      <TextField
+        label="Current Password"
+        type="password"
+        value={oldPassword}
+        onChange={e => setOldPassword(e.target.value)}
+        onBlur={verifyOldPassword}
+        margin="normal"
+        fullWidth
+        error={!!oldPassword && !oldPasswordValid}
+        helperText={oldPassword && !oldPasswordValid ? 'Incorrect password' : ''}
+      />
+      <TextField
+        label="New Password"
+        type="password"
+        value={newPassword}
+        onChange={e => setNewPassword(e.target.value)}
+        margin="normal"
+        fullWidth
+        disabled={!oldPasswordValid}
+      />
+      <TextField
+        label="Confirm New Password"
+        type="password"
+        value={confirmPassword}
+        onChange={e => setConfirmPassword(e.target.value)}
+        margin="normal"
+        fullWidth
+        disabled={!newPassword || !oldPasswordValid}
+      />
+      <Tooltip title={newPassword === confirmPassword ? '' : 'new password and confirm password must match'} disableHoverListener={newPassword === confirmPassword}>
+        <span>
+          <Button type="submit" variant="contained" sx={{ mt: 2 }} disabled={newPassword !== confirmPassword}>
+            Save
+          </Button>
+        </span>
+      </Tooltip>
     </Box>
   );
 };
