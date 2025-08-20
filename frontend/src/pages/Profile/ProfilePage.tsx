@@ -31,7 +31,7 @@ const ProfilePage = () => {
     e.preventDefault();
     const token = await ensureFreshToken();
     if (!token) return;
-    const body: any = {
+    const body: Record<string, unknown> = {
       full_name: fullName,
       email,
       default_pickup_address: defaultPickup,

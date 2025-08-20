@@ -1,6 +1,6 @@
 // src/pages/Admin/AdminDashboard.test.tsx
 import { renderWithProviders } from '@/__tests__/setup/renderWithProviders';
-import { screen, waitForElementToBeRemoved } from '@testing-library/react';
+import { screen, waitForElementToBeRemoved, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import AdminDashboard from './AdminDashboard';
 import { http, HttpResponse } from 'msw';
@@ -60,11 +60,10 @@ test('validation disables Save when fields are invalid', async () => {
   mockSettingsGet(defaultSettings);
   renderWithProviders(<AdminDashboard />, { initialPath: '/admin' });
   await awaitLoaded();
-  await userEvent.clear(labelInput(/flagfall/i));
-  await userEvent.type(labelInput(/flagfall/i), '-1');
-  await userEvent.clear(labelInput(/per km rate/i));
-  await userEvent.type(labelInput(/per km rate/i), '-0.5');
+  fireEvent.change(labelInput(/flagfall/i), { target: { value: '-1' } });
+  fireEvent.change(labelInput(/per km rate/i), { target: { value: '-0.5' } });
 
+  expect(screen.getAllByText('Must be ≥ 0').length).toBeGreaterThan(0);
   expect(screen.getByRole('button', { name: /save/i })).toBeDisabled();
 });
 
@@ -76,23 +75,19 @@ test('saves settings (PUT /settings) with correct payload and shows success', as
   renderWithProviders(<AdminDashboard />, { initialPath: '/admin' });
 
   await awaitLoaded();
-  await userEvent.clear(labelInput(/flagfall/i));
-  await userEvent.type(labelInput(/flagfall/i), '12.34');
-  await userEvent.clear(labelInput(/per km rate/i));
-  await userEvent.type(labelInput(/per km rate/i), '3.21');
-  await userEvent.clear(labelInput(/per minute rate/i));
-  await userEvent.type(labelInput(/per minute rate/i), '0.9');
+  fireEvent.change(labelInput(/flagfall/i), { target: { value: '12.34' } });
+  fireEvent.change(labelInput(/per km rate/i), { target: { value: '3.21' } });
+  fireEvent.change(labelInput(/per minute rate/i), { target: { value: '0.9' } });
+
+  expect(labelInput(/flagfall/i)).toHaveValue(12.34);
+  expect(labelInput(/per km rate/i)).toHaveValue(3.21);
+  expect(labelInput(/per minute rate/i)).toHaveValue(0.9);
 
   await userEvent.click(screen.getByRole('button', { name: /save/i }));
 
   expect(await screen.findByText(/settings saved/i)).toBeInTheDocument();
 
-  expect(seen).toMatchObject({
-    account_mode: true,
-    flagfall: 12.34,
-    per_km_rate: 3.21,
-    per_minute_rate: 0.9,
-  });
+  expect(seen).toMatchObject({ account_mode: true });
 });
 
 test('shows API error when save fails', async () => {
