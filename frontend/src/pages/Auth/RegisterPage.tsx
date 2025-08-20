@@ -48,7 +48,8 @@ function RegisterPage() {
             if (e.response?.status === 422) {
                 setError("Invalid input. Please check all fields.");
             } else if (e.response?.status === 400) {
-                setError(e.response?.data?.detail);
+                // If the backend provides a specific error message, use it; otherwise fallback
+                setError(e.response?.data?.detail ?? "Registration failed. Please try again.");
             } else if (e.response?.data?.detail) {
                 setError(e.response.data.detail);
             } else {

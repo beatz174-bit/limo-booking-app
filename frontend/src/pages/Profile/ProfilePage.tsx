@@ -31,12 +31,20 @@ const ProfilePage = () => {
     e.preventDefault();
     const token = await ensureFreshToken();
     if (!token) return;
-    const body: any = {
+    interface UpdateProfileBody {
+      full_name: string;
+      email: string;
+      default_pickup_address: string;
+      password?: string;
+    }
+    const body: UpdateProfileBody = {
       full_name: fullName,
       email,
       default_pickup_address: defaultPickup,
     };
-    if (password) body.password = password;
+    if (password) {
+      body.password = password;
+    }
     const res = await fetch(`${CONFIG.API_BASE_URL}/users/me`, {
       method: 'PATCH',
       headers: {
