@@ -7,6 +7,11 @@ A full-stack application for scheduling limousine rides. The backend is built wi
 - `backend/` – FastAPI service and REST API (see `backend/README.md` for auto-generated API docs).
 - `frontend/` – React application for customers and administrators.
 
+## Documentation
+
+- The backend's OpenAPI specification is exported to `backend/README.md`. This file is generated from the FastAPI app using Widdershins and should not be edited manually.
+- Additional usage notes for the React client live in `frontend/README.md`.
+
 ## Prerequisites
 
 - Python 3.11+

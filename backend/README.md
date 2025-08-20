@@ -19,6 +19,8 @@ headingLevel: 2
 
 <!-- Generator: Widdershins v4.0.1 -->
 
+> **Note:** This document is generated from the FastAPI OpenAPI schema using Widdershins. Do not edit manually.
+
 <h1 id="limo-booking-app">Limo Booking App v0.1</h1>
 
 ## Configuration
@@ -27,6 +29,7 @@ Set required environment variables before running the backend:
 
 - `GOOGLE_MAPS_API_KEY` – used for distance and duration metrics via Google Distance Matrix.
 - `ORS_API_KEY` – used for geocoding with the OpenRouteService API.
+- `JWT_SECRET_KEY` – secret key for signing authentication tokens.
 
 Expose these in the appropriate `.env.*` files or your deployment environment.
 

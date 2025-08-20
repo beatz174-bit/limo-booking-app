@@ -2,6 +2,10 @@
 
 React + TypeScript single-page application for the Limo Booking App.
 
+## Prerequisites
+
+- Node.js 18+
+
 ## Setup
 
 Install dependencies:
