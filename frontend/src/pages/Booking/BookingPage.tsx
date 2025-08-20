@@ -89,7 +89,7 @@ export default function BookingPage() {
           pickup_location: pickup.trim(),
           destination: dropoff.trim(),
           ride_time: new Date(rideTime).toISOString(),
-          price: pricing.price || 0,
+          price: price || 0,
         };
         // Send the booking details to the backend API
         await bookingsApi.apiCreateBookingBookingsPost(payload);
