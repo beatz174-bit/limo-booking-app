@@ -3,23 +3,55 @@ import React from "react";
 import { PriceSummary } from "./PriceSummary";
 
 describe("PriceSummary", () => {
-  test("shows loader when loading", () => {
-    render(<PriceSummary price={null} loading />);
-    expect(screen.getByRole("progressbar")).toBeInTheDocument();
+  test("renders nothing without valid addresses", () => {
+    const { container } = render(
+      <PriceSummary pickup="" dropoff="" rideTime="" flagfall={0} perKm={1} perMin={1} />
+    );
+    expect(container).toBeEmptyDOMElement();
   });
 
-  test("shows error when provided", () => {
-    render(<PriceSummary price={null} error="Oops" />);
-    expect(screen.getByText("Oops")).toBeInTheDocument();
+  test("renders formatted price when inputs complete", async () => {
+    render(
+      <PriceSummary
+        pickup="A"
+        dropoff="B"
+        rideTime="2025-01-01T10:00"
+        flagfall={0}
+        perKm={2}
+        perMin={1}
+        distanceKm={10}
+        durationMin={5}
+      />
+    );
+    expect(await screen.findByText("$25.00")).toBeInTheDocument();
   });
 
-  test("renders formatted price when available", () => {
-    render(<PriceSummary price={12.345} />);
-    expect(screen.getByText(/\$12\.35/)).toBeInTheDocument();
-  });
-
-  test("renders dash when price is null and no error/loading", () => {
-    render(<PriceSummary price={null} />);
-    expect(screen.getByText("—")).toBeInTheDocument();
+  test("recalculates when distance changes", async () => {
+    const { rerender } = render(
+      <PriceSummary
+        pickup="A"
+        dropoff="B"
+        rideTime="2025-01-01T10:00"
+        flagfall={0}
+        perKm={2}
+        perMin={1}
+        distanceKm={1}
+        durationMin={1}
+      />
+    );
+    expect(await screen.findByText("$3.00")).toBeInTheDocument();
+    rerender(
+      <PriceSummary
+        pickup="A"
+        dropoff="B"
+        rideTime="2025-01-01T10:00"
+        flagfall={0}
+        perKm={2}
+        perMin={1}
+        distanceKm={2}
+        durationMin={1}
+      />
+    );
+    expect(await screen.findByText("$5.00")).toBeInTheDocument();
   });
 });
