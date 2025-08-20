@@ -18,8 +18,20 @@ describe("FareBreakdown", () => {
       </DevFeaturesProvider>
     );
     expect(screen.getByText(/Flagfall: \$5\.00/i)).toBeInTheDocument();
-    expect(screen.getByText(/Distance: \$6\.00/i)).toBeInTheDocument();
-    expect(screen.getByText(/Duration: \$4\.00/i)).toBeInTheDocument();
-    expect(screen.getByText(/Total: \$15\.00/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Distance: 3 km @ \$2 per km = \$6\.00/i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Duration: 4 minutes @ \$1 per minute = \$4\.00/i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Total: \$5 \+ \$6\.00 \+ \$4\.00 = \$15\.00/i,
+      ),
+    ).toBeInTheDocument();
   });
 });
