@@ -6,14 +6,20 @@ export function useRouteMetrics() {
   return useCallback(
     async function getMetrics(
       pickup: string,
-      dropoff: string
+      dropoff: string,
+      rideTime?: string
     ): Promise<{ km: number; min: number } | null> {
       if (!pickup || !dropoff) return null;
       try {
         const base = CONFIG.API_BASE_URL || "";
         const origin = base || window.location.origin;
         const url = new URL("/route-metrics", origin);
-        url.search = `pickup=${encodeURIComponent(pickup)}&dropoff=${encodeURIComponent(dropoff)}`;
+        const params = new URLSearchParams({
+          pickup,
+          dropoff,
+        });
+        if (rideTime) params.set("ride_time", rideTime);
+        url.search = params.toString();
         const res = await fetch(url.toString());
         if (!res.ok) {
           console.error("Route metrics request failed", res.status);

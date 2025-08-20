@@ -31,13 +31,7 @@ const ProfilePage = () => {
     e.preventDefault();
     const token = await ensureFreshToken();
     if (!token) return;
-    interface UpdateProfileBody {
-      full_name: string;
-      email: string;
-      default_pickup_address: string;
-      password?: string;
-    }
-    const body: UpdateProfileBody = {
+    const body: Record<string, unknown> = {
       full_name: fullName,
       email,
       default_pickup_address: defaultPickup,

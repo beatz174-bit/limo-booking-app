@@ -1,6 +1,8 @@
 """Utilities for computing route distance and duration via Google APIs."""
 
 import logging
+from datetime import datetime
+
 import httpx
 
 from app.core.config import get_settings
@@ -9,8 +11,20 @@ logger = logging.getLogger(__name__)
 
 GOOGLE_DISTANCE_MATRIX_URL = "https://maps.googleapis.com/maps/api/distancematrix/json"
 
-async def get_route_metrics(pickup: str, dropoff: str) -> dict:
-    logger.info("route metrics pickup=%s dropoff=%s", pickup, dropoff)
+
+async def get_route_metrics(
+    pickup: str,
+    dropoff: str,
+    ride_time: datetime | None = None,
+) -> dict:
+    """Fetch distance and duration between two addresses.
+
+    If ``ride_time`` is provided, it is forwarded to the Google Distance Matrix
+    API via the ``departure_time`` parameter so that traffic predictions are
+    based on the requested pickup time.
+    """
+
+    logger.info("route metrics pickup=%s dropoff=%s ride_time=%s", pickup, dropoff, ride_time)
     settings = get_settings()
     api_key = settings.google_maps_api_key
     if not api_key:
@@ -21,6 +35,8 @@ async def get_route_metrics(pickup: str, dropoff: str) -> dict:
         "units": "metric",
         "key": api_key,
     }
+    if ride_time is not None:
+        params["departure_time"] = int(ride_time.timestamp())
     async with httpx.AsyncClient(timeout=10) as client:
         res = await client.get(GOOGLE_DISTANCE_MATRIX_URL, params=params)
         res.raise_for_status()

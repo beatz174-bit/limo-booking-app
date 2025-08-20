@@ -151,6 +151,7 @@ export default function BookingPage() {
                   <MapRoute
                     pickup={pickupRoute}
                     dropoff={dropoffRoute}
+                    rideTime={rideTime}
                     onMetrics={handleMetrics}
                   />
                 </MapProvider>
