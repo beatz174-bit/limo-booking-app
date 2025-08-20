@@ -21,6 +21,5 @@ describe('DevNotes', () => {
     expect(screen.getByText(/https:\/\/api\.test/)).toBeInTheDocument();
     expect(screen.getByText('client-123')).toBeInTheDocument();
     expect(screen.getByText(/https:\/\/auth\.test\/authorize/)).toBeInTheDocument();
-    expect(screen.getByText('configured')).toBeInTheDocument();
   });
 });

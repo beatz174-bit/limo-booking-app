@@ -9,11 +9,6 @@ import ListItemText from '@mui/material/ListItemText';
 import { CONFIG } from '@/config';
 import { useDevFeatures } from '@/contexts/DevFeaturesContext';
 
-const DevNotes: React.FC = () => {
-  const env = import.meta.env as Record<string, string | undefined>;
-  const { enabled } = useDevFeatures();
-  if (!enabled) return null;
-
   return (
     <Box p={2}>
       <Typography variant="h4" gutterBottom>

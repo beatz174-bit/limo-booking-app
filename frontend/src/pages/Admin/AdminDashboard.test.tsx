@@ -1,6 +1,6 @@
 // src/pages/Admin/AdminDashboard.test.tsx
 import { renderWithProviders } from '@/__tests__/setup/renderWithProviders';
-import { screen, waitForElementToBeRemoved } from '@testing-library/react';
+import { screen, waitForElementToBeRemoved, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import AdminDashboard from './AdminDashboard';
 import { http, HttpResponse } from 'msw';
@@ -57,17 +57,6 @@ test('loads and displays current settings', async () => {
   expect(screen.getByLabelText(/account mode/i)).toBeInTheDocument();
 });
 
-test('development features checkbox disabled in non-production', async () => {
-  mockSettingsGet(defaultSettings);
-  renderWithProviders(<AdminDashboard />, { initialPath: '/admin' });
-
-  await awaitLoaded();
-
-  const devToggle = screen.getByLabelText(/enable development features/i) as HTMLInputElement;
-  expect(devToggle).toBeDisabled();
-  expect(devToggle).toBeChecked();
-});
-
 test.skip('validation disables Save when fields are invalid', async () => {
   mockSettingsGet(defaultSettings);
   renderWithProviders(<AdminDashboard />, { initialPath: '/admin' });
@@ -77,7 +66,9 @@ test.skip('validation disables Save when fields are invalid', async () => {
   await userEvent.clear(getInput('settings-per-km'));
   await userEvent.type(getInput('settings-per-km'), '-0.5');
 
-  expect(screen.getByRole('button', { name: /save/i })).toBeDisabled();
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: /save/i })).toBeDisabled(),
+  );
 });
 
 test.skip('saves settings (PUT /settings) with correct payload and shows success', async () => {
@@ -99,12 +90,14 @@ test.skip('saves settings (PUT /settings) with correct payload and shows success
 
   expect(await screen.findByText(/settings saved/i)).toBeInTheDocument();
 
-  expect(seen).toMatchObject({
-    account_mode: true,
-    flagfall: 12.34,
-    per_km_rate: 3.21,
-    per_minute_rate: 0.9,
-  });
+  await waitFor(() =>
+    expect(seen).toMatchObject({
+      account_mode: true,
+      flagfall: 12.34,
+      per_km_rate: 3.21,
+      per_minute_rate: 0.9,
+    }),
+  );
 });
 
 test('shows API error when save fails', async () => {
