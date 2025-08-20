@@ -17,18 +17,20 @@ interface MapContextValue {
 
 const MapContext = createContext<MapContextValue>({ isLoaded: false });
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useMap() {
   return useContext(MapContext);
 }
 
 export function MapProvider({ apiKey, children }: Props) {
   const key = apiKey ?? CONFIG.GOOGLE_MAPS_API_KEY;
-  if (!key) return <>{children}</>;
 
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: key,
+    googleMapsApiKey: key ?? '',
   });
+
+  if (!key) return <>{children}</>;
 
   return (
     <MapContext.Provider value={{ isLoaded, loadError: loadError as Error | undefined }}>

@@ -1,5 +1,5 @@
 // Hook that computes trip price based on distance and duration.
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export type PriceInputs = {
   pickup: string;
@@ -35,7 +35,7 @@ export function usePriceCalculator(
   );
   const lastArgsRef = useRef("");
 
-  const compute = async () => {
+  const compute = useCallback(async () => {
     setError(null);
 
     // Guard: require both addresses
@@ -68,8 +68,8 @@ export function usePriceCalculator(
       setError("Invalid price inputs");
       return;
     }
-  setPrice(Math.max(0, Math.round(p * 100) / 100));
-  };
+    setPrice(Math.max(0, Math.round(p * 100) / 100));
+  }, [pickup, dropoff, rideTime, flagfall, perKm, perMin, distanceKm, durationMin]);
 
   // Auto-calc on input changes
   useEffect(() => {

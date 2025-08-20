@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatAddress } from './formatAddress';
+import { formatAddress, type AddressComponents } from './formatAddress';
 
 describe('formatAddress', () => {
   it('joins typical address parts', () => {
@@ -14,11 +14,11 @@ describe('formatAddress', () => {
   });
 
   it('falls back to alternative fields and omits blanks', () => {
-    const addr = {
+    const addr: AddressComponents = {
       flat_number: '2',
       pedestrian: 'Highway',
       suburb: 'Shelbyville'
-    } as any;
+    };
     expect(formatAddress(addr)).toBe('2 Highway Shelbyville');
   });
 
