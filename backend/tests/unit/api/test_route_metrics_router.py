@@ -1,14 +1,14 @@
 import pytest
 from httpx import AsyncClient
 from datetime import datetime
-
-from app.main import app
+from typing import Union
+from _pytest.monkeypatch import MonkeyPatch
 
 @pytest.mark.asyncio
-async def test_route_metrics_router(monkeypatch, client: AsyncClient):
+async def test_route_metrics_router(monkeypatch: MonkeyPatch, client: AsyncClient):
     from app.api import route_metrics as router
 
-    async def fake_get_route_metrics(pickup: str, dropoff: str, ride_time: datetime | None):
+    async def fake_get_route_metrics(pickup: str, dropoff: str, ride_time: Union[datetime, None]):
         assert pickup == "A" and dropoff == "B"
         assert ride_time == datetime(2020, 1, 1)
         return {"km": 1.2, "min": 3.4}

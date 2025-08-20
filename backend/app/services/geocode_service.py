@@ -89,7 +89,7 @@ async def search_geocode(query: str, limit: int = 5) -> list[dict]:
     api_key = settings.ors_api_key
 
     url = "https://api.openrouteservice.org/geocode/search"
-    params = {
+    params: dict[str, object] = {
         "api_key": api_key,
         "text": query,
         "size": limit,

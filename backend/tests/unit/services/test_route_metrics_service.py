@@ -1,12 +1,12 @@
 import pytest
 import httpx
 from datetime import datetime, timezone
-
+from _pytest.monkeypatch import MonkeyPatch
 from app.core.config import get_settings
 from app.services import route_metrics_service
 
 @pytest.mark.asyncio
-async def test_get_route_metrics(monkeypatch):
+async def test_get_route_metrics(monkeypatch: MonkeyPatch):
     async def fake_get(self, url, params=None):
         assert params.get("departure_time") == 0
         class Resp:
@@ -36,7 +36,7 @@ async def test_get_route_metrics(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_get_route_metrics_request_denied(monkeypatch):
+async def test_get_route_metrics_request_denied(monkeypatch: MonkeyPatch):
     async def fake_get(self, url, params=None):
         class Resp:
             status_code = 200
@@ -59,7 +59,7 @@ async def test_get_route_metrics_request_denied(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_get_route_metrics_no_api_key(monkeypatch):
+async def test_get_route_metrics_no_api_key(monkeypatch: MonkeyPatch):
     monkeypatch.delenv("GOOGLE_MAPS_API_KEY", raising=False)
     get_settings.cache_clear()
     with pytest.raises(RuntimeError) as exc:

@@ -1,6 +1,6 @@
 """Administrative configuration stored in the database."""
 
-from sqlalchemy import CheckConstraint, Float, String, Boolean, text
+from sqlalchemy import CheckConstraint, Float, Boolean, text
 from app.db.database import Base
 from sqlalchemy.orm import Mapped, mapped_column
 

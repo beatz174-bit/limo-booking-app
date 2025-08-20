@@ -91,7 +91,7 @@ async def connect() -> None:
     # empty metadata collection and skip table creation, leading to runtime
     # errors such as "no such table: users" when the API is exercised during
     # tests.
-    from app.models import booking, settings, user  # noqa: F401
+    from app.models import booking, settings, user  # noqa: F401 #type: ignore
 
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

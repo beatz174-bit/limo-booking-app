@@ -1,6 +1,5 @@
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
-from typing import Optional
 
 from app.services import geocode_service
 
