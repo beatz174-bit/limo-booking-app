@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { AxiosError } from "axios";
 // Use the SAME shared API client that RegisterPage uses so we hit the correct backend/db
 // Update the path below to exactly match RegisterPage's import if different
@@ -39,7 +39,7 @@ export default function AdminDashboard() {
   //   // Replace with your actual token plumbed from context if needed.
   //   accessToken: () => localStorage.getItem("access_token") || "",
   // });
-  const settingsApi = new SettingsApi(config);
+  const settingsApi = useMemo(() => new SettingsApi(config), []);
   const { enabled: devEnabled, setEnabled: setDevEnabled, isProd } = useDevFeatures();
 
   // Local UI state

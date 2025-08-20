@@ -3,7 +3,6 @@ import { useEffect } from 'react';
 import { GoogleMap, DirectionsRenderer } from '@react-google-maps/api';
 import { useRoute } from '@/hooks/useRoute';
 import { useRouteMetrics } from '@/hooks/useRouteMetrics';
-import { useMap } from './MapProvider';
 
 export type Props = {
   pickup: string;

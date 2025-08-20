@@ -1,5 +1,5 @@
 // React context providing authentication state and helpers.
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import cfg, { AuthApi } from "@/components/ApiConfig";
 import { CONFIG } from "@/config";
 import { setTokens, getRefreshToken } from "../services/tokenStore";
@@ -28,7 +28,7 @@ const oauthCfg: OAuthConfig = {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AuthState>({ accessToken: null, user: null, loading: true, userID: null, userName: null });
-  const authApi = new AuthApi(cfg);
+  const authApi = useMemo(() => new AuthApi(cfg), []);
   // const [userName, setUserName] = useState<string>('');
   // const [userID, setUserID] = useState<string|null>(null);
 
@@ -54,7 +54,7 @@ useEffect(() => {
   setState((s) => ({ ...s, loading: false }));
 }, []);
 
-  const persist = (t?: TokenResponse | null, user?: UserShape) => {
+  const persist = useCallback((t?: TokenResponse | null, user?: UserShape) => {
     const access_token = t?.access_token ?? null;
     const refresh_token = t?.refresh_token ?? null;
     if (access_token || refresh_token || user) {
@@ -64,77 +64,77 @@ useEffect(() => {
     }
     setTokens(access_token, refresh_token);
     setState((s) => ({ ...s, accessToken: access_token, user: user ?? s.user }));
-  };
+  }, []);
 
-const loginWithPassword = async (email: string, password: string) => {
-  const res = await fetch(`${CONFIG.API_BASE_URL}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-    credentials: "omit",
-  });
+  const loginWithPassword = useCallback(async (email: string, password: string) => {
+    const res = await fetch(`${CONFIG.API_BASE_URL}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+      credentials: "omit",
+    });
 
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    if (res.status === 401 || /invalid/i.test(text)) {
-      throw new Error("Invalid credentials");
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      if (res.status === 401 || /invalid/i.test(text)) {
+        throw new Error("Invalid credentials");
+      }
+      throw new Error("Login failed");
     }
-    throw new Error("Login failed");
-  }
-  
-  const body = await res.json();
-  const token = body.access_token ?? body.token ?? null;
-  localStorage.setItem(
-    "auth_tokens",
-    JSON.stringify({
-      access_token: token,
-      refresh_token: body.refresh_token ?? null,
-      user: body.user ?? null,
-    })
-  );
-  
-  localStorage.setItem("userName", body.full_name)
-  localStorage.setItem("userID", String(body.id))
 
-  setTokens(token, body.refresh_token ?? null);
-  setState(s => ({
-  ...s,
-  accessToken: token,
-  user: body.user ?? s.user,
-  userID: String(body.id),
-  userName: body.full_name,
-}));
-};
+    const body = await res.json();
+    const token = body.access_token ?? body.token ?? null;
+    localStorage.setItem(
+      "auth_tokens",
+      JSON.stringify({
+        access_token: token,
+        refresh_token: body.refresh_token ?? null,
+        user: body.user ?? null,
+      })
+    );
 
-  const registerWithPassword = async (fullName: string, email: string, password: string) => {
+    localStorage.setItem("userName", body.full_name);
+    localStorage.setItem("userID", String(body.id));
+
+    setTokens(token, body.refresh_token ?? null);
+    setState((s) => ({
+      ...s,
+      accessToken: token,
+      user: body.user ?? s.user,
+      userID: String(body.id),
+      userName: body.full_name,
+    }));
+  }, [setState]);
+
+  const registerWithPassword = useCallback(async (fullName: string, email: string, password: string) => {
     await authApi.endpointRegisterAuthRegisterPost({ full_name: fullName, email, password });
     // auto-login
     await loginWithPassword(email, password);
-  };
+  }, [authApi, loginWithPassword]);
 
-  const loginWithOAuth = () => beginLogin(oauthCfg);
+  const loginWithOAuth = useCallback(() => beginLogin(oauthCfg), []);
 
-  const finishOAuthIfCallback = async () => {
+  const finishOAuthIfCallback = useCallback(async () => {
     if (!/\bcode=/.test(window.location.search)) return;
     const tokens = await completeLoginFromRedirect(oauthCfg);
     // Optional: fetch profile here via authApi if you have /auth/me
     persist(tokens, null);
-  };
+  }, [persist]);
 
-  const logout = () => {
-  persist(null, null);
-  localStorage.removeItem("userID");
-  localStorage.removeItem("userName");
-  setState(s => ({
-    ...s,
-    accessToken: null,
-    user: null,
-    userID: null,
-    userName: null,
-  }));
-  };
+  const logout = useCallback(() => {
+    persist(null, null);
+    localStorage.removeItem("userID");
+    localStorage.removeItem("userName");
+    setState((s) => ({
+      ...s,
+      accessToken: null,
+      user: null,
+      userID: null,
+      userName: null,
+    }));
+  }, [persist, setState]);
 
-  const ensureFreshToken = async (): Promise<string | null> => {
+  const ensureFreshToken = useCallback(async (): Promise<string | null> => {
     if (state.accessToken) return state.accessToken;
     const r = getRefreshToken();
     if (!r) return null;
@@ -146,7 +146,7 @@ const loginWithPassword = async (email: string, password: string) => {
       logout();
       return null;
     }
-  };
+  }, [state.accessToken, persist, logout]);
 
   const value = useMemo<AuthContextType>(
     () => ({
