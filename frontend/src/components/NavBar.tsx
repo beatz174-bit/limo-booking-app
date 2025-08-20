@@ -10,9 +10,11 @@ import AccountCircle from '@mui/icons-material/AccountCircle';
 import { useNavigate } from 'react-router-dom';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { useDevFeatures } from '@/contexts/DevFeaturesContext';
 
 const NavBar: React.FC = () => {
   const { logout, userName, userID } = useAuth();  // get logout (and maybe user info) from context
+  const { enabled: devEnabled } = useDevFeatures();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -49,8 +51,8 @@ const NavBar: React.FC = () => {
 
   const navAdmin = () => {
     handleMenuClose();
-    navigate('/admin')
-  }
+    navigate('/admin');
+  };
 
   const navDevNotes = () => {
     handleMenuClose();
@@ -94,9 +96,7 @@ const NavBar: React.FC = () => {
           {userID == '1' && (
             <MenuItem onClick={navAdmin}>Administration</MenuItem>
           )}
-          {import.meta.env.DEV && (
-            <MenuItem onClick={navDevNotes}>Dev Notes</MenuItem>
-          )}
+          {devEnabled && <MenuItem onClick={navDevNotes}>Dev Notes</MenuItem>}
         </Menu>
       </Toolbar>
     </AppBar>
