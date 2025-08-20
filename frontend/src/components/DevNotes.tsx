@@ -41,6 +41,12 @@ const DevNotes: React.FC = () => {
         <ListItem>
           <ListItemText primary="Google Maps API key" secondary={CONFIG.GOOGLE_MAPS_API_KEY || '(not set)'} />
         </ListItem>
+        <ListItem>
+          <ListItemText primary="ORS API key" secondary={CONFIG.ORS_API_KEY || '(not set)'} />
+        </ListItem>
+        <ListItem>
+          <ListItemText primary="JWT SECRET key" secondary={CONFIG.JWT_SECRET_KEY || '(not set)'} />
+        </ListItem>
       </List>
       <Typography variant="body2" color="text.secondary">
         For local development, ensure the backend is running and the Google Maps API key is set. You can register a new account
