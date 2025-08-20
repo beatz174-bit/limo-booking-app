@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { LoadScript } from '@react-google-maps/api';
+import { createContext, useContext } from 'react';
+import { useJsApiLoader } from '@react-google-maps/api';
 import { CONFIG } from '@/config';
 
 interface Props {
@@ -7,10 +8,33 @@ interface Props {
   children: ReactNode;
 }
 
+interface MapContextValue {
+  /** True once the Google Maps script has loaded */
+  isLoaded: boolean;
+  /** Error from loading the script, if any */
+  loadError?: Error;
+}
+
+const MapContext = createContext<MapContextValue>({ isLoaded: false });
+
+export function useMap() {
+  return useContext(MapContext);
+}
+
 export function MapProvider({ apiKey, children }: Props) {
   const key = apiKey ?? CONFIG.GOOGLE_MAPS_API_KEY;
   if (!key) return <>{children}</>;
-  return <LoadScript googleMapsApiKey={key}>{children}</LoadScript>;
+
+  const { isLoaded, loadError } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: key,
+  });
+
+  return (
+    <MapContext.Provider value={{ isLoaded, loadError: loadError as Error | undefined }}>
+      {loadError ? <div>map unavailable</div> : isLoaded ? children : <div>loading...</div>}
+    </MapContext.Provider>
+  );
 }
 
 export default MapProvider;

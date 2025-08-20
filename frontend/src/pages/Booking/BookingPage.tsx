@@ -9,13 +9,13 @@ import type { BookingCreate } from "@/api-client";
 
 import { useSettings } from "@/hooks/useSettings";
 import { usePickupFromGeolocation } from "@/hooks/usePickupFromGeolocation";
-import { usePriceCalculator } from "@/hooks/usePriceCalculator";
 import { minFutureDateTime } from "@/lib/datetime";
 
 import { AddressField } from "@/components/AddressField";
 import { DateTimeField } from "@/components/DateTimeField";
 import { PriceSummary } from "@/components/PriceSummary";
-import { FareBreakdown } from "@/components/FareBreakdown";
+import FareBreakdown from "@/components/FareBreakdown";
+import { DevOnly } from "@/contexts/DevFeaturesContext";
 import { MapRoute } from "@/components/MapRoute";
 import { MapProvider } from "@/components/MapProvider";
 
@@ -35,6 +35,7 @@ export default function BookingPage() {
 
   const [distanceKm, setDistanceKm] = useState<number | undefined>(undefined);
   const [durationMin, setDurationMin] = useState<number | undefined>(undefined);
+  const [price, setPrice] = useState<number | null>(null);
 
   const handleMetrics = useCallback((km: number, min: number) => {
     setDistanceKm(km);
@@ -80,19 +81,6 @@ export default function BookingPage() {
 
   // Update pickup when geolocation hook resolves an address
   const pickupValue = geo.address || pickup;
-
-  const pricing = usePriceCalculator({
-    pickup: pickupValue,
-    dropoff,
-    rideTime,
-    flagfall: tariff.flagfall ?? 0,
-    perKm: tariff.perKm ?? 0,
-    perMin: tariff.perMin ?? 0,
-    distanceKm,
-    durationMin,
-    auto: true,
-    debounceMs: 300,
-  });
 
   async function submitBooking() {
     if (!settings) return;
@@ -160,6 +148,7 @@ export default function BookingPage() {
                   <MapRoute
                     pickup={pickupRoute}
                     dropoff={dropoffRoute}
+                    rideTime={rideTime}
                     onMetrics={handleMetrics}
                   />
                 </MapProvider>
@@ -167,9 +156,6 @@ export default function BookingPage() {
                 <Stack direction="row" spacing={1}>
                   <Button variant="contained" onClick={submitBooking} disabled={settingsLoading}>
                     Book now
-                  </Button>
-                  <Button variant="outlined" onClick={() => pricing.compute()} disabled={settingsLoading}>
-                    Recalculate price
                   </Button>
                 </Stack>
               </Stack>
@@ -181,17 +167,26 @@ export default function BookingPage() {
           <Card>
             <CardContent>
               <PriceSummary
-                price={pricing.price}
-                loading={pricing.loading || settingsLoading}
-                error={pricing.error}
-              />
-              <FareBreakdown
+                pickup={pickupRoute}
+                dropoff={dropoffRoute}
+                rideTime={rideTime}
                 flagfall={tariff.flagfall}
                 perKm={tariff.perKm}
                 perMin={tariff.perMin}
                 distanceKm={distanceKm}
                 durationMin={durationMin}
+                onPrice={setPrice}
               />
+              <DevOnly>
+                <FareBreakdown
+                  price={price}
+                  flagfall={tariff.flagfall}
+                  perKm={tariff.perKm}
+                  perMin={tariff.perMin}
+                  distanceKm={distanceKm}
+                  durationMin={durationMin}
+                />
+              </DevOnly>
             </CardContent>
           </Card>
         </Grid>
@@ -199,3 +194,4 @@ export default function BookingPage() {
     </Box>
   );
 }
+

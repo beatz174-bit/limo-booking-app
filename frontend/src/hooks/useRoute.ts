@@ -9,13 +9,17 @@ interface GMaps {
   };
 }
 
-export function useRoute(pickup: string, dropoff: string) {
+export function useRoute(pickup: string, dropoff: string, enabled = true) {
   const [valid, setValid] = useState(false);
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setDirections(null);
+    if (!enabled) {
+      setValid(false);
+      return;
+    }
     const g = (window as { google?: GMaps }).google;
     if (!pickup || !dropoff || !g?.maps) {
       setValid(false);
@@ -38,7 +42,7 @@ export function useRoute(pickup: string, dropoff: string) {
     return () => {
       cancelled = true;
     };
-  }, [pickup, dropoff]);
+  }, [pickup, dropoff, enabled]);
 
   return { valid, directions };
 }

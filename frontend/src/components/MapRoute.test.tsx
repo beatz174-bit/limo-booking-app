@@ -7,7 +7,7 @@ import { MapProvider } from './MapProvider';
 vi.mock('@react-google-maps/api', () => ({
   GoogleMap: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   DirectionsRenderer: () => null,
-  LoadScript: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  useJsApiLoader: () => ({ isLoaded: true, loadError: undefined }),
 }));
 
 beforeEach(() => {
@@ -38,20 +38,20 @@ describe('MapRoute', () => {
     const onMetrics = vi.fn();
     render(
       <MapProvider>
-        <MapRoute pickup="A" dropoff="B" onMetrics={onMetrics} />
+        <MapRoute pickup="A" dropoff="B" rideTime="2020-01-01T00:00" onMetrics={onMetrics} />
       </MapProvider>
     );
     await waitFor(() => expect(onMetrics).toHaveBeenCalledWith(10, 15));
   });
 
-  test('does not refetch metrics on rerender with same addresses', async () => {
+  test('does not refetch metrics on rerender with same addresses and time', async () => {
     vi.mock('@/config', () => ({ CONFIG: { API_BASE_URL: 'http://api', GOOGLE_MAPS_API_KEY: 'KEY' } }));
     const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ km: 10, min: 15 }) }));
     vi.stubGlobal('fetch', fetchMock);
     const onMetrics = vi.fn();
     const { rerender } = render(
       <MapProvider>
-        <MapRoute pickup="A" dropoff="B" onMetrics={onMetrics} />
+        <MapRoute pickup="A" dropoff="B" rideTime="2020-01-01T00:00" onMetrics={onMetrics} />
       </MapProvider>
     );
     await waitFor(() => expect(onMetrics).toHaveBeenCalledWith(10, 15));
@@ -60,12 +60,35 @@ describe('MapRoute', () => {
 
     rerender(
       <MapProvider>
-        <MapRoute pickup="A" dropoff="B" onMetrics={onMetrics} />
+        <MapRoute pickup="A" dropoff="B" rideTime="2020-01-01T00:00" onMetrics={onMetrics} />
       </MapProvider>
     );
     await new Promise((r) => setTimeout(r, 20));
     expect(fetchMock).not.toHaveBeenCalled();
     expect(onMetrics).not.toHaveBeenCalled();
+  });
+
+  test('refetches metrics when rideTime changes', async () => {
+    vi.mock('@/config', () => ({ CONFIG: { API_BASE_URL: 'http://api', GOOGLE_MAPS_API_KEY: 'KEY' } }));
+    const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ km: 10, min: 15 }) }));
+    vi.stubGlobal('fetch', fetchMock);
+    const onMetrics = vi.fn();
+    const { rerender } = render(
+      <MapProvider>
+        <MapRoute pickup="A" dropoff="B" rideTime="2020-01-01T00:00" onMetrics={onMetrics} />
+      </MapProvider>
+    );
+    await waitFor(() => expect(onMetrics).toHaveBeenCalledWith(10, 15));
+    fetchMock.mockClear();
+    onMetrics.mockClear();
+
+    rerender(
+      <MapProvider>
+        <MapRoute pickup="A" dropoff="B" rideTime="2020-01-01T01:00" onMetrics={onMetrics} />
+      </MapProvider>
+    );
+    await waitFor(() => expect(onMetrics).toHaveBeenCalledWith(10, 15));
+    expect(fetchMock).toHaveBeenCalled();
   });
 
   test('does not call onMetrics when either address missing', async () => {
@@ -75,7 +98,7 @@ describe('MapRoute', () => {
     const onMetrics = vi.fn();
     const { rerender } = render(
       <MapProvider>
-        <MapRoute pickup="" dropoff="B" onMetrics={onMetrics} />
+        <MapRoute pickup="" dropoff="B" rideTime="2020-01-01T00:00" onMetrics={onMetrics} />
       </MapProvider>
     );
     await new Promise((r) => setTimeout(r, 20));
@@ -83,7 +106,7 @@ describe('MapRoute', () => {
 
     rerender(
       <MapProvider>
-        <MapRoute pickup="A" dropoff="" onMetrics={onMetrics} />
+        <MapRoute pickup="A" dropoff="" rideTime="2020-01-01T00:00" onMetrics={onMetrics} />
       </MapProvider>
     );
     await new Promise((r) => setTimeout(r, 20));

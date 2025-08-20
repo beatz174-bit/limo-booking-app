@@ -3,14 +3,16 @@ import { useEffect } from 'react';
 import { GoogleMap, DirectionsRenderer } from '@react-google-maps/api';
 import { useRoute } from '@/hooks/useRoute';
 import { useRouteMetrics } from '@/hooks/useRouteMetrics';
+import { useMap } from './MapProvider';
 
 export type Props = {
   pickup: string;
   dropoff: string;
+  rideTime?: string;
   onMetrics?: (km: number, minutes: number) => void;
 };
 
-function Placeholder() {
+function Placeholder({ text = 'map unavailable' }: { text?: string }) {
   return (
     <div
       id="map"
@@ -23,12 +25,13 @@ function Placeholder() {
         background: '#eee',
       }}
     >
-      map unavailable
+      {text}
     </div>
   );
 }
 
-export function MapRoute({ pickup, dropoff, onMetrics }: Props) {
+
+export function MapRoute({ pickup, dropoff, rideTime, onMetrics }: Props) {
   const { valid, directions } = useRoute(pickup, dropoff);
   const getMetrics = useRouteMetrics();
 
@@ -36,15 +39,18 @@ export function MapRoute({ pickup, dropoff, onMetrics }: Props) {
     let cancelled = false;
     async function compute() {
       if (!pickup || !dropoff || !onMetrics) return;
-      const res = await getMetrics(pickup, dropoff);
+      const rideTimeIso = rideTime ? new Date(rideTime).toISOString() : undefined;
+      const res = await getMetrics(pickup, dropoff, rideTimeIso);
       if (!cancelled && res) onMetrics(res.km, res.min);
     }
     void compute();
     return () => {
       cancelled = true;
     };
-  }, [pickup, dropoff, onMetrics, getMetrics]);
+  }, [pickup, dropoff, rideTime, onMetrics, getMetrics]);
 
+  // if (loadError) return <Placeholder />;
+  // if (!isLoaded) return <Placeholder text="loading..." />;
   if (!valid || !directions) return <Placeholder />;
 
   return (
