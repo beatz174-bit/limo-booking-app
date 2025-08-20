@@ -8,7 +8,7 @@ import ListItemText from '@mui/material/ListItemText';
 
 import { CONFIG } from '@/config';
 import { useDevFeatures } from '@/contexts/DevFeaturesContext';
-
+const DevNotes: React.FC = () => {
   return (
     <Box p={2}>
       <Typography variant="h4" gutterBottom>
