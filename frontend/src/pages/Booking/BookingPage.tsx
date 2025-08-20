@@ -12,7 +12,6 @@ import type { BookingCreate } from "@/api-client";
 
 import { useSettings } from "@/hooks/useSettings";
 import { usePickupFromGeolocation } from "@/hooks/usePickupFromGeolocation";
-import { usePriceCalculator } from "@/hooks/usePriceCalculator";
 import { minFutureDateTime } from "@/lib/datetime";
 
 import { AddressField } from "@/components/AddressField";
@@ -38,6 +37,7 @@ export default function BookingPage() {
 
   const [distanceKm, setDistanceKm] = useState<number | undefined>(undefined);
   const [durationMin, setDurationMin] = useState<number | undefined>(undefined);
+  const [price, setPrice] = useState<number | null>(null);
 
   const handleMetrics = useCallback((km: number, min: number) => {
     setDistanceKm(km);
@@ -84,19 +84,6 @@ export default function BookingPage() {
   // Update pickup when geolocation hook resolves an address
   const pickupValue = geo.address || pickup;
 
-  const pricing = usePriceCalculator({
-    pickup: pickupValue,
-    dropoff,
-    rideTime,
-    flagfall: tariff.flagfall ?? 0,
-    perKm: tariff.perKm ?? 0,
-    perMin: tariff.perMin ?? 0,
-    distanceKm,
-    durationMin,
-    auto: true,
-    debounceMs: 300,
-  });
-
   async function submitBooking() {
     if (!settings) return;
     try {
@@ -104,7 +91,7 @@ export default function BookingPage() {
         pickup_location: pickup.trim(),
         destination: dropoff.trim(),
         ride_time: new Date(rideTime).toISOString(),
-        price: pricing.price || 0,
+        price: price || 0,
       };
       // TODO: Replace with your actual request object + API call
       await bookingsApi.apiCreateBookingBookingsPost(payload)
@@ -171,9 +158,6 @@ export default function BookingPage() {
                   <Button variant="contained" onClick={submitBooking} disabled={settingsLoading}>
                     Book now
                   </Button>
-                  <Button variant="outlined" onClick={() => pricing.compute()} disabled={settingsLoading}>
-                    Recalculate price
-                  </Button>
                 </Stack>
               </Stack>
             </CardContent>
@@ -184,9 +168,15 @@ export default function BookingPage() {
           <Card>
             <CardContent>
               <PriceSummary
-                price={pricing.price}
-                loading={pricing.loading || settingsLoading}
-                error={pricing.error}
+                pickup={pickupRoute}
+                dropoff={dropoffRoute}
+                rideTime={rideTime}
+                flagfall={tariff.flagfall}
+                perKm={tariff.perKm}
+                perMin={tariff.perMin}
+                distanceKm={distanceKm}
+                durationMin={durationMin}
+                onPrice={setPrice}
               />
               <FareBreakdown
                 flagfall={tariff.flagfall}
