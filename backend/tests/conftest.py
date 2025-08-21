@@ -1,32 +1,43 @@
-import os
 import asyncio
+import os
+import tempfile
+import uuid
+from pathlib import Path
+
+import httpx
 import pytest
 import pytest_asyncio
-from pathlib import Path
-import httpx
-
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy import create_engine
-
-
 from httpx import AsyncClient
+from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+# Ensure a unique, fresh DB path for each test session unless explicitly provided
+if not os.getenv("DATABASE_PATH"):
+    tmp_dir = Path(tempfile.gettempdir())
+    unique_name = f"test_db_{uuid.uuid4().hex}.sqlite"
+    os.environ["DATABASE_PATH"] = str(tmp_dir / unique_name)
+
+from alembic import command
+
+# --- Resolve async DB URL from .env.test (pytest-dotenv loads it when you pass --envfile) ---
+from alembic.config import Config
+from app.core.config import get_settings
+
+# try:
+from app.dependencies import get_db  # ← common place
 
 # IMPORTANT: adjust these imports to match your repo.
 # - app.main: FastAPI instance
 # - app.core.config (or wherever) to read DATABASE_URL if needed
 # - app.db.dependencies (or wherever) to import get_db dependency used by routes
 from app.main import app
-# try:
-from app.dependencies import get_db  # ← common place
+
 # except ImportError:
 #     from app.api.dependencies import get_db  # ← fallback if you keep deps under api/
 
-# --- Resolve async DB URL from .env.test (pytest-dotenv loads it when you pass --envfile) ---
-from alembic.config import Config
-from alembic import command  
-from app.core.config import get_settings
 
 settings = get_settings()
+
 
 def _make_async_url(sync_url: str) -> str:
     """
@@ -44,21 +55,31 @@ def _make_async_url(sync_url: str) -> str:
     # If already async, return as-is
     return sync_url
 
-SYNC_DB_URL = f'sqlite:///{os.getenv("DATABASE_PATH")}' or os.getenv("SQLALCHEMY_DATABASE_URI") or ""
+
+SYNC_DB_URL = (
+    f'sqlite:///{os.getenv("DATABASE_PATH")}'
+    or os.getenv("SQLALCHEMY_DATABASE_URI")
+    or ""
+)
 if not SYNC_DB_URL:
-    raise RuntimeError("DATABASE_URL not found in environment (ensure you run pytest with --envfile=.env.test)")
+    raise RuntimeError(
+        "DATABASE_URL not found in environment (ensure you run pytest with --envfile=.env.test)"
+    )
 ASYNC_DB_URL = _make_async_url(SYNC_DB_URL)
 
 # --- Create async engine / sessionmaker bound to the REAL test DB file/url ---
 
 async_engine = create_async_engine(ASYNC_DB_URL, future=True)
-AsyncSessionLocal = async_sessionmaker(bind=async_engine, expire_on_commit=False, class_=AsyncSession)
+AsyncSessionLocal = async_sessionmaker(
+    bind=async_engine, expire_on_commit=False, class_=AsyncSession
+)
 
 
 # --- Run Alembic migrations ONCE per test session (against the sync URL your env already uses) ---
 
+
 @pytest.fixture(scope="session", autouse=True)
-def _migrate_db(): # type: ignore
+def _migrate_db():  # type: ignore
     """
     Your app already runs migrations automatically in test logs, but we ensure the DB is migrated
     before tests that open AsyncSession. If your app's startup runs Alembic, you can drop this.
@@ -73,7 +94,10 @@ def _migrate_db(): # type: ignore
     # command.upgrade(cfg, "head")
     # TEST_DATABASE_URL = f"sqlite:///{settings.database_path}"
     db_path = settings.database_path or os.getenv("DATABASE_PATH") or ".pytest.db"
-    TEST_DATABASE_URL = f"sqlite:///{db_path}"
+    db_file = Path(db_path)
+    if db_file.exists():
+        db_file.unlink()
+    TEST_DATABASE_URL = f"sqlite:///{db_file}"
 
     cfg = Config(os.getenv("ALEMBIC_INI_PATH", "alembic.ini"))
     cfg.set_main_option("sqlalchemy.url", TEST_DATABASE_URL)
@@ -86,13 +110,13 @@ def _migrate_db(): # type: ignore
     except Exception:
         pass
     try:
-        Path(db_path).unlink(missing_ok=True) #
+        db_file.unlink(missing_ok=True)
     except Exception:
         pass
 
 
-
 # --- Event loop for pytest-asyncio (Py3.9 default policy etc.) ---
+
 
 @pytest.fixture(scope="session")
 def event_loop():
@@ -102,6 +126,7 @@ def event_loop():
 
 
 # --- Async DB session fixture for tests that need direct DB access ---
+
 
 @pytest_asyncio.fixture
 async def async_session():
@@ -113,14 +138,15 @@ async def async_session():
 
 # --- Override FastAPI dependency to inject AsyncSession into routes/services ---
 
+
 @pytest_asyncio.fixture(autouse=True, scope="function")
 async def override_get_db():
     async def _get_db():
-        async with AsyncSessionLocal() as session: 
+        async with AsyncSessionLocal() as session:
             try:
-                yield session          # endpoint runs here
+                yield session  # endpoint runs here
                 await session.commit()  # commit on success
-            except:                     # noqa: E722
+            except:  # noqa: E722
                 await session.rollback()
                 raise
             finally:
@@ -133,6 +159,7 @@ async def override_get_db():
 
 
 # --- Async HTTP client for integration tests ---
+
 
 @pytest_asyncio.fixture
 async def client():
