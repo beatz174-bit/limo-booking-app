@@ -36,3 +36,4 @@ pytest-mock
 httpx
 python-multipart
 python-json-logger
+stripe

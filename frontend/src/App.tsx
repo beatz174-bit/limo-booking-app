@@ -1,7 +1,7 @@
 // Main application component setting up routes.
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from '@/pages/Auth/LoginPage';
-import BookingPage from '@/pages/Booking/BookingPage';
+import BookingWizardPage from '@/pages/Booking/BookingWizardPage';
 import AdminDashboard from '@/pages/Admin/AdminDashboard';
 import RideHistoryPage from '@/pages/Booking/RideHistoryPage';
 import RideDetailsPage from '@/pages/Booking/RideDetailsPage';
@@ -33,7 +33,7 @@ function App() {
       {/* Protected user routes */}
       <Route
         path="/book"
-        element={ accessToken ? <BookingPage /> : <Navigate to="/login" /> }
+        element={ accessToken ? <BookingWizardPage /> : <Navigate to="/login" /> }
       />
       <Route
         path="/history"

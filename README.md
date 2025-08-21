@@ -26,8 +26,10 @@ The application relies on several external services. Set these variables in a `.
 | `GOOGLE_MAPS_API_KEY` | Distance and duration metrics via Google Distance Matrix. |
 | `ORS_API_KEY` | Geocoding via the OpenRouteService API. |
 | `JWT_SECRET_KEY` | Secret used to sign access tokens. |
+| `STRIPE_SECRET_KEY` | Server-side Stripe key for payment intents and SetupIntents. |
 | `VITE_API_BASE_URL` | (frontend) Base URL of the backend API. |
 | `VITE_GOOGLE_MAPS_API_KEY` | (frontend) Google Maps key for map rendering. |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | (frontend) Stripe publishable key for card collection. |
 | `LOG_LEVEL` | (backend) Logging verbosity (`DEBUG`, `INFO`, etc.). Defaults to `INFO`. |
 
 ## Logging
