@@ -35,9 +35,14 @@ def test_graylog_handler_attached(monkeypatch: pytest.MonkeyPatch) -> None:
     get_settings.cache_clear()
     try:
         setup_logging()
-        assert any(
-            isinstance(h, graypy.GELFUDPHandler) for h in logging.getLogger().handlers
-        )
+        handlers = [
+            h
+            for h in logging.getLogger().handlers
+            if isinstance(h, graypy.GELFUDPHandler)
+        ]
+        assert handlers
+        handler = handlers[0]
+        assert handler.static_fields.get("env") == get_settings().env
     finally:
         logging.getLogger().handlers.clear()
         monkeypatch.delenv("GRAYLOG_HOST")
