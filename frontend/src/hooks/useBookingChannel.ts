@@ -5,6 +5,7 @@ export interface LocationUpdate {
   lng: number;
   speed?: number;
   ts: number;
+  status?: string;
 }
 
 export function useBookingChannel(bookingId: string | null) {
