@@ -1,9 +1,13 @@
 import { renderHook } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import useDirections from '@/hooks/useDirections';
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 describe('useDirections', () => {
-  it('fetches and parses distance and duration', async () => {
+  it('memoizes results and parses distance and duration', async () => {
     vi.mock('@/config', () => ({ CONFIG: { GOOGLE_MAPS_API_KEY: 'KEY' } }));
     const fake = {
       routes: [

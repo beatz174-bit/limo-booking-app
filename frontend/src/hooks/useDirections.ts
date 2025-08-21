@@ -6,6 +6,11 @@ export interface DirectionsMetrics {
   min: number;
 }
 
+/**
+ * Returns a function that retrieves driving directions between two points.
+ * Results are memoized in-memory to avoid duplicate calls for the same
+ * pickup and dropoff combination.
+ */
 export function useDirections() {
   const cache = useRef(new Map<string, DirectionsMetrics>());
 
@@ -13,15 +18,15 @@ export function useDirections() {
     async (pickup: string, dropoff: string): Promise<DirectionsMetrics | null> => {
       if (!pickup || !dropoff) return null;
       const key = `${pickup}|${dropoff}`;
-      if (cache.current.has(key)) {
-        return cache.current.get(key)!;
-      }
+      const cached = cache.current.get(key);
+      if (cached) return cached;
+
       try {
         const params = new URLSearchParams({
           origin: pickup,
           destination: dropoff,
           mode: "driving",
-          key: CONFIG.GOOGLE_MAPS_API_KEY || "",
+          key: CONFIG.GOOGLE_MAPS_API_KEY ?? "",
         });
         const url = `https://maps.googleapis.com/maps/api/directions/json?${params.toString()}`;
         const res = await fetch(url);
