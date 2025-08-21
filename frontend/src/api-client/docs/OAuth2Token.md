@@ -1,5 +1,6 @@
 # OAuth2Token
 
+OAuth2 compliant access token.
 
 ## Properties
 

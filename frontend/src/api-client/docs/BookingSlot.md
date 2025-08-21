@@ -1,20 +1,21 @@
-# BookingUpdate
+# BookingSlot
 
-Allowed fields when updating a booking.
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**status** | **string** |  | [default to undefined]
+**id** | **string** |  | [default to undefined]
+**pickup_when** | **string** |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { BookingUpdate } from './api';
+import { BookingSlot } from './api';
 
-const instance: BookingUpdate = {
-    status,
+const instance: BookingSlot = {
+    id,
+    pickup_when,
 };
 ```
 

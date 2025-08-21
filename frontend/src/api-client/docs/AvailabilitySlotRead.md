@@ -1,25 +1,24 @@
-# UserRead
+# AvailabilitySlotRead
 
-User data returned from the API.
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**email** | **string** |  | [default to undefined]
-**full_name** | **string** |  | [default to undefined]
-**default_pickup_address** | **string** |  | [optional] [default to undefined]
+**start_dt** | **string** |  | [default to undefined]
+**end_dt** | **string** |  | [default to undefined]
+**reason** | **string** |  | [optional] [default to undefined]
 **id** | **number** |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { UserRead } from './api';
+import { AvailabilitySlotRead } from './api';
 
-const instance: UserRead = {
-    email,
-    full_name,
-    default_pickup_address,
+const instance: AvailabilitySlotRead = {
+    start_dt,
+    end_dt,
+    reason,
     id,
 };
 ```

@@ -1,20 +1,20 @@
-# BookingUpdate
+# GeocodeSearchResponse
 
-Allowed fields when updating a booking.
+Collection of geocode search results.
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**status** | **string** |  | [default to undefined]
+**results** | [**Array&lt;GeocodeSearchResult&gt;**](GeocodeSearchResult.md) |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { BookingUpdate } from './api';
+import { GeocodeSearchResponse } from './api';
 
-const instance: BookingUpdate = {
-    status,
+const instance: GeocodeSearchResponse = {
+    results,
 };
 ```
 

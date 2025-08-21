@@ -1,5 +1,6 @@
 # UserCreate
 
+Fields required when creating a user.
 
 ## Properties
 
@@ -7,6 +8,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **email** | **string** |  | [default to undefined]
 **full_name** | **string** |  | [default to undefined]
+**default_pickup_address** | **string** |  | [optional] [default to undefined]
 **password** | **string** |  | [default to undefined]
 
 ## Example
@@ -17,6 +19,7 @@ import { UserCreate } from './api';
 const instance: UserCreate = {
     email,
     full_name,
+    default_pickup_address,
     password,
 };
 ```

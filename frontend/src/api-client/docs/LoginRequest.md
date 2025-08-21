@@ -1,5 +1,6 @@
 # LoginRequest
 
+User credentials supplied during login.
 
 ## Properties
 

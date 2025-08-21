@@ -1,20 +1,19 @@
-# BookingUpdate
+# StripeSetupIntent
 
-Allowed fields when updating a booking.
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**status** | **string** |  | [default to undefined]
+**setup_intent_client_secret** | **string** |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { BookingUpdate } from './api';
+import { StripeSetupIntent } from './api';
 
-const instance: BookingUpdate = {
-    status,
+const instance: StripeSetupIntent = {
+    setup_intent_client_secret,
 };
 ```
 
