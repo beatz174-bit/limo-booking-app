@@ -84,3 +84,13 @@ async def decline_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
     await db.commit()
     await db.refresh(booking)
     return booking
+
+async def leave_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
+    """Mark a confirmed booking as on the way."""
+    booking = await db.get(Booking, booking_id)
+    if booking is None or booking.status is not BookingStatus.DRIVER_CONFIRMED:
+        raise ValueError("booking cannot be left")
+    booking.status = BookingStatus.ON_THE_WAY
+    await db.commit()
+    await db.refresh(booking)
+    return booking

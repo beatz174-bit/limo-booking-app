@@ -40,5 +40,7 @@ class BookingCreateResponse(BaseModel):
     booking: BookingPublic
     stripe: StripeSetupIntent
 
+
 class BookingStatusResponse(BaseModel):
     status: BookingStatus
+    leave_at: Optional[datetime] = None

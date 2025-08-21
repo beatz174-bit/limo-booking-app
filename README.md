@@ -31,6 +31,7 @@ The application relies on several external services. Set these variables in a `.
 | `VITE_GOOGLE_MAPS_API_KEY` | (frontend) Google Maps key for map rendering. |
 | `VITE_STRIPE_PUBLISHABLE_KEY` | (frontend) Stripe publishable key for card collection. |
 | `LOG_LEVEL` | (backend) Logging verbosity (`DEBUG`, `INFO`, etc.). Defaults to `INFO`. |
+| `FCM_PROJECT_ID` / `FCM_CLIENT_EMAIL` / `FCM_PRIVATE_KEY` | (backend) Optional Firebase credentials for push notifications. |
 
 ## Logging
 
@@ -80,6 +81,13 @@ Run the frontend:
 cd frontend
 npm run dev
 ```
+
+## Realtime tracking
+
+The backend exposes a WebSocket at `/ws/bookings/{id}` which streams driver
+location updates. Customers can retrieve a tracking link via
+`GET /api/v1/track/{public_code}` and connect to the WebSocket for live
+updates.
 
 ## Testing
 

@@ -37,6 +37,7 @@ class BookingRead(BookingBase):
     status: BookingStatus
     created_at: datetime
     updated_at: datetime
+    leave_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
