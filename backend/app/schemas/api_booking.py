@@ -40,6 +40,5 @@ class BookingCreateResponse(BaseModel):
     booking: BookingPublic
     stripe: StripeSetupIntent
 
-
 class BookingStatusResponse(BaseModel):
     status: BookingStatus

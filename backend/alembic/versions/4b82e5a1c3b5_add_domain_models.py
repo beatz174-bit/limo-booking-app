@@ -117,7 +117,6 @@ def upgrade() -> None:
             sa.Column('per_km_rate', sa.Float(), nullable=False, server_default='0'),
             sa.Column('per_minute_rate', sa.Float(), nullable=False, server_default='0'),
         )
-
     # Seed a single driver user
     users_table = sa.table(
         'users_v2',

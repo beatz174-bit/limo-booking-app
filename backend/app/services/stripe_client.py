@@ -13,7 +13,6 @@ def create_setup_intent(customer_email: str):
         metadata={"customer_email": customer_email},
     )
 
-
 def charge_deposit(amount_cents: int, payment_method: str = "pm_card_visa"):
     """Charge a deposit using a stored payment method.
 
@@ -32,3 +31,4 @@ def charge_deposit(amount_cents: int, payment_method: str = "pm_card_visa"):
         payment_method=payment_method,
         confirm=True,
     )
+
