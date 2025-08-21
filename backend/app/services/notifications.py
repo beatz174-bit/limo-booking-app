@@ -68,37 +68,32 @@ async def _send_fcm(
         algorithm="RS256",
     )
     async with httpx.AsyncClient(timeout=10) as client:
-        token_resp = await client.post(
-            "https://oauth2.googleapis.com/token",
-            data={
-                "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
-                "assertion": assertion,
-            },
-        )
-        if token_resp.status_code != 200:
-            return
-        access_token = token_resp.json().get("access_token")
-        if not access_token:
-            return
-
-        data = {"type": notif_type.value}
-        for k, v in payload.items():
-            data[k] = json.dumps(v) if not isinstance(v, str) else v
-
-        message = {
-            "message": {
-                "topic": to_role.value.lower(),
-                "data": data,
-            }
-        }
-
-        url = (
-            "https://fcm.googleapis.com/v1/projects/"
-            f"{settings.fcm_project_id}/messages:send"
-        )
         try:
+            token_resp = await client.post(
+                "https://oauth2.googleapis.com/token",
+                data={
+                    "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                    "assertion": assertion,
+                },
+            )
+            token_resp.raise_for_status()
+            access_token = token_resp.json().get("access_token")
+            if not access_token:
+                return
+
+            data = {"type": notif_type.value}
+            for k, v in payload.items():
+                data[k] = json.dumps(v) if not isinstance(v, str) else v
+
+            message = {
+                "message": {
+                    "topic": to_role.value.lower(),
+                    "data": data,
+                }
+            }
+
             await client.post(
-                url,
+                f"https://fcm.googleapis.com/v1/projects/{settings.fcm_project_id}/messages:send",
                 headers={"Authorization": f"Bearer {access_token}"},
                 json=message,
             )
