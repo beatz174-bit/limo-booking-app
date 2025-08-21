@@ -5,6 +5,7 @@ from time import time
 from typing import Callable, Optional
 from uuid import uuid4
 
+import graypy
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
@@ -23,6 +24,14 @@ class RequestIdFilter(logging.Filter):
         return True
 
 
+def _graylog_handler(
+    host: str, port: int, static_fields: dict
+) -> graypy.GELFUDPHandler:
+    handler = graypy.GELFUDPHandler(host, port)
+    handler.static_fields = static_fields
+    return handler
+
+
 def setup_logging() -> None:
     """Configure application-wide logging."""
     settings = get_settings()
@@ -38,11 +47,12 @@ def setup_logging() -> None:
     root_handlers = ["default"]
     if settings.graylog_host:
         handlers["graylog"] = {
-            "class": "graypy.GELFUDPHandler",
+            "()": "app.core.logging._graylog_handler",
             "formatter": "default",
             "filters": ["request_id"],
             "host": settings.graylog_host,
             "port": settings.graylog_port,
+            "static_fields": {"env": settings.env},
         }
         root_handlers.append("graylog")
 
