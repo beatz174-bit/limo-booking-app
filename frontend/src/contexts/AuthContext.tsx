@@ -7,7 +7,7 @@ import { beginLogin, completeLoginFromRedirect, refreshTokens, TokenResponse, OA
 import { useLocation, useNavigate } from "react-router-dom";
 import { type AuthContextType } from "@/types/AuthContextType";
 
-type UserShape = { email?: string; full_name?: string } | null;
+type UserShape = { email?: string; full_name?: string; role?: string } | null;
 
 type AuthState = {
   accessToken: string | null;
@@ -38,7 +38,7 @@ useEffect(() => {
   const raw = localStorage.getItem("auth_tokens");
   const storeduserID = localStorage.getItem("userID");
   const storeduserName = localStorage.getItem("userName");
-  const storedRole = localStorage.getItem("userRole");
+  const storedRole = localStorage.getItem("role");
   if (raw) {
     try {
       const { access_token, refresh_token, user, role } = JSON.parse(raw);
@@ -49,7 +49,7 @@ useEffect(() => {
         loading: false,
         userID: storeduserID ?? null,
         userName: storeduserName ?? null,
-        role: role ?? storedRole ?? null,
+        role: storedRole ?? user?.role ?? null,
       });
       if (role ?? storedRole) {
         localStorage.setItem("userRole", String(role ?? storedRole));
@@ -94,10 +94,14 @@ useEffect(() => {
   const persist = useCallback((t?: TokenResponse | null, user?: UserShape, role?: string | null) => {
     const access_token = t?.access_token ?? null;
     const refresh_token = t?.refresh_token ?? null;
-    if (access_token || refresh_token || user || role) {
-      localStorage.setItem("auth_tokens", JSON.stringify({ access_token, refresh_token, user, role }));
+    if (access_token || refresh_token || user) {
+      localStorage.setItem("auth_tokens", JSON.stringify({ access_token, refresh_token, user }));
+      if (user?.role) {
+        localStorage.setItem("role", user.role);
+      }
     } else {
       localStorage.removeItem("auth_tokens");
+      localStorage.removeItem("role");
     }
     if (role !== undefined) {
       if (role) {
@@ -107,10 +111,10 @@ useEffect(() => {
       }
     }
     setTokens(access_token, refresh_token);
-    setState((s) => ({ ...s, accessToken: access_token, user: user ?? s.user, role: role ?? s.role }));
+    setState((s) => ({ ...s, accessToken: access_token, user: user ?? s.user, role: user?.role ?? s.role }));
   }, []);
 
-  const loginWithPassword = useCallback(async (email: string, password: string) => {
+  const loginWithPassword = useCallback(async (email: string, password: string): Promise<string | null> => {
     const res = await fetch(`${CONFIG.API_BASE_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -128,11 +132,20 @@ useEffect(() => {
 
     const body = await res.json();
     const token = body.access_token ?? body.token ?? null;
-    persist(
-      { access_token: token, refresh_token: body.refresh_token ?? null },
-      body.user ?? null,
-      body.role ?? null
+    const role: string | null = body.role ?? body.user?.role ?? null;
+    localStorage.setItem(
+      "auth_tokens",
+      JSON.stringify({
+        access_token: token,
+        refresh_token: body.refresh_token ?? null,
+        user: body.user ?? null,
+      })
     );
+    if (role) {
+      localStorage.setItem("role", role);
+    } else {
+      localStorage.removeItem("role");
+    }
 
     localStorage.setItem("userName", body.full_name);
     localStorage.setItem("userID", String(body.id));
@@ -143,9 +156,10 @@ useEffect(() => {
       user: body.user ?? s.user,
       userID: String(body.id),
       userName: body.full_name,
-      role: body.role ?? s.role,
+      role,
     }));
-  }, [setState, persist]);
+    return role;
+  }, [setState]);
 
   const registerWithPassword = useCallback(async (fullName: string, email: string, password: string) => {
     await authApi.endpointRegisterAuthRegisterPost({ full_name: fullName, email, password });
@@ -166,7 +180,7 @@ useEffect(() => {
     persist(null, null, null);
     localStorage.removeItem("userID");
     localStorage.removeItem("userName");
-    localStorage.removeItem("userRole");
+    localStorage.removeItem("role");
     setState((s) => ({
       ...s,
       accessToken: null,

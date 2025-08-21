@@ -37,8 +37,10 @@ export default function LoginPage() {
     setSubmitting(true);
     setError(null);
     try {
-      await loginWithPassword(email, password);
-      const dest = params.get("from") || "/book";
+      const role = await loginWithPassword(email, password);
+      let dest = "/book";
+      if (role === "DRIVER") dest = "/driver";
+      else if (role && role.toUpperCase().includes("ADMIN")) dest = "/admin";
       navigate(dest, { replace: true });
     } catch (err: unknown) {
       if (err instanceof Response) {
