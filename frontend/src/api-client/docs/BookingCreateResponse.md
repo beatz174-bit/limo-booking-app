@@ -1,20 +1,21 @@
-# BookingUpdate
+# BookingCreateResponse
 
-Allowed fields when updating a booking.
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**status** | **string** |  | [default to undefined]
+**booking** | [**BookingPublic**](BookingPublic.md) |  | [default to undefined]
+**stripe** | [**StripeSetupIntent**](StripeSetupIntent.md) |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { BookingUpdate } from './api';
+import { BookingCreateResponse } from './api';
 
-const instance: BookingUpdate = {
-    status,
+const instance: BookingCreateResponse = {
+    booking,
+    stripe,
 };
 ```
 

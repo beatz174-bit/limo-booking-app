@@ -1,5 +1,6 @@
 # SettingsPayload
 
+Configuration values provided during setup.
 
 ## Properties
 

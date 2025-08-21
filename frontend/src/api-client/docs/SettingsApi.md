@@ -10,6 +10,7 @@ All URIs are relative to *http://localhost*
 # **apiGetSettingsSettingsGet**
 > SettingsPayload apiGetSettingsSettingsGet()
 
+Return current pricing and configuration.
 
 ### Example
 
@@ -53,6 +54,7 @@ This endpoint does not have any parameters.
 # **apiUpdateSettingsSettingsPut**
 > SettingsPayload apiUpdateSettingsSettingsPut(settingsPayload)
 
+Persist updated configuration values.
 
 ### Example
 

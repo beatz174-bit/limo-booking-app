@@ -1,20 +1,23 @@
-# BookingUpdate
+# Location
 
-Allowed fields when updating a booking.
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**status** | **string** |  | [default to undefined]
+**address** | **string** |  | [default to undefined]
+**lat** | **number** |  | [default to undefined]
+**lng** | **number** |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { BookingUpdate } from './api';
+import { Location } from './api';
 
-const instance: BookingUpdate = {
-    status,
+const instance: Location = {
+    address,
+    lat,
+    lng,
 };
 ```
 

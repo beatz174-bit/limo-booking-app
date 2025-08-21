@@ -10,6 +10,7 @@ All URIs are relative to *http://localhost*
 # **setupSetupPost**
 > any setupSetupPost(setupPayload)
 
+Create admin settings and initial user.
 
 ### Example
 
@@ -62,6 +63,7 @@ No authorization required
 # **setupStatusSetupGet**
 > SettingsPayload setupStatusSetupGet()
 
+Check if setup has already been completed.
 
 ### Example
 

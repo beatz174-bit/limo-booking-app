@@ -1,5 +1,6 @@
 # SetupPayload
 
+Payload containing admin user and settings.
 
 ## Properties
 

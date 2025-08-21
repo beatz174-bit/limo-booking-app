@@ -9,6 +9,7 @@ All URIs are relative to *http://localhost*
 # **apiRouteMetricsRouteMetricsGet**
 > any apiRouteMetricsRouteMetricsGet()
 
+Return travel metrics between pickup and dropoff addresses.
 
 ### Example
 
@@ -23,10 +24,12 @@ const apiInstance = new RouteMetricsApi(configuration);
 
 let pickup: string; // (default to undefined)
 let dropoff: string; // (default to undefined)
+let rideTime: string; //Desired pickup time to account for traffic (optional) (default to undefined)
 
 const { status, data } = await apiInstance.apiRouteMetricsRouteMetricsGet(
     pickup,
-    dropoff
+    dropoff,
+    rideTime
 );
 ```
 
@@ -36,6 +39,7 @@ const { status, data } = await apiInstance.apiRouteMetricsRouteMetricsGet(
 |------------- | ------------- | ------------- | -------------|
 | **pickup** | [**string**] |  | defaults to undefined|
 | **dropoff** | [**string**] |  | defaults to undefined|
+| **rideTime** | [**string**] | Desired pickup time to account for traffic | (optional) defaults to undefined|
 
 
 ### Return type

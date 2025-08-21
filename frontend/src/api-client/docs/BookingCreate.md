@@ -1,5 +1,6 @@
 # BookingCreate
 
+Payload to create a new booking.
 
 ## Properties
 

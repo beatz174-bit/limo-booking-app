@@ -1,20 +1,21 @@
-# BookingUpdate
+# TrackResponse
 
-Allowed fields when updating a booking.
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**status** | **string** |  | [default to undefined]
+**booking** | [**AppSchemasBookingV2BookingRead**](AppSchemasBookingV2BookingRead.md) |  | [default to undefined]
+**ws_url** | **string** |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { BookingUpdate } from './api';
+import { TrackResponse } from './api';
 
-const instance: BookingUpdate = {
-    status,
+const instance: TrackResponse = {
+    booking,
+    ws_url,
 };
 ```
 

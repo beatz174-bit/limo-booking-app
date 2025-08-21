@@ -1,5 +1,6 @@
 # GeocodeResponse
 
+Single address lookup result.
 
 ## Properties
 

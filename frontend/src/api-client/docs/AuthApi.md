@@ -12,6 +12,7 @@ All URIs are relative to *http://localhost*
 # **endpointRegisterAuthRegisterPost**
 > any endpointRegisterAuthRegisterPost(registerRequest)
 
+Create a new user account.
 
 ### Example
 
@@ -64,6 +65,7 @@ No authorization required
 # **loginAuthLoginPost**
 > any loginAuthLoginPost(loginRequest)
 
+Validate user credentials and return an access token.
 
 ### Example
 
@@ -116,6 +118,7 @@ No authorization required
 # **tokenAuthTokenPost**
 > OAuth2Token tokenAuthTokenPost()
 
+Exchange a username/password for an OAuth2 token.
 
 ### Example
 
@@ -182,6 +185,7 @@ No authorization required
 # **tokenAuthTokenPost_0**
 > OAuth2Token tokenAuthTokenPost_0()
 
+Exchange a username/password for an OAuth2 token.
 
 ### Example
 

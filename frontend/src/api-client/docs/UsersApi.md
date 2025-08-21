@@ -6,13 +6,16 @@ All URIs are relative to *http://localhost*
 |------------- | ------------- | -------------|
 |[**apiCreateUserUsersPost**](#apicreateuseruserspost) | **POST** /users | Api Create User|
 |[**apiDeleteUserUsersUserIdDelete**](#apideleteuserusersuseriddelete) | **DELETE** /users/{user_id} | Api Delete User|
+|[**apiGetMeUsersMeGet**](#apigetmeusersmeget) | **GET** /users/me | Api Get Me|
 |[**apiGetUserUsersUserIdGet**](#apigetuserusersuseridget) | **GET** /users/{user_id} | Api Get User|
 |[**apiListUsersUsersGet**](#apilistusersusersget) | **GET** /users | Api List Users|
+|[**apiUpdateMeUsersMePatch**](#apiupdatemeusersmepatch) | **PATCH** /users/me | Api Update Me|
 |[**apiUpdateUserUsersUserIdPatch**](#apiupdateuserusersuseridpatch) | **PATCH** /users/{user_id} | Api Update User|
 
 # **apiCreateUserUsersPost**
 > UserRead apiCreateUserUsersPost(userCreate)
 
+Register a new user in the system.
 
 ### Example
 
@@ -65,6 +68,7 @@ No authorization required
 # **apiDeleteUserUsersUserIdDelete**
 > apiDeleteUserUsersUserIdDelete()
 
+Remove a user permanently.
 
 ### Example
 
@@ -113,9 +117,54 @@ void (empty response body)
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **apiGetMeUsersMeGet**
+> UserRead apiGetMeUsersMeGet()
+
+Return the currently authenticated user\'s profile.
+
+### Example
+
+```typescript
+import {
+    UsersApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new UsersApi(configuration);
+
+const { status, data } = await apiInstance.apiGetMeUsersMeGet();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**UserRead**
+
+### Authorization
+
+[OAuth2PasswordBearer](../README.md#OAuth2PasswordBearer)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Successful Response |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **apiGetUserUsersUserIdGet**
 > UserRead apiGetUserUsersUserIdGet()
 
+Fetch a single user by ID.
 
 ### Example
 
@@ -167,6 +216,7 @@ const { status, data } = await apiInstance.apiGetUserUsersUserIdGet(
 # **apiListUsersUsersGet**
 > Array<UserRead> apiListUsersUsersGet()
 
+Return all existing users.
 
 ### Example
 
@@ -207,9 +257,63 @@ This endpoint does not have any parameters.
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **apiUpdateMeUsersMePatch**
+> UserRead apiUpdateMeUsersMePatch(userUpdate)
+
+Allow the current user to update their profile.
+
+### Example
+
+```typescript
+import {
+    UsersApi,
+    Configuration,
+    UserUpdate
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new UsersApi(configuration);
+
+let userUpdate: UserUpdate; //
+
+const { status, data } = await apiInstance.apiUpdateMeUsersMePatch(
+    userUpdate
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **userUpdate** | **UserUpdate**|  | |
+
+
+### Return type
+
+**UserRead**
+
+### Authorization
+
+[OAuth2PasswordBearer](../README.md#OAuth2PasswordBearer)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Successful Response |  -  |
+|**422** | Validation Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **apiUpdateUserUsersUserIdPatch**
 > UserRead apiUpdateUserUsersUserIdPatch(userUpdate)
 
+Update selected fields of a user.
 
 ### Example
 

@@ -1,34 +1,33 @@
-# GeocodeApi
+# AvailabilityApi
 
 All URIs are relative to *http://localhost*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**apiGeocodeSearchGeocodeSearchGet**](#apigeocodesearchgeocodesearchget) | **GET** /geocode/search | Api Geocode Search|
-|[**apiReverseGeocodeGeocodeReverseGet**](#apireversegeocodegeocodereverseget) | **GET** /geocode/reverse | Api Reverse Geocode|
+|[**createSlotApiV1AvailabilityPost**](#createslotapiv1availabilitypost) | **POST** /api/v1/availability | Create Slot|
+|[**getAvailabilityApiV1AvailabilityGet**](#getavailabilityapiv1availabilityget) | **GET** /api/v1/availability | Get Availability|
 
-# **apiGeocodeSearchGeocodeSearchGet**
-> GeocodeSearchResponse apiGeocodeSearchGeocodeSearchGet()
+# **createSlotApiV1AvailabilityPost**
+> AvailabilitySlotRead createSlotApiV1AvailabilityPost(availabilitySlotCreate)
 
-Search for addresses matching a query string.
+Create a manual availability block.
 
 ### Example
 
 ```typescript
 import {
-    GeocodeApi,
-    Configuration
+    AvailabilityApi,
+    Configuration,
+    AvailabilitySlotCreate
 } from './api';
 
 const configuration = new Configuration();
-const apiInstance = new GeocodeApi(configuration);
+const apiInstance = new AvailabilityApi(configuration);
 
-let q: string; // (default to undefined)
-let limit: number; // (optional) (default to 5)
+let availabilitySlotCreate: AvailabilitySlotCreate; //
 
-const { status, data } = await apiInstance.apiGeocodeSearchGeocodeSearchGet(
-    q,
-    limit
+const { status, data } = await apiInstance.createSlotApiV1AvailabilityPost(
+    availabilitySlotCreate
 );
 ```
 
@@ -36,13 +35,12 @@ const { status, data } = await apiInstance.apiGeocodeSearchGeocodeSearchGet(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **q** | [**string**] |  | defaults to undefined|
-| **limit** | [**number**] |  | (optional) defaults to 5|
+| **availabilitySlotCreate** | **AvailabilitySlotCreate**|  | |
 
 
 ### Return type
 
-**GeocodeSearchResponse**
+**AvailabilitySlotRead**
 
 ### Authorization
 
@@ -50,40 +48,38 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Successful Response |  -  |
+|**201** | Successful Response |  -  |
 |**422** | Validation Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiReverseGeocodeGeocodeReverseGet**
-> GeocodeResponse apiReverseGeocodeGeocodeReverseGet()
+# **getAvailabilityApiV1AvailabilityGet**
+> AvailabilityResponse getAvailabilityApiV1AvailabilityGet()
 
-Look up an address from latitude and longitude.
+Return availability slots and confirmed bookings for a given month.
 
 ### Example
 
 ```typescript
 import {
-    GeocodeApi,
+    AvailabilityApi,
     Configuration
 } from './api';
 
 const configuration = new Configuration();
-const apiInstance = new GeocodeApi(configuration);
+const apiInstance = new AvailabilityApi(configuration);
 
-let lat: number; // (default to undefined)
-let lon: number; // (default to undefined)
+let month: string; // (default to undefined)
 
-const { status, data } = await apiInstance.apiReverseGeocodeGeocodeReverseGet(
-    lat,
-    lon
+const { status, data } = await apiInstance.getAvailabilityApiV1AvailabilityGet(
+    month
 );
 ```
 
@@ -91,13 +87,12 @@ const { status, data } = await apiInstance.apiReverseGeocodeGeocodeReverseGet(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **lat** | [**number**] |  | defaults to undefined|
-| **lon** | [**number**] |  | defaults to undefined|
+| **month** | [**string**] |  | defaults to undefined|
 
 
 ### Return type
 
-**GeocodeResponse**
+**AvailabilityResponse**
 
 ### Authorization
 

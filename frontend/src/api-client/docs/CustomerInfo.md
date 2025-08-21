@@ -1,24 +1,23 @@
-# RegisterRequest
+# CustomerInfo
 
-Payload required to create a new user.
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**name** | **string** |  | [default to undefined]
 **email** | **string** |  | [default to undefined]
-**full_name** | **string** |  | [default to undefined]
-**password** | **string** |  | [default to undefined]
+**phone** | **string** |  | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { RegisterRequest } from './api';
+import { CustomerInfo } from './api';
 
-const instance: RegisterRequest = {
+const instance: CustomerInfo = {
+    name,
     email,
-    full_name,
-    password,
+    phone,
 };
 ```
 

@@ -24,7 +24,319 @@ import type { RequestArgs } from './base';
 import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerMap } from './base';
 
 /**
+ * Breakdown of address parts returned by provider.
+ * @export
+ * @interface AddressComponents
+ */
+export interface AddressComponents {
+    /**
+     * 
+     * @type {string}
+     * @memberof AddressComponents
+     */
+    'house_number'?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof AddressComponents
+     */
+    'road'?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof AddressComponents
+     */
+    'suburb'?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof AddressComponents
+     */
+    'city'?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof AddressComponents
+     */
+    'postcode'?: string | null;
+}
+/**
+ * Representation of a booking returned from API.
+ * @export
+ * @interface AppSchemasBookingBookingRead
+ */
+export interface AppSchemasBookingBookingRead {
+    /**
+     * 
+     * @type {number}
+     * @memberof AppSchemasBookingBookingRead
+     */
+    'id': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof AppSchemasBookingBookingRead
+     */
+    'user_id': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof AppSchemasBookingBookingRead
+     */
+    'pickup_location': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AppSchemasBookingBookingRead
+     */
+    'dropoff_location': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AppSchemasBookingBookingRead
+     */
+    'time': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AppSchemasBookingBookingRead
+     */
+    'price': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AppSchemasBookingBookingRead
+     */
+    'status': AppSchemasBookingBookingReadStatusEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof AppSchemasBookingBookingRead
+     */
+    'created_at'?: string | null;
+}
+
+export const AppSchemasBookingBookingReadStatusEnum = {
+    Pending: 'pending',
+    Accepted: 'accepted',
+    Completed: 'completed',
+    Cancelled: 'cancelled'
+} as const;
+
+export type AppSchemasBookingBookingReadStatusEnum = typeof AppSchemasBookingBookingReadStatusEnum[keyof typeof AppSchemasBookingBookingReadStatusEnum];
+
+/**
  * 
+ * @export
+ * @interface AppSchemasBookingV2BookingRead
+ */
+export interface AppSchemasBookingV2BookingRead {
+    /**
+     * 
+     * @type {string}
+     * @memberof AppSchemasBookingV2BookingRead
+     */
+    'customer_id': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AppSchemasBookingV2BookingRead
+     */
+    'pickup_address': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof AppSchemasBookingV2BookingRead
+     */
+    'pickup_lat': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof AppSchemasBookingV2BookingRead
+     */
+    'pickup_lng': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof AppSchemasBookingV2BookingRead
+     */
+    'dropoff_address': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof AppSchemasBookingV2BookingRead
+     */
+    'dropoff_lat': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof AppSchemasBookingV2BookingRead
+     */
+    'dropoff_lng': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof AppSchemasBookingV2BookingRead
+     */
+    'pickup_when': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AppSchemasBookingV2BookingRead
+     */
+    'notes'?: string | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof AppSchemasBookingV2BookingRead
+     */
+    'passengers': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof AppSchemasBookingV2BookingRead
+     */
+    'estimated_price_cents': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof AppSchemasBookingV2BookingRead
+     */
+    'final_price_cents'?: number | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof AppSchemasBookingV2BookingRead
+     */
+    'deposit_required_cents': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof AppSchemasBookingV2BookingRead
+     */
+    'deposit_payment_intent_id'?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof AppSchemasBookingV2BookingRead
+     */
+    'final_payment_intent_id'?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof AppSchemasBookingV2BookingRead
+     */
+    'id': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AppSchemasBookingV2BookingRead
+     */
+    'public_code': string;
+    /**
+     * 
+     * @type {BookingStatus}
+     * @memberof AppSchemasBookingV2BookingRead
+     */
+    'status': BookingStatus;
+    /**
+     * 
+     * @type {string}
+     * @memberof AppSchemasBookingV2BookingRead
+     */
+    'created_at': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AppSchemasBookingV2BookingRead
+     */
+    'updated_at': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AppSchemasBookingV2BookingRead
+     */
+    'leave_at'?: string | null;
+}
+
+
+/**
+ * 
+ * @export
+ * @interface AvailabilityResponse
+ */
+export interface AvailabilityResponse {
+    /**
+     * 
+     * @type {Array<AvailabilitySlotRead>}
+     * @memberof AvailabilityResponse
+     */
+    'slots': Array<AvailabilitySlotRead>;
+    /**
+     * 
+     * @type {Array<BookingSlot>}
+     * @memberof AvailabilityResponse
+     */
+    'bookings': Array<BookingSlot>;
+}
+/**
+ * 
+ * @export
+ * @interface AvailabilitySlotCreate
+ */
+export interface AvailabilitySlotCreate {
+    /**
+     * 
+     * @type {string}
+     * @memberof AvailabilitySlotCreate
+     */
+    'start_dt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AvailabilitySlotCreate
+     */
+    'end_dt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AvailabilitySlotCreate
+     */
+    'reason'?: string | null;
+}
+/**
+ * 
+ * @export
+ * @interface AvailabilitySlotRead
+ */
+export interface AvailabilitySlotRead {
+    /**
+     * 
+     * @type {string}
+     * @memberof AvailabilitySlotRead
+     */
+    'start_dt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AvailabilitySlotRead
+     */
+    'end_dt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AvailabilitySlotRead
+     */
+    'reason'?: string | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof AvailabilitySlotRead
+     */
+    'id': number;
+}
+/**
+ * Payload to create a new booking.
  * @export
  * @interface BookingCreate
  */
@@ -73,70 +385,173 @@ export type BookingCreateStatusEnum = typeof BookingCreateStatusEnum[keyof typeo
 /**
  * 
  * @export
- * @interface BookingRead
+ * @interface BookingCreateRequest
  */
-export interface BookingRead {
+export interface BookingCreateRequest {
+    /**
+     * 
+     * @type {CustomerInfo}
+     * @memberof BookingCreateRequest
+     */
+    'customer': CustomerInfo;
+    /**
+     * 
+     * @type {string}
+     * @memberof BookingCreateRequest
+     */
+    'pickup_when': string;
+    /**
+     * 
+     * @type {Location}
+     * @memberof BookingCreateRequest
+     */
+    'pickup': Location;
+    /**
+     * 
+     * @type {Location}
+     * @memberof BookingCreateRequest
+     */
+    'dropoff': Location;
     /**
      * 
      * @type {number}
-     * @memberof BookingRead
+     * @memberof BookingCreateRequest
      */
-    'id': number;
+    'passengers': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof BookingCreateRequest
+     */
+    'notes'?: string | null;
+}
+/**
+ * 
+ * @export
+ * @interface BookingCreateResponse
+ */
+export interface BookingCreateResponse {
+    /**
+     * 
+     * @type {BookingPublic}
+     * @memberof BookingCreateResponse
+     */
+    'booking': BookingPublic;
+    /**
+     * 
+     * @type {StripeSetupIntent}
+     * @memberof BookingCreateResponse
+     */
+    'stripe': StripeSetupIntent;
+}
+/**
+ * 
+ * @export
+ * @interface BookingPublic
+ */
+export interface BookingPublic {
+    /**
+     * 
+     * @type {string}
+     * @memberof BookingPublic
+     */
+    'id': string;
+    /**
+     * 
+     * @type {BookingStatus}
+     * @memberof BookingPublic
+     */
+    'status': BookingStatus;
+    /**
+     * 
+     * @type {string}
+     * @memberof BookingPublic
+     */
+    'public_code': string;
     /**
      * 
      * @type {number}
-     * @memberof BookingRead
+     * @memberof BookingPublic
      */
-    'user_id': number;
+    'estimated_price_cents': number;
     /**
      * 
-     * @type {string}
-     * @memberof BookingRead
+     * @type {number}
+     * @memberof BookingPublic
      */
-    'pickup_location': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof BookingRead
-     */
-    'dropoff_location': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof BookingRead
-     */
-    'time': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof BookingRead
-     */
-    'price': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof BookingRead
-     */
-    'status': BookingReadStatusEnum;
-    /**
-     * 
-     * @type {string}
-     * @memberof BookingRead
-     */
-    'created_at'?: string | null;
+    'deposit_required_cents': number;
 }
 
-export const BookingReadStatusEnum = {
-    Pending: 'pending',
-    Accepted: 'accepted',
-    Completed: 'completed',
-    Cancelled: 'cancelled'
-} as const;
-
-export type BookingReadStatusEnum = typeof BookingReadStatusEnum[keyof typeof BookingReadStatusEnum];
 
 /**
  * 
+ * @export
+ * @interface BookingSlot
+ */
+export interface BookingSlot {
+    /**
+     * 
+     * @type {string}
+     * @memberof BookingSlot
+     */
+    'id': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BookingSlot
+     */
+    'pickup_when': string;
+}
+/**
+ * 
+ * @export
+ * @enum {string}
+ */
+
+export const BookingStatus = {
+    Pending: 'PENDING',
+    DriverConfirmed: 'DRIVER_CONFIRMED',
+    Declined: 'DECLINED',
+    OnTheWay: 'ON_THE_WAY',
+    ArrivedPickup: 'ARRIVED_PICKUP',
+    InProgress: 'IN_PROGRESS',
+    ArrivedDropoff: 'ARRIVED_DROPOFF',
+    Completed: 'COMPLETED',
+    Cancelled: 'CANCELLED'
+} as const;
+
+export type BookingStatus = typeof BookingStatus[keyof typeof BookingStatus];
+
+
+/**
+ * 
+ * @export
+ * @interface BookingStatusResponse
+ */
+export interface BookingStatusResponse {
+    /**
+     * 
+     * @type {BookingStatus}
+     * @memberof BookingStatusResponse
+     */
+    'status': BookingStatus;
+    /**
+     * 
+     * @type {string}
+     * @memberof BookingStatusResponse
+     */
+    'leave_at'?: string | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof BookingStatusResponse
+     */
+    'final_price_cents'?: number | null;
+}
+
+
+/**
+ * Allowed fields when updating a booking.
  * @export
  * @interface BookingUpdate
  */
@@ -161,6 +576,31 @@ export type BookingUpdateStatusEnum = typeof BookingUpdateStatusEnum[keyof typeo
 /**
  * 
  * @export
+ * @interface CustomerInfo
+ */
+export interface CustomerInfo {
+    /**
+     * 
+     * @type {string}
+     * @memberof CustomerInfo
+     */
+    'name': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CustomerInfo
+     */
+    'email': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CustomerInfo
+     */
+    'phone'?: string | null;
+}
+/**
+ * Single address lookup result.
+ * @export
  * @interface GeocodeResponse
  */
 export interface GeocodeResponse {
@@ -170,6 +610,32 @@ export interface GeocodeResponse {
      * @memberof GeocodeResponse
      */
     'address': string;
+}
+/**
+ * Collection of geocode search results.
+ * @export
+ * @interface GeocodeSearchResponse
+ */
+export interface GeocodeSearchResponse {
+    /**
+     * 
+     * @type {Array<GeocodeSearchResult>}
+     * @memberof GeocodeSearchResponse
+     */
+    'results': Array<GeocodeSearchResult>;
+}
+/**
+ * One item from a geocode search result list.
+ * @export
+ * @interface GeocodeSearchResult
+ */
+export interface GeocodeSearchResult {
+    /**
+     * 
+     * @type {AddressComponents}
+     * @memberof GeocodeSearchResult
+     */
+    'address': AddressComponents;
 }
 /**
  * 
@@ -186,6 +652,31 @@ export interface HTTPValidationError {
 }
 /**
  * 
+ * @export
+ * @interface Location
+ */
+export interface Location {
+    /**
+     * 
+     * @type {string}
+     * @memberof Location
+     */
+    'address': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof Location
+     */
+    'lat': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof Location
+     */
+    'lng': number;
+}
+/**
+ * User credentials supplied during login.
  * @export
  * @interface LoginRequest
  */
@@ -204,7 +695,7 @@ export interface LoginRequest {
     'password': string;
 }
 /**
- * 
+ * OAuth2 compliant access token.
  * @export
  * @interface OAuth2Token
  */
@@ -230,7 +721,7 @@ export interface OAuth2Token {
 export interface Price {
 }
 /**
- * 
+ * Payload required to create a new user.
  * @export
  * @interface RegisterRequest
  */
@@ -255,7 +746,7 @@ export interface RegisterRequest {
     'password': string;
 }
 /**
- * 
+ * Configuration values provided during setup.
  * @export
  * @interface SettingsPayload
  */
@@ -266,6 +757,11 @@ export interface SettingsPayload {
      * @memberof SettingsPayload
      */
     'account_mode': boolean;
+    /**
+     * 
+     * @type {number}
+     * @memberof SettingsPayload
+     */
     'flagfall': number;
     /**
      * 
@@ -281,7 +777,7 @@ export interface SettingsPayload {
     'per_minute_rate': number;
 }
 /**
- * 
+ * Payload containing admin user and settings.
  * @export
  * @interface SetupPayload
  */
@@ -314,6 +810,38 @@ export interface SetupPayload {
 /**
  * 
  * @export
+ * @interface StripeSetupIntent
+ */
+export interface StripeSetupIntent {
+    /**
+     * 
+     * @type {string}
+     * @memberof StripeSetupIntent
+     */
+    'setup_intent_client_secret': string;
+}
+/**
+ * 
+ * @export
+ * @interface TrackResponse
+ */
+export interface TrackResponse {
+    /**
+     * 
+     * @type {AppSchemasBookingV2BookingRead}
+     * @memberof TrackResponse
+     */
+    'booking': AppSchemasBookingV2BookingRead;
+    /**
+     * 
+     * @type {string}
+     * @memberof TrackResponse
+     */
+    'ws_url': string;
+}
+/**
+ * Fields required when creating a user.
+ * @export
  * @interface UserCreate
  */
 export interface UserCreate {
@@ -334,10 +862,16 @@ export interface UserCreate {
      * @type {string}
      * @memberof UserCreate
      */
+    'default_pickup_address'?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof UserCreate
+     */
     'password': string;
 }
 /**
- * 
+ * User data returned from the API.
  * @export
  * @interface UserRead
  */
@@ -356,13 +890,19 @@ export interface UserRead {
     'full_name': string;
     /**
      * 
+     * @type {string}
+     * @memberof UserRead
+     */
+    'default_pickup_address'?: string | null;
+    /**
+     * 
      * @type {number}
      * @memberof UserRead
      */
     'id': number;
 }
 /**
- * 
+ * Optional fields for updating a user.
  * @export
  * @interface UserUpdate
  */
@@ -385,6 +925,12 @@ export interface UserUpdate {
      * @memberof UserUpdate
      */
     'password'?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof UserUpdate
+     */
+    'default_pickup_address'?: string | null;
 }
 /**
  * 
@@ -426,7 +972,7 @@ export interface ValidationErrorLocInner {
 export const AuthApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
         /**
-         * 
+         * Create a new user account.
          * @summary Endpoint Register
          * @param {RegisterRequest} registerRequest 
          * @param {*} [options] Override http request option.
@@ -462,7 +1008,7 @@ export const AuthApiAxiosParamCreator = function (configuration?: Configuration)
             };
         },
         /**
-         * 
+         * Validate user credentials and return an access token.
          * @summary Login
          * @param {LoginRequest} loginRequest 
          * @param {*} [options] Override http request option.
@@ -498,7 +1044,7 @@ export const AuthApiAxiosParamCreator = function (configuration?: Configuration)
             };
         },
         /**
-         * 
+         * Exchange a username/password for an OAuth2 token.
          * @summary Token
          * @param {string} username 
          * @param {string} password 
@@ -566,7 +1112,7 @@ export const AuthApiAxiosParamCreator = function (configuration?: Configuration)
             };
         },
         /**
-         * 
+         * Exchange a username/password for an OAuth2 token.
          * @summary Token
          * @param {string} username 
          * @param {string} password 
@@ -644,7 +1190,7 @@ export const AuthApiFp = function(configuration?: Configuration) {
     const localVarAxiosParamCreator = AuthApiAxiosParamCreator(configuration)
     return {
         /**
-         * 
+         * Create a new user account.
          * @summary Endpoint Register
          * @param {RegisterRequest} registerRequest 
          * @param {*} [options] Override http request option.
@@ -657,7 +1203,7 @@ export const AuthApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
+         * Validate user credentials and return an access token.
          * @summary Login
          * @param {LoginRequest} loginRequest 
          * @param {*} [options] Override http request option.
@@ -670,7 +1216,7 @@ export const AuthApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
+         * Exchange a username/password for an OAuth2 token.
          * @summary Token
          * @param {string} username 
          * @param {string} password 
@@ -688,7 +1234,7 @@ export const AuthApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
+         * Exchange a username/password for an OAuth2 token.
          * @summary Token
          * @param {string} username 
          * @param {string} password 
@@ -716,7 +1262,7 @@ export const AuthApiFactory = function (configuration?: Configuration, basePath?
     const localVarFp = AuthApiFp(configuration)
     return {
         /**
-         * 
+         * Create a new user account.
          * @summary Endpoint Register
          * @param {RegisterRequest} registerRequest 
          * @param {*} [options] Override http request option.
@@ -726,7 +1272,7 @@ export const AuthApiFactory = function (configuration?: Configuration, basePath?
             return localVarFp.endpointRegisterAuthRegisterPost(registerRequest, options).then((request) => request(axios, basePath));
         },
         /**
-         * 
+         * Validate user credentials and return an access token.
          * @summary Login
          * @param {LoginRequest} loginRequest 
          * @param {*} [options] Override http request option.
@@ -736,7 +1282,7 @@ export const AuthApiFactory = function (configuration?: Configuration, basePath?
             return localVarFp.loginAuthLoginPost(loginRequest, options).then((request) => request(axios, basePath));
         },
         /**
-         * 
+         * Exchange a username/password for an OAuth2 token.
          * @summary Token
          * @param {string} username 
          * @param {string} password 
@@ -751,7 +1297,7 @@ export const AuthApiFactory = function (configuration?: Configuration, basePath?
             return localVarFp.tokenAuthTokenPost(username, password, grantType, scope, clientId, clientSecret, options).then((request) => request(axios, basePath));
         },
         /**
-         * 
+         * Exchange a username/password for an OAuth2 token.
          * @summary Token
          * @param {string} username 
          * @param {string} password 
@@ -776,7 +1322,7 @@ export const AuthApiFactory = function (configuration?: Configuration, basePath?
  */
 export class AuthApi extends BaseAPI {
     /**
-     * 
+     * Create a new user account.
      * @summary Endpoint Register
      * @param {RegisterRequest} registerRequest 
      * @param {*} [options] Override http request option.
@@ -788,7 +1334,7 @@ export class AuthApi extends BaseAPI {
     }
 
     /**
-     * 
+     * Validate user credentials and return an access token.
      * @summary Login
      * @param {LoginRequest} loginRequest 
      * @param {*} [options] Override http request option.
@@ -800,7 +1346,7 @@ export class AuthApi extends BaseAPI {
     }
 
     /**
-     * 
+     * Exchange a username/password for an OAuth2 token.
      * @summary Token
      * @param {string} username 
      * @param {string} password 
@@ -817,7 +1363,7 @@ export class AuthApi extends BaseAPI {
     }
 
     /**
-     * 
+     * Exchange a username/password for an OAuth2 token.
      * @summary Token
      * @param {string} username 
      * @param {string} password 
@@ -837,13 +1383,195 @@ export class AuthApi extends BaseAPI {
 
 
 /**
+ * AvailabilityApi - axios parameter creator
+ * @export
+ */
+export const AvailabilityApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * Create a manual availability block.
+         * @summary Create Slot
+         * @param {AvailabilitySlotCreate} availabilitySlotCreate 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        createSlotApiV1AvailabilityPost: async (availabilitySlotCreate: AvailabilitySlotCreate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'availabilitySlotCreate' is not null or undefined
+            assertParamExists('createSlotApiV1AvailabilityPost', 'availabilitySlotCreate', availabilitySlotCreate)
+            const localVarPath = `/api/v1/availability`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(availabilitySlotCreate, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Return availability slots and confirmed bookings for a given month.
+         * @summary Get Availability
+         * @param {string} month 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getAvailabilityApiV1AvailabilityGet: async (month: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'month' is not null or undefined
+            assertParamExists('getAvailabilityApiV1AvailabilityGet', 'month', month)
+            const localVarPath = `/api/v1/availability`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (month !== undefined) {
+                localVarQueryParameter['month'] = month;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * AvailabilityApi - functional programming interface
+ * @export
+ */
+export const AvailabilityApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = AvailabilityApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * Create a manual availability block.
+         * @summary Create Slot
+         * @param {AvailabilitySlotCreate} availabilitySlotCreate 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async createSlotApiV1AvailabilityPost(availabilitySlotCreate: AvailabilitySlotCreate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AvailabilitySlotRead>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.createSlotApiV1AvailabilityPost(availabilitySlotCreate, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AvailabilityApi.createSlotApiV1AvailabilityPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Return availability slots and confirmed bookings for a given month.
+         * @summary Get Availability
+         * @param {string} month 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getAvailabilityApiV1AvailabilityGet(month: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AvailabilityResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getAvailabilityApiV1AvailabilityGet(month, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AvailabilityApi.getAvailabilityApiV1AvailabilityGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * AvailabilityApi - factory interface
+ * @export
+ */
+export const AvailabilityApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = AvailabilityApiFp(configuration)
+    return {
+        /**
+         * Create a manual availability block.
+         * @summary Create Slot
+         * @param {AvailabilitySlotCreate} availabilitySlotCreate 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        createSlotApiV1AvailabilityPost(availabilitySlotCreate: AvailabilitySlotCreate, options?: RawAxiosRequestConfig): AxiosPromise<AvailabilitySlotRead> {
+            return localVarFp.createSlotApiV1AvailabilityPost(availabilitySlotCreate, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Return availability slots and confirmed bookings for a given month.
+         * @summary Get Availability
+         * @param {string} month 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getAvailabilityApiV1AvailabilityGet(month: string, options?: RawAxiosRequestConfig): AxiosPromise<AvailabilityResponse> {
+            return localVarFp.getAvailabilityApiV1AvailabilityGet(month, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * AvailabilityApi - object-oriented interface
+ * @export
+ * @class AvailabilityApi
+ * @extends {BaseAPI}
+ */
+export class AvailabilityApi extends BaseAPI {
+    /**
+     * Create a manual availability block.
+     * @summary Create Slot
+     * @param {AvailabilitySlotCreate} availabilitySlotCreate 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AvailabilityApi
+     */
+    public createSlotApiV1AvailabilityPost(availabilitySlotCreate: AvailabilitySlotCreate, options?: RawAxiosRequestConfig) {
+        return AvailabilityApiFp(this.configuration).createSlotApiV1AvailabilityPost(availabilitySlotCreate, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Return availability slots and confirmed bookings for a given month.
+     * @summary Get Availability
+     * @param {string} month 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AvailabilityApi
+     */
+    public getAvailabilityApiV1AvailabilityGet(month: string, options?: RawAxiosRequestConfig) {
+        return AvailabilityApiFp(this.configuration).getAvailabilityApiV1AvailabilityGet(month, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
  * BookingsApi - axios parameter creator
  * @export
  */
 export const BookingsApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
         /**
-         * 
+         * Create a new booking for the current user.
          * @summary Api Create Booking
          * @param {BookingCreate} bookingCreate 
          * @param {*} [options] Override http request option.
@@ -883,7 +1611,7 @@ export const BookingsApiAxiosParamCreator = function (configuration?: Configurat
             };
         },
         /**
-         * 
+         * Remove a booking from the system.
          * @summary Api Delete Booking
          * @param {number} bookingId 
          * @param {*} [options] Override http request option.
@@ -921,7 +1649,7 @@ export const BookingsApiAxiosParamCreator = function (configuration?: Configurat
             };
         },
         /**
-         * 
+         * List bookings for the authenticated user.
          * @summary Api List Bookings
          * @param {number} [skip] 
          * @param {number} [limit] 
@@ -965,7 +1693,7 @@ export const BookingsApiAxiosParamCreator = function (configuration?: Configurat
             };
         },
         /**
-         * 
+         * Update the status of an existing booking.
          * @summary Api Update Status
          * @param {number} bookingId 
          * @param {BookingUpdate} bookingUpdate 
@@ -1008,6 +1736,42 @@ export const BookingsApiAxiosParamCreator = function (configuration?: Configurat
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * 
+         * @summary Create Booking Endpoint
+         * @param {BookingCreateRequest} bookingCreateRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        createBookingEndpointApiV1BookingsPost: async (bookingCreateRequest: BookingCreateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bookingCreateRequest' is not null or undefined
+            assertParamExists('createBookingEndpointApiV1BookingsPost', 'bookingCreateRequest', bookingCreateRequest)
+            const localVarPath = `/api/v1/bookings`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(bookingCreateRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
     }
 };
 
@@ -1019,20 +1783,20 @@ export const BookingsApiFp = function(configuration?: Configuration) {
     const localVarAxiosParamCreator = BookingsApiAxiosParamCreator(configuration)
     return {
         /**
-         * 
+         * Create a new booking for the current user.
          * @summary Api Create Booking
          * @param {BookingCreate} bookingCreate 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiCreateBookingBookingsPost(bookingCreate: BookingCreate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BookingRead>> {
+        async apiCreateBookingBookingsPost(bookingCreate: BookingCreate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AppSchemasBookingBookingRead>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiCreateBookingBookingsPost(bookingCreate, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['BookingsApi.apiCreateBookingBookingsPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
+         * Remove a booking from the system.
          * @summary Api Delete Booking
          * @param {number} bookingId 
          * @param {*} [options] Override http request option.
@@ -1045,31 +1809,44 @@ export const BookingsApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
+         * List bookings for the authenticated user.
          * @summary Api List Bookings
          * @param {number} [skip] 
          * @param {number} [limit] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiListBookingsBookingsGet(skip?: number, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<BookingRead>>> {
+        async apiListBookingsBookingsGet(skip?: number, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<AppSchemasBookingBookingRead>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiListBookingsBookingsGet(skip, limit, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['BookingsApi.apiListBookingsBookingsGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
+         * Update the status of an existing booking.
          * @summary Api Update Status
          * @param {number} bookingId 
          * @param {BookingUpdate} bookingUpdate 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiUpdateStatusBookingsBookingIdStatusPatch(bookingId: number, bookingUpdate: BookingUpdate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BookingRead>> {
+        async apiUpdateStatusBookingsBookingIdStatusPatch(bookingId: number, bookingUpdate: BookingUpdate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AppSchemasBookingBookingRead>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiUpdateStatusBookingsBookingIdStatusPatch(bookingId, bookingUpdate, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['BookingsApi.apiUpdateStatusBookingsBookingIdStatusPatch']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Create Booking Endpoint
+         * @param {BookingCreateRequest} bookingCreateRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async createBookingEndpointApiV1BookingsPost(bookingCreateRequest: BookingCreateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BookingCreateResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.createBookingEndpointApiV1BookingsPost(bookingCreateRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['BookingsApi.createBookingEndpointApiV1BookingsPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
@@ -1083,17 +1860,17 @@ export const BookingsApiFactory = function (configuration?: Configuration, baseP
     const localVarFp = BookingsApiFp(configuration)
     return {
         /**
-         * 
+         * Create a new booking for the current user.
          * @summary Api Create Booking
          * @param {BookingCreate} bookingCreate 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiCreateBookingBookingsPost(bookingCreate: BookingCreate, options?: RawAxiosRequestConfig): AxiosPromise<BookingRead> {
+        apiCreateBookingBookingsPost(bookingCreate: BookingCreate, options?: RawAxiosRequestConfig): AxiosPromise<AppSchemasBookingBookingRead> {
             return localVarFp.apiCreateBookingBookingsPost(bookingCreate, options).then((request) => request(axios, basePath));
         },
         /**
-         * 
+         * Remove a booking from the system.
          * @summary Api Delete Booking
          * @param {number} bookingId 
          * @param {*} [options] Override http request option.
@@ -1103,26 +1880,36 @@ export const BookingsApiFactory = function (configuration?: Configuration, baseP
             return localVarFp.apiDeleteBookingBookingsBookingIdDelete(bookingId, options).then((request) => request(axios, basePath));
         },
         /**
-         * 
+         * List bookings for the authenticated user.
          * @summary Api List Bookings
          * @param {number} [skip] 
          * @param {number} [limit] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiListBookingsBookingsGet(skip?: number, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<Array<BookingRead>> {
+        apiListBookingsBookingsGet(skip?: number, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<Array<AppSchemasBookingBookingRead>> {
             return localVarFp.apiListBookingsBookingsGet(skip, limit, options).then((request) => request(axios, basePath));
         },
         /**
-         * 
+         * Update the status of an existing booking.
          * @summary Api Update Status
          * @param {number} bookingId 
          * @param {BookingUpdate} bookingUpdate 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiUpdateStatusBookingsBookingIdStatusPatch(bookingId: number, bookingUpdate: BookingUpdate, options?: RawAxiosRequestConfig): AxiosPromise<BookingRead> {
+        apiUpdateStatusBookingsBookingIdStatusPatch(bookingId: number, bookingUpdate: BookingUpdate, options?: RawAxiosRequestConfig): AxiosPromise<AppSchemasBookingBookingRead> {
             return localVarFp.apiUpdateStatusBookingsBookingIdStatusPatch(bookingId, bookingUpdate, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Create Booking Endpoint
+         * @param {BookingCreateRequest} bookingCreateRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        createBookingEndpointApiV1BookingsPost(bookingCreateRequest: BookingCreateRequest, options?: RawAxiosRequestConfig): AxiosPromise<BookingCreateResponse> {
+            return localVarFp.createBookingEndpointApiV1BookingsPost(bookingCreateRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -1135,7 +1922,7 @@ export const BookingsApiFactory = function (configuration?: Configuration, baseP
  */
 export class BookingsApi extends BaseAPI {
     /**
-     * 
+     * Create a new booking for the current user.
      * @summary Api Create Booking
      * @param {BookingCreate} bookingCreate 
      * @param {*} [options] Override http request option.
@@ -1147,7 +1934,7 @@ export class BookingsApi extends BaseAPI {
     }
 
     /**
-     * 
+     * Remove a booking from the system.
      * @summary Api Delete Booking
      * @param {number} bookingId 
      * @param {*} [options] Override http request option.
@@ -1159,7 +1946,7 @@ export class BookingsApi extends BaseAPI {
     }
 
     /**
-     * 
+     * List bookings for the authenticated user.
      * @summary Api List Bookings
      * @param {number} [skip] 
      * @param {number} [limit] 
@@ -1172,7 +1959,7 @@ export class BookingsApi extends BaseAPI {
     }
 
     /**
-     * 
+     * Update the status of an existing booking.
      * @summary Api Update Status
      * @param {number} bookingId 
      * @param {BookingUpdate} bookingUpdate 
@@ -1182,6 +1969,715 @@ export class BookingsApi extends BaseAPI {
      */
     public apiUpdateStatusBookingsBookingIdStatusPatch(bookingId: number, bookingUpdate: BookingUpdate, options?: RawAxiosRequestConfig) {
         return BookingsApiFp(this.configuration).apiUpdateStatusBookingsBookingIdStatusPatch(bookingId, bookingUpdate, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Create Booking Endpoint
+     * @param {BookingCreateRequest} bookingCreateRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof BookingsApi
+     */
+    public createBookingEndpointApiV1BookingsPost(bookingCreateRequest: BookingCreateRequest, options?: RawAxiosRequestConfig) {
+        return BookingsApiFp(this.configuration).createBookingEndpointApiV1BookingsPost(bookingCreateRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * CustomerBookingsApi - axios parameter creator
+ * @export
+ */
+export const CustomerBookingsApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary List My Bookings
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listMyBookingsApiV1CustomersMeBookingsGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/customers/me/bookings`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OAuth2PasswordBearer required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * CustomerBookingsApi - functional programming interface
+ * @export
+ */
+export const CustomerBookingsApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = CustomerBookingsApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary List My Bookings
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async listMyBookingsApiV1CustomersMeBookingsGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<AppSchemasBookingV2BookingRead>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.listMyBookingsApiV1CustomersMeBookingsGet(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CustomerBookingsApi.listMyBookingsApiV1CustomersMeBookingsGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * CustomerBookingsApi - factory interface
+ * @export
+ */
+export const CustomerBookingsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = CustomerBookingsApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary List My Bookings
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listMyBookingsApiV1CustomersMeBookingsGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<AppSchemasBookingV2BookingRead>> {
+            return localVarFp.listMyBookingsApiV1CustomersMeBookingsGet(options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * CustomerBookingsApi - object-oriented interface
+ * @export
+ * @class CustomerBookingsApi
+ * @extends {BaseAPI}
+ */
+export class CustomerBookingsApi extends BaseAPI {
+    /**
+     * 
+     * @summary List My Bookings
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CustomerBookingsApi
+     */
+    public listMyBookingsApiV1CustomersMeBookingsGet(options?: RawAxiosRequestConfig) {
+        return CustomerBookingsApiFp(this.configuration).listMyBookingsApiV1CustomersMeBookingsGet(options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * DriverBookingsApi - axios parameter creator
+ * @export
+ */
+export const DriverBookingsApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Arrive Dropoff
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        arriveDropoffApiV1DriverBookingsBookingIdArriveDropoffPost: async (bookingId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bookingId' is not null or undefined
+            assertParamExists('arriveDropoffApiV1DriverBookingsBookingIdArriveDropoffPost', 'bookingId', bookingId)
+            const localVarPath = `/api/v1/driver/bookings/{booking_id}/arrive-dropoff`
+                .replace(`{${"booking_id"}}`, encodeURIComponent(String(bookingId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Arrive Pickup
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        arrivePickupApiV1DriverBookingsBookingIdArrivePickupPost: async (bookingId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bookingId' is not null or undefined
+            assertParamExists('arrivePickupApiV1DriverBookingsBookingIdArrivePickupPost', 'bookingId', bookingId)
+            const localVarPath = `/api/v1/driver/bookings/{booking_id}/arrive-pickup`
+                .replace(`{${"booking_id"}}`, encodeURIComponent(String(bookingId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Complete Booking
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        completeBookingApiV1DriverBookingsBookingIdCompletePost: async (bookingId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bookingId' is not null or undefined
+            assertParamExists('completeBookingApiV1DriverBookingsBookingIdCompletePost', 'bookingId', bookingId)
+            const localVarPath = `/api/v1/driver/bookings/{booking_id}/complete`
+                .replace(`{${"booking_id"}}`, encodeURIComponent(String(bookingId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Confirm Booking
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        confirmBookingApiV1DriverBookingsBookingIdConfirmPost: async (bookingId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bookingId' is not null or undefined
+            assertParamExists('confirmBookingApiV1DriverBookingsBookingIdConfirmPost', 'bookingId', bookingId)
+            const localVarPath = `/api/v1/driver/bookings/{booking_id}/confirm`
+                .replace(`{${"booking_id"}}`, encodeURIComponent(String(bookingId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Decline Booking
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        declineBookingApiV1DriverBookingsBookingIdDeclinePost: async (bookingId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bookingId' is not null or undefined
+            assertParamExists('declineBookingApiV1DriverBookingsBookingIdDeclinePost', 'bookingId', bookingId)
+            const localVarPath = `/api/v1/driver/bookings/{booking_id}/decline`
+                .replace(`{${"booking_id"}}`, encodeURIComponent(String(bookingId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Leave Booking
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        leaveBookingApiV1DriverBookingsBookingIdLeavePost: async (bookingId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bookingId' is not null or undefined
+            assertParamExists('leaveBookingApiV1DriverBookingsBookingIdLeavePost', 'bookingId', bookingId)
+            const localVarPath = `/api/v1/driver/bookings/{booking_id}/leave`
+                .replace(`{${"booking_id"}}`, encodeURIComponent(String(bookingId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary List Bookings
+         * @param {BookingStatus | null} [status] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listBookingsApiV1DriverBookingsGet: async (status?: BookingStatus | null, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/driver/bookings`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (status !== undefined) {
+                localVarQueryParameter['status'] = status;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Start Trip
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        startTripApiV1DriverBookingsBookingIdStartTripPost: async (bookingId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bookingId' is not null or undefined
+            assertParamExists('startTripApiV1DriverBookingsBookingIdStartTripPost', 'bookingId', bookingId)
+            const localVarPath = `/api/v1/driver/bookings/{booking_id}/start-trip`
+                .replace(`{${"booking_id"}}`, encodeURIComponent(String(bookingId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * DriverBookingsApi - functional programming interface
+ * @export
+ */
+export const DriverBookingsApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = DriverBookingsApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Arrive Dropoff
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async arriveDropoffApiV1DriverBookingsBookingIdArriveDropoffPost(bookingId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BookingStatusResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.arriveDropoffApiV1DriverBookingsBookingIdArriveDropoffPost(bookingId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DriverBookingsApi.arriveDropoffApiV1DriverBookingsBookingIdArriveDropoffPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Arrive Pickup
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async arrivePickupApiV1DriverBookingsBookingIdArrivePickupPost(bookingId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BookingStatusResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.arrivePickupApiV1DriverBookingsBookingIdArrivePickupPost(bookingId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DriverBookingsApi.arrivePickupApiV1DriverBookingsBookingIdArrivePickupPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Complete Booking
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async completeBookingApiV1DriverBookingsBookingIdCompletePost(bookingId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BookingStatusResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.completeBookingApiV1DriverBookingsBookingIdCompletePost(bookingId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DriverBookingsApi.completeBookingApiV1DriverBookingsBookingIdCompletePost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Confirm Booking
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async confirmBookingApiV1DriverBookingsBookingIdConfirmPost(bookingId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BookingStatusResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.confirmBookingApiV1DriverBookingsBookingIdConfirmPost(bookingId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DriverBookingsApi.confirmBookingApiV1DriverBookingsBookingIdConfirmPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Decline Booking
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async declineBookingApiV1DriverBookingsBookingIdDeclinePost(bookingId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BookingStatusResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.declineBookingApiV1DriverBookingsBookingIdDeclinePost(bookingId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DriverBookingsApi.declineBookingApiV1DriverBookingsBookingIdDeclinePost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Leave Booking
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async leaveBookingApiV1DriverBookingsBookingIdLeavePost(bookingId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BookingStatusResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.leaveBookingApiV1DriverBookingsBookingIdLeavePost(bookingId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DriverBookingsApi.leaveBookingApiV1DriverBookingsBookingIdLeavePost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary List Bookings
+         * @param {BookingStatus | null} [status] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async listBookingsApiV1DriverBookingsGet(status?: BookingStatus | null, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<AppSchemasBookingV2BookingRead>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.listBookingsApiV1DriverBookingsGet(status, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DriverBookingsApi.listBookingsApiV1DriverBookingsGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Start Trip
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async startTripApiV1DriverBookingsBookingIdStartTripPost(bookingId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BookingStatusResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.startTripApiV1DriverBookingsBookingIdStartTripPost(bookingId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DriverBookingsApi.startTripApiV1DriverBookingsBookingIdStartTripPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * DriverBookingsApi - factory interface
+ * @export
+ */
+export const DriverBookingsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = DriverBookingsApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Arrive Dropoff
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        arriveDropoffApiV1DriverBookingsBookingIdArriveDropoffPost(bookingId: string, options?: RawAxiosRequestConfig): AxiosPromise<BookingStatusResponse> {
+            return localVarFp.arriveDropoffApiV1DriverBookingsBookingIdArriveDropoffPost(bookingId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Arrive Pickup
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        arrivePickupApiV1DriverBookingsBookingIdArrivePickupPost(bookingId: string, options?: RawAxiosRequestConfig): AxiosPromise<BookingStatusResponse> {
+            return localVarFp.arrivePickupApiV1DriverBookingsBookingIdArrivePickupPost(bookingId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Complete Booking
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        completeBookingApiV1DriverBookingsBookingIdCompletePost(bookingId: string, options?: RawAxiosRequestConfig): AxiosPromise<BookingStatusResponse> {
+            return localVarFp.completeBookingApiV1DriverBookingsBookingIdCompletePost(bookingId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Confirm Booking
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        confirmBookingApiV1DriverBookingsBookingIdConfirmPost(bookingId: string, options?: RawAxiosRequestConfig): AxiosPromise<BookingStatusResponse> {
+            return localVarFp.confirmBookingApiV1DriverBookingsBookingIdConfirmPost(bookingId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Decline Booking
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        declineBookingApiV1DriverBookingsBookingIdDeclinePost(bookingId: string, options?: RawAxiosRequestConfig): AxiosPromise<BookingStatusResponse> {
+            return localVarFp.declineBookingApiV1DriverBookingsBookingIdDeclinePost(bookingId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Leave Booking
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        leaveBookingApiV1DriverBookingsBookingIdLeavePost(bookingId: string, options?: RawAxiosRequestConfig): AxiosPromise<BookingStatusResponse> {
+            return localVarFp.leaveBookingApiV1DriverBookingsBookingIdLeavePost(bookingId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary List Bookings
+         * @param {BookingStatus | null} [status] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listBookingsApiV1DriverBookingsGet(status?: BookingStatus | null, options?: RawAxiosRequestConfig): AxiosPromise<Array<AppSchemasBookingV2BookingRead>> {
+            return localVarFp.listBookingsApiV1DriverBookingsGet(status, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Start Trip
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        startTripApiV1DriverBookingsBookingIdStartTripPost(bookingId: string, options?: RawAxiosRequestConfig): AxiosPromise<BookingStatusResponse> {
+            return localVarFp.startTripApiV1DriverBookingsBookingIdStartTripPost(bookingId, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * DriverBookingsApi - object-oriented interface
+ * @export
+ * @class DriverBookingsApi
+ * @extends {BaseAPI}
+ */
+export class DriverBookingsApi extends BaseAPI {
+    /**
+     * 
+     * @summary Arrive Dropoff
+     * @param {string} bookingId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DriverBookingsApi
+     */
+    public arriveDropoffApiV1DriverBookingsBookingIdArriveDropoffPost(bookingId: string, options?: RawAxiosRequestConfig) {
+        return DriverBookingsApiFp(this.configuration).arriveDropoffApiV1DriverBookingsBookingIdArriveDropoffPost(bookingId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Arrive Pickup
+     * @param {string} bookingId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DriverBookingsApi
+     */
+    public arrivePickupApiV1DriverBookingsBookingIdArrivePickupPost(bookingId: string, options?: RawAxiosRequestConfig) {
+        return DriverBookingsApiFp(this.configuration).arrivePickupApiV1DriverBookingsBookingIdArrivePickupPost(bookingId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Complete Booking
+     * @param {string} bookingId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DriverBookingsApi
+     */
+    public completeBookingApiV1DriverBookingsBookingIdCompletePost(bookingId: string, options?: RawAxiosRequestConfig) {
+        return DriverBookingsApiFp(this.configuration).completeBookingApiV1DriverBookingsBookingIdCompletePost(bookingId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Confirm Booking
+     * @param {string} bookingId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DriverBookingsApi
+     */
+    public confirmBookingApiV1DriverBookingsBookingIdConfirmPost(bookingId: string, options?: RawAxiosRequestConfig) {
+        return DriverBookingsApiFp(this.configuration).confirmBookingApiV1DriverBookingsBookingIdConfirmPost(bookingId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Decline Booking
+     * @param {string} bookingId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DriverBookingsApi
+     */
+    public declineBookingApiV1DriverBookingsBookingIdDeclinePost(bookingId: string, options?: RawAxiosRequestConfig) {
+        return DriverBookingsApiFp(this.configuration).declineBookingApiV1DriverBookingsBookingIdDeclinePost(bookingId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Leave Booking
+     * @param {string} bookingId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DriverBookingsApi
+     */
+    public leaveBookingApiV1DriverBookingsBookingIdLeavePost(bookingId: string, options?: RawAxiosRequestConfig) {
+        return DriverBookingsApiFp(this.configuration).leaveBookingApiV1DriverBookingsBookingIdLeavePost(bookingId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary List Bookings
+     * @param {BookingStatus | null} [status] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DriverBookingsApi
+     */
+    public listBookingsApiV1DriverBookingsGet(status?: BookingStatus | null, options?: RawAxiosRequestConfig) {
+        return DriverBookingsApiFp(this.configuration).listBookingsApiV1DriverBookingsGet(status, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Start Trip
+     * @param {string} bookingId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DriverBookingsApi
+     */
+    public startTripApiV1DriverBookingsBookingIdStartTripPost(bookingId: string, options?: RawAxiosRequestConfig) {
+        return DriverBookingsApiFp(this.configuration).startTripApiV1DriverBookingsBookingIdStartTripPost(bookingId, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -1194,7 +2690,49 @@ export class BookingsApi extends BaseAPI {
 export const GeocodeApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
         /**
-         * 
+         * Search for addresses matching a query string.
+         * @summary Api Geocode Search
+         * @param {string} q 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiGeocodeSearchGeocodeSearchGet: async (q: string, limit?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'q' is not null or undefined
+            assertParamExists('apiGeocodeSearchGeocodeSearchGet', 'q', q)
+            const localVarPath = `/geocode/search`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (q !== undefined) {
+                localVarQueryParameter['q'] = q;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Look up an address from latitude and longitude.
          * @summary Api Reverse Geocode
          * @param {number} lat 
          * @param {number} lon 
@@ -1248,7 +2786,21 @@ export const GeocodeApiFp = function(configuration?: Configuration) {
     const localVarAxiosParamCreator = GeocodeApiAxiosParamCreator(configuration)
     return {
         /**
-         * 
+         * Search for addresses matching a query string.
+         * @summary Api Geocode Search
+         * @param {string} q 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiGeocodeSearchGeocodeSearchGet(q: string, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GeocodeSearchResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiGeocodeSearchGeocodeSearchGet(q, limit, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['GeocodeApi.apiGeocodeSearchGeocodeSearchGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Look up an address from latitude and longitude.
          * @summary Api Reverse Geocode
          * @param {number} lat 
          * @param {number} lon 
@@ -1272,7 +2824,18 @@ export const GeocodeApiFactory = function (configuration?: Configuration, basePa
     const localVarFp = GeocodeApiFp(configuration)
     return {
         /**
-         * 
+         * Search for addresses matching a query string.
+         * @summary Api Geocode Search
+         * @param {string} q 
+         * @param {number} [limit] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiGeocodeSearchGeocodeSearchGet(q: string, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<GeocodeSearchResponse> {
+            return localVarFp.apiGeocodeSearchGeocodeSearchGet(q, limit, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Look up an address from latitude and longitude.
          * @summary Api Reverse Geocode
          * @param {number} lat 
          * @param {number} lon 
@@ -1293,7 +2856,20 @@ export const GeocodeApiFactory = function (configuration?: Configuration, basePa
  */
 export class GeocodeApi extends BaseAPI {
     /**
-     * 
+     * Search for addresses matching a query string.
+     * @summary Api Geocode Search
+     * @param {string} q 
+     * @param {number} [limit] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GeocodeApi
+     */
+    public apiGeocodeSearchGeocodeSearchGet(q: string, limit?: number, options?: RawAxiosRequestConfig) {
+        return GeocodeApiFp(this.configuration).apiGeocodeSearchGeocodeSearchGet(q, limit, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Look up an address from latitude and longitude.
      * @summary Api Reverse Geocode
      * @param {number} lat 
      * @param {number} lon 
@@ -1315,14 +2891,15 @@ export class GeocodeApi extends BaseAPI {
 export const RouteMetricsApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
         /**
-         * 
+         * Return travel metrics between pickup and dropoff addresses.
          * @summary Compute distance and duration between two addresses
          * @param {string} pickup 
          * @param {string} dropoff 
+         * @param {string | null} [rideTime] Desired pickup time to account for traffic
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiRouteMetricsRouteMetricsGet: async (pickup: string, dropoff: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiRouteMetricsRouteMetricsGet: async (pickup: string, dropoff: string, rideTime?: string | null, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'pickup' is not null or undefined
             assertParamExists('apiRouteMetricsRouteMetricsGet', 'pickup', pickup)
             // verify required parameter 'dropoff' is not null or undefined
@@ -1347,6 +2924,12 @@ export const RouteMetricsApiAxiosParamCreator = function (configuration?: Config
                 localVarQueryParameter['dropoff'] = dropoff;
             }
 
+            if (rideTime !== undefined) {
+                localVarQueryParameter['ride_time'] = (rideTime as any instanceof Date) ?
+                    (rideTime as any).toISOString() :
+                    rideTime;
+            }
+
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -1369,15 +2952,16 @@ export const RouteMetricsApiFp = function(configuration?: Configuration) {
     const localVarAxiosParamCreator = RouteMetricsApiAxiosParamCreator(configuration)
     return {
         /**
-         * 
+         * Return travel metrics between pickup and dropoff addresses.
          * @summary Compute distance and duration between two addresses
          * @param {string} pickup 
          * @param {string} dropoff 
+         * @param {string | null} [rideTime] Desired pickup time to account for traffic
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiRouteMetricsRouteMetricsGet(pickup: string, dropoff: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiRouteMetricsRouteMetricsGet(pickup, dropoff, options);
+        async apiRouteMetricsRouteMetricsGet(pickup: string, dropoff: string, rideTime?: string | null, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiRouteMetricsRouteMetricsGet(pickup, dropoff, rideTime, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['RouteMetricsApi.apiRouteMetricsRouteMetricsGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -1393,15 +2977,16 @@ export const RouteMetricsApiFactory = function (configuration?: Configuration, b
     const localVarFp = RouteMetricsApiFp(configuration)
     return {
         /**
-         * 
+         * Return travel metrics between pickup and dropoff addresses.
          * @summary Compute distance and duration between two addresses
          * @param {string} pickup 
          * @param {string} dropoff 
+         * @param {string | null} [rideTime] Desired pickup time to account for traffic
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiRouteMetricsRouteMetricsGet(pickup: string, dropoff: string, options?: RawAxiosRequestConfig): AxiosPromise<any> {
-            return localVarFp.apiRouteMetricsRouteMetricsGet(pickup, dropoff, options).then((request) => request(axios, basePath));
+        apiRouteMetricsRouteMetricsGet(pickup: string, dropoff: string, rideTime?: string | null, options?: RawAxiosRequestConfig): AxiosPromise<any> {
+            return localVarFp.apiRouteMetricsRouteMetricsGet(pickup, dropoff, rideTime, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -1414,16 +2999,17 @@ export const RouteMetricsApiFactory = function (configuration?: Configuration, b
  */
 export class RouteMetricsApi extends BaseAPI {
     /**
-     * 
+     * Return travel metrics between pickup and dropoff addresses.
      * @summary Compute distance and duration between two addresses
      * @param {string} pickup 
      * @param {string} dropoff 
+     * @param {string | null} [rideTime] Desired pickup time to account for traffic
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof RouteMetricsApi
      */
-    public apiRouteMetricsRouteMetricsGet(pickup: string, dropoff: string, options?: RawAxiosRequestConfig) {
-        return RouteMetricsApiFp(this.configuration).apiRouteMetricsRouteMetricsGet(pickup, dropoff, options).then((request) => request(this.axios, this.basePath));
+    public apiRouteMetricsRouteMetricsGet(pickup: string, dropoff: string, rideTime?: string | null, options?: RawAxiosRequestConfig) {
+        return RouteMetricsApiFp(this.configuration).apiRouteMetricsRouteMetricsGet(pickup, dropoff, rideTime, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -1436,7 +3022,7 @@ export class RouteMetricsApi extends BaseAPI {
 export const SettingsApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
         /**
-         * 
+         * Return current pricing and configuration.
          * @summary Api Get Settings
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1470,7 +3056,7 @@ export const SettingsApiAxiosParamCreator = function (configuration?: Configurat
             };
         },
         /**
-         * 
+         * Persist updated configuration values.
          * @summary Api Update Settings
          * @param {SettingsPayload} settingsPayload 
          * @param {*} [options] Override http request option.
@@ -1520,7 +3106,7 @@ export const SettingsApiFp = function(configuration?: Configuration) {
     const localVarAxiosParamCreator = SettingsApiAxiosParamCreator(configuration)
     return {
         /**
-         * 
+         * Return current pricing and configuration.
          * @summary Api Get Settings
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1532,7 +3118,7 @@ export const SettingsApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
+         * Persist updated configuration values.
          * @summary Api Update Settings
          * @param {SettingsPayload} settingsPayload 
          * @param {*} [options] Override http request option.
@@ -1555,7 +3141,7 @@ export const SettingsApiFactory = function (configuration?: Configuration, baseP
     const localVarFp = SettingsApiFp(configuration)
     return {
         /**
-         * 
+         * Return current pricing and configuration.
          * @summary Api Get Settings
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1564,7 +3150,7 @@ export const SettingsApiFactory = function (configuration?: Configuration, baseP
             return localVarFp.apiGetSettingsSettingsGet(options).then((request) => request(axios, basePath));
         },
         /**
-         * 
+         * Persist updated configuration values.
          * @summary Api Update Settings
          * @param {SettingsPayload} settingsPayload 
          * @param {*} [options] Override http request option.
@@ -1584,7 +3170,7 @@ export const SettingsApiFactory = function (configuration?: Configuration, baseP
  */
 export class SettingsApi extends BaseAPI {
     /**
-     * 
+     * Return current pricing and configuration.
      * @summary Api Get Settings
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -1595,7 +3181,7 @@ export class SettingsApi extends BaseAPI {
     }
 
     /**
-     * 
+     * Persist updated configuration values.
      * @summary Api Update Settings
      * @param {SettingsPayload} settingsPayload 
      * @param {*} [options] Override http request option.
@@ -1616,7 +3202,7 @@ export class SettingsApi extends BaseAPI {
 export const SetupApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
         /**
-         * 
+         * Create admin settings and initial user.
          * @summary Setup
          * @param {SetupPayload} setupPayload 
          * @param {*} [options] Override http request option.
@@ -1652,7 +3238,7 @@ export const SetupApiAxiosParamCreator = function (configuration?: Configuration
             };
         },
         /**
-         * 
+         * Check if setup has already been completed.
          * @summary Setup Status
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1692,7 +3278,7 @@ export const SetupApiFp = function(configuration?: Configuration) {
     const localVarAxiosParamCreator = SetupApiAxiosParamCreator(configuration)
     return {
         /**
-         * 
+         * Create admin settings and initial user.
          * @summary Setup
          * @param {SetupPayload} setupPayload 
          * @param {*} [options] Override http request option.
@@ -1705,7 +3291,7 @@ export const SetupApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
+         * Check if setup has already been completed.
          * @summary Setup Status
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1727,7 +3313,7 @@ export const SetupApiFactory = function (configuration?: Configuration, basePath
     const localVarFp = SetupApiFp(configuration)
     return {
         /**
-         * 
+         * Create admin settings and initial user.
          * @summary Setup
          * @param {SetupPayload} setupPayload 
          * @param {*} [options] Override http request option.
@@ -1737,7 +3323,7 @@ export const SetupApiFactory = function (configuration?: Configuration, basePath
             return localVarFp.setupSetupPost(setupPayload, options).then((request) => request(axios, basePath));
         },
         /**
-         * 
+         * Check if setup has already been completed.
          * @summary Setup Status
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1756,7 +3342,7 @@ export const SetupApiFactory = function (configuration?: Configuration, basePath
  */
 export class SetupApi extends BaseAPI {
     /**
-     * 
+     * Create admin settings and initial user.
      * @summary Setup
      * @param {SetupPayload} setupPayload 
      * @param {*} [options] Override http request option.
@@ -1768,7 +3354,7 @@ export class SetupApi extends BaseAPI {
     }
 
     /**
-     * 
+     * Check if setup has already been completed.
      * @summary Setup Status
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -1782,13 +3368,121 @@ export class SetupApi extends BaseAPI {
 
 
 /**
+ * TrackApi - axios parameter creator
+ * @export
+ */
+export const TrackApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Track Booking
+         * @param {string} code 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        trackBookingApiV1TrackCodeGet: async (code: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'code' is not null or undefined
+            assertParamExists('trackBookingApiV1TrackCodeGet', 'code', code)
+            const localVarPath = `/api/v1/track/{code}`
+                .replace(`{${"code"}}`, encodeURIComponent(String(code)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * TrackApi - functional programming interface
+ * @export
+ */
+export const TrackApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = TrackApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Track Booking
+         * @param {string} code 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async trackBookingApiV1TrackCodeGet(code: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TrackResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.trackBookingApiV1TrackCodeGet(code, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['TrackApi.trackBookingApiV1TrackCodeGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * TrackApi - factory interface
+ * @export
+ */
+export const TrackApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = TrackApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Track Booking
+         * @param {string} code 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        trackBookingApiV1TrackCodeGet(code: string, options?: RawAxiosRequestConfig): AxiosPromise<TrackResponse> {
+            return localVarFp.trackBookingApiV1TrackCodeGet(code, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * TrackApi - object-oriented interface
+ * @export
+ * @class TrackApi
+ * @extends {BaseAPI}
+ */
+export class TrackApi extends BaseAPI {
+    /**
+     * 
+     * @summary Track Booking
+     * @param {string} code 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TrackApi
+     */
+    public trackBookingApiV1TrackCodeGet(code: string, options?: RawAxiosRequestConfig) {
+        return TrackApiFp(this.configuration).trackBookingApiV1TrackCodeGet(code, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
  * UsersApi - axios parameter creator
  * @export
  */
 export const UsersApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
         /**
-         * 
+         * Register a new user in the system.
          * @summary Api Create User
          * @param {UserCreate} userCreate 
          * @param {*} [options] Override http request option.
@@ -1824,7 +3518,7 @@ export const UsersApiAxiosParamCreator = function (configuration?: Configuration
             };
         },
         /**
-         * 
+         * Remove a user permanently.
          * @summary Api Delete User
          * @param {number} userId 
          * @param {*} [options] Override http request option.
@@ -1862,7 +3556,41 @@ export const UsersApiAxiosParamCreator = function (configuration?: Configuration
             };
         },
         /**
-         * 
+         * Return the currently authenticated user\'s profile.
+         * @summary Api Get Me
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiGetMeUsersMeGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/users/me`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OAuth2PasswordBearer required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Fetch a single user by ID.
          * @summary Api Get User
          * @param {number} userId 
          * @param {*} [options] Override http request option.
@@ -1900,7 +3628,7 @@ export const UsersApiAxiosParamCreator = function (configuration?: Configuration
             };
         },
         /**
-         * 
+         * Return all existing users.
          * @summary Api List Users
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -1934,7 +3662,47 @@ export const UsersApiAxiosParamCreator = function (configuration?: Configuration
             };
         },
         /**
-         * 
+         * Allow the current user to update their profile.
+         * @summary Api Update Me
+         * @param {UserUpdate} userUpdate 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiUpdateMeUsersMePatch: async (userUpdate: UserUpdate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'userUpdate' is not null or undefined
+            assertParamExists('apiUpdateMeUsersMePatch', 'userUpdate', userUpdate)
+            const localVarPath = `/users/me`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OAuth2PasswordBearer required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(userUpdate, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Update selected fields of a user.
          * @summary Api Update User
          * @param {number} userId 
          * @param {UserUpdate} userUpdate 
@@ -1988,7 +3756,7 @@ export const UsersApiFp = function(configuration?: Configuration) {
     const localVarAxiosParamCreator = UsersApiAxiosParamCreator(configuration)
     return {
         /**
-         * 
+         * Register a new user in the system.
          * @summary Api Create User
          * @param {UserCreate} userCreate 
          * @param {*} [options] Override http request option.
@@ -2001,7 +3769,7 @@ export const UsersApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
+         * Remove a user permanently.
          * @summary Api Delete User
          * @param {number} userId 
          * @param {*} [options] Override http request option.
@@ -2014,7 +3782,19 @@ export const UsersApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
+         * Return the currently authenticated user\'s profile.
+         * @summary Api Get Me
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiGetMeUsersMeGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<UserRead>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiGetMeUsersMeGet(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UsersApi.apiGetMeUsersMeGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Fetch a single user by ID.
          * @summary Api Get User
          * @param {number} userId 
          * @param {*} [options] Override http request option.
@@ -2027,7 +3807,7 @@ export const UsersApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
+         * Return all existing users.
          * @summary Api List Users
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -2039,7 +3819,20 @@ export const UsersApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
+         * Allow the current user to update their profile.
+         * @summary Api Update Me
+         * @param {UserUpdate} userUpdate 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiUpdateMeUsersMePatch(userUpdate: UserUpdate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<UserRead>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiUpdateMeUsersMePatch(userUpdate, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UsersApi.apiUpdateMeUsersMePatch']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Update selected fields of a user.
          * @summary Api Update User
          * @param {number} userId 
          * @param {UserUpdate} userUpdate 
@@ -2063,7 +3856,7 @@ export const UsersApiFactory = function (configuration?: Configuration, basePath
     const localVarFp = UsersApiFp(configuration)
     return {
         /**
-         * 
+         * Register a new user in the system.
          * @summary Api Create User
          * @param {UserCreate} userCreate 
          * @param {*} [options] Override http request option.
@@ -2073,7 +3866,7 @@ export const UsersApiFactory = function (configuration?: Configuration, basePath
             return localVarFp.apiCreateUserUsersPost(userCreate, options).then((request) => request(axios, basePath));
         },
         /**
-         * 
+         * Remove a user permanently.
          * @summary Api Delete User
          * @param {number} userId 
          * @param {*} [options] Override http request option.
@@ -2083,7 +3876,16 @@ export const UsersApiFactory = function (configuration?: Configuration, basePath
             return localVarFp.apiDeleteUserUsersUserIdDelete(userId, options).then((request) => request(axios, basePath));
         },
         /**
-         * 
+         * Return the currently authenticated user\'s profile.
+         * @summary Api Get Me
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiGetMeUsersMeGet(options?: RawAxiosRequestConfig): AxiosPromise<UserRead> {
+            return localVarFp.apiGetMeUsersMeGet(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Fetch a single user by ID.
          * @summary Api Get User
          * @param {number} userId 
          * @param {*} [options] Override http request option.
@@ -2093,7 +3895,7 @@ export const UsersApiFactory = function (configuration?: Configuration, basePath
             return localVarFp.apiGetUserUsersUserIdGet(userId, options).then((request) => request(axios, basePath));
         },
         /**
-         * 
+         * Return all existing users.
          * @summary Api List Users
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -2102,7 +3904,17 @@ export const UsersApiFactory = function (configuration?: Configuration, basePath
             return localVarFp.apiListUsersUsersGet(options).then((request) => request(axios, basePath));
         },
         /**
-         * 
+         * Allow the current user to update their profile.
+         * @summary Api Update Me
+         * @param {UserUpdate} userUpdate 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiUpdateMeUsersMePatch(userUpdate: UserUpdate, options?: RawAxiosRequestConfig): AxiosPromise<UserRead> {
+            return localVarFp.apiUpdateMeUsersMePatch(userUpdate, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Update selected fields of a user.
          * @summary Api Update User
          * @param {number} userId 
          * @param {UserUpdate} userUpdate 
@@ -2123,7 +3935,7 @@ export const UsersApiFactory = function (configuration?: Configuration, basePath
  */
 export class UsersApi extends BaseAPI {
     /**
-     * 
+     * Register a new user in the system.
      * @summary Api Create User
      * @param {UserCreate} userCreate 
      * @param {*} [options] Override http request option.
@@ -2135,7 +3947,7 @@ export class UsersApi extends BaseAPI {
     }
 
     /**
-     * 
+     * Remove a user permanently.
      * @summary Api Delete User
      * @param {number} userId 
      * @param {*} [options] Override http request option.
@@ -2147,7 +3959,18 @@ export class UsersApi extends BaseAPI {
     }
 
     /**
-     * 
+     * Return the currently authenticated user\'s profile.
+     * @summary Api Get Me
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UsersApi
+     */
+    public apiGetMeUsersMeGet(options?: RawAxiosRequestConfig) {
+        return UsersApiFp(this.configuration).apiGetMeUsersMeGet(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Fetch a single user by ID.
      * @summary Api Get User
      * @param {number} userId 
      * @param {*} [options] Override http request option.
@@ -2159,7 +3982,7 @@ export class UsersApi extends BaseAPI {
     }
 
     /**
-     * 
+     * Return all existing users.
      * @summary Api List Users
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -2170,7 +3993,19 @@ export class UsersApi extends BaseAPI {
     }
 
     /**
-     * 
+     * Allow the current user to update their profile.
+     * @summary Api Update Me
+     * @param {UserUpdate} userUpdate 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UsersApi
+     */
+    public apiUpdateMeUsersMePatch(userUpdate: UserUpdate, options?: RawAxiosRequestConfig) {
+        return UsersApiFp(this.configuration).apiUpdateMeUsersMePatch(userUpdate, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Update selected fields of a user.
      * @summary Api Update User
      * @param {number} userId 
      * @param {UserUpdate} userUpdate 
