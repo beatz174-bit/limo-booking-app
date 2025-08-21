@@ -11,13 +11,23 @@ import {
   Typography,
 } from '@mui/material';
 
-import { bookingsApi } from '@/components/ApiConfig';
-import type { BookingRead } from '@/api-client';
+import { CONFIG } from '@/config';
+import { getAccessToken } from '@/services/tokenStore';
+
+interface Booking {
+  id: string;
+  pickup_address: string;
+  dropoff_address: string;
+  pickup_when: string;
+  status: string;
+  estimated_price_cents: number;
+  final_price_cents?: number;
+}
 
 function RideHistoryPage() {
   const navigate = useNavigate();
 
-  const [bookings, setBookings] = useState<BookingRead[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,8 +36,13 @@ function RideHistoryPage() {
 
     (async () => {
       try {
-        const res = await bookingsApi.apiListBookingsBookingsGet();
-        if (alive) setBookings(res.data as BookingRead[]);
+        const token = getAccessToken();
+        const res = await fetch(`${CONFIG.API_BASE_URL}/api/v1/customers/me/bookings`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Failed to load bookings');
+        const data = await res.json();
+        if (alive) setBookings(data as Booking[]);
       } catch (e: unknown) {
         if (alive) setError(e instanceof Error ? e.message : 'Failed to load bookings');
       } finally {
@@ -83,10 +98,12 @@ function RideHistoryPage() {
                 sx={{ cursor: 'pointer' }}
                 onClick={() => navigate(`/history/${b.id}`, { state: b })}
               >
-                <TableCell>{b.pickup_location}</TableCell>
-                <TableCell>{b.dropoff_location}</TableCell>
-                <TableCell>{new Date(b.time).toLocaleString()}</TableCell>
-                <TableCell>${b.price}</TableCell>
+                <TableCell>{b.pickup_address}</TableCell>
+                <TableCell>{b.dropoff_address}</TableCell>
+                <TableCell>{new Date(b.pickup_when).toLocaleString()}</TableCell>
+                <TableCell>
+                  {((b.final_price_cents ?? b.estimated_price_cents) / 100).toFixed(2)}
+                </TableCell>
                 <TableCell>{b.status}</TableCell>
               </TableRow>
             ))}
