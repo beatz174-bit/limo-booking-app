@@ -21,7 +21,7 @@ export default function LoginPage() {
       try {
         await finishOAuthIfCallback?.();
         if (/\bcode=/.test(window.location.search)) {
-          const dest = params.get("from") || "/book";
+          const dest = params.get("from") || "/";
           navigate(dest, { replace: true });
         }
       } catch {
@@ -38,7 +38,7 @@ export default function LoginPage() {
     setError(null);
     try {
       await loginWithPassword(email, password);
-      const dest = params.get("from") || "/book";
+      const dest = params.get("from") || "/";
       navigate(dest, { replace: true });
     } catch (err: unknown) {
       if (err instanceof Response) {

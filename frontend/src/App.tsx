@@ -16,6 +16,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import PageNotFound from '@/pages/PageNotFound';
 import DevNotes from '@/components/DevNotes';
 import { useDevFeatures } from '@/contexts/DevFeaturesContext';
+import HomePage from '@/pages/Dashboard/HomePage';
 
 function App() {
   const { accessToken, loading, userID } = useAuth(); // custom hook to get AuthContext
@@ -29,9 +30,9 @@ function App() {
     <>
     {accessToken && <NavBar />}
     <Routes>
-      <Route path="/" element={ accessToken ? <Navigate to="/book" /> : <Navigate to="/login" /> } />
-      <Route path="/login" element={ !accessToken ? <LoginPage />: <Navigate to="/book" />} />
-      <Route path="/register" element={ !accessToken ? <RegisterPage /> : <Navigate to="/book" />} />
+      <Route path="/" element={ accessToken ? <HomePage /> : <Navigate to="/login" /> } />
+      <Route path="/login" element={ !accessToken ? <LoginPage />: <Navigate to="/" />} />
+      <Route path="/register" element={ !accessToken ? <RegisterPage /> : <Navigate to="/" />} />
 
       {/* Protected user routes */}
       <Route

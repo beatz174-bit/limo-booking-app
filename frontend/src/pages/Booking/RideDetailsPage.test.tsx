@@ -41,3 +41,32 @@ test('Back button navigates to /history', async () => {
     await screen.findByRole('heading', { name: /ride history/i })
   ).toBeInTheDocument();
 });
+
+test('shows tracking link when booking trackable', async () => {
+  const booking = {
+    id: 1,
+    pickup_location: 'A',
+    dropoff_location: 'B',
+    time: new Date().toISOString(),
+    price: 10,
+    status: 'on_the_way',
+    public_code: 'abc123',
+  };
+
+  server.use(
+    http.get(apiUrl('/bookings'), () => HttpResponse.json([booking]))
+  );
+
+  render(
+    <AuthProvider>
+      <MemoryRouter initialEntries={['/history/1']}>
+        <Routes>
+          <Route path="/history/:id" element={<RideDetailsPage />} />
+        </Routes>
+      </MemoryRouter>
+    </AuthProvider>,
+  );
+
+  const link = await screen.findByRole('link', { name: /track/i });
+  expect(link).toHaveAttribute('href', '/t/abc123');
+});

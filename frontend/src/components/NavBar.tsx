@@ -13,7 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useDevFeatures } from '@/contexts/DevFeaturesContext';
 
 const NavBar: React.FC = () => {
-  const { logout, userName, userID } = useAuth();  // get logout (and maybe user info) from context
+  const { logout, userName, role } = useAuth();  // get logout (and maybe user info) from context
   const { enabled: devEnabled } = useDevFeatures();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -47,6 +47,16 @@ const NavBar: React.FC = () => {
   const navProfile = () => {
     handleMenuClose();
     navigate('/me');
+  };
+
+  const navDriverDashboard = () => {
+    handleMenuClose();
+    navigate('/driver');
+  };
+
+  const navDriverAvailability = () => {
+    handleMenuClose();
+    navigate('/driver/availability');
   };
 
   const navAdmin = () => {
@@ -91,10 +101,14 @@ const NavBar: React.FC = () => {
         >
           <MenuItem onClick={handleLogout}>Logout</MenuItem>
           <MenuItem onClick={navBook}>Book</MenuItem>
-          <MenuItem onClick={navHistory}>History</MenuItem>
+          <MenuItem onClick={navHistory}>Ride History</MenuItem>
           <MenuItem onClick={navProfile}>Profile</MenuItem>
-          {userID == '1' && (
-            <MenuItem onClick={navAdmin}>Administration</MenuItem>
+          {role?.toLowerCase() === 'driver' && [
+            <MenuItem key="driver-dashboard" onClick={navDriverDashboard}>Driver Dashboard</MenuItem>,
+            <MenuItem key="driver-availability" onClick={navDriverAvailability}>Availability</MenuItem>,
+          ]}
+          {role?.toLowerCase() === 'admin' && (
+            <MenuItem onClick={navAdmin}>Admin Dashboard</MenuItem>
           )}
           {devEnabled && <MenuItem onClick={navDevNotes}>Dev Notes</MenuItem>}
         </Menu>

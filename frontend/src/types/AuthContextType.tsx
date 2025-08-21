@@ -1,15 +1,18 @@
 // Type definitions for the authentication context values.
-export type UserShape = { email?: string; full_name?: string } | null;
+export type UserShape = { email?: string; full_name?: string; role?: string } | null;
 
 export type AuthContextType = {
   accessToken: string | null;
   user: UserShape | null;
   loading: boolean;
-  
+
   userName: string | null;
   userID: string | null;
+  role: string | null;
 
-  loginWithPassword: (email: string, password: string) => Promise<void>;
+  role: string | null;
+
+  loginWithPassword: (email: string, password: string) => Promise<string | null>;
   registerWithPassword: (fullName: string, email: string, password: string) => Promise<void>;
 
   loginWithOAuth: () => void;

@@ -11,8 +11,7 @@ import { apiUrl } from '@/__tests__/setup/msw.handlers';
 
 const label = (re: RegExp | string) => screen.getByLabelText(re, { selector: 'input' });
 
-test('logs in successfully', async () => {
-  // stub /admin only (destination), not /login (source)
+test('navigates to /book for customer', async () => {
   renderWithProviders(<LoginPage />, {
     initialPath: '/login',
     extraRoutes: <Route path="/book" element={<BookingWizardPage />} />
