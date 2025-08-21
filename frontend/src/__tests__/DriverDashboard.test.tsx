@@ -17,7 +17,6 @@ describe('DriverDashboard', () => {
         <DriverDashboard />
       </MemoryRouter>
     );
-
     expect(await screen.findByText('A → B')).toBeInTheDocument();
     fireEvent.click(screen.getByText('Confirm'));
     await waitFor(() => expect(screen.getByText('Leave now')).toBeInTheDocument());

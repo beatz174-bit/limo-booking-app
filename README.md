@@ -114,6 +114,12 @@ progress the trip lifecycle:
 - `POST /api/v1/driver/bookings/{id}/arrive-dropoff`
 - `POST /api/v1/driver/bookings/{id}/complete` (computes final fare and charges the remainder)
 
+## Customer API
+
+Authenticated customers can view their booking history via:
+
+- `GET /api/v1/customers/me/bookings`
+
 ## Google Maps API Setup
 
 1. Create a Google Cloud project and enable the **Maps JavaScript**, **Distance Matrix**, and **Directions** APIs.

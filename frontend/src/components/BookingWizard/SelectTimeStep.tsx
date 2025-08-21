@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Stack, TextField, Button, Typography } from '@mui/material';
 import useAvailability from '@/hooks/useAvailability';
 
-
 interface Props {
   data: any;
   onNext: (data: any) => void;
@@ -22,7 +21,6 @@ export default function SelectTimeStep({ data, onNext }: Props) {
         return new Date(when) >= start && new Date(when) < end;
       })
     : false;
-
   return (
     <Stack spacing={2}>
       <TextField

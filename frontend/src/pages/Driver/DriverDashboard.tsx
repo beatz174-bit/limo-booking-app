@@ -33,7 +33,6 @@ export default function DriverDashboard() {
     id: string,
     action: 'confirm' | 'decline' | 'leave' | 'arrive-pickup' | 'start-trip' | 'arrive-dropoff' | 'complete'
   ) {
-
     const token = getAccessToken();
     const res = await fetch(`${CONFIG.API_BASE_URL}/api/v1/driver/bookings/${id}/${action}`, {
       method: 'POST',
@@ -99,7 +98,6 @@ export default function DriverDashboard() {
             {b.status === 'COMPLETED' && b.final_price_cents !== undefined && (
               <Typography>${(b.final_price_cents / 100).toFixed(2)}</Typography>
             )}
-
           </ListItem>
         ))}
         {bookings.length === 0 && <Typography>No bookings</Typography>}
