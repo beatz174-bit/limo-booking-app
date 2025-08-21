@@ -55,6 +55,12 @@ domain actions, and handled errors are recorded with structured context.
    npm install
    ```
 
+## Database migrations
+
+The backend relies on Alembic migrations for database schema creation and
+updates. When the application starts, migrations are applied up to the latest
+revision, so ensure your migration files are up to date.
+
 ## Running
 
 ### Using Docker
