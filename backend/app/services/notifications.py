@@ -1,4 +1,5 @@
 """Notification helper service."""
+
 import json
 import uuid
 from datetime import datetime, timezone
@@ -8,9 +9,9 @@ import httpx
 from jose import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.models.notification import Notification, NotificationType
 from app.models.user_v2 import UserRole
-from app.core.config import get_settings
 
 
 async def create_notification(
@@ -34,7 +35,9 @@ async def create_notification(
     return note
 
 
-async def _send_fcm(to_role: UserRole, notif_type: NotificationType, payload: dict[str, Any]) -> None:
+async def _send_fcm(
+    to_role: UserRole, notif_type: NotificationType, payload: dict[str, Any]
+) -> None:
     """Send a Firebase Cloud Messaging push if credentials are configured.
 
     The function safely no-ops when any required key is missing or when the HTTP
@@ -64,39 +67,41 @@ async def _send_fcm(to_role: UserRole, notif_type: NotificationType, payload: di
         settings.fcm_private_key.replace("\\n", "\n"),
         algorithm="RS256",
     )
-    token_resp = await httpx.post(
-        "https://oauth2.googleapis.com/token",
-        data={
-            "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
-            "assertion": assertion,
-        },
-        timeout=10,
-    )
-    if token_resp.status_code != 200:
-        return
-    access_token = token_resp.json().get("access_token")
-    if not access_token:
-        return
-
-    data = {"type": notif_type.value}
-    for k, v in payload.items():
-        data[k] = json.dumps(v) if not isinstance(v, str) else v
-
-    message = {
-        "message": {
-            "topic": to_role.value.lower(),
-            "data": data,
-        }
-    }
-
-    url = f"https://fcm.googleapis.com/v1/projects/{settings.fcm_project_id}/messages:send"
-    try:
-        await httpx.post(
-            url,
-            headers={"Authorization": f"Bearer {access_token}"},
-            json=message,
-            timeout=10,
+    async with httpx.AsyncClient(timeout=10) as client:
+        token_resp = await client.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                "assertion": assertion,
+            },
         )
-    except httpx.HTTPError:
-        # Silently ignore push delivery issues to keep core flow resilient
-        return
+        if token_resp.status_code != 200:
+            return
+        access_token = token_resp.json().get("access_token")
+        if not access_token:
+            return
+
+        data = {"type": notif_type.value}
+        for k, v in payload.items():
+            data[k] = json.dumps(v) if not isinstance(v, str) else v
+
+        message = {
+            "message": {
+                "topic": to_role.value.lower(),
+                "data": data,
+            }
+        }
+
+        url = (
+            "https://fcm.googleapis.com/v1/projects/"
+            f"{settings.fcm_project_id}/messages:send"
+        )
+        try:
+            await client.post(
+                url,
+                headers={"Authorization": f"Bearer {access_token}"},
+                json=message,
+            )
+        except httpx.HTTPError:
+            # Silently ignore push delivery issues to keep core flow resilient
+            return
