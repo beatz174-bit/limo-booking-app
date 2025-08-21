@@ -1,5 +1,6 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
+import { renderHook, waitFor } from '@testing-library/react';
 import useAvailability from '@/hooks/useAvailability';
 
 describe('useAvailability', () => {
@@ -8,7 +9,7 @@ describe('useAvailability', () => {
     const fake = { slots: [], bookings: [] };
     const fetchMock = vi.fn(async (url: string) => {
       expect(url).toBe('http://api/api/v1/availability?month=2025-01');
-      return { ok: true, json: async () => fake } as any;
+      return { ok: true, json: async () => fake } as unknown as Response;
     });
     vi.stubGlobal('fetch', fetchMock);
     const { result } = renderHook(() => useAvailability('2025-01'));

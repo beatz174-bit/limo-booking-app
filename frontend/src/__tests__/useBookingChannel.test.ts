@@ -14,7 +14,7 @@ class WSStub {
 
 describe('useBookingChannel', () => {
   beforeAll(() => {
-    vi.stubGlobal('WebSocket', WSStub as any);
+    vi.stubGlobal('WebSocket', WSStub as unknown as typeof WebSocket);
     vi.stubEnv('VITE_BACKEND_URL', 'http://api');
   });
   afterAll(() => {
@@ -26,7 +26,9 @@ describe('useBookingChannel', () => {
     const { result } = renderHook(() => useBookingChannel('42'));
     const ws = WSStub.instances[0];
     act(() => {
-      ws.onmessage && ws.onmessage({ data: JSON.stringify({ lat: 1, lng: 2, ts: 0 }) });
+      if (ws.onmessage) {
+        ws.onmessage({ data: JSON.stringify({ lat: 1, lng: 2, ts: 0 }) });
+      }
     });
     expect(result.current?.lat).toBe(1);
     expect(result.current?.lng).toBe(2);
