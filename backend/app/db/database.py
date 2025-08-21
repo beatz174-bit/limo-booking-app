@@ -91,10 +91,37 @@ async def connect() -> None:
     # empty metadata collection and skip table creation, leading to runtime
     # errors such as "no such table: users" when the API is exercised during
     # tests.
+    # Import all ORM models so that metadata is populated.
+    # Legacy models are still imported for backward compatibility.
     from app.models import booking, settings, user  # noqa: F401 #type: ignore
+    # New domain models
+    from app.models import (
+        user_v2,  # noqa: F401
+        availability_slot,  # noqa: F401
+        booking_v2,  # noqa: F401
+        trip,  # noqa: F401
+        route_point,  # noqa: F401
+        notification,  # noqa: F401
+    )
 
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+    # Ensure a single driver user exists for the new domain models
+    from app.models.user_v2 import User, UserRole
+
+    async with AsyncSessionLocal() as session:
+        from sqlalchemy import select
+
+        result = await session.execute(
+            select(User).where(User.role == UserRole.DRIVER)
+        )
+        driver = result.scalar_one_or_none()
+        if driver is None:
+            session.add(
+                User(email="driver@example.com", name="Driver", role=UserRole.DRIVER)
+            )
+            await session.commit()
 
 async def disconnect() -> None:
     """
@@ -126,6 +153,12 @@ class Database:
 
 # Final instance to import in main.py
 database = Database(connect_fn=connect, disconnect_fn=disconnect)
+
+
+async def get_async_session() -> AsyncSession:
+    """FastAPI dependency that provides an `AsyncSession`."""
+    async with AsyncSessionLocal() as session:
+        yield session
 
 # --------------------------------------------------------------------
 # 6. Optional SQLite sync fallback ---------------------------------------------------
