@@ -6,10 +6,11 @@ import { DevFeaturesProvider } from '@/contexts/DevFeaturesContext';
 import NavBar from './NavBar';
 import { render } from '@testing-library/react';
 
-function seedAuth({ id, name }: { id: string; name: string }) {
-  localStorage.setItem('auth_tokens', JSON.stringify({ access_token: 't', refresh_token: 'r', user: { email: 'x' } }));
+function seedAuth({ id, name, role }: { id: string; name: string; role: string }) {
+  localStorage.setItem('auth_tokens', JSON.stringify({ access_token: 't', refresh_token: 'r', user: { email: 'x' }, role }));
   localStorage.setItem('userID', id);
   localStorage.setItem('userName', name);
+  localStorage.setItem('userRole', role);
 }
 
 function renderWithAuth(initialPath = '/book') {
@@ -28,24 +29,35 @@ function renderWithAuth(initialPath = '/book') {
 }
 
 describe('NavBar', () => {
-  test('shows Administration menu item when userID == "1"', async () => {
-    seedAuth({ id: '1', name: 'Admin User' });
+  test('shows Admin Dashboard when role is ADMIN', async () => {
+    seedAuth({ id: '1', name: 'Admin User', role: 'ADMIN' });
     renderWithAuth();
 
     await userEvent.click(screen.getByLabelText(/account/i)); // open menu
-    expect(await screen.findByRole('menuitem', { name: /administration/i })).toBeInTheDocument();
+    expect(await screen.findByRole('menuitem', { name: /admin dashboard/i })).toBeInTheDocument();
   });
 
-  test('hides Administration menu item for non-admin user', async () => {
-    seedAuth({ id: '2', name: 'Regular User' });
+  test('shows driver menu items for DRIVER role', async () => {
+    seedAuth({ id: '2', name: 'Driver User', role: 'DRIVER' });
     renderWithAuth();
 
     await userEvent.click(screen.getByLabelText(/account/i));
-    expect(screen.queryByRole('menuitem', { name: /administration/i })).not.toBeInTheDocument();
+    expect(await screen.findByRole('menuitem', { name: /driver dashboard/i })).toBeInTheDocument();
+    expect(await screen.findByRole('menuitem', { name: /availability/i })).toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /admin dashboard/i })).not.toBeInTheDocument();
+  });
+
+  test('hides role-specific items for CUSTOMER role', async () => {
+    seedAuth({ id: '3', name: 'Regular User', role: 'CUSTOMER' });
+    renderWithAuth();
+
+    await userEvent.click(screen.getByLabelText(/account/i));
+    expect(screen.queryByRole('menuitem', { name: /admin dashboard/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /driver dashboard/i })).not.toBeInTheDocument();
   });
 
   test('Logout clears state and navigates to /login', async () => {
-    seedAuth({ id: '1', name: 'Admin User' });
+    seedAuth({ id: '1', name: 'Admin User', role: 'ADMIN' });
     renderWithAuth('/book');
 
     await userEvent.click(screen.getByLabelText(/account/i));
@@ -56,5 +68,6 @@ describe('NavBar', () => {
     expect(localStorage.getItem('auth_tokens')).toBeNull();
     expect(localStorage.getItem('userID')).toBeNull();
     expect(localStorage.getItem('userName')).toBeNull();
+    expect(localStorage.getItem('userRole')).toBeNull();
   });
 });

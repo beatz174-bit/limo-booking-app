@@ -5,9 +5,10 @@ export type AuthContextType = {
   accessToken: string | null;
   user: UserShape | null;
   loading: boolean;
-  
+
   userName: string | null;
   userID: string | null;
+  role: string | null;
 
   role: string | null;
 
