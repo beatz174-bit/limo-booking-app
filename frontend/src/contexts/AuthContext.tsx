@@ -7,7 +7,7 @@ import { beginLogin, completeLoginFromRedirect, refreshTokens, TokenResponse, OA
 import { useLocation, useNavigate } from "react-router-dom";
 import { type AuthContextType } from "@/types/AuthContextType";
 
-type UserShape = { email?: string; full_name?: string } | null;
+type UserShape = { email?: string; full_name?: string; role?: string } | null;
 
 type AuthState = {
   accessToken: string | null;
@@ -15,6 +15,7 @@ type AuthState = {
   loading: boolean;
   userID: string| null;
   userName: string | null;
+  role: string | null;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,7 +28,7 @@ const oauthCfg: OAuthConfig = {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, setState] = useState<AuthState>({ accessToken: null, user: null, loading: true, userID: null, userName: null });
+  const [state, setState] = useState<AuthState>({ accessToken: null, user: null, loading: true, userID: null, userName: null, role: null });
   const authApi = useMemo(() => new AuthApi(cfg), []);
   // const [userName, setUserName] = useState<string>('');
   // const [userID, setUserID] = useState<string|null>(null);
@@ -37,9 +38,10 @@ useEffect(() => {
   const raw = localStorage.getItem("auth_tokens");
   const storeduserID = localStorage.getItem("userID");
   const storeduserName = localStorage.getItem("userName");
+  const storedRole = localStorage.getItem("role");
   if (raw) {
     try {
-      const { access_token, refresh_token, user } = JSON.parse(raw);
+      const { access_token, refresh_token, user, role } = JSON.parse(raw);
       setTokens(access_token, refresh_token);
       setState({
         accessToken: access_token ?? null,
@@ -47,26 +49,72 @@ useEffect(() => {
         loading: false,
         userID: storeduserID ?? null,
         userName: storeduserName ?? null,
+        role: storedRole ?? user?.role ?? null,
       });
+      if (role ?? storedRole) {
+        localStorage.setItem("userRole", String(role ?? storedRole));
+      }
       return;
     } catch { /* ignore parse errors */ }
   }
   setState((s) => ({ ...s, loading: false }));
 }, []);
 
-  const persist = useCallback((t?: TokenResponse | null, user?: UserShape) => {
+  useEffect(() => {
+    if (!state.accessToken || state.role) return;
+    const fetchMe = async () => {
+      try {
+        const res = await fetch(`${CONFIG.API_BASE_URL}/users/me`, {
+          headers: { Authorization: `Bearer ${state.accessToken}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.role) {
+          localStorage.setItem("userRole", data.role);
+        }
+        if (data.full_name) {
+          localStorage.setItem("userName", data.full_name);
+        }
+        if (data.id) {
+          localStorage.setItem("userID", String(data.id));
+        }
+        setState((s) => ({
+          ...s,
+          role: data.role ?? s.role,
+          userName: data.full_name ?? s.userName,
+          userID: data.id ? String(data.id) : s.userID,
+        }));
+      } catch {
+        /* ignore */
+      }
+    };
+    fetchMe();
+  }, [state.accessToken, state.role]);
+
+  const persist = useCallback((t?: TokenResponse | null, user?: UserShape, role?: string | null) => {
     const access_token = t?.access_token ?? null;
     const refresh_token = t?.refresh_token ?? null;
     if (access_token || refresh_token || user) {
       localStorage.setItem("auth_tokens", JSON.stringify({ access_token, refresh_token, user }));
+      if (user?.role) {
+        localStorage.setItem("role", user.role);
+      }
     } else {
       localStorage.removeItem("auth_tokens");
+      localStorage.removeItem("role");
+    }
+    if (role !== undefined) {
+      if (role) {
+        localStorage.setItem("userRole", role);
+      } else {
+        localStorage.removeItem("userRole");
+      }
     }
     setTokens(access_token, refresh_token);
-    setState((s) => ({ ...s, accessToken: access_token, user: user ?? s.user }));
+    setState((s) => ({ ...s, accessToken: access_token, user: user ?? s.user, role: user?.role ?? s.role }));
   }, []);
 
-  const loginWithPassword = useCallback(async (email: string, password: string) => {
+  const loginWithPassword = useCallback(async (email: string, password: string): Promise<string | null> => {
     const res = await fetch(`${CONFIG.API_BASE_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -84,6 +132,7 @@ useEffect(() => {
 
     const body = await res.json();
     const token = body.access_token ?? body.token ?? null;
+    const role: string | null = body.role ?? body.user?.role ?? null;
     localStorage.setItem(
       "auth_tokens",
       JSON.stringify({
@@ -92,18 +141,24 @@ useEffect(() => {
         user: body.user ?? null,
       })
     );
+    if (role) {
+      localStorage.setItem("role", role);
+    } else {
+      localStorage.removeItem("role");
+    }
 
     localStorage.setItem("userName", body.full_name);
     localStorage.setItem("userID", String(body.id));
 
-    setTokens(token, body.refresh_token ?? null);
     setState((s) => ({
       ...s,
       accessToken: token,
       user: body.user ?? s.user,
       userID: String(body.id),
       userName: body.full_name,
+      role,
     }));
+    return role;
   }, [setState]);
 
   const registerWithPassword = useCallback(async (fullName: string, email: string, password: string) => {
@@ -122,15 +177,17 @@ useEffect(() => {
   }, [persist]);
 
   const logout = useCallback(() => {
-    persist(null, null);
+    persist(null, null, null);
     localStorage.removeItem("userID");
     localStorage.removeItem("userName");
+    localStorage.removeItem("role");
     setState((s) => ({
       ...s,
       accessToken: null,
       user: null,
       userID: null,
       userName: null,
+      role: null,
     }));
   }, [persist, setState]);
 

@@ -6,6 +6,7 @@ import {
   Stack,
   Typography,
   IconButton,
+  Button,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
@@ -105,6 +106,11 @@ function RideDetailsPage() {
         <Typography>
           <strong>Status:</strong> {booking.status}
         </Typography>
+        {!['COMPLETED', 'CANCELLED'].includes(booking.status.toUpperCase()) && (
+          <Button component={RouterLink} to={`/t/${booking.public_code}`}>
+            Track
+          </Button>
+        )}
       </Stack>
 
       <MapProvider>
