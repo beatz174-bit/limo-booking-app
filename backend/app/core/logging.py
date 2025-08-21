@@ -1,4 +1,5 @@
 import logging
+import os
 from contextvars import ContextVar
 from logging.config import dictConfig
 from time import time
@@ -24,10 +25,12 @@ class RequestIdFilter(logging.Filter):
         return True
 
 
-def _graylog_handler(
-    host: str, port: int, static_fields: dict
-) -> graypy.GELFUDPHandler:
-    handler = graypy.GELFUDPHandler(host, port)
+def _graylog_handler(host: str, port: int, static_fields: dict) -> logging.Handler:
+    transport = os.getenv("GRAYLOG_TRANSPORT", "udp").lower()
+    if transport == "tcp":
+        handler: logging.Handler = graypy.GELFTCPHandler(host, port)
+    else:
+        handler = graypy.GELFUDPHandler(host, port)
     handler.static_fields = static_fields
     return handler
 
