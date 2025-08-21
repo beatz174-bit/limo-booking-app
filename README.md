@@ -108,7 +108,10 @@ silently disabled.
 ## Testing
 
 - Backend: `cd backend && pytest`
+- Backend type-checking: `cd backend && mypy --strict app`
+- External service connectivity: exercised via `pytest` tests
 - Frontend: `cd frontend && npm test`
+- Frontend type-checking: `cd frontend && npm run test:typecheck`
 - End-to-end: `cd frontend && npm run e2e`
 
 ## Driver API
