@@ -106,6 +106,17 @@ class Settings(BaseSettings):
     # Third-party APIs
     ors_api_key: Optional[str] = os.getenv("ORS_API_KEY","undefined")
     google_maps_api_key: Optional[str] = os.getenv("GOOGLE_MAPS_API_KEY")
+    stripe_secret_key: Optional[str] = os.getenv("STRIPE_SECRET_KEY")
+    stripe_webhook_secret: Optional[str] = os.getenv("STRIPE_WEBHOOK_SECRET")
+    fcm_project_id: Optional[str] = os.getenv("FCM_PROJECT_ID")
+    fcm_client_email: Optional[str] = os.getenv("FCM_CLIENT_EMAIL")
+    fcm_private_key: Optional[str] = os.getenv("FCM_PRIVATE_KEY")
+    app_tz: str = os.getenv("APP_TZ", "Australia/Brisbane")
+    app_base_url: Optional[str] = os.getenv("APP_BASE_URL")
+    frontend_base_url: Optional[str] = os.getenv("FRONTEND_BASE_URL")
+    driver_base_lat: float = float(os.getenv("DRIVER_BASE_LAT", "-27.4698"))
+    driver_base_lng: float = float(os.getenv("DRIVER_BASE_LNG", "153.0251"))
+    leave_buffer_min: int = int(os.getenv("LEAVE_BUFFER_MIN", "5"))
 
     # Pydantic config (v1 vs v2)
     if _P2:
