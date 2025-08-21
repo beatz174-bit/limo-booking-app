@@ -49,3 +49,14 @@ def charge_deposit(amount_cents: int, payment_method: str = "pm_card_visa"):
         payment_method=payment_method,
         confirm=True,
     )
+
+
+def charge_final(amount_cents: int, payment_method: str = "pm_card_visa"):
+    """Charge the remaining fare amount."""
+    return stripe.PaymentIntent.create(
+        amount=amount_cents,
+        currency="aud",
+        payment_method=payment_method,
+        confirm=True,
+    )
+

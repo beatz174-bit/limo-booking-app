@@ -8,10 +8,9 @@ interface Booking {
   pickup_address: string;
   dropoff_address: string;
   pickup_when: string;
-
   status: string;
   leave_at?: string;
-
+  final_price_cents?: number;
 }
 
 export default function DriverDashboard() {
@@ -29,18 +28,25 @@ export default function DriverDashboard() {
     })();
   }, []);
 
-  async function update(id: string, action: 'confirm' | 'decline' | 'leave') {
+  async function update(
+    id: string,
+    action: 'confirm' | 'decline' | 'leave' | 'arrive-pickup' | 'start-trip' | 'arrive-dropoff' | 'complete'
+  ) {
+
     const token = getAccessToken();
     const res = await fetch(`${CONFIG.API_BASE_URL}/api/v1/driver/bookings/${id}/${action}`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` }
     });
     if (res.ok) {
-      if (action === 'leave') {
-        setBookings(bookings.map(b => b.id === id ? { ...b, status: 'ON_THE_WAY' } : b));
-      } else {
-        setBookings(bookings.filter(b => b.id !== id));
-      }
+      const data = await res.json();
+      setBookings(b =>
+        b.map(item =>
+          item.id === id
+            ? { ...item, status: data.status, final_price_cents: data.final_price_cents ?? item.final_price_cents }
+            : item
+        )
+      );
     }
   }
 
@@ -74,6 +80,22 @@ export default function DriverDashboard() {
                 Leave now
               </Button>
             )}
+            {b.status === 'ON_THE_WAY' && (
+              <Button variant="contained" onClick={() => update(b.id, 'arrive-pickup')}>Arrived pickup</Button>
+            )}
+            {b.status === 'ARRIVED_PICKUP' && (
+              <Button variant="contained" onClick={() => update(b.id, 'start-trip')}>Start trip</Button>
+            )}
+            {b.status === 'IN_PROGRESS' && (
+              <Button variant="contained" onClick={() => update(b.id, 'arrive-dropoff')}>Arrived dropoff</Button>
+            )}
+            {b.status === 'ARRIVED_DROPOFF' && (
+              <Button variant="contained" onClick={() => update(b.id, 'complete')}>Complete</Button>
+            )}
+            {b.status === 'COMPLETED' && b.final_price_cents !== undefined && (
+              <Typography>${(b.final_price_cents / 100).toFixed(2)}</Typography>
+            )}
+
           </ListItem>
         ))}
         {bookings.length === 0 && <Typography>No bookings</Typography>}

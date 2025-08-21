@@ -5,7 +5,6 @@ import BookingWizardPage from '@/pages/Booking/BookingWizardPage';
 import AdminDashboard from '@/pages/Admin/AdminDashboard';
 import DriverDashboard from '@/pages/Driver/DriverDashboard';
 import TrackingPage from '@/pages/TrackingPage';
-
 import RideHistoryPage from '@/pages/Booking/RideHistoryPage';
 import RideDetailsPage from '@/pages/Booking/RideDetailsPage';
 import RegisterPage from "@/pages/Auth/RegisterPage";

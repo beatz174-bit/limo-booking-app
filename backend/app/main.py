@@ -80,6 +80,7 @@ app.include_router(driver_bookings_v1_router.router)
 app.include_router(track_v1_router.router)
 app.include_router(ws_router.router)
 
+
 @app.get("/", include_in_schema=False)
 async def docs_redirect():
     return RedirectResponse(url="/docs")

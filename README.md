@@ -98,7 +98,13 @@ updates.
 ## Driver API
 
 Authenticated driver clients can manage bookings via the `/api/v1/driver/bookings` routes. Confirming a booking charges the
-customer's deposit via Stripe, while declining leaves the booking in a declined state.
+customer's deposit via Stripe, while declining leaves the booking in a declined state. Once on the way, additional actions
+progress the trip lifecycle:
+
+- `POST /api/v1/driver/bookings/{id}/arrive-pickup`
+- `POST /api/v1/driver/bookings/{id}/start-trip`
+- `POST /api/v1/driver/bookings/{id}/arrive-dropoff`
+- `POST /api/v1/driver/bookings/{id}/complete` (computes final fare and charges the remainder)
 
 ## Google Maps API Setup
 
