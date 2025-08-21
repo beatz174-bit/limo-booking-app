@@ -12,54 +12,46 @@ interface Args {
   perMin: number;
 }
 
-export function useDirections({
-  pickup,
-  dropoff,
-  rideTime,
-  flagfall,
-  perKm,
-  perMin,
-}: Args) {
-  const getMetrics = useRouteMetrics();
-  const [distanceKm, setDistanceKm] = useState<number | undefined>();
-  const [durationMin, setDurationMin] = useState<number | undefined>();
-  const [loading, setLoading] = useState(false);
+/**
+ * Returns a function that retrieves driving directions between two points.
+ * Results are memoized in-memory to avoid duplicate calls for the same
+ * pickup and dropoff combination.
+ */
+export function useDirections() {
+  const cache = useRef(new Map<string, DirectionsMetrics>());
 
-  useEffect(() => {
-    let cancelled = false;
-    async function fetchMetrics() {
-      if (!pickup || !dropoff) {
-        setDistanceKm(undefined);
-        setDurationMin(undefined);
-        return;
+  return useCallback(
+    async (pickup: string, dropoff: string): Promise<DirectionsMetrics | null> => {
+      if (!pickup || !dropoff) return null;
+      const key = `${pickup}|${dropoff}`;
+      const cached = cache.current.get(key);
+      if (cached) return cached;
+
+      try {
+        const params = new URLSearchParams({
+          origin: pickup,
+          destination: dropoff,
+          mode: "driving",
+          key: CONFIG.GOOGLE_MAPS_API_KEY ?? "",
+        });
+        const url = `https://maps.googleapis.com/maps/api/directions/json?${params.toString()}`;
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        const data = await res.json();
+        const leg = data?.routes?.[0]?.legs?.[0];
+        const dist = leg?.distance?.value; // meters
+        const dur = leg?.duration?.value; // seconds
+        if (!Number.isFinite(dist) || !Number.isFinite(dur)) return null;
+        const metrics = { km: dist / 1000, min: dur / 60 };
+        cache.current.set(key, metrics);
+        return metrics;
+      } catch (err) {
+        console.error(err);
+        return null;
       }
-      setLoading(true);
-      const res = await getMetrics(pickup, dropoff, rideTime);
-      if (!cancelled) {
-        setDistanceKm(res?.km);
-        setDurationMin(res?.min);
-        setLoading(false);
-      }
-    }
-    void fetchMetrics();
-    return () => {
-      cancelled = true;
-    };
-  }, [pickup, dropoff, rideTime, getMetrics]);
-
-  const { price } = usePriceCalculator({
-    pickup,
-    dropoff,
-    rideTime,
-    flagfall,
-    perKm,
-    perMin,
-    distanceKm,
-    durationMin,
-    auto: true,
-  });
-
-  return { distanceKm, durationMin, price, loading } as const;
+    },
+    []
+  );
 }
 
 export default useDirections;
