@@ -4,6 +4,7 @@ import { Route } from 'react-router-dom';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import LoginPage from './LoginPage';
+import BookingWizardPage from '@/pages/Booking/BookingWizardPage';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/__tests__/setup/msw.server';
 import { apiUrl } from '@/__tests__/setup/msw.handlers';
@@ -14,14 +15,14 @@ test('logs in successfully', async () => {
   // stub /admin only (destination), not /login (source)
   renderWithProviders(<LoginPage />, {
     initialPath: '/login',
-    extraRoutes: <Route path="/book" element={<h1>Booking Page</h1>} />
+    extraRoutes: <Route path="/book" element={<BookingWizardPage />} />
   });
 
   await userEvent.type(label(/email/i), 'test@example.com');
   await userEvent.type(label(/password/i), 'pw');
   await userEvent.click(screen.getByRole('button', { name: /log in/i }));
 
-  expect(await screen.findByRole('heading', { name: /booking page/i })).toBeInTheDocument();
+  expect(await screen.findByText(/select time/i)).toBeInTheDocument();
 });
 
 test('shows error on bad credentials', async () => {
