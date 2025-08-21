@@ -2,6 +2,7 @@
 import { request, type APIResponse } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
+import { spawn } from "node:child_process";
 import * as dotenv from "dotenv";
 
 // Load the e2e env so we point at the TEST backend & TEST DB
@@ -23,6 +24,29 @@ async function bodyText(res: APIResponse) {
 export default async function globalSetup(): Promise<void> {
   // Ensure storage dir
   fs.mkdirSync(path.dirname(STORAGE_PATH), { recursive: true });
+
+  // Start the FastAPI backend for API interactions
+  const backend = spawn(
+    "uvicorn",
+    ["app.main:app", "--host", "0.0.0.0", "--port", "8000"],
+    {
+      cwd: path.resolve(process.cwd(), "../backend"),
+      env: { ...process.env, ENV: "test" },
+      stdio: "inherit",
+    }
+  );
+
+  // Wait for the server to be ready
+  for (let i = 0; i < 20; i++) {
+    try {
+      await fetch(`${API}/docs`);
+      break;
+    } catch {
+      await new Promise((r) => setTimeout(r, 500));
+    }
+  }
+
+  process.on("exit", () => backend.kill());
 
   // Speak to the API behind API_BASE_URL (TEST backend)
   const api = await request.newContext({ baseURL: API });
