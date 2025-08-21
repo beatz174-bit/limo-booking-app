@@ -26,9 +26,13 @@ The application relies on several external services. Set these variables in a `.
 | `GOOGLE_MAPS_API_KEY` | Distance and duration metrics via Google Distance Matrix. |
 | `ORS_API_KEY` | Geocoding via the OpenRouteService API. |
 | `JWT_SECRET_KEY` | Secret used to sign access tokens. |
+| `STRIPE_SECRET_KEY` | Server-side Stripe key for payment intents and SetupIntents. |
 | `VITE_API_BASE_URL` | (frontend) Base URL of the backend API. |
 | `VITE_GOOGLE_MAPS_API_KEY` | (frontend) Google Maps key for map rendering. |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | (frontend) Stripe publishable key for card collection. |
 | `LOG_LEVEL` | (backend) Logging verbosity (`DEBUG`, `INFO`, etc.). Defaults to `INFO`. |
+| `FCM_PROJECT_ID` / `FCM_CLIENT_EMAIL` / `FCM_PRIVATE_KEY` | (backend) Optional Firebase credentials for push notifications. |
+| `VITE_FCM_API_KEY` / `VITE_FCM_PROJECT_ID` / `VITE_FCM_APP_ID` / `VITE_FCM_SENDER_ID` / `VITE_FCM_VAPID_KEY` | (frontend) Optional Firebase config for web push. |
 
 ## Logging
 
@@ -79,10 +83,50 @@ cd frontend
 npm run dev
 ```
 
+## Realtime tracking
+
+The backend exposes a WebSocket at `/ws/bookings/{id}` which streams driver
+location updates. Customers can retrieve a tracking link via
+`GET /api/v1/track/{public_code}` and connect to the WebSocket for live
+updates.
+
+## Availability
+
+The driver can manage personal blocks and avoid double-booking through the
+`/api/v1/availability` API. Confirmed bookings automatically reserve their time
+window, and additional blocks can be added via the `/driver/availability`
+frontend page.
+
+## Push notifications
+
+When Firebase credentials are supplied the backend dispatches push notifications
+to role-based topics using Firebase Cloud Messaging. The frontend registers a
+service worker and requests a browser token at startup; messages display using
+the standard Web Push APIs. When the credentials are omitted the feature is
+silently disabled.
+
 ## Testing
 
 - Backend: `cd backend && pytest`
 - Frontend: `cd frontend && npm test`
+- End-to-end: `cd frontend && npm run e2e`
+
+## Driver API
+
+Authenticated driver clients can manage bookings via the `/api/v1/driver/bookings` routes. Confirming a booking charges the
+customer's deposit via Stripe, while declining leaves the booking in a declined state. Once on the way, additional actions
+progress the trip lifecycle:
+
+- `POST /api/v1/driver/bookings/{id}/arrive-pickup`
+- `POST /api/v1/driver/bookings/{id}/start-trip`
+- `POST /api/v1/driver/bookings/{id}/arrive-dropoff`
+- `POST /api/v1/driver/bookings/{id}/complete` (computes final fare and charges the remainder)
+
+## Customer API
+
+Authenticated customers can view their booking history via:
+
+- `GET /api/v1/customers/me/bookings`
 
 ## Google Maps API Setup
 

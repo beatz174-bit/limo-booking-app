@@ -1,8 +1,11 @@
 // Main application component setting up routes.
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from '@/pages/Auth/LoginPage';
-import BookingPage from '@/pages/Booking/BookingPage';
+import BookingWizardPage from '@/pages/Booking/BookingWizardPage';
 import AdminDashboard from '@/pages/Admin/AdminDashboard';
+import DriverDashboard from '@/pages/Driver/DriverDashboard';
+import AvailabilityPage from '@/pages/Driver/AvailabilityPage';
+import TrackingPage from '@/pages/TrackingPage';
 import RideHistoryPage from '@/pages/Booking/RideHistoryPage';
 import RideDetailsPage from '@/pages/Booking/RideDetailsPage';
 import RegisterPage from "@/pages/Auth/RegisterPage";
@@ -33,7 +36,7 @@ function App() {
       {/* Protected user routes */}
       <Route
         path="/book"
-        element={ accessToken ? <BookingPage /> : <Navigate to="/login" /> }
+        element={ accessToken ? <BookingWizardPage /> : <Navigate to="/login" /> }
       />
       <Route
         path="/history"
@@ -53,6 +56,15 @@ function App() {
         path="/admin"
         element={ accessToken && userID == '1' ? <AdminDashboard /> : <Navigate to="/login" /> }
       />
+      <Route
+        path="/driver"
+        element={ accessToken ? <DriverDashboard /> : <Navigate to="/login" /> }
+      />
+      <Route
+        path="/driver/availability"
+        element={ accessToken ? <AvailabilityPage /> : <Navigate to="/login" /> }
+      />
+      <Route path="/t/:code" element={<TrackingPage />} />
 
       {devEnabled && <Route path="/devnotes" element={<DevNotes />} />}
 
