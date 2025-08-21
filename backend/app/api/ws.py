@@ -39,6 +39,7 @@ async def booking_ws(websocket: WebSocket, booking_id: uuid.UUID):
                             )
                             db.add(point)
                             await db.commit()
+
                 await broadcast.publish(channel=channel, message=data)
         except WebSocketDisconnect:
             pass
