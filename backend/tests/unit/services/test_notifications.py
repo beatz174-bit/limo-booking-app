@@ -30,6 +30,10 @@ async def test_send_fcm_uses_async_client(monkeypatch: MonkeyPatch):
         def json(self):
             return self._data
 
+        def raise_for_status(self):
+            if self.status_code >= 400:
+                raise httpx.HTTPStatusError("error", request=None, response=None)
+
     class DummyClient:
         def __init__(self, *args, **kwargs):
             self.calls = []
