@@ -1,15 +1,14 @@
 import logging
+from contextvars import ContextVar
 from logging.config import dictConfig
+from time import time
 from typing import Callable, Optional
 from uuid import uuid4
-from contextvars import ContextVar
 
 from app.core.config import get_settings
-from time import time
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
-
 
 # context variable for per-request correlation IDs
 request_id_ctx_var: ContextVar[Optional[str]] = ContextVar("request_id", default=None)
@@ -49,6 +48,9 @@ def setup_logging() -> None:
         "root": {"level": log_level, "handlers": ["default"]},
     }
     dictConfig(logging_config)
+    # `dictConfig` may reset the root logger to WARNING which hides debug logs.
+    # Explicitly set the root level so our configured `LOG_LEVEL` always wins.
+    logging.getLogger().setLevel(log_level)
 
     # ensure uvicorn uses our configuration
     for logger_name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
