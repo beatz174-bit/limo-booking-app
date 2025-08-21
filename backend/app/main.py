@@ -3,6 +3,20 @@
 import logging
 from contextlib import asynccontextmanager
 
+from app.core.config import get_settings
+from app.core.logging import RequestLoggingMiddleware, setup_logging
+
+settings = get_settings()
+setup_logging()
+logging.getLogger().debug(
+    "Effective log level: %s", logging.getLogger().getEffectiveLevel()
+)
+logger = logging.getLogger(__name__)
+
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, RedirectResponse
+
 from app.api import auth as auth_router
 from app.api import bookings as bookings_router
 from app.api import geocode as geocode_router
@@ -16,20 +30,8 @@ from app.api.v1 import bookings as bookings_v1_router
 from app.api.v1 import customers as customers_v1_router
 from app.api.v1 import driver_bookings as driver_bookings_v1_router
 from app.api.v1 import track as track_v1_router
-from app.core.config import get_settings
-from app.core.logging import RequestLoggingMiddleware, setup_logging
 from app.db.database import database
 from app.services.scheduler import scheduler
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse
-
-settings = get_settings()
-setup_logging()
-logging.getLogger().debug(
-    "Effective log level: %s", logging.getLogger().getEffectiveLevel()
-)
-logger = logging.getLogger(__name__)
 
 
 def get_app() -> FastAPI:
