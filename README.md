@@ -85,6 +85,12 @@ npm run dev
 
 - Backend: `cd backend && pytest`
 - Frontend: `cd frontend && npm test`
+- End-to-end: `cd frontend && npm run e2e`
+
+## Driver API
+
+Authenticated driver clients can manage bookings via the `/api/v1/driver/bookings` routes. Confirming a booking charges the
+customer's deposit via Stripe, while declining leaves the booking in a declined state.
 
 ## Google Maps API Setup
 

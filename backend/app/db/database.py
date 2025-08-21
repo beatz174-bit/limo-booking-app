@@ -154,6 +154,12 @@ class Database:
 # Final instance to import in main.py
 database = Database(connect_fn=connect, disconnect_fn=disconnect)
 
+
+async def get_async_session() -> AsyncSession:
+    """FastAPI dependency that provides an `AsyncSession`."""
+    async with AsyncSessionLocal() as session:
+        yield session
+
 # --------------------------------------------------------------------
 # 6. Optional SQLite sync fallback ---------------------------------------------------
 #

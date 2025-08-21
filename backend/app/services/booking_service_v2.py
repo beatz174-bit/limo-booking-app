@@ -1,5 +1,7 @@
 """Service layer for booking lifecycle operations."""
 import secrets
+import uuid
+
 from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -57,3 +59,28 @@ async def create_booking(db: AsyncSession, data: BookingCreateRequest) -> tuple[
     setup_intent = stripe_client.create_setup_intent(data.customer.email)
     client_secret = setup_intent.client_secret
     return booking, client_secret
+
+async def confirm_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
+    """Confirm a pending booking and charge the deposit."""
+    booking = await db.get(Booking, booking_id)
+    if booking is None or booking.status is not BookingStatus.PENDING:
+        raise ValueError("booking cannot be confirmed")
+
+    intent = stripe_client.charge_deposit(booking.deposit_required_cents)
+    booking.status = BookingStatus.DRIVER_CONFIRMED
+    booking.deposit_payment_intent_id = intent.id
+    await db.commit()
+    await db.refresh(booking)
+    return booking
+
+
+async def decline_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
+    """Decline a pending booking."""
+    booking = await db.get(Booking, booking_id)
+    if booking is None or booking.status is not BookingStatus.PENDING:
+        raise ValueError("booking cannot be declined")
+
+    booking.status = BookingStatus.DECLINED
+    await db.commit()
+    await db.refresh(booking)
+    return booking
