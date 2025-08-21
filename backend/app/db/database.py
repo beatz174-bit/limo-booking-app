@@ -1,18 +1,22 @@
 # app/db/database.py
 import warnings
+
 """Database connection and session management utilities."""
 
-from typing import Awaitable, Dict, Union, Protocol
+from pathlib import Path
+from typing import Awaitable, Dict, Protocol, Union
 
-from sqlalchemy.engine.url import make_url, URL
+from sqlalchemy.engine.url import URL, make_url
 from sqlalchemy.ext.asyncio import (
-    create_async_engine,
-    async_sessionmaker,
     AsyncEngine,
     AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
 )
 from sqlalchemy.orm import DeclarativeBase
-from pathlib import Path
+
+from alembic import command
+from alembic.config import Config
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -21,9 +25,8 @@ settings = get_settings()
 # 🚀 1. Build engine URL and detect async driver
 
 
-
 raw = settings.database_path
-path = Path(raw) #type: ignore
+path = Path(raw)  # type: ignore
 if not path.is_absolute():
     # choose your root; e.g., repo root or backend dir
     repo_root = Path(__file__).resolve().parents[3]  # adjust as needed
@@ -41,7 +44,7 @@ if url.drivername == "sqlite":
     )
     url = URL.create(
         drivername="sqlite+aiosqlite",
-        database=url.database or ":memory:", 
+        database=url.database or ":memory:",
     )
 
 # --------------------------------------------------------------------
@@ -75,37 +78,29 @@ AsyncSessionLocal = async_sessionmaker(
 # --------------------------------------------------------------------
 # 4. Declarative Base for ORM models
 
+
 class Base(DeclarativeBase):
     pass
+
 
 # --------------------------------------------------------------------
 # 5. Database "lifespan" utilities
 
-async def connect() -> None:
-    """
-    Called on app startup; creates all tables if not exist.
-    Automatically handles AsyncEngine.
-    """
-    # Import all model modules so that `Base.metadata` is populated before
-    # invoking ``create_all``.  Without these imports SQLAlchemy would see an
-    # empty metadata collection and skip table creation, leading to runtime
-    # errors such as "no such table: users" when the API is exercised during
-    # tests.
-    # Import all ORM models so that metadata is populated.
-    # Legacy models are still imported for backward compatibility.
-    from app.models import booking, settings, user  # noqa: F401 #type: ignore
-    # New domain models
-    from app.models import (
-        user_v2,  # noqa: F401
-        availability_slot,  # noqa: F401
-        booking_v2,  # noqa: F401
-        trip,  # noqa: F401
-        route_point,  # noqa: F401
-        notification,  # noqa: F401
-    )
 
-    async with async_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+async def connect() -> None:
+    """Run on app startup to ensure the database is migrated."""
+    # Import all ORM models so that metadata is populated. Legacy models are
+    # still imported for backward compatibility.
+    # New domain models
+    from app.models import availability_slot  # noqa: F401
+    from app.models import booking_v2  # noqa: F401
+    from app.models import notification  # noqa: F401
+    from app.models import route_point  # noqa: F401
+    from app.models import trip  # noqa: F401
+    from app.models import user_v2  # noqa: F401
+    from app.models import booking, settings, user  # noqa: F401  # type: ignore
+
+    command.upgrade(Config("alembic.ini"), "head")
 
     # Ensure a single driver user exists for the new domain models
     from app.models.user_v2 import User, UserRole
@@ -113,9 +108,7 @@ async def connect() -> None:
     async with AsyncSessionLocal() as session:
         from sqlalchemy import select
 
-        result = await session.execute(
-            select(User).where(User.role == UserRole.DRIVER)
-        )
+        result = await session.execute(select(User).where(User.role == UserRole.DRIVER))
         driver = result.scalar_one_or_none()
         if driver is None:
             session.add(
@@ -123,20 +116,22 @@ async def connect() -> None:
             )
             await session.commit()
 
+
 async def disconnect() -> None:
     """
     Cleanly dispose engine on app shutdown.
     """
     await async_engine.dispose()
 
+
 class LifespanCallable(Protocol):
     """
     Simple alias for async fn: () -> Awaitable[None]
     Helps static analyzers infer the connect/disconnect signatures.
     """
-    def __call__(self) -> Awaitable[None]:
-        ...
-    
+
+    def __call__(self) -> Awaitable[None]: ...
+
 
 class Database:
     """
@@ -151,6 +146,7 @@ class Database:
         self.connect = connect_fn
         self.disconnect = disconnect_fn
 
+
 # Final instance to import in main.py
 database = Database(connect_fn=connect, disconnect_fn=disconnect)
 
@@ -159,6 +155,7 @@ async def get_async_session() -> AsyncSession:
     """FastAPI dependency that provides an `AsyncSession`."""
     async with AsyncSessionLocal() as session:
         yield session
+
 
 # --------------------------------------------------------------------
 # 6. Optional SQLite sync fallback ---------------------------------------------------
