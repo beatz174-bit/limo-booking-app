@@ -2,37 +2,40 @@
 
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse, JSONResponse
 
+from app.api import auth as auth_router
+from app.api import bookings as bookings_router
+from app.api import geocode as geocode_router
+from app.api import route_metrics as route_metrics_router
+from app.api import settings as settings_router
+from app.api import setup as setup_router
+from app.api import users as users_router
+from app.api import ws as ws_router
+from app.api.v1 import availability as availability_v1_router
+from app.api.v1 import bookings as bookings_v1_router
+from app.api.v1 import customers as customers_v1_router
+from app.api.v1 import driver_bookings as driver_bookings_v1_router
+from app.api.v1 import track as track_v1_router
 from app.core.config import get_settings
 from app.core.logging import RequestLoggingMiddleware, setup_logging
 from app.db.database import database
-
-from app.api import (
-    auth as auth_router,
-    users as users_router,
-    bookings as bookings_router,
-    setup as setup_router,
-    settings as settings_router,
-    route_metrics as route_metrics_router,
-    geocode as geocode_router,
-)
-from app.api.v1 import bookings as bookings_v1_router
-from app.api.v1 import driver_bookings as driver_bookings_v1_router
-from app.api.v1 import track as track_v1_router
-from app.api.v1 import availability as availability_v1_router
-from app.api.v1 import customers as customers_v1_router
-from app.api import ws as ws_router
 from app.services.scheduler import scheduler
-setup_logging()
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, RedirectResponse
+
 settings = get_settings()
+setup_logging()
+logging.getLogger().debug(
+    "Effective log level: %s", logging.getLogger().getEffectiveLevel()
+)
 logger = logging.getLogger(__name__)
+
 
 def get_app() -> FastAPI:
     """For pytest: returns the singleton `app`."""
     return app
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -45,6 +48,7 @@ async def lifespan(app: FastAPI):
         scheduler.shutdown()
         await ws_router.broadcast.disconnect()
         await database.disconnect()
+
 
 app = FastAPI(
     title=settings.app_name,
@@ -108,4 +112,3 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
     logger = logging.getLogger("app.error")
     logger.exception("Unhandled exception path=%s", request.url.path)
     return JSONResponse(status_code=500, content={"detail": "Internal Server Error"})
-
