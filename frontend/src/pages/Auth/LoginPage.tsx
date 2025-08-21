@@ -21,7 +21,7 @@ export default function LoginPage() {
       try {
         await finishOAuthIfCallback?.();
         if (/\bcode=/.test(window.location.search)) {
-          const dest = params.get("from") || "/book";
+          const dest = params.get("from") || "/";
           navigate(dest, { replace: true });
         }
       } catch {
@@ -37,10 +37,8 @@ export default function LoginPage() {
     setSubmitting(true);
     setError(null);
     try {
-      const role = await loginWithPassword(email, password);
-      let dest = "/book";
-      if (role === "DRIVER") dest = "/driver";
-      else if (role && role.toUpperCase().includes("ADMIN")) dest = "/admin";
+      await loginWithPassword(email, password);
+      const dest = params.get("from") || "/";
       navigate(dest, { replace: true });
     } catch (err: unknown) {
       if (err instanceof Response) {

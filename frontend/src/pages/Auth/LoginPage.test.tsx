@@ -13,14 +13,14 @@ const label = (re: RegExp | string) => screen.getByLabelText(re, { selector: 'in
 test('navigates to /book for customer', async () => {
   renderWithProviders(<LoginPage />, {
     initialPath: '/login',
-    extraRoutes: <Route path="/book" element={<h1>Booking Page</h1>} />
+    extraRoutes: <Route path="/" element={<h1>Home Page</h1>} />
   });
 
   await userEvent.type(label(/email/i), 'test@example.com');
   await userEvent.type(label(/password/i), 'pw');
   await userEvent.click(screen.getByRole('button', { name: /log in/i }));
 
-  expect(await screen.findByRole('heading', { name: /booking page/i })).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { name: /home page/i })).toBeInTheDocument();
 });
 
 test('navigates to /driver for driver role', async () => {
