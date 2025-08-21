@@ -7,7 +7,7 @@ import { beginLogin, completeLoginFromRedirect, refreshTokens, TokenResponse, OA
 import { useLocation, useNavigate } from "react-router-dom";
 import { type AuthContextType } from "@/types/AuthContextType";
 
-type UserShape = { email?: string; full_name?: string } | null;
+type UserShape = { email?: string; full_name?: string; role?: string } | null;
 
 type AuthState = {
   accessToken: string | null;
@@ -15,6 +15,7 @@ type AuthState = {
   loading: boolean;
   userID: string| null;
   userName: string | null;
+  role: string | null;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,7 +28,7 @@ const oauthCfg: OAuthConfig = {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, setState] = useState<AuthState>({ accessToken: null, user: null, loading: true, userID: null, userName: null });
+  const [state, setState] = useState<AuthState>({ accessToken: null, user: null, loading: true, userID: null, userName: null, role: null });
   const authApi = useMemo(() => new AuthApi(cfg), []);
   // const [userName, setUserName] = useState<string>('');
   // const [userID, setUserID] = useState<string|null>(null);
@@ -37,6 +38,7 @@ useEffect(() => {
   const raw = localStorage.getItem("auth_tokens");
   const storeduserID = localStorage.getItem("userID");
   const storeduserName = localStorage.getItem("userName");
+  const storedRole = localStorage.getItem("role");
   if (raw) {
     try {
       const { access_token, refresh_token, user } = JSON.parse(raw);
@@ -47,6 +49,7 @@ useEffect(() => {
         loading: false,
         userID: storeduserID ?? null,
         userName: storeduserName ?? null,
+        role: storedRole ?? user?.role ?? null,
       });
       return;
     } catch { /* ignore parse errors */ }
@@ -59,14 +62,18 @@ useEffect(() => {
     const refresh_token = t?.refresh_token ?? null;
     if (access_token || refresh_token || user) {
       localStorage.setItem("auth_tokens", JSON.stringify({ access_token, refresh_token, user }));
+      if (user?.role) {
+        localStorage.setItem("role", user.role);
+      }
     } else {
       localStorage.removeItem("auth_tokens");
+      localStorage.removeItem("role");
     }
     setTokens(access_token, refresh_token);
-    setState((s) => ({ ...s, accessToken: access_token, user: user ?? s.user }));
+    setState((s) => ({ ...s, accessToken: access_token, user: user ?? s.user, role: user?.role ?? s.role }));
   }, []);
 
-  const loginWithPassword = useCallback(async (email: string, password: string) => {
+  const loginWithPassword = useCallback(async (email: string, password: string): Promise<string | null> => {
     const res = await fetch(`${CONFIG.API_BASE_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -84,6 +91,7 @@ useEffect(() => {
 
     const body = await res.json();
     const token = body.access_token ?? body.token ?? null;
+    const role: string | null = body.role ?? body.user?.role ?? null;
     localStorage.setItem(
       "auth_tokens",
       JSON.stringify({
@@ -92,6 +100,11 @@ useEffect(() => {
         user: body.user ?? null,
       })
     );
+    if (role) {
+      localStorage.setItem("role", role);
+    } else {
+      localStorage.removeItem("role");
+    }
 
     localStorage.setItem("userName", body.full_name);
     localStorage.setItem("userID", String(body.id));
@@ -103,7 +116,9 @@ useEffect(() => {
       user: body.user ?? s.user,
       userID: String(body.id),
       userName: body.full_name,
+      role,
     }));
+    return role;
   }, [setState]);
 
   const registerWithPassword = useCallback(async (fullName: string, email: string, password: string) => {
@@ -125,12 +140,14 @@ useEffect(() => {
     persist(null, null);
     localStorage.removeItem("userID");
     localStorage.removeItem("userName");
+    localStorage.removeItem("role");
     setState((s) => ({
       ...s,
       accessToken: null,
       user: null,
       userID: null,
       userName: null,
+      role: null,
     }));
   }, [persist, setState]);
 

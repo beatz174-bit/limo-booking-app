@@ -46,7 +46,8 @@ export const handlers = [
     return HttpResponse.json({
       access_token: 'test-token',
       token_type: 'bearer',
-      user: { id: 1, full_name: 'Test User', email: body.email },
+      role: 'CUSTOMER',
+      user: { id: 1, full_name: 'Test User', email: body.email, role: 'CUSTOMER' },
     });
   }),
 
