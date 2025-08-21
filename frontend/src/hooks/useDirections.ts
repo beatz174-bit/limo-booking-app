@@ -1,9 +1,15 @@
-import { CONFIG } from "@/config";
-import { useCallback, useRef } from "react";
+// Hook that fetches route metrics and computes fare estimate.
+import { useEffect, useState } from "react";
+import { useRouteMetrics } from "./useRouteMetrics";
+import { usePriceCalculator } from "./usePriceCalculator";
 
-export interface DirectionsMetrics {
-  km: number;
-  min: number;
+interface Args {
+  pickup: string;
+  dropoff: string;
+  rideTime: string;
+  flagfall: number;
+  perKm: number;
+  perMin: number;
 }
 
 /**

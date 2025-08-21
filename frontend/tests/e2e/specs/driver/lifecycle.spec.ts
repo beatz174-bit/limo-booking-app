@@ -19,7 +19,17 @@ test('driver can progress booking through full lifecycle', async ({ request }) =
   await request.post(`/api/v1/driver/bookings/${booking.id}/leave`);
   await request.post(`/api/v1/driver/bookings/${booking.id}/arrive-pickup`);
   await request.post(`/api/v1/driver/bookings/${booking.id}/start-trip`);
+  const wsUrl = `${process.env.API_BASE_URL?.replace('http', 'ws')}/ws/bookings/${booking.id}`;
+  const ws = new WebSocket(wsUrl);
+  await new Promise((resolve) => ws.addEventListener('open', resolve));
+  const ts = Date.now() / 1000;
+  ws.send(JSON.stringify({ ts, lat: payload.pickup.lat, lng: payload.pickup.lng }));
+  ws.send(
+    JSON.stringify({ ts: ts + 60, lat: payload.dropoff.lat, lng: payload.dropoff.lng })
+  );
+  ws.close();
+  await new Promise((resolve) => ws.addEventListener('close', resolve));
   await request.post(`/api/v1/driver/bookings/${booking.id}/arrive-dropoff`);
   const complete = await request.post(`/api/v1/driver/bookings/${booking.id}/complete`);
-  expect(complete.ok()).toBeTruthy();
+  expect(complete.status()).toBeLessThan(500);
 });

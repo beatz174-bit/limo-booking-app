@@ -39,3 +39,4 @@ python-json-logger
 stripe
 apscheduler
 broadcaster
+websockets

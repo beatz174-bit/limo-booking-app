@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { CONFIG } from '@/config';
 
 export interface AvailabilityData {
@@ -8,14 +8,14 @@ export interface AvailabilityData {
 
 export default function useAvailability(month: string) {
   const [data, setData] = useState<AvailabilityData | null>(null);
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     const res = await fetch(`${CONFIG.API_BASE_URL}/api/v1/availability?month=${month}`);
     if (res.ok) {
       setData(await res.json());
     }
-  };
-  useEffect(() => {
-    fetchData();
   }, [month]);
+  useEffect(() => {
+    void fetchData();
+  }, [fetchData]);
   return { data, refresh: fetchData };
 }

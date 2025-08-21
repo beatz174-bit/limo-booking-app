@@ -3,10 +3,13 @@ import { request, type APIResponse } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import * as dotenv from "dotenv";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 // Load the e2e env so we point at the TEST backend & TEST DB
-dotenv.config({ path: path.resolve(process.cwd(), ".env.e2e") });
+dotenv.config({ path: path.resolve(__dirname, "../.env.e2e") });
 
 const API = process.env.API_BASE_URL ?? "http://localhost:8000";
 const UI  = process.env.E2E_BASE_URL ?? "http://localhost:5173";
@@ -25,25 +28,47 @@ export default async function globalSetup(): Promise<void> {
   // Ensure storage dir
   fs.mkdirSync(path.dirname(STORAGE_PATH), { recursive: true });
 
+  // Ensure WebSocket support for backend routes
+  await new Promise<void>((resolve, reject) => {
+    const pip = spawn("pip", ["install", "websockets"], { stdio: "inherit" });
+    pip.on("close", (code) => (code === 0 ? resolve() : reject(new Error("pip install failed"))));
+  });
+
   // Start the FastAPI backend for API interactions
   const backend = spawn(
     "uvicorn",
     ["app.main:app", "--host", "0.0.0.0", "--port", "8000"],
     {
       cwd: path.resolve(process.cwd(), "../backend"),
-      env: { ...process.env, ENV: "test" },
+      env: {
+        ...process.env,
+        ENV: "test",
+        STRIPE_SECRET_KEY: "",
+        GOOGLE_MAPS_API_KEY: "",
+        FCM_PROJECT_ID: "",
+        FCM_CLIENT_EMAIL: "",
+        FCM_PRIVATE_KEY: "",
+      },
       stdio: "inherit",
     }
   );
 
-  // Wait for the server to be ready
+  let ready = false;
   for (let i = 0; i < 20; i++) {
     try {
-      await fetch(`${API}/docs`);
-      break;
+      const res = await fetch(`${API}/docs`);
+      if (res.ok) {
+        ready = true;
+        break;
+      }
     } catch {
-      await new Promise((r) => setTimeout(r, 500));
+      /* ignore until timeout */
     }
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  if (!ready) {
+    backend.kill();
+    throw new Error("Backend failed to start");
   }
 
   process.on("exit", () => backend.kill());

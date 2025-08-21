@@ -2,9 +2,13 @@ import { useState } from 'react';
 import { Stack, TextField, Button, Typography } from '@mui/material';
 import useAvailability from '@/hooks/useAvailability';
 
+interface FormData {
+  pickup_when?: string;
+}
+
 interface Props {
-  data: any;
-  onNext: (data: any) => void;
+  data: FormData;
+  onNext: (data: FormData) => void;
 }
 
 export default function SelectTimeStep({ data, onNext }: Props) {

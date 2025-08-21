@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { GoogleMap, Marker } from '@react-google-maps/api';
 import { CONFIG } from '@/config';
 import { useBookingChannel } from '@/hooks/useBookingChannel';
+import StatusTimeline, { type StatusStep } from '@/components/StatusTimeline';
 
 type GoogleLike = {
   maps: {
@@ -30,7 +31,7 @@ interface TrackResponse {
   ws_url: string;
 }
 
-const STATUS_STEPS = [
+const STATUS_STEPS: StatusStep[] = [
   { key: 'confirm', label: 'Confirmed' },
   { key: 'leave', label: 'En route to pickup' },
   { key: 'arrive-pickup', label: 'Arrived pickup' },
@@ -95,7 +96,6 @@ export default function TrackingPage() {
   }, [update, status, pickup, dropoff]);
 
   const pos = update ? { lat: update.lat, lng: update.lng } : null;
-  const currentIdx = STATUS_STEPS.findIndex((s) => s.key === status);
 
   return (
     <div>
@@ -111,13 +111,7 @@ export default function TrackingPage() {
         <p>Waiting for driver...</p>
       )}
       {eta !== null && <p>ETA: {eta} min</p>}
-      <ol>
-        {STATUS_STEPS.map((s, i) => (
-          <li key={s.key} data-active={i <= currentIdx}>
-            {s.label}
-          </li>
-        ))}
-      </ol>
+      <StatusTimeline steps={STATUS_STEPS} currentKey={status} />
     </div>
   );
 }

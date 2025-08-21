@@ -4,13 +4,28 @@ import SelectTimeStep from './SelectTimeStep';
 import TripDetailsStep from './TripDetailsStep';
 import PaymentStep from './PaymentStep';
 
+interface Location {
+  address: string;
+  lat: number;
+  lng: number;
+}
+
+interface FormData {
+  pickup_when?: string;
+  pickup?: Location;
+  dropoff?: Location;
+  passengers?: number;
+  notes?: string;
+  customer?: { name?: string; email?: string; phone?: string };
+}
+
 const steps = ['Select time', 'Trip details', 'Payment'];
 
 export default function BookingWizard() {
   const [active, setActive] = useState(0);
-  const [form, setForm] = useState<any>({ passengers: 1 });
+  const [form, setForm] = useState<FormData>({ passengers: 1 });
 
-  const next = (data: any) => {
+  const next = (data: Partial<FormData>) => {
     setForm({ ...form, ...data });
     setActive((s) => s + 1);
   };
