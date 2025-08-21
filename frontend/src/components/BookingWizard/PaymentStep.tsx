@@ -1,13 +1,31 @@
-import { Stack, TextField, Button } from '@mui/material';
+import { Stack, TextField, Button, Typography } from '@mui/material';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { useState } from 'react';
 import { useStripeSetupIntent } from '@/hooks/useStripeSetupIntent';
+import { useSettings } from '@/hooks/useSettings';
+import { settingsApi } from '@/components/ApiConfig';
+import { useDirections } from '@/hooks/useDirections';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
 
+interface Location {
+  address: string;
+  lat: number;
+  lng: number;
+}
+
+interface BookingData {
+  pickup_when: string;
+  pickup: Location;
+  dropoff: Location;
+  passengers: number;
+  notes?: string;
+  customer?: { name?: string; email?: string; phone?: string };
+}
+
 interface Props {
-  data: any;
+  data: BookingData;
   onBack: () => void;
 }
 
@@ -15,6 +33,28 @@ function PaymentInner({ data, onBack }: Props) {
   const stripe = useStripe();
   const elements = useElements();
   const { createBooking } = useStripeSetupIntent();
+  const { data: settings } = useSettings(settingsApi);
+  interface SettingsAliases {
+    flagfall?: number;
+    per_km_rate?: number;
+    perKm?: number;
+    per_minute_rate?: number;
+    perMin?: number;
+  }
+  const s = settings as SettingsAliases | undefined;
+  const tariff = {
+    flagfall: Number(s?.flagfall ?? 0),
+    perKm: Number(s?.per_km_rate ?? s?.perKm ?? 0),
+    perMin: Number(s?.per_minute_rate ?? s?.perMin ?? 0),
+  };
+  const { price } = useDirections({
+    pickup: data.pickup?.address ?? data.pickup ?? '',
+    dropoff: data.dropoff?.address ?? data.dropoff ?? '',
+    rideTime: data.pickup_when || '',
+    flagfall: tariff.flagfall,
+    perKm: tariff.perKm,
+    perMin: tariff.perMin,
+  });
   const [name, setName] = useState(data.customer?.name || '');
   const [email, setEmail] = useState(data.customer?.email || '');
   const [phone, setPhone] = useState(data.customer?.phone || '');
@@ -28,12 +68,11 @@ function PaymentInner({ data, onBack }: Props) {
     };
     const res = await createBooking(payload);
     if (res.clientSecret && card) {
-      await stripe.confirmCardSetup(res.clientSecret, {
-        payment_method: { card },
-      });
-      // eslint-disable-next-line no-alert
-      alert('Booking created');
-    }
+        await stripe.confirmCardSetup(res.clientSecret, {
+          payment_method: { card },
+        });
+        alert('Booking created');
+      }
   }
 
   return (
@@ -41,6 +80,13 @@ function PaymentInner({ data, onBack }: Props) {
       <TextField label="Name" value={name} onChange={(e) => setName(e.target.value)} />
       <TextField label="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
       <TextField label="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+      {price !== null && (
+        <Typography>Estimated fare: ${price.toFixed(2)}</Typography>
+      )}
+      <Typography variant="body2">
+        50% deposit{price !== null ? ` ($${(price * 0.5).toFixed(2)})` : ''} charged on
+        confirmation
+      </Typography>
       <CardElement />
       <Stack direction="row" spacing={1}>
         <Button onClick={onBack}>Back</Button>

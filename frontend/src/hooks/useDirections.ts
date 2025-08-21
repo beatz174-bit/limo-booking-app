@@ -1,46 +1,65 @@
-import { CONFIG } from "@/config";
-import { useCallback, useRef } from "react";
+// Hook that fetches route metrics and computes fare estimate.
+import { useEffect, useState } from "react";
+import { useRouteMetrics } from "./useRouteMetrics";
+import { usePriceCalculator } from "./usePriceCalculator";
 
-export interface DirectionsMetrics {
-  km: number;
-  min: number;
+interface Args {
+  pickup: string;
+  dropoff: string;
+  rideTime: string;
+  flagfall: number;
+  perKm: number;
+  perMin: number;
 }
 
-export function useDirections() {
-  const cache = useRef(new Map<string, DirectionsMetrics>());
+export function useDirections({
+  pickup,
+  dropoff,
+  rideTime,
+  flagfall,
+  perKm,
+  perMin,
+}: Args) {
+  const getMetrics = useRouteMetrics();
+  const [distanceKm, setDistanceKm] = useState<number | undefined>();
+  const [durationMin, setDurationMin] = useState<number | undefined>();
+  const [loading, setLoading] = useState(false);
 
-  return useCallback(
-    async (pickup: string, dropoff: string): Promise<DirectionsMetrics | null> => {
-      if (!pickup || !dropoff) return null;
-      const key = `${pickup}|${dropoff}`;
-      if (cache.current.has(key)) {
-        return cache.current.get(key)!;
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchMetrics() {
+      if (!pickup || !dropoff) {
+        setDistanceKm(undefined);
+        setDurationMin(undefined);
+        return;
       }
-      try {
-        const params = new URLSearchParams({
-          origin: pickup,
-          destination: dropoff,
-          mode: "driving",
-          key: CONFIG.GOOGLE_MAPS_API_KEY || "",
-        });
-        const url = `https://maps.googleapis.com/maps/api/directions/json?${params.toString()}`;
-        const res = await fetch(url);
-        if (!res.ok) return null;
-        const data = await res.json();
-        const leg = data?.routes?.[0]?.legs?.[0];
-        const dist = leg?.distance?.value; // meters
-        const dur = leg?.duration?.value; // seconds
-        if (!Number.isFinite(dist) || !Number.isFinite(dur)) return null;
-        const metrics = { km: dist / 1000, min: dur / 60 };
-        cache.current.set(key, metrics);
-        return metrics;
-      } catch (err) {
-        console.error(err);
-        return null;
+      setLoading(true);
+      const res = await getMetrics(pickup, dropoff, rideTime);
+      if (!cancelled) {
+        setDistanceKm(res?.km);
+        setDurationMin(res?.min);
+        setLoading(false);
       }
-    },
-    []
-  );
+    }
+    void fetchMetrics();
+    return () => {
+      cancelled = true;
+    };
+  }, [pickup, dropoff, rideTime, getMetrics]);
+
+  const { price } = usePriceCalculator({
+    pickup,
+    dropoff,
+    rideTime,
+    flagfall,
+    perKm,
+    perMin,
+    distanceKm,
+    durationMin,
+    auto: true,
+  });
+
+  return { distanceKm, durationMin, price, loading } as const;
 }
 
 export default useDirections;

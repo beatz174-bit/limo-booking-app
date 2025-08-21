@@ -1,29 +1,93 @@
 import { useState } from 'react';
 import { Stack, TextField, Button } from '@mui/material';
+import { AddressField } from '@/components/AddressField';
+import { CONFIG } from '@/config';
+
+interface Location {
+  address: string;
+  lat: number;
+  lng: number;
+}
+
+interface FormData {
+  pickup?: Location;
+  dropoff?: Location;
+  passengers?: number;
+  notes?: string;
+}
 
 interface Props {
-  data: any;
-  onNext: (data: any) => void;
+  data: FormData;
+  onNext: (data: FormData) => void;
   onBack: () => void;
+}
+
+async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+  if (!address) return null;
+  try {
+    const backend = CONFIG.API_BASE_URL as string | undefined;
+    let url: string;
+    if (backend) {
+      const u = new URL('/geocode/search', backend || window.location.origin);
+      u.searchParams.set('q', address);
+      url = u.toString();
+    } else {
+      url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`;
+    }
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const first = Array.isArray(data) ? data[0] : data?.results?.[0];
+    if (!first) return null;
+    const lat = Number(first.lat || first.latitude);
+    const lng = Number(first.lon || first.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+    return { lat, lng };
+  } catch {
+    return null;
+  }
 }
 
 export default function TripDetailsStep({ data, onNext, onBack }: Props) {
   const [pickup, setPickup] = useState(data.pickup?.address || '');
-  const [pickupLat, setPickupLat] = useState(data.pickup?.lat ?? 0);
-  const [pickupLng, setPickupLng] = useState(data.pickup?.lng ?? 0);
+  const [pickupLat, setPickupLat] = useState<number>(data.pickup?.lat ?? 0);
+  const [pickupLng, setPickupLng] = useState<number>(data.pickup?.lng ?? 0);
   const [dropoff, setDropoff] = useState(data.dropoff?.address || '');
-  const [dropLat, setDropLat] = useState(data.dropoff?.lat ?? 0);
-  const [dropLng, setDropLng] = useState(data.dropoff?.lng ?? 0);
-  const [passengers, setPassengers] = useState(data.passengers ?? 1);
+  const [dropLat, setDropLat] = useState<number>(data.dropoff?.lat ?? 0);
+  const [dropLng, setDropLng] = useState<number>(data.dropoff?.lng ?? 0);
+  const [passengers, setPassengers] = useState<number>(data.passengers ?? 1);
   const [notes, setNotes] = useState(data.notes || '');
+
   return (
     <Stack spacing={2}>
-      <TextField label="Pickup address" value={pickup} onChange={(e) => setPickup(e.target.value)} />
-      <TextField label="Pickup lat" type="number" value={pickupLat} onChange={(e) => setPickupLat(Number(e.target.value))} />
-      <TextField label="Pickup lng" type="number" value={pickupLng} onChange={(e) => setPickupLng(Number(e.target.value))} />
-      <TextField label="Dropoff address" value={dropoff} onChange={(e) => setDropoff(e.target.value)} />
-      <TextField label="Dropoff lat" type="number" value={dropLat} onChange={(e) => setDropLat(Number(e.target.value))} />
-      <TextField label="Dropoff lng" type="number" value={dropLng} onChange={(e) => setDropLng(Number(e.target.value))} />
+      <AddressField
+        id="pickup"
+        label="Pickup address"
+        value={pickup}
+        onChange={setPickup}
+        onBlur={(v) => {
+          void geocodeAddress(v).then((coords) => {
+            if (coords) {
+              setPickupLat(coords.lat);
+              setPickupLng(coords.lng);
+            }
+          });
+        }}
+      />
+      <AddressField
+        id="dropoff"
+        label="Dropoff address"
+        value={dropoff}
+        onChange={setDropoff}
+        onBlur={(v) => {
+          void geocodeAddress(v).then((coords) => {
+            if (coords) {
+              setDropLat(coords.lat);
+              setDropLng(coords.lng);
+            }
+          });
+        }}
+      />
       <TextField label="Passengers" type="number" value={passengers} onChange={(e) => setPassengers(Number(e.target.value))} />
       <TextField label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
       <Stack direction="row" spacing={1}>
