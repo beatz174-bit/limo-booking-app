@@ -33,6 +33,19 @@ Set required environment variables before running the backend:
 
 Expose these in the appropriate `.env.*` files or your deployment environment.
 
+## Baselining an Existing Database
+
+To adopt this project with a database that already contains tables, baseline it so
+Alembic recognizes the current schema.
+
+```bash
+alembic stamp b9516c750b29  # mark current schema as baseline
+alembic upgrade head
+```
+
+You may need to drop or rename tables created outside Alembic before applying
+migrations.
+
 > Scroll down for code samples, example requests and responses. Select a language for code samples from the tabs above or the mobile navigation menu.
 
 # Authentication
