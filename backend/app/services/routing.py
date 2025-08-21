@@ -1,12 +1,40 @@
 """Helpers for Google Directions API."""
+
+from math import atan2, cos, radians, sin, sqrt
 from typing import Tuple
+
 import httpx
 from app.core.config import get_settings
 
 settings = get_settings()
 
-async def estimate_route(pickup_lat: float, pickup_lng: float, dropoff_lat: float, dropoff_lng: float) -> Tuple[float, float]:
-    """Return (distance_km, duration_min) between two coordinates using Google Directions."""
+
+async def estimate_route(
+    pickup_lat: float,
+    pickup_lng: float,
+    dropoff_lat: float,
+    dropoff_lng: float,
+) -> Tuple[float, float]:
+    """Return (distance_km, duration_min) between two coordinates.
+
+    In test environments or when no Google API key is configured, fall back to
+    a simple haversine distance calculation with an assumed average speed of
+    60 km/h to avoid external network calls.
+    """
+
+    if settings.env == "test" or not settings.google_maps_api_key:
+        r = 6371.0
+        dlat = radians(dropoff_lat - pickup_lat)
+        dlng = radians(dropoff_lng - pickup_lng)
+        a = (
+            sin(dlat / 2) ** 2
+            + cos(radians(pickup_lat)) * cos(radians(dropoff_lat)) * sin(dlng / 2) ** 2
+        )
+        c = 2 * atan2(sqrt(a), sqrt(1 - a))
+        distance_km = r * c
+        duration_min = distance_km  # 60 km/h average speed
+        return distance_km, duration_min
+
     params = {
         "origin": f"{pickup_lat},{pickup_lng}",
         "destination": f"{dropoff_lat},{dropoff_lng}",

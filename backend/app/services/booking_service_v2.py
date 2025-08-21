@@ -1,21 +1,25 @@
 """Service layer for booking lifecycle operations."""
+
 import secrets
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
+from math import atan2, cos, radians, sin, sqrt
+
+from app.models.availability_slot import AvailabilitySlot
+from app.models.booking_v2 import Booking, BookingStatus
+from app.models.route_point import RoutePoint
+from app.models.settings import AdminConfig
+from app.models.trip import Trip
+from app.models.user_v2 import User, UserRole
+from app.schemas.api_booking import BookingCreateRequest
+from app.services import pricing_service, routing, stripe_client
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.user_v2 import User, UserRole
-from app.models.booking_v2 import Booking, BookingStatus
-from app.models.trip import Trip
-from app.models.route_point import RoutePoint
-from app.models.settings import AdminConfig
-from app.models.availability_slot import AvailabilitySlot
-from app.schemas.api_booking import BookingCreateRequest
-from app.services import pricing_service, routing, stripe_client
-from math import radians, cos, sin, sqrt, atan2
 
-async def create_booking(db: AsyncSession, data: BookingCreateRequest) -> tuple[Booking, str]:
+async def create_booking(
+    db: AsyncSession, data: BookingCreateRequest
+) -> tuple[Booking, str]:
     """Create a booking and corresponding Stripe SetupIntent."""
     now = datetime.now(timezone.utc)
     if data.pickup_when <= now:
@@ -24,11 +28,20 @@ async def create_booking(db: AsyncSession, data: BookingCreateRequest) -> tuple[
     result = await db.execute(select(User).where(User.email == data.customer.email))
     customer = result.scalar_one_or_none()
     if customer is None:
-        customer = User(email=data.customer.email, name=data.customer.name, role=UserRole.CUSTOMER)
+        customer = User(
+            email=data.customer.email, name=data.customer.name, role=UserRole.CUSTOMER
+        )
         db.add(customer)
         await db.flush()
 
-    settings = (await db.execute(select(AdminConfig))).scalar_one()
+    settings = (await db.execute(select(AdminConfig))).scalar_one_or_none()
+    if settings is None:
+        settings = AdminConfig(
+            account_mode=False,
+            flagfall=0,
+            per_km_rate=0,
+            per_minute_rate=0,
+        )
     distance_km, duration_min = await routing.estimate_route(
         data.pickup.lat,
         data.pickup.lng,
@@ -56,8 +69,8 @@ async def create_booking(db: AsyncSession, data: BookingCreateRequest) -> tuple[
         status=BookingStatus.PENDING,
     )
     db.add(booking)
+    await db.flush()
     await db.commit()
-    await db.refresh(booking)
 
     setup_intent = stripe_client.create_setup_intent(data.customer.email)
     client_secret = setup_intent.client_secret
@@ -143,7 +156,9 @@ async def arrive_dropoff(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
     if booking is None or booking.status is not BookingStatus.IN_PROGRESS:
         raise ValueError("booking cannot arrive dropoff")
     booking.status = BookingStatus.ARRIVED_DROPOFF
-    trip = (await db.execute(select(Trip).where(Trip.booking_id == booking.id))).scalar_one()
+    trip = (
+        await db.execute(select(Trip).where(Trip.booking_id == booking.id))
+    ).scalar_one()
     trip.ended_at = datetime.now(timezone.utc)
     await db.commit()
     await db.refresh(booking)
@@ -154,7 +169,10 @@ def _haversine(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
     R = 6371000.0
     dlat = radians(lat2 - lat1)
     dlng = radians(lng2 - lng1)
-    a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlng / 2) ** 2
+    a = (
+        sin(dlat / 2) ** 2
+        + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlng / 2) ** 2
+    )
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
     return R * c
 
@@ -165,10 +183,16 @@ async def complete_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
         raise ValueError("booking cannot be completed")
 
     points = (
-        await db.execute(
-            select(RoutePoint).where(RoutePoint.booking_id == booking.id).order_by(RoutePoint.ts)
+        (
+            await db.execute(
+                select(RoutePoint)
+                .where(RoutePoint.booking_id == booking.id)
+                .order_by(RoutePoint.ts)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     distance = 0.0
     for p1, p2 in zip(points, points[1:]):
         distance += _haversine(p1.lat, p1.lng, p2.lat, p2.lng)
@@ -176,7 +200,9 @@ async def complete_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
     if points:
         duration = int((points[-1].ts - points[0].ts).total_seconds())
 
-    trip = (await db.execute(select(Trip).where(Trip.booking_id == booking.id))).scalar_one()
+    trip = (
+        await db.execute(select(Trip).where(Trip.booking_id == booking.id))
+    ).scalar_one()
     trip.distance_meters = int(distance)
     trip.duration_seconds = duration
     trip.started_at = points[0].ts if points else trip.started_at

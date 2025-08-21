@@ -30,6 +30,15 @@ export default defineConfig({
       testDir: 'tests/e2e/specs/admin',      // your admin specs
       use: { storageState: path.join(process.cwd(), 'storage', 'admin.json') }, // start signed IN
     },
+    {
+      name: 'api',
+      testDir: 'tests/e2e/specs',
+      testMatch: ['booking/wizard.spec.ts', 'driver/lifecycle.spec.ts'],
+      use: {
+        baseURL: process.env.API_BASE_URL ?? 'http://localhost:8000',
+        storageState: undefined,
+      },
+    },
   ],
 
 });

@@ -1,26 +1,37 @@
 """Stripe API convenience helpers."""
+
 from app.core.config import get_settings
 
-try:
-    import stripe  # type: ignore
+try:  # pragma: no cover - runtime import
+    import stripe as real_stripe  # type: ignore
 except ModuleNotFoundError:  # pragma: no cover - tests provide stub
-    class _StubIntent:
-        def __init__(self, **data):
-            self.__dict__.update(data)
+    real_stripe = None
 
-    class stripe:  # type: ignore
-        class SetupIntent:
-            @staticmethod
-            def create(**kwargs):
-                return _StubIntent(client_secret="test")
 
-        class PaymentIntent:
-            @staticmethod
-            def create(**kwargs):
-                return _StubIntent(id="pi_test")
+class _StubIntent:
+    def __init__(self, **data):
+        self.__dict__.update(data)
+
+
+class _StubStripe:  # type: ignore
+    class SetupIntent:
+        @staticmethod
+        def create(**kwargs):
+            return _StubIntent(client_secret="test")
+
+    class PaymentIntent:
+        @staticmethod
+        def create(**kwargs):
+            return _StubIntent(id="pi_test")
+
 
 settings = get_settings()
-stripe.api_key = settings.stripe_secret_key or ""
+if settings.env == "test" or not settings.stripe_secret_key or real_stripe is None:
+    stripe = _StubStripe()  # type: ignore
+else:
+    stripe = real_stripe  # type: ignore
+    stripe.api_key = settings.stripe_secret_key or ""
+
 
 def create_setup_intent(customer_email: str):
     """Create a Stripe SetupIntent for the provided customer email."""
