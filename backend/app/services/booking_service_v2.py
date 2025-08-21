@@ -1,6 +1,7 @@
 """Service layer for booking lifecycle operations."""
 import secrets
 import uuid
+
 from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -59,7 +60,6 @@ async def create_booking(db: AsyncSession, data: BookingCreateRequest) -> tuple[
     client_secret = setup_intent.client_secret
     return booking, client_secret
 
-
 async def confirm_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
     """Confirm a pending booking and charge the deposit."""
     booking = await db.get(Booking, booking_id)
@@ -84,7 +84,6 @@ async def decline_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
     await db.commit()
     await db.refresh(booking)
     return booking
-
 
 async def leave_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
     """Mark a confirmed booking as on the way."""

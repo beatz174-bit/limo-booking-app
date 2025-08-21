@@ -39,7 +39,6 @@ async def confirm_booking(booking_id: uuid.UUID, db: AsyncSession = Depends(get_
     leave_at = await scheduler.schedule_leave_now(booking)
     return BookingStatusResponse(status=booking.status, leave_at=leave_at)
 
-
 @router.post("/{booking_id}/decline", response_model=BookingStatusResponse)
 async def decline_booking(booking_id: uuid.UUID, db: AsyncSession = Depends(get_async_session)):
     try:
@@ -47,7 +46,6 @@ async def decline_booking(booking_id: uuid.UUID, db: AsyncSession = Depends(get_
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return BookingStatusResponse(status=booking.status)
-
 
 @router.post("/{booking_id}/leave", response_model=BookingStatusResponse)
 async def leave_booking(booking_id: uuid.UUID, db: AsyncSession = Depends(get_async_session)):

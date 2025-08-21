@@ -48,6 +48,7 @@ async def test_driver_confirm_booking(async_session, client: AsyncClient, monkey
 
     monkeypatch.setattr("app.services.routing.estimate_route", fake_route)
 
+
     res = await client.post(f"/api/v1/driver/bookings/{booking.id}/confirm")
     assert res.status_code == 200
     data = res.json()

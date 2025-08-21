@@ -24,6 +24,7 @@ from app.api.v1 import driver_bookings as driver_bookings_v1_router
 from app.api.v1 import track as track_v1_router
 from app.api import ws as ws_router
 from app.services.scheduler import scheduler
+
 setup_logging()
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -78,7 +79,6 @@ app.include_router(bookings_v1_router.router)
 app.include_router(driver_bookings_v1_router.router)
 app.include_router(track_v1_router.router)
 app.include_router(ws_router.router)
-
 
 @app.get("/", include_in_schema=False)
 async def docs_redirect():

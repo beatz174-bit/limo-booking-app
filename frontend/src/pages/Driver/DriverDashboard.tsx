@@ -8,8 +8,10 @@ interface Booking {
   pickup_address: string;
   dropoff_address: string;
   pickup_when: string;
+
   status: string;
   leave_at?: string;
+
 }
 
 export default function DriverDashboard() {
