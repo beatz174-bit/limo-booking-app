@@ -19,6 +19,13 @@ from app.api import (
     route_metrics as route_metrics_router,
     geocode as geocode_router,
 )
+from app.api.v1 import bookings as bookings_v1_router
+from app.api.v1 import driver_bookings as driver_bookings_v1_router
+from app.api.v1 import track as track_v1_router
+from app.api.v1 import availability as availability_v1_router
+from app.api.v1 import customers as customers_v1_router
+from app.api import ws as ws_router
+from app.services.scheduler import scheduler
 setup_logging()
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -30,8 +37,14 @@ def get_app() -> FastAPI:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await database.connect()
-    yield
-    await database.disconnect()
+    await ws_router.broadcast.connect()
+    scheduler.start()
+    try:
+        yield
+    finally:
+        scheduler.shutdown()
+        await ws_router.broadcast.disconnect()
+        await database.disconnect()
 
 app = FastAPI(
     title=settings.app_name,
@@ -63,6 +76,12 @@ app.include_router(setup_router.router)
 app.include_router(settings_router.router)
 app.include_router(route_metrics_router.router)
 app.include_router(users_router.router)
+app.include_router(bookings_v1_router.router)
+app.include_router(driver_bookings_v1_router.router)
+app.include_router(track_v1_router.router)
+app.include_router(availability_v1_router.router)
+app.include_router(customers_v1_router.router)
+app.include_router(ws_router.router)
 
 
 @app.get("/", include_in_schema=False)
