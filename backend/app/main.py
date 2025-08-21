@@ -26,7 +26,6 @@ from app.api.v1 import availability as availability_v1_router
 from app.api.v1 import customers as customers_v1_router
 from app.api import ws as ws_router
 from app.services.scheduler import scheduler
-
 setup_logging()
 settings = get_settings()
 logger = logging.getLogger(__name__)

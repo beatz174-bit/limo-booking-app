@@ -45,4 +45,3 @@ class BookingStatusResponse(BaseModel):
     status: BookingStatus
     leave_at: Optional[datetime] = None
     final_price_cents: Optional[int] = None
-

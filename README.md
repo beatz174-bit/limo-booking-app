@@ -32,6 +32,7 @@ The application relies on several external services. Set these variables in a `.
 | `VITE_STRIPE_PUBLISHABLE_KEY` | (frontend) Stripe publishable key for card collection. |
 | `LOG_LEVEL` | (backend) Logging verbosity (`DEBUG`, `INFO`, etc.). Defaults to `INFO`. |
 | `FCM_PROJECT_ID` / `FCM_CLIENT_EMAIL` / `FCM_PRIVATE_KEY` | (backend) Optional Firebase credentials for push notifications. |
+| `VITE_FCM_API_KEY` / `VITE_FCM_PROJECT_ID` / `VITE_FCM_APP_ID` / `VITE_FCM_SENDER_ID` / `VITE_FCM_VAPID_KEY` | (frontend) Optional Firebase config for web push. |
 
 ## Logging
 
@@ -96,6 +97,13 @@ The driver can manage personal blocks and avoid double-booking through the
 window, and additional blocks can be added via the `/driver/availability`
 frontend page.
 
+## Push notifications
+
+When Firebase credentials are supplied the backend dispatches push notifications
+to role-based topics using Firebase Cloud Messaging. The frontend registers a
+service worker and requests a browser token at startup; messages display using
+the standard Web Push APIs. When the credentials are omitted the feature is
+silently disabled.
 
 ## Testing
 
