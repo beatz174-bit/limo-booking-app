@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button, List, ListItem, ListItemText, Stack, Typography } from '@mui/material';
+import { Link } from 'react-router-dom';
 import { CONFIG } from '@/config';
 import { getAccessToken } from '@/services/tokenStore';
 
@@ -59,6 +60,9 @@ export default function DriverDashboard() {
   return (
     <Stack spacing={2} sx={{ p: 2 }}>
       <Typography variant="h5">Driver Bookings</Typography>
+      <Button component={Link} to="/driver/availability" variant="outlined">
+        Manage availability
+      </Button>
       <List>
         {bookings.map(b => (
           <ListItem key={b.id} divider>

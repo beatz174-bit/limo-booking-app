@@ -23,7 +23,7 @@ async def _create_booking(async_session) -> Booking:
         dropoff_address="B",
         dropoff_lat=-27.1,
         dropoff_lng=153.1,
-        pickup_when=datetime.now(timezone.utc) + timedelta(hours=1),
+        pickup_when=datetime.now(timezone.utc) + timedelta(days=2),
         passengers=1,
         estimated_price_cents=1000,
         deposit_required_cents=500,

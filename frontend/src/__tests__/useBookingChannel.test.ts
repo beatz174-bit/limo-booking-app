@@ -1,5 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import { useBookingChannel } from '@/hooks/useBookingChannel';
+import { vi } from 'vitest';
 
 class WSStub {
   static instances: WSStub[] = [];
@@ -13,8 +14,12 @@ class WSStub {
 
 describe('useBookingChannel', () => {
   beforeAll(() => {
-    // @ts-ignore
-    global.WebSocket = WSStub;
+    vi.stubGlobal('WebSocket', WSStub as any);
+    vi.stubEnv('VITE_BACKEND_URL', 'http://api');
+  });
+  afterAll(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
   });
 
   it('updates state on message', () => {

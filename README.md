@@ -89,6 +89,14 @@ location updates. Customers can retrieve a tracking link via
 `GET /api/v1/track/{public_code}` and connect to the WebSocket for live
 updates.
 
+## Availability
+
+The driver can manage personal blocks and avoid double-booking through the
+`/api/v1/availability` API. Confirmed bookings automatically reserve their time
+window, and additional blocks can be added via the `/driver/availability`
+frontend page.
+
+
 ## Testing
 
 - Backend: `cd backend && pytest`

@@ -1,8 +1,7 @@
 """Service layer for booking lifecycle operations."""
 import secrets
 import uuid
-
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,6 +10,7 @@ from app.models.booking_v2 import Booking, BookingStatus
 from app.models.trip import Trip
 from app.models.route_point import RoutePoint
 from app.models.settings import AdminConfig
+from app.models.availability_slot import AvailabilitySlot
 from app.schemas.api_booking import BookingCreateRequest
 from app.services import pricing_service, routing, stripe_client
 from math import radians, cos, sin, sqrt, atan2
@@ -69,10 +69,27 @@ async def confirm_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
     booking = await db.get(Booking, booking_id)
     if booking is None or booking.status is not BookingStatus.PENDING:
         raise ValueError("booking cannot be confirmed")
+    buffer = timedelta(minutes=30)
+    block_start = booking.pickup_when - buffer
+    block_end = booking.pickup_when + timedelta(hours=1) + buffer
+    overlap = await db.execute(
+        select(AvailabilitySlot).where(
+            AvailabilitySlot.end_dt > block_start,
+            AvailabilitySlot.start_dt < block_end,
+        )
+    )
+    if overlap.scalars().first():
+        raise ValueError("booking overlaps existing slot")
+
 
     intent = stripe_client.charge_deposit(booking.deposit_required_cents)
     booking.status = BookingStatus.DRIVER_CONFIRMED
     booking.deposit_payment_intent_id = intent.id
+    slot = AvailabilitySlot(
+        start_dt=block_start, end_dt=block_end, reason=f"BOOKING:{booking.id}"
+    )
+    db.add(slot)
+
     await db.commit()
     await db.refresh(booking)
     return booking
