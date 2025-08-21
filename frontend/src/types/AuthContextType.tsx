@@ -5,9 +5,10 @@ export type AuthContextType = {
   accessToken: string | null;
   user: UserShape | null;
   loading: boolean;
-  
+
   userName: string | null;
   userID: string | null;
+  role: string | null;
 
   loginWithPassword: (email: string, password: string) => Promise<void>;
   registerWithPassword: (fullName: string, email: string, password: string) => Promise<void>;
