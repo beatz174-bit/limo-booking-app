@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Button,
   List,
@@ -15,6 +15,18 @@ import { getAccessToken } from '@/services/tokenStore';
 import { bookingStatusLabels, type BookingStatus } from '@/types/BookingStatus';
 import StatusChip from '@/components/StatusChip';
 
+const statuses: BookingStatus[] = [
+  'PENDING',
+  'DRIVER_CONFIRMED',
+  'ON_THE_WAY',
+  'ARRIVED_PICKUP',
+  'IN_PROGRESS',
+  'ARRIVED_DROPOFF',
+  'COMPLETED',
+  'DECLINED',
+  'CANCELLED'
+];
+
 interface Booking {
   id: string;
   pickup_address: string;
@@ -27,15 +39,16 @@ interface Booking {
 
 export default function DriverDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const statuses: BookingStatus[] = [
-    'PENDING',
-    'DRIVER_CONFIRMED',
-    'ON_THE_WAY',
-    'ARRIVED_PICKUP',
-    'IN_PROGRESS',
-    'ARRIVED_DROPOFF',
-    'COMPLETED'
-  ];
+  const bookingsByStatus = useMemo(() => {
+    const groups = statuses.reduce(
+      (acc, s) => ({ ...acc, [s]: [] as Booking[] }),
+      {} as Record<BookingStatus, Booking[]>
+    );
+    bookings.forEach(b => {
+      groups[b.status].push(b);
+    });
+    return groups;
+  }, [bookings]);
   const [tab, setTab] = useState<BookingStatus>('PENDING');
 
   useEffect(() => {
@@ -109,7 +122,7 @@ export default function DriverDashboard() {
         ))}
       </Tabs>
       {statuses.map(s => {
-        const list = bookings.filter(b => b.status === s);
+        const list = bookingsByStatus[s];
         return (
           <List key={s} hidden={tab !== s}>
             {list.map(b => (
