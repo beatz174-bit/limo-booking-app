@@ -25,10 +25,13 @@ async def get_route_metrics(
     based on the requested pickup time.
     """
 
-    logger.info("route metrics pickup=%s dropoff=%s ride_time=%s", pickup, dropoff, ride_time)
+    logger.info(
+        "route metrics pickup=%s dropoff=%s ride_time=%s", pickup, dropoff, ride_time
+    )
     settings = get_settings()
     api_key = settings.google_maps_api_key
-    if not api_key:
+    # Treat empty strings or placeholder "undefined" as missing configuration
+    if not api_key or api_key == "undefined":
         raise RuntimeError("GOOGLE_MAPS_API_KEY not configured")
     params = {
         "origins": pickup,
@@ -57,4 +60,3 @@ async def get_route_metrics(
     except Exception as exc:
         logger.exception("invalid response from Distance Matrix")
         raise RuntimeError("Invalid response from Distance Matrix") from exc
-
