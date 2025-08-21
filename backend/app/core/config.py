@@ -2,16 +2,16 @@
 from __future__ import annotations
 
 import os
+
 """Application configuration using Pydantic settings."""
 
 import os
 from functools import lru_cache
 from pathlib import Path
 from typing import List, Optional
-from pydantic import model_validator
-from pydantic_settings import BaseSettings
-from pydantic_settings import SettingsConfigDict
 
+from pydantic import model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # --- Resolve which .env to load ------------------------------------------------
 
@@ -60,7 +60,8 @@ try:
     _P2 = True
 except Exception:
 
-    _P2 = False # type: ignore
+    _P2 = False  # type: ignore
+
 
 def _project_root() -> Path:
     """
@@ -76,14 +77,17 @@ def _project_root() -> Path:
 
 # --- Settings model ------------------------------------------------------------
 
+
 class Settings(BaseSettings):
     # App
-    app_name: str = os.getenv("PROJECT_NAME","Limo Booking App")
-    app_version: str = os.getenv("PROJECT_VERSION","undefined")
-    api_prefix: str = os.getenv("API_PREFIX","undefined")
+    app_name: str = os.getenv("PROJECT_NAME", "Limo Booking App")
+    app_version: str = os.getenv("PROJECT_VERSION", "undefined")
+    api_prefix: str = os.getenv("API_PREFIX", "undefined")
     env: str = _ENV
     debug: bool = os.getenv("DEBUG", "false").lower() in {"1", "true", "yes", "on"}
     log_level: str = os.getenv("LOG_LEVEL", "INFO")
+    graylog_host: Optional[str] = os.getenv("GRAYLOG_HOST")
+    graylog_port: int = int(os.getenv("GRAYLOG_PORT", "12201"))
 
     # CORS (allow multiple origins via comma-separated list)
     allow_origins: str = os.getenv("CORS_ALLOW_ORIGINS", "undefined")
@@ -94,17 +98,21 @@ class Settings(BaseSettings):
     # Database (prefer DATABASE_URL; else derive from DATABASE_PATH)
     database_url: Optional[str] = os.getenv("DATABASE_URL")
     database_path: Optional[str] = os.getenv("DATABASE_PATH")
-    database_pool_size: int = int(os.getenv("DB_POOL_SIZE","undefined"))
-    database_max_overflow: int = int(os.getenv("DB_MAX_OVERFLOW","undefined"))
-    database_pool_recycle: int = int(os.getenv("DB_POOL_RECYCLE","undefined"))
+    database_pool_size: int = int(os.getenv("DB_POOL_SIZE", "undefined"))
+    database_max_overflow: int = int(os.getenv("DB_MAX_OVERFLOW", "undefined"))
+    database_pool_recycle: int = int(os.getenv("DB_POOL_RECYCLE", "undefined"))
 
     # Auth / Security
-    jwt_secret_key: str  = os.getenv("JWT_SECRET_KEY","undefined") # must be provided by env
+    jwt_secret_key: str = os.getenv(
+        "JWT_SECRET_KEY", "undefined"
+    )  # must be provided by env
     jwt_algorithm: str = os.getenv("JWT_ALGORITHM", "HS256")
-    access_token_expire_minutes: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
+    access_token_expire_minutes: int = int(
+        os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60")
+    )
 
     # Third-party APIs
-    ors_api_key: Optional[str] = os.getenv("ORS_API_KEY","undefined")
+    ors_api_key: Optional[str] = os.getenv("ORS_API_KEY", "undefined")
     google_maps_api_key: Optional[str] = os.getenv("GOOGLE_MAPS_API_KEY")
     stripe_secret_key: Optional[str] = os.getenv("STRIPE_SECRET_KEY")
     stripe_webhook_secret: Optional[str] = os.getenv("STRIPE_WEBHOOK_SECRET")
@@ -120,8 +128,11 @@ class Settings(BaseSettings):
 
     # Pydantic config (v1 vs v2)
     if _P2:
-        model_config = SettingsConfigDict(env_prefix="", extra="ignore", case_sensitive=False)
+        model_config = SettingsConfigDict(
+            env_prefix="", extra="ignore", case_sensitive=False
+        )
     else:
+
         class Config:
             env_prefix = ""
             case_sensitive = False
@@ -179,6 +190,7 @@ class Settings(BaseSettings):
         # Sensible default for dev if nothing is provided
         default_path = (_project_root() / "data" / "app.db").resolve()
         return f"sqlite:///{default_path}"
+
 
 @lru_cache
 def get_settings() -> Settings:

@@ -2,6 +2,7 @@
 import logging
 import os
 
+import graypy
 import pytest
 
 from app.core.config import get_settings
@@ -25,4 +26,20 @@ def test_setup_logging_respects_log_level(level: str, expected: int) -> None:
         else:
             os.environ.pop("LOG_LEVEL", None)
         logging.getLogger().handlers.clear()
+        get_settings.cache_clear()
+
+
+def test_graylog_handler_attached(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("GRAYLOG_HOST", "graylog")
+    monkeypatch.setenv("GRAYLOG_PORT", "12345")
+    get_settings.cache_clear()
+    try:
+        setup_logging()
+        assert any(
+            isinstance(h, graypy.GELFUDPHandler) for h in logging.getLogger().handlers
+        )
+    finally:
+        logging.getLogger().handlers.clear()
+        monkeypatch.delenv("GRAYLOG_HOST")
+        monkeypatch.delenv("GRAYLOG_PORT")
         get_settings.cache_clear()
