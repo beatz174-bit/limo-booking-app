@@ -29,16 +29,21 @@ def test_setup_logging_respects_log_level(level: str, expected: int) -> None:
         get_settings.cache_clear()
 
 
-def test_graylog_handler_attached(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize(
+    "transport,handler_cls",
+    [("udp", graypy.GELFUDPHandler), ("tcp", graypy.GELFTCPHandler)],
+)
+def test_graylog_handler_attached(
+    monkeypatch: pytest.MonkeyPatch, transport: str, handler_cls: type
+) -> None:
     monkeypatch.setenv("GRAYLOG_HOST", "graylog")
     monkeypatch.setenv("GRAYLOG_PORT", "12345")
+    monkeypatch.setenv("GRAYLOG_TRANSPORT", transport)
     get_settings.cache_clear()
     try:
         setup_logging()
         handlers = [
-            h
-            for h in logging.getLogger().handlers
-            if isinstance(h, graypy.GELFUDPHandler)
+            h for h in logging.getLogger().handlers if isinstance(h, handler_cls)
         ]
         assert handlers
         handler = handlers[0]
@@ -47,4 +52,5 @@ def test_graylog_handler_attached(monkeypatch: pytest.MonkeyPatch) -> None:
         logging.getLogger().handlers.clear()
         monkeypatch.delenv("GRAYLOG_HOST")
         monkeypatch.delenv("GRAYLOG_PORT")
+        monkeypatch.delenv("GRAYLOG_TRANSPORT", raising=False)
         get_settings.cache_clear()
