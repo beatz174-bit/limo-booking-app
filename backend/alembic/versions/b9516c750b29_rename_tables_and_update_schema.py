@@ -7,8 +7,9 @@ Create Date: 2025-08-04 19:03:07.141963
 """
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy import inspect
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "b9516c750b29"
@@ -36,36 +37,42 @@ def upgrade():
                 batch_op.f("ix_admin_config_id"), ["id"], unique=False
             )
 
-    op.create_table(
-        "users",
-        sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("email", sa.Text(), nullable=False),
-        sa.Column("full_name", sa.Text(), nullable=False),
-        sa.Column("password_hash", sa.Text(), nullable=False),
-        sa.Column("is_approved", sa.Boolean(), nullable=False),
-        sa.Column("role", sa.Text(), nullable=False),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    with op.batch_alter_table("users", schema=None) as batch_op:
-        batch_op.create_index(batch_op.f("ix_users_email"), ["email"], unique=True)
+    if inspector.has_table("user"):
+        op.rename_table("user", "users")
+    elif not inspector.has_table("users"):
+        op.create_table(
+            "users",
+            sa.Column("id", sa.Integer(), nullable=False),
+            sa.Column("email", sa.Text(), nullable=False),
+            sa.Column("full_name", sa.Text(), nullable=False),
+            sa.Column("password_hash", sa.Text(), nullable=False),
+            sa.Column("is_approved", sa.Boolean(), nullable=False),
+            sa.Column("role", sa.Text(), nullable=False),
+            sa.PrimaryKeyConstraint("id"),
+        )
+        with op.batch_alter_table("users", schema=None) as batch_op:
+            batch_op.create_index(batch_op.f("ix_users_email"), ["email"], unique=True)
 
-    op.create_table(
-        "bookings",
-        sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("user_id", sa.Integer(), nullable=True),
-        sa.Column("pickup_location", sa.String(), nullable=True),
-        sa.Column("dropoff_location", sa.String(), nullable=True),
-        sa.Column("time", sa.String(), nullable=True),
-        sa.Column("status", sa.Text(), nullable=False),
-        sa.Column("price", sa.Float(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["user_id"],
-            ["users.id"],
-        ),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    with op.batch_alter_table("bookings", schema=None) as batch_op:
-        batch_op.create_index(batch_op.f("ix_bookings_id"), ["id"], unique=False)
+    if inspector.has_table("booking"):
+        op.rename_table("booking", "bookings")
+    elif not inspector.has_table("bookings"):
+        op.create_table(
+            "bookings",
+            sa.Column("id", sa.Integer(), nullable=False),
+            sa.Column("user_id", sa.Integer(), nullable=True),
+            sa.Column("pickup_location", sa.String(), nullable=True),
+            sa.Column("dropoff_location", sa.String(), nullable=True),
+            sa.Column("time", sa.String(), nullable=True),
+            sa.Column("status", sa.Text(), nullable=False),
+            sa.Column("price", sa.Float(), nullable=False),
+            sa.ForeignKeyConstraint(
+                ["user_id"],
+                ["users.id"],
+            ),
+            sa.PrimaryKeyConstraint("id"),
+        )
+        with op.batch_alter_table("bookings", schema=None) as batch_op:
+            batch_op.create_index(batch_op.f("ix_bookings_id"), ["id"], unique=False)
 
     # ### end Alembic commands ###
 
