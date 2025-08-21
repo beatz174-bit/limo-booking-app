@@ -5,10 +5,11 @@ from time import time
 from typing import Callable, Optional
 from uuid import uuid4
 
-from app.core.config import get_settings
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
+
+from app.core.config import get_settings
 
 # context variable for per-request correlation IDs
 request_id_ctx_var: ContextVar[Optional[str]] = ContextVar("request_id", default=None)
@@ -26,6 +27,25 @@ def setup_logging() -> None:
     """Configure application-wide logging."""
     settings = get_settings()
     log_level = settings.log_level.upper()
+    handlers = {
+        "default": {
+            "class": "logging.StreamHandler",
+            "formatter": "default",
+            "filters": ["request_id"],
+            "stream": "ext://sys.stdout",
+        }
+    }
+    root_handlers = ["default"]
+    if settings.graylog_host:
+        handlers["graylog"] = {
+            "class": "graypy.GELFUDPHandler",
+            "formatter": "default",
+            "filters": ["request_id"],
+            "host": settings.graylog_host,
+            "port": settings.graylog_port,
+        }
+        root_handlers.append("graylog")
+
     logging_config = {
         "version": 1,
         "disable_existing_loggers": False,
@@ -37,15 +57,8 @@ def setup_logging() -> None:
             }
         },
         "filters": {"request_id": {"()": "app.core.logging.RequestIdFilter"}},
-        "handlers": {
-            "default": {
-                "class": "logging.StreamHandler",
-                "formatter": "default",
-                "filters": ["request_id"],
-                "stream": "ext://sys.stdout",
-            }
-        },
-        "root": {"level": log_level, "handlers": ["default"]},
+        "handlers": handlers,
+        "root": {"level": log_level, "handlers": root_handlers},
     }
     dictConfig(logging_config)
     # `dictConfig` may reset the root logger to WARNING which hides debug logs.

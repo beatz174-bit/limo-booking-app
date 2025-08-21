@@ -30,6 +30,8 @@ Set required environment variables before running the backend:
 - `GOOGLE_MAPS_API_KEY` – used for distance and duration metrics via Google Distance Matrix.
 - `ORS_API_KEY` – used for geocoding with the OpenRouteService API.
 - `JWT_SECRET_KEY` – secret key for signing authentication tokens.
+- `GRAYLOG_HOST` / `GRAYLOG_PORT` – optional Graylog endpoint for forwarding
+  logs; stdout output remains.
 
 Expose these in the appropriate `.env.*` files or your deployment environment.
 
