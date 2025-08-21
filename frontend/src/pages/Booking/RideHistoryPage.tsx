@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import {
   Box,
   CircularProgress,
+  Button,
   Table,
   TableBody,
   TableCell,
@@ -20,6 +21,7 @@ interface Booking {
   dropoff_address: string;
   pickup_when: string;
   status: string;
+  public_code: string;
   estimated_price_cents: number;
   final_price_cents?: number;
 }
@@ -88,25 +90,42 @@ function RideHistoryPage() {
               <TableCell>Ride Time</TableCell>
               <TableCell>Price</TableCell>
               <TableCell>Status</TableCell>
+              <TableCell>Track</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {bookings.map((b) => (
-              <TableRow
-                key={b.id}
-                hover
-                sx={{ cursor: 'pointer' }}
-                onClick={() => navigate(`/history/${b.id}`, { state: b })}
-              >
-                <TableCell>{b.pickup_address}</TableCell>
-                <TableCell>{b.dropoff_address}</TableCell>
-                <TableCell>{new Date(b.pickup_when).toLocaleString()}</TableCell>
-                <TableCell>
-                  {((b.final_price_cents ?? b.estimated_price_cents) / 100).toFixed(2)}
-                </TableCell>
-                <TableCell>{b.status}</TableCell>
-              </TableRow>
-            ))}
+            {bookings.map((b) => {
+              const trackable = !['COMPLETED', 'CANCELLED'].includes(
+                b.status.toUpperCase(),
+              );
+              return (
+                <TableRow
+                  key={b.id}
+                  hover
+                  sx={{ cursor: 'pointer' }}
+                  onClick={() => navigate(`/history/${b.id}`, { state: b })}
+                >
+                  <TableCell>{b.pickup_address}</TableCell>
+                  <TableCell>{b.dropoff_address}</TableCell>
+                  <TableCell>{new Date(b.pickup_when).toLocaleString()}</TableCell>
+                  <TableCell>
+                    {((b.final_price_cents ?? b.estimated_price_cents) / 100).toFixed(2)}
+                  </TableCell>
+                  <TableCell>{b.status}</TableCell>
+                  <TableCell>
+                    {trackable && (
+                      <Button
+                        component={RouterLink}
+                        to={`/t/${b.public_code}`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Track
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       )}
