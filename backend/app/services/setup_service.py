@@ -15,6 +15,9 @@ logger = logging.getLogger(__name__)
 
 
 async def complete_initial_setup(db: AsyncSession, data: SetupPayload):
+    from app.db.database import Base, async_engine
+    async with async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
     if await is_setup_complete(db):
         logger.warning("setup already completed")
         raise HTTPException(status_code=400, detail="Setup already completed")
