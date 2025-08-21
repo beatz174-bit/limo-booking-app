@@ -1,35 +1,123 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { GoogleMap, Marker } from '@react-google-maps/api';
 import { CONFIG } from '@/config';
 import { useBookingChannel } from '@/hooks/useBookingChannel';
 
+type GoogleLike = {
+  maps: {
+    DirectionsService: new () => {
+      route: (req: {
+        origin: unknown;
+        destination: string;
+        travelMode: string;
+      }) => Promise<{
+        routes: { legs: { duration: { value: number } }[] }[];
+      }>;
+    };
+    LatLng: new (lat: number, lng: number) => unknown;
+    TravelMode: { DRIVING: string };
+  };
+};
+
 interface TrackResponse {
-  booking: { id: string; pickup_address: string; dropoff_address: string; status: string };
+  booking: {
+    id: string;
+    pickup_address: string;
+    dropoff_address: string;
+    status: string;
+  };
   ws_url: string;
 }
+
+const STATUS_STEPS = [
+  { key: 'confirm', label: 'Confirmed' },
+  { key: 'leave', label: 'En route to pickup' },
+  { key: 'arrive-pickup', label: 'Arrived pickup' },
+  { key: 'start-trip', label: 'Trip started' },
+  { key: 'arrive-dropoff', label: 'Arrived dropoff' },
+  { key: 'complete', label: 'Completed' },
+];
 
 export default function TrackingPage() {
   const { code } = useParams();
   const [bookingId, setBookingId] = useState<string | null>(null);
+  const [pickup, setPickup] = useState('');
+  const [dropoff, setDropoff] = useState('');
+  const [status, setStatus] = useState('');
+  const [eta, setEta] = useState<number | null>(null);
   const update = useBookingChannel(bookingId);
 
   useEffect(() => {
     (async () => {
-      const res = await fetch(`${CONFIG.API_BASE_URL}/api/v1/track/${code}`);
+      const res = await fetch(
+        `${CONFIG.API_BASE_URL}/api/v1/track/${code}`
+      );
       if (res.ok) {
         const data: TrackResponse = await res.json();
         setBookingId(data.booking.id);
+        setPickup(data.booking.pickup_address);
+        setDropoff(data.booking.dropoff_address);
+        setStatus(data.booking.status);
       }
     })();
   }, [code]);
 
+  useEffect(() => {
+    if (update?.status) setStatus(update.status);
+  }, [update?.status]);
+
+  useEffect(() => {
+    async function calcEta() {
+      if (!update || !pickup || !dropoff) return;
+      const g = (window as { google?: GoogleLike }).google;
+      if (!g?.maps) return;
+      const svc = new g.maps.DirectionsService();
+      const dest =
+        ['arrive-pickup', 'start-trip', 'arrive-dropoff', 'complete'].includes(
+          status
+        )
+          ? dropoff
+          : pickup;
+      try {
+        const res = await svc.route({
+          origin: new g.maps.LatLng(update.lat, update.lng),
+          destination: dest,
+          travelMode: g.maps.TravelMode.DRIVING,
+        });
+        const sec = res.routes[0].legs[0].duration.value;
+        setEta(Math.round(sec / 60));
+      } catch {
+        setEta(null);
+      }
+    }
+    void calcEta();
+  }, [update, status, pickup, dropoff]);
+
+  const pos = update ? { lat: update.lat, lng: update.lng } : null;
+  const currentIdx = STATUS_STEPS.findIndex((s) => s.key === status);
+
   return (
     <div>
-      {update ? (
-        <p>Driver at {update.lat.toFixed(5)}, {update.lng.toFixed(5)}</p>
+      {pos ? (
+        <GoogleMap
+          mapContainerStyle={{ width: '100%', height: 300 }}
+          center={pos}
+          zoom={14}
+        >
+          <Marker position={pos} />
+        </GoogleMap>
       ) : (
         <p>Waiting for driver...</p>
       )}
+      {eta !== null && <p>ETA: {eta} min</p>}
+      <ol>
+        {STATUS_STEPS.map((s, i) => (
+          <li key={s.key} data-active={i <= currentIdx}>
+            {s.label}
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }
