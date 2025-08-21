@@ -81,6 +81,7 @@ async def confirm_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
     if overlap.scalars().first():
         raise ValueError("booking overlaps existing slot")
 
+
     intent = stripe_client.charge_deposit(booking.deposit_required_cents)
     booking.status = BookingStatus.DRIVER_CONFIRMED
     booking.deposit_payment_intent_id = intent.id
@@ -88,6 +89,7 @@ async def confirm_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
         start_dt=block_start, end_dt=block_end, reason=f"BOOKING:{booking.id}"
     )
     db.add(slot)
+
     await db.commit()
     await db.refresh(booking)
     return booking
@@ -194,3 +196,4 @@ async def complete_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
     await db.commit()
     await db.refresh(booking)
     return booking
+

@@ -96,6 +96,7 @@ The driver can manage personal blocks and avoid double-booking through the
 window, and additional blocks can be added via the `/driver/availability`
 frontend page.
 
+
 ## Testing
 
 - Backend: `cd backend && pytest`
