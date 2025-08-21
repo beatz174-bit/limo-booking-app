@@ -1,6 +1,7 @@
 """Service layer for booking lifecycle operations."""
 import secrets
 import uuid
+
 from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -178,3 +179,4 @@ async def complete_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
     await db.commit()
     await db.refresh(booking)
     return booking
+

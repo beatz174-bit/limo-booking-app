@@ -59,3 +59,4 @@ def charge_final(amount_cents: int, payment_method: str = "pm_card_visa"):
         payment_method=payment_method,
         confirm=True,
     )
+

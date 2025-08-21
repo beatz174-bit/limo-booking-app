@@ -99,3 +99,4 @@ async def complete_booking(booking_id: uuid.UUID, db: AsyncSession = Depends(get
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return BookingStatusResponse(status=booking.status, final_price_cents=booking.final_price_cents)
+
