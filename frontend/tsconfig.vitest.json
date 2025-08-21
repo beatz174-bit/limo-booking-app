@@ -2,7 +2,7 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "types": ["vitest", "@testing-library/jest-dom", "vite/client"],
+    "types": ["vitest/globals", "@testing-library/jest-dom", "vite/client"],
     "verbatimModuleSyntax": false
   },
   "include": [

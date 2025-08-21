@@ -15,7 +15,7 @@
     "e2e:ui": "playwright test --ui",
     "e2e:report": "playwright show-report",
     "typecheck": "tsc -p tsconfig.app.json",
-    "test:typecheck": "tsc -p tsconfig.test.json --noEmit"
+    "test:typecheck": "tsc -p tsconfig.vitest.json --noEmit"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

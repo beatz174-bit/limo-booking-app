@@ -25,7 +25,7 @@ describe('useDirections', () => {
       expect(url).toBe(
         'https://maps.googleapis.com/maps/api/directions/json?origin=A&destination=B&mode=driving&key=KEY'
       );
-      return { ok: true, json: async () => fake } as any;
+      return new Response(JSON.stringify(fake), { status: 200 });
     });
     vi.stubGlobal('fetch', fetchMock);
     const { result } = renderHook(() => useDirections());

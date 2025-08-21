@@ -35,5 +35,13 @@ Run unit tests with:
 npm test
 ```
 
+Run TypeScript type checks:
+
+```bash
+npm run test:typecheck
+```
+
+Connectivity tests for external services are included in the unit test suite.
+
 Additional scripts for coverage or end-to-end tests are available in `package.json`.
 
