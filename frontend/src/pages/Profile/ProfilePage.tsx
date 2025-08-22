@@ -3,6 +3,7 @@ import { Box, Button, TextField, Typography, Tooltip } from '@mui/material';
 import { AddressField } from '@/components/AddressField';
 import { useAuth } from '@/contexts/AuthContext';
 import { CONFIG } from '@/config';
+import PushToggle from '@/components/PushToggle';
 
 const ProfilePage = () => {
   const { ensureFreshToken } = useAuth();
@@ -124,6 +125,9 @@ const ProfilePage = () => {
           </Button>
         </span>
       </Tooltip>
+      <Box mt={4}>
+        <PushToggle ensureFreshToken={ensureFreshToken} />
+      </Box>
     </Box>
   );
 };
