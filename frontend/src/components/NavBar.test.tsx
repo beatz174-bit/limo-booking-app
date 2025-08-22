@@ -11,6 +11,7 @@ function seedAuth({ id, name, role }: { id: string; name: string; role: string }
   localStorage.setItem('userID', id);
   localStorage.setItem('userName', name);
   localStorage.setItem('userRole', role);
+  localStorage.setItem('role', role);
 }
 
 function renderWithAuth(initialPath = '/book') {
@@ -29,6 +30,14 @@ function renderWithAuth(initialPath = '/book') {
 }
 
 describe('NavBar', () => {
+  test('shows Home menu item', async () => {
+    seedAuth({ id: '0', name: 'Regular User', role: 'CUSTOMER' });
+    renderWithAuth();
+
+    await userEvent.click(screen.getByLabelText(/account/i));
+    expect(await screen.findByRole('menuitem', { name: /home/i })).toBeInTheDocument();
+  });
+
   test('shows Admin Dashboard when role is ADMIN', async () => {
     seedAuth({ id: '1', name: 'Admin User', role: 'ADMIN' });
     renderWithAuth();
