@@ -6,6 +6,7 @@ import { setTokens, getRefreshToken } from "../services/tokenStore";
 import { beginLogin, completeLoginFromRedirect, refreshTokens, TokenResponse, OAuthConfig } from "../services/oauth";
 import { useLocation, useNavigate } from "react-router-dom";
 import { type AuthContextType } from "@/types/AuthContextType";
+import { initPush } from "@/services/push";
 
 type UserShape = { email?: string; full_name?: string; role?: string } | null;
 
@@ -26,6 +27,20 @@ const oauthCfg: OAuthConfig = {
   tokenUrl: CONFIG.OAUTH_TOKEN_URL,
   redirectUri: CONFIG.OAUTH_REDIRECT_URI,
 };
+
+function maybeInitPush() {
+  if (
+    typeof window !== "undefined" &&
+    "serviceWorker" in navigator &&
+    import.meta.env.VITE_FCM_VAPID_KEY &&
+    import.meta.env.VITE_FCM_API_KEY &&
+    import.meta.env.VITE_FCM_PROJECT_ID &&
+    import.meta.env.VITE_FCM_APP_ID &&
+    import.meta.env.VITE_FCM_SENDER_ID
+  ) {
+    initPush().catch((err) => console.warn("push init failed", err));
+  }
+}
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AuthState>({ accessToken: null, user: null, loading: true, userID: null, userName: null, role: null });
@@ -111,7 +126,15 @@ useEffect(() => {
       }
     }
     setTokens(access_token, refresh_token);
-    setState((s) => ({ ...s, accessToken: access_token, user: user ?? s.user, role: user?.role ?? s.role }));
+    setState((s) => ({
+      ...s,
+      accessToken: access_token,
+      user: user ?? s.user,
+      role: user?.role ?? s.role,
+    }));
+    if (access_token) {
+      maybeInitPush();
+    }
   }, []);
 
   const loginWithPassword = useCallback(async (email: string, password: string): Promise<string | null> => {
@@ -158,6 +181,9 @@ useEffect(() => {
       userName: body.full_name,
       role,
     }));
+    if (token) {
+      maybeInitPush();
+    }
     return role;
   }, [setState]);
 
