@@ -3,12 +3,13 @@
 import logging
 
 from fastapi import Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.dependencies import get_current_user, get_db
+from app.models.settings import AdminConfig
 from app.schemas.setup import SettingsPayload
 from app.schemas.user import UserRead
-from app.models.settings import AdminConfig
-from app.dependencies import get_db, get_current_user
-from sqlalchemy import select
 
 logger = logging.getLogger(__name__)
 
@@ -19,10 +20,15 @@ def ensure_admin(user: UserRead):
         raise HTTPException(status_code=403, detail="Admin only")
 
 
-async def get_settings(db: AsyncSession = Depends(get_db), user: UserRead=Depends(get_current_user)) -> SettingsPayload:
+async def get_settings(
+    db: AsyncSession = Depends(get_db), user: UserRead = Depends(get_current_user)
+) -> SettingsPayload:
     """Fetch pricing configuration from the database."""
     ensure_admin(user)
-    logger.info("user %s retrieving settings", getattr(user, "id", "unknown"))
+    logger.info(
+        "retrieving settings",
+        extra={"user_id": getattr(user, "id", "unknown")},
+    )
     row = await db.get(AdminConfig, 1)
     if not row:
         raise HTTPException(status_code=404, detail="No settings yet")
@@ -37,7 +43,10 @@ async def get_settings(db: AsyncSession = Depends(get_db), user: UserRead=Depend
 async def update_settings(data: SettingsPayload, db: AsyncSession, user: UserRead):
     """Persist updated pricing configuration."""
     ensure_admin(user)
-    logger.info("user %s updating settings", getattr(user, "id", "unknown"))
+    logger.info(
+        "updating settings",
+        extra={"user_id": getattr(user, "id", "unknown")},
+    )
 
     result = await db.execute(select(AdminConfig).where(AdminConfig.id == 1))
     row = result.scalar_one_or_none()
@@ -50,7 +59,7 @@ async def update_settings(data: SettingsPayload, db: AsyncSession, user: UserRea
     row.per_km_rate = data.per_km_rate
     row.per_minute_rate = data.per_minute_rate
 
-    await db.commit()      # commit first
+    await db.commit()  # commit first
     # await db.refresh(row)  # then refresh (transaction is open for read)
 
     return SettingsPayload.model_validate(row, from_attributes=True)

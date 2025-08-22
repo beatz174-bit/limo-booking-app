@@ -4,6 +4,7 @@ from __future__ import annotations
 """Service functions wrapping OpenRouteService geocoding APIs."""
 
 import logging
+
 import httpx
 
 from app.core.config import get_settings
@@ -33,7 +34,7 @@ async def reverse_geocode(lat: float, lon: float) -> str:
         returned.
     """
 
-    logger.info("reverse geocode lat=%s lon=%s", lat, lon)
+    logger.info("reverse geocode", extra={"lat": lat, "lon": lon})
     settings = get_settings()
     api_key = settings.ors_api_key
 
@@ -45,17 +46,17 @@ async def reverse_geocode(lat: float, lon: float) -> str:
         "size": 1,
     }
     headers = {"Accept": "application/json"}
+    logger.debug(
+        "reverse geocode request",
+        extra={"url": url, "lat": lat, "lon": lon},
+    )
 
     async with httpx.AsyncClient() as client:
         res = await client.get(url, params=params, headers=headers)
         res.raise_for_status()
         data = res.json()
 
-    address = (
-        data.get("features", [{}])[0]
-        .get("properties", {})
-        .get("label")
-    )
+    address = data.get("features", [{}])[0].get("properties", {}).get("label")
 
     return address or f"{lat:.5f}, {lon:.5f}"
 
@@ -84,7 +85,7 @@ async def search_geocode(query: str, limit: int = 5) -> list[dict]:
         ``postcode``) when available.
     """
 
-    logger.info("search geocode query=%s limit=%s", query, limit)
+    logger.info("search geocode", extra={"query": query, "limit": limit})
     settings = get_settings()
     api_key = settings.ors_api_key
 
@@ -95,6 +96,10 @@ async def search_geocode(query: str, limit: int = 5) -> list[dict]:
         "size": limit,
     }
     headers = {"Accept": "application/json"}
+    logger.debug(
+        "search geocode request",
+        extra={"url": url, "query": query, "limit": limit},
+    )
 
     async with httpx.AsyncClient() as client:
         res = await client.get(url, params=params, headers=headers)

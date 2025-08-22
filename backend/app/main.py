@@ -9,7 +9,8 @@ from app.core.logging import RequestLoggingMiddleware, setup_logging
 settings = get_settings()
 setup_logging()
 logging.getLogger().debug(
-    "Effective log level: %s", logging.getLogger().getEffectiveLevel()
+    "Effective log level",
+    extra={"level": logging.getLogger().getEffectiveLevel()},
 )
 logger = logging.getLogger(__name__)
 
@@ -96,10 +97,12 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     """Log handled HTTP errors."""
     logger = logging.getLogger("app.error")
     logger.warning(
-        "HTTPException status=%s detail=%s path=%s",
-        exc.status_code,
-        exc.detail,
-        request.url.path,
+        "HTTPException",
+        extra={
+            "status": exc.status_code,
+            "detail": exc.detail,
+            "path": request.url.path,
+        },
     )
     return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
@@ -108,5 +111,5 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 async def unhandled_exception_handler(request: Request, exc: Exception):
     """Log unexpected errors and return a generic message."""
     logger = logging.getLogger("app.error")
-    logger.exception("Unhandled exception path=%s", request.url.path)
+    logger.exception("Unhandled exception", extra={"path": request.url.path})
     return JSONResponse(status_code=500, content={"detail": "Internal Server Error"})

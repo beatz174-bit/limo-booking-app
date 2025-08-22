@@ -96,16 +96,21 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         try:
             response = await call_next(request)
         except Exception:
-            logger.exception("%s %s unhandled error", request.method, request.url.path)
+            logger.exception(
+                "unhandled error",
+                extra={"method": request.method, "path": request.url.path},
+            )
             raise
         finally:
             request_id_ctx_var.reset(token)
         process_time = (time() - start) * 1000
         logger.info(
-            "%s %s status=%s duration=%.2fms",
-            request.method,
-            request.url.path,
-            response.status_code,
-            process_time,
+            "request",
+            extra={
+                "method": request.method,
+                "path": request.url.path,
+                "status": response.status_code,
+                "duration_ms": round(process_time, 2),
+            },
         )
         return response
