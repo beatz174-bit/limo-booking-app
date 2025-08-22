@@ -48,7 +48,7 @@ describe("ApiConfig", () => {
     const { authApi, bookingsApi, driverBookingsApi, usersApi, setupApi, settingsApi, availabilityApi } = mod;
 
     // config assertions
-    const cfgTyped = cfg as Configuration;
+    const cfgTyped = configuration as Configuration;
     expect(cfgTyped.basePath).toBe("https://api.example.test");
     expect(typeof cfgTyped.accessToken).toBe("function");
     await expect(cfgTyped.accessToken()).resolves.toBe("token-abc");

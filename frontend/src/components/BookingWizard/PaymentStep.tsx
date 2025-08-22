@@ -2,6 +2,7 @@ import { Stack, TextField, Button, Typography } from '@mui/material';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStripeSetupIntent } from '@/hooks/useStripeSetupIntent';
 import { useSettings } from '@/hooks/useSettings';
 import { settingsApi } from '@/components/ApiConfig';
@@ -32,6 +33,7 @@ interface Props {
 function PaymentInner({ data, onBack }: Props) {
   const stripe = useStripe();
   const elements = useElements();
+  const navigate = useNavigate();
   const { createBooking } = useStripeSetupIntent();
   const { data: settings } = useSettings(settingsApi);
   interface SettingsAliases {
@@ -68,11 +70,11 @@ function PaymentInner({ data, onBack }: Props) {
     };
     const res = await createBooking(payload);
     if (res.clientSecret && card) {
-        await stripe.confirmCardSetup(res.clientSecret, {
-          payment_method: { card },
-        });
-        alert('Booking created');
-      }
+      await stripe.confirmCardSetup(res.clientSecret, {
+        payment_method: { card },
+      });
+      navigate(`/confirmation/${res.booking.id}`, { state: res.booking });
+    }
   }
 
   return (

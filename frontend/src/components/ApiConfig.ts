@@ -4,7 +4,7 @@ import { CONFIG } from "@/config";
 import { getAccessToken } from "@/services/tokenStore";
 
 
-const configuration = new Configuration({
+export const configuration = new Configuration({
   basePath: CONFIG.API_BASE_URL,
   accessToken: async () => getAccessToken() ?? "",
 });
@@ -23,6 +23,3 @@ export { AuthApi, BookingsApi, UsersApi, SetupApi, SettingsApi, DriverBookingsAp
 
 // Optional: token change hook
 // onTokenChange(() => { /* e.g. invalidate caches if needed */ });
-
-// (Optional) still export default for legacy imports
-export default configuration;

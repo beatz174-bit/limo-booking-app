@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, Button, TextField, Typography, Tooltip } from '@mui/material';
+import { Box, Button, TextField, Typography, Tooltip, FormControlLabel, Switch } from '@mui/material';
 import { AddressField } from '@/components/AddressField';
 import { useAuth } from '@/contexts/AuthContext';
 import { usersApi, authApi } from '@/components/ApiConfig';
@@ -13,6 +13,7 @@ const ProfilePage = () => {
   const [oldPasswordValid, setOldPasswordValid] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(Notification.permission === 'granted');
 
   useEffect(() => {
     const load = async () => {
@@ -44,8 +45,7 @@ const ProfilePage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = await ensureFreshToken();
-    if (!token) return;
+    await ensureFreshToken();
     const body: Record<string, unknown> = {
       full_name: fullName,
       email,
@@ -63,6 +63,13 @@ const ProfilePage = () => {
     setOldPassword('');
     setNewPassword('');
     setConfirmPassword('');
+  };
+
+  const handleNotificationsChange = async (_e: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
+    setNotificationsEnabled(checked);
+    if (checked) {
+      await initPush();
+    }
   };
 
   return (
@@ -101,6 +108,11 @@ const ProfilePage = () => {
         margin="normal"
         fullWidth
         disabled={!newPassword || !oldPasswordValid}
+      />
+      <FormControlLabel
+        control={<Switch checked={notificationsEnabled} onChange={handleNotificationsChange} />}
+        label="Enable notifications"
+        sx={{ mt: 2 }}
       />
       <Tooltip title={newPassword === confirmPassword ? '' : 'new password and confirm password must match'} disableHoverListener={newPassword === confirmPassword}>
         <span>

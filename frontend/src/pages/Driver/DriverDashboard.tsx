@@ -7,7 +7,7 @@ import {
   Stack,
   Typography,
   Tabs,
-  Tab
+  Tab,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { driverBookingsApi as bookingsApi } from '@/components/ApiConfig';
@@ -23,27 +23,17 @@ const statuses: BookingStatus[] = [
   'ARRIVED_DROPOFF',
   'COMPLETED',
   'DECLINED',
-  'CANCELLED'
+  'CANCELLED',
 ];
-
-interface Booking {
-  id: string;
-  pickup_address: string;
-  dropoff_address: string;
-  pickup_when: string;
-  status: BookingStatus;
-  leave_at?: string;
-  final_price_cents?: number;
-}
 
 export default function DriverDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const bookingsByStatus = useMemo(() => {
     const groups = statuses.reduce(
       (acc, s) => ({ ...acc, [s]: [] as Booking[] }),
-      {} as Record<BookingStatus, Booking[]>
+      {} as Record<BookingStatus, Booking[]>,
     );
-    bookings.forEach(b => {
+    bookings.forEach((b) => {
       groups[b.status].push(b);
     });
     return groups;
@@ -70,7 +60,7 @@ export default function DriverDashboard() {
       | 'arrive-pickup'
       | 'start-trip'
       | 'arrive-dropoff'
-      | 'complete'
+      | 'complete',
   ) {
     const apiMap = {
       confirm: bookingsApi.confirmBookingApiV1DriverBookingsBookingIdConfirmPost,
@@ -98,6 +88,18 @@ export default function DriverDashboard() {
     } catch {
       /* ignore */
     }
+    const data = res.data as Booking;
+    setBookings((b) =>
+      b.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              status: data.status,
+              final_price_cents: data.final_price_cents ?? item.final_price_cents,
+            }
+          : item,
+      ),
+    );
   }
 
   const [now, setNow] = useState(Date.now());
@@ -118,15 +120,15 @@ export default function DriverDashboard() {
         variant="scrollable"
         scrollButtons="auto"
       >
-        {statuses.map(s => (
+        {statuses.map((s) => (
           <Tab key={s} label={bookingStatusLabels[s]} value={s} />
         ))}
       </Tabs>
-      {statuses.map(s => {
+      {statuses.map((s) => {
         const list = bookingsByStatus[s];
         return (
           <List key={s} hidden={tab !== s}>
-            {list.map(b => (
+            {list.map((b) => (
               <ListItem key={b.id} divider>
                 <ListItemText
                   primary={`${b.pickup_address} → ${b.dropoff_address}`}

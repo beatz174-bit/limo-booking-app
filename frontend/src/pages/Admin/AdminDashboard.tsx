@@ -3,7 +3,7 @@ import { AxiosError } from "axios";
 // Use the SAME shared API client that RegisterPage uses so we hit the correct backend/db
 // Update the path below to exactly match RegisterPage's import if different
 // import { SettingsApi } from "../../api-client/api";
-import config, { SettingsApi } from "@/components/ApiConfig";
+import { configuration, SettingsApi } from "@/components/ApiConfig";
 import type { SettingsPayload } from "@/api-client";
 import { useDevFeatures } from '@/contexts/DevFeaturesContext';
 import {
@@ -39,7 +39,7 @@ export default function AdminDashboard() {
   //   // Replace with your actual token plumbed from context if needed.
   //   accessToken: () => localStorage.getItem("access_token") || "",
   // });
-  const settingsApi = useMemo(() => new SettingsApi(config), []);
+  const settingsApi = useMemo(() => new SettingsApi(configuration), []);
   const { enabled: devEnabled, setEnabled: setDevEnabled, isProd } = useDevFeatures();
 
   // Local UI state
