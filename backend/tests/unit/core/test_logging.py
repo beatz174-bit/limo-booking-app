@@ -6,7 +6,7 @@ import graypy
 import pytest
 
 from app.core.config import get_settings
-from app.core.logging import setup_logging
+from app.core.logging import FacilityFilter, setup_logging
 
 
 @pytest.mark.parametrize(
@@ -48,9 +48,18 @@ def test_graylog_handler_attached(
         assert handlers
         handler = handlers[0]
         assert handler.static_fields.get("env") == get_settings().env
+        assert handler.static_fields.get("source") == get_settings().app_name
+        assert handler.static_fields.get("node") == "backend"
     finally:
         logging.getLogger().handlers.clear()
         monkeypatch.delenv("GRAYLOG_HOST")
         monkeypatch.delenv("GRAYLOG_PORT")
         monkeypatch.delenv("GRAYLOG_TRANSPORT", raising=False)
         get_settings.cache_clear()
+
+
+def test_facility_filter_sets_facility() -> None:
+    record = logging.LogRecord("app.test", logging.INFO, __file__, 1, "msg", (), None)
+    facility = FacilityFilter()
+    facility.filter(record)
+    assert record.facility == "app.test"
