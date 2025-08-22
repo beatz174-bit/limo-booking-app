@@ -7,7 +7,6 @@ import { DevFeaturesProvider } from '@/contexts/DevFeaturesContext';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import theme from '@/theme';
 import App from '@/App';
-import { initPush } from '@/services/push';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -23,5 +22,3 @@ createRoot(document.getElementById('root')!).render(
     </BrowserRouter>
   </StrictMode>,
 );
-
-initPush();
