@@ -4,10 +4,14 @@ import userEvent from '@testing-library/user-event';
 import { Route } from 'react-router-dom';
 import HomePage from './HomePage';
 
-function seedAuth(id: string) {
-  localStorage.setItem('auth_tokens', JSON.stringify({ access_token: 't', refresh_token: 'r', user: { email: 'x' } }));
+function seedAuth(id: string, role = 'CUSTOMER') {
+  localStorage.setItem(
+    'auth_tokens',
+    JSON.stringify({ access_token: 't', refresh_token: 'r', user: { email: 'x', role }, role })
+  );
   localStorage.setItem('userID', id);
   localStorage.setItem('userName', 'Test User');
+  localStorage.setItem('role', role);
 }
 
 describe('HomePage', () => {
