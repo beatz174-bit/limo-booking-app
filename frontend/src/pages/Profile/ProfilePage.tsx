@@ -3,6 +3,7 @@ import { Box, Button, TextField, Typography, Tooltip, FormControlLabel, Switch }
 import { AddressField } from '@/components/AddressField';
 import { useAuth } from '@/contexts/AuthContext';
 import PushToggle from '@/components/PushToggle';
+import { CONFIG } from '@/config';
 
   const ProfilePage = () => {
   const { ensureFreshToken } = useAuth();
@@ -13,16 +14,24 @@ import PushToggle from '@/components/PushToggle';
   const [oldPasswordValid, setOldPasswordValid] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [notificationsEnabled, setNotificationsEnabled] = useState(Notification.permission === 'granted');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(
+    typeof Notification !== 'undefined' && Notification.permission === 'granted'
+  );
 
   useEffect(() => {
     const load = async () => {
       const token = await ensureFreshToken();
       if (!token) return;
-      const { data } = await usersApi.apiGetMeUsersMeGet();
-      setFullName(data.full_name || '');
-      setEmail(data.email || '');
-      setDefaultPickup(data.default_pickup_address || '');
+      const base = CONFIG.API_BASE_URL ?? '';
+      const res = await fetch(`${base}/users/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setFullName(data.full_name || '');
+        setEmail(data.email || '');
+        setDefaultPickup(data.default_pickup_address || '');
+      }
     };
     load();
   }, [ensureFreshToken]);
@@ -36,8 +45,14 @@ import PushToggle from '@/components/PushToggle';
   const verifyOldPassword = async () => {
     if (!oldPassword) return;
     try {
-      await authApi.tokenAuthTokenPost(email, oldPassword);
-      setOldPasswordValid(true);
+      const base = CONFIG.API_BASE_URL ?? '';
+      const res = await fetch(`${base}/auth/token`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Basic ${btoa(`${email}:${oldPassword}`)}`,
+        },
+      });
+      setOldPasswordValid(res.ok);
     } catch {
       setOldPasswordValid(false);
     }
@@ -55,7 +70,16 @@ import PushToggle from '@/components/PushToggle';
       body.password = newPassword;
     }
     try {
-      const { data } = await usersApi.apiUpdateMeUsersMePatch(body);
+      const base = CONFIG.API_BASE_URL ?? '';
+      const res = await fetch(`${base}/users/me`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${await ensureFreshToken()}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
       localStorage.setItem('userName', data.full_name);
     } catch {
       /* ignore */

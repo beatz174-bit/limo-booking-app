@@ -26,7 +26,8 @@ async def get_route_metrics(
     """
 
     logger.info(
-        "route metrics pickup=%s dropoff=%s ride_time=%s", pickup, dropoff, ride_time
+        "route metrics",
+        extra={"pickup": pickup, "dropoff": dropoff, "ride_time": ride_time},
     )
     settings = get_settings()
     api_key = settings.google_maps_api_key
@@ -41,18 +42,27 @@ async def get_route_metrics(
     }
     if ride_time is not None:
         params["departure_time"] = int(ride_time.timestamp())
+    logger.debug(
+        "distance matrix request",
+        extra={
+            "url": GOOGLE_DISTANCE_MATRIX_URL,
+            "pickup": pickup,
+            "dropoff": dropoff,
+            "ride_time": ride_time,
+        },
+    )
     async with httpx.AsyncClient(timeout=10) as client:
         res = await client.get(GOOGLE_DISTANCE_MATRIX_URL, params=params)
         res.raise_for_status()
         data = res.json()
     if data.get("status") != "OK":
         message = data.get("error_message") or data.get("status", "error")
-        logger.error("distance matrix error: %s", message)
+        logger.error("distance matrix error", extra={"error": message})
         raise RuntimeError(message)
     try:
         element = data["rows"][0]["elements"][0]
         if element.get("status") != "OK":
-            logger.error("element status %s", element.get("status"))
+            logger.error("element status", extra={"status": element.get("status")})
             raise RuntimeError(element.get("status", "error"))
         distance_m = element["distance"]["value"]
         duration_s = element["duration"]["value"]

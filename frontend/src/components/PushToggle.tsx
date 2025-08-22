@@ -14,7 +14,8 @@ const PushToggle = ({ ensureFreshToken }: Props) => {
     const load = async () => {
       const auth = await ensureFreshToken();
       if (!auth) return;
-      const res = await fetch(`${CONFIG.API_BASE_URL}/users/me`, {
+      const base = CONFIG.API_BASE_URL ?? '';
+      const res = await fetch(`${base}/users/me`, {
         headers: { Authorization: `Bearer ${auth}` },
       });
       if (res.ok) {
@@ -34,7 +35,8 @@ const PushToggle = ({ ensureFreshToken }: Props) => {
     if (checked) {
       const token = await subscribePush();
       if (!token) return;
-      await fetch(`${CONFIG.API_BASE_URL}/users/me`, {
+      const base = CONFIG.API_BASE_URL ?? '';
+      await fetch(`${base}/users/me`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -44,7 +46,8 @@ const PushToggle = ({ ensureFreshToken }: Props) => {
       });
     } else {
       await unsubscribePush();
-      await fetch(`${CONFIG.API_BASE_URL}/users/me`, {
+      const base = CONFIG.API_BASE_URL ?? '';
+      await fetch(`${base}/users/me`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

@@ -3,10 +3,11 @@ import os
 from contextvars import ContextVar
 from logging.config import dictConfig
 from time import time
-from typing import Callable, Optional
+from typing import Callable, Dict, Optional
 from uuid import uuid4
 
 import graypy
+from fastapi import HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
@@ -25,13 +26,31 @@ class RequestIdFilter(logging.Filter):
         return True
 
 
-def _graylog_handler(host: str, port: int, static_fields: dict) -> logging.Handler:
+class FacilityFilter(logging.Filter):
+    """Set the facility on log records to the logger's name."""
+
+    def filter(self, record: logging.LogRecord) -> bool:  # pragma: no cover - trivial
+        record.facility = record.name
+        return True
+
+
+def _graylog_handler(
+    host: str, port: int, static_fields: Optional[Dict[str, str]] = None
+) -> logging.Handler:
+    settings = get_settings()
     transport = os.getenv("GRAYLOG_TRANSPORT", "udp").lower()
     if transport == "tcp":
         handler: logging.Handler = graypy.GELFTCPHandler(host, port)
     else:
         handler = graypy.GELFUDPHandler(host, port)
-    handler.static_fields = static_fields
+    fields = {
+        "env": settings.env,
+        "source": settings.app_name,
+        "node": "backend",
+    }
+    if static_fields:
+        fields.update(static_fields)
+    handler.static_fields = fields
     return handler
 
 
@@ -43,7 +62,7 @@ def setup_logging() -> None:
         "default": {
             "class": "logging.StreamHandler",
             "formatter": "default",
-            "filters": ["request_id"],
+            "filters": ["request_id", "facility"],
             "stream": "ext://sys.stdout",
         }
     }
@@ -52,10 +71,9 @@ def setup_logging() -> None:
         handlers["graylog"] = {
             "()": "app.core.logging._graylog_handler",
             "formatter": "default",
-            "filters": ["request_id"],
+            "filters": ["request_id", "facility"],
             "host": settings.graylog_host,
             "port": settings.graylog_port,
-            "static_fields": {"env": settings.env},
         }
         root_handlers.append("graylog")
 
@@ -69,7 +87,10 @@ def setup_logging() -> None:
                 "datefmt": "%Y-%m-%d %H:%M:%S",
             }
         },
-        "filters": {"request_id": {"()": "app.core.logging.RequestIdFilter"}},
+        "filters": {
+            "request_id": {"()": "app.core.logging.RequestIdFilter"},
+            "facility": {"()": "app.core.logging.FacilityFilter"},
+        },
         "handlers": handlers,
         "root": {"level": log_level, "handlers": root_handlers},
     }
@@ -95,17 +116,31 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         start = time()
         try:
             response = await call_next(request)
+        except HTTPException as exc:
+            logger.warning(
+                "%s %s status=%s detail=%s",
+                request.method,
+                request.url.path,
+                exc.status_code,
+                exc.detail,
+            )
+            raise
         except Exception:
-            logger.exception("%s %s unhandled error", request.method, request.url.path)
+            logger.exception(
+                "unhandled error",
+                extra={"method": request.method, "path": request.url.path},
+            )
             raise
         finally:
             request_id_ctx_var.reset(token)
         process_time = (time() - start) * 1000
         logger.info(
-            "%s %s status=%s duration=%.2fms",
-            request.method,
-            request.url.path,
-            response.status_code,
-            process_time,
+            "request",
+            extra={
+                "method": request.method,
+                "path": request.url.path,
+                "status": response.status_code,
+                "duration_ms": round(process_time, 2),
+            },
         )
         return response

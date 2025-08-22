@@ -18,7 +18,17 @@ export const setupApi = new SetupApi(configuration);
 export const settingsApi = new SettingsApi(configuration);
 
 // (Keep if you still want the classes too)
-export { AuthApi, BookingsApi, DriverBookingsApi, UsersApi, SetupApi, SettingsApi } from "@/api-client";
+export {
+  AuthApi,
+  BookingsApi,
+  DriverBookingsApi,
+  UsersApi,
+  SetupApi,
+  SettingsApi,
+  AvailabilityApi,
+} from "@/api-client";
+
+export default configuration;
 
 // Optional: token change hook
 // onTokenChange(() => { /* e.g. invalidate caches if needed */ });
