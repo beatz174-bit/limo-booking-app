@@ -1,10 +1,10 @@
 // Shared configuration and API client singletons.
-import { Configuration, AuthApi, BookingsApi, DriverBookingsApi, UsersApi, SetupApi, SettingsApi } from "@/api-client";
+import { Configuration, AuthApi, BookingsApi, UsersApi, SetupApi, SettingsApi, DriverBookingsApi, AvailabilityApi } from "@/api-client";
 import { CONFIG } from "@/config";
 import { getAccessToken } from "@/services/tokenStore";
 
 
-const configuration = new Configuration({
+export const configuration = new Configuration({
   basePath: CONFIG.API_BASE_URL,
   accessToken: async () => getAccessToken() ?? "",
 });
@@ -22,6 +22,3 @@ export { AuthApi, BookingsApi, DriverBookingsApi, UsersApi, SetupApi, SettingsAp
 
 // Optional: token change hook
 // onTokenChange(() => { /* e.g. invalidate caches if needed */ });
-
-// (Optional) still export default for legacy imports
-export default configuration;

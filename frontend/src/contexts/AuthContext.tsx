@@ -1,13 +1,24 @@
 // React context providing authentication state and helpers.
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import cfg, { AuthApi } from "@/components/ApiConfig";
+import { authApi } from "@/components/ApiConfig";
 import { CONFIG } from "@/config";
 import { setTokens, getRefreshToken } from "../services/tokenStore";
 import { beginLogin, completeLoginFromRedirect, refreshTokens, TokenResponse, OAuthConfig } from "../services/oauth";
 import { useLocation, useNavigate } from "react-router-dom";
 import { type AuthContextType } from "@/types/AuthContextType";
+import { initPush } from "@/services/push";
 
 type UserShape = { email?: string; full_name?: string; role?: string } | null;
+
+type LoginResponse = {
+  access_token?: string;
+  token?: string;
+  refresh_token?: string | null;
+  role?: string | null;
+  user?: { role?: string } | null;
+  full_name?: string;
+  id?: number | string;
+};
 
 type AuthState = {
   accessToken: string | null;
@@ -17,8 +28,8 @@ type AuthState = {
   userName: string | null;
   role: string | null;
 };
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// eslint-disable-next-line react-refresh/only-export-components
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const oauthCfg: OAuthConfig = {
   clientId: CONFIG.OAUTH_CLIENT_ID,
@@ -27,9 +38,22 @@ const oauthCfg: OAuthConfig = {
   redirectUri: CONFIG.OAUTH_REDIRECT_URI,
 };
 
+function maybeInitPush() {
+  if (
+    typeof window !== "undefined" &&
+    "serviceWorker" in navigator &&
+    import.meta.env.VITE_FCM_VAPID_KEY &&
+    import.meta.env.VITE_FCM_API_KEY &&
+    import.meta.env.VITE_FCM_PROJECT_ID &&
+    import.meta.env.VITE_FCM_APP_ID &&
+    import.meta.env.VITE_FCM_SENDER_ID
+  ) {
+    initPush().catch((err) => console.warn("push init failed", err));
+  }
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AuthState>({ accessToken: null, user: null, loading: true, userID: null, userName: null, role: null });
-  const authApi = useMemo(() => new AuthApi(cfg), []);
   // const [userName, setUserName] = useState<string>('');
   // const [userID, setUserID] = useState<string|null>(null);
 
@@ -111,20 +135,54 @@ useEffect(() => {
       }
     }
     setTokens(access_token, refresh_token);
-    setState((s) => ({ ...s, accessToken: access_token, user: user ?? s.user, role: user?.role ?? s.role }));
+    setState((s) => ({
+      ...s,
+      accessToken: access_token,
+      user: user ?? s.user,
+      role: user?.role ?? s.role,
+    }));
+    if (access_token) {
+      maybeInitPush();
+    }
   }, []);
 
   const loginWithPassword = useCallback(async (email: string, password: string): Promise<string | null> => {
-    const res = await fetch(`${CONFIG.API_BASE_URL}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-      credentials: "omit",
-    });
+    try {
+      const res = await authApi.loginAuthLoginPost({ email, password });
+      const body = res.data as LoginResponse;
+      const token = body.access_token ?? body.token ?? null;
+      const role: string | null = body.role ?? body.user?.role ?? null;
+      localStorage.setItem(
+        "auth_tokens",
+        JSON.stringify({
+          access_token: token,
+          refresh_token: body.refresh_token ?? null,
+          user: body.user ?? null,
+        })
+      );
+      if (role) {
+        localStorage.setItem("role", role);
+      } else {
+        localStorage.removeItem("role");
+      }
 
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      if (res.status === 401 || /invalid/i.test(text)) {
+      localStorage.setItem("userName", body.full_name);
+      localStorage.setItem("userID", String(body.id));
+
+      setState((s) => ({
+        ...s,
+        accessToken: token,
+        user: body.user ?? s.user,
+        userID: String(body.id),
+        userName: body.full_name,
+        role,
+      }));
+      return role;
+    } catch (e: unknown) {
+      const err = e as { response?: { status?: number; data?: { detail?: string } } };
+      const status = err.response?.status;
+      const text = err.response?.data?.detail || "";
+      if (status === 401 || /invalid/i.test(String(text))) {
         throw new Error("Invalid credentials");
       }
       throw new Error("Login failed");
@@ -158,14 +216,17 @@ useEffect(() => {
       userName: body.full_name,
       role,
     }));
+    if (token) {
+      maybeInitPush();
+    }
     return role;
   }, [setState]);
 
-  const registerWithPassword = useCallback(async (fullName: string, email: string, password: string) => {
-    await authApi.endpointRegisterAuthRegisterPost({ full_name: fullName, email, password });
-    // auto-login
-    await loginWithPassword(email, password);
-  }, [authApi, loginWithPassword]);
+    const registerWithPassword = useCallback(async (fullName: string, email: string, password: string) => {
+      await authApi.endpointRegisterAuthRegisterPost({ full_name: fullName, email, password });
+      // auto-login
+      await loginWithPassword(email, password);
+    }, [loginWithPassword]);
 
   const loginWithOAuth = useCallback(() => beginLogin(oauthCfg), []);
 
@@ -241,5 +302,26 @@ export const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [loading, accessToken, location, navigate]);
 
   if (loading || !accessToken) return null;
+  return <>{children}</>;
+};
+
+export const RequireRole: React.FC<{ role: string; children: React.ReactNode }> = ({
+  role,
+  children,
+}) => {
+  const { accessToken, loading, role: userRole } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!loading) {
+      const from = encodeURIComponent(location.pathname + location.search);
+      if (!accessToken || userRole !== role) {
+        navigate(`/login?from=${from}`, { replace: true });
+      }
+    }
+  }, [loading, accessToken, userRole, role, location, navigate]);
+
+  if (loading || !accessToken || userRole !== role) return null;
   return <>{children}</>;
 };

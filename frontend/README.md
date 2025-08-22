@@ -18,6 +18,11 @@ Create a `.env` file or export the following variables:
 
 - `VITE_API_BASE_URL` – URL of the backend API (e.g. `http://localhost:8000`).
 - `VITE_GOOGLE_MAPS_API_KEY` – Google Maps key for rendering maps.
+ - `VITE_FCM_VAPID_KEY` – Firebase Cloud Messaging VAPID key.
+ - `VITE_FCM_API_KEY` – Firebase API key.
+ - `VITE_FCM_PROJECT_ID` – Firebase project ID.
+ - `VITE_FCM_APP_ID` – Firebase app ID.
+ - `VITE_FCM_SENDER_ID` – Firebase sender ID.
 
 ## Development
 
