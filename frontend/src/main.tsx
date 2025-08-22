@@ -5,10 +5,6 @@ import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { DevFeaturesProvider } from '@/contexts/DevFeaturesContext';
 import App from '@/App';
-import { initPush } from '@/services/push';
-import { ThemeProvider, CssBaseline, createTheme } from '@mui/material';
-
-const theme = createTheme();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

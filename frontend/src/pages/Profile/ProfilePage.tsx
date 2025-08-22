@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { Box, Button, TextField, Typography, Tooltip, FormControlLabel, Switch } from '@mui/material';
 import { AddressField } from '@/components/AddressField';
 import { useAuth } from '@/contexts/AuthContext';
-import { usersApi, authApi } from '@/components/ApiConfig';
+import { CONFIG } from '@/config';
+import PushToggle from '@/components/PushToggle';
 
-const ProfilePage = () => {
+  const ProfilePage = () => {
   const { ensureFreshToken } = useAuth();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -121,6 +122,9 @@ const ProfilePage = () => {
           </Button>
         </span>
       </Tooltip>
+      <Box mt={4}>
+        <PushToggle ensureFreshToken={ensureFreshToken} />
+      </Box>
     </Box>
   );
 };
