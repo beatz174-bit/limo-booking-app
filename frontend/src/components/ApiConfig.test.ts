@@ -45,20 +45,10 @@ vi.mock("@/config", () => ({ CONFIG: { API_BASE_URL: "https://api.example.test" 
 describe("ApiConfig", () => {
   test("constructs clients with basePath and token getter", async () => {
     const mod = await import("./ApiConfig");
-    const cfg = mod.default;
-    const {
-      authApi,
-      bookingsApi,
-      usersApi,
-      setupApi,
-      settingsApi,
-      customerBookingsApi,
-      driverBookingsApi,
-      availabilityApi,
-    } = mod;
+    const { configuration, authApi, bookingsApi, usersApi, setupApi, settingsApi } = mod;
 
     // config assertions
-    const cfgTyped = cfg as Configuration;
+    const cfgTyped = configuration as Configuration;
     expect(cfgTyped.basePath).toBe("https://api.example.test");
     expect(typeof cfgTyped.accessToken).toBe("function");
     await expect(cfgTyped.accessToken()).resolves.toBe("token-abc");

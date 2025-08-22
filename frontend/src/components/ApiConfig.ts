@@ -13,7 +13,8 @@ import {
 import { CONFIG } from "@/config";
 import { getAccessToken } from "@/services/tokenStore";
 
-const configuration = new Configuration({
+
+export const configuration = new Configuration({
   basePath: CONFIG.API_BASE_URL,
   accessToken: async () => getAccessToken() ?? "",
 });
@@ -42,6 +43,3 @@ export {
 
 // Optional: token change hook
 // onTokenChange(() => { /* e.g. invalidate caches if needed */ });
-
-// (Optional) still export default for legacy imports
-export default configuration;

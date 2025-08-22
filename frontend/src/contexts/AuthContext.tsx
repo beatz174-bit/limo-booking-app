@@ -1,6 +1,6 @@
 // React context providing authentication state and helpers.
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import cfg, { AuthApi } from "@/components/ApiConfig";
+import { configuration, AuthApi } from "@/components/ApiConfig";
 import { CONFIG } from "@/config";
 import { setTokens, getRefreshToken } from "../services/tokenStore";
 import { beginLogin, completeLoginFromRedirect, refreshTokens, TokenResponse, OAuthConfig } from "../services/oauth";
@@ -29,7 +29,7 @@ const oauthCfg: OAuthConfig = {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AuthState>({ accessToken: null, user: null, loading: true, userID: null, userName: null, role: null });
-  const authApi = useMemo(() => new AuthApi(cfg), []);
+  const authApi = useMemo(() => new AuthApi(configuration), []);
   // const [userName, setUserName] = useState<string>('');
   // const [userID, setUserID] = useState<string|null>(null);
 
