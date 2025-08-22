@@ -2,9 +2,8 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import RideHistoryPage from './RideHistoryPage';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { server } from '@/__tests__/setup/msw.server';
-import { http, HttpResponse } from 'msw';
-import { apiUrl } from '@/__tests__/setup/msw.handlers';
+import { customerBookingsApi } from '@/components/ApiConfig';
+import { vi } from 'vitest';
 
 test('shows track link for trackable bookings', async () => {
   const bookings = [
@@ -28,11 +27,9 @@ test('shows track link for trackable bookings', async () => {
     },
   ];
 
-  server.use(
-    http.get(apiUrl('/api/v1/customers/me/bookings'), () =>
-      HttpResponse.json(bookings),
-    ),
-  );
+  vi
+    .spyOn(customerBookingsApi, 'listMyBookingsApiV1CustomersMeBookingsGet')
+    .mockResolvedValue({ data: bookings } as never);
 
   render(
     <AuthProvider>
