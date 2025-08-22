@@ -12,8 +12,8 @@ import {
   Button,
   Alert,
 } from '@mui/material';
-import cfg, { AuthApi } from "@/components/ApiConfig"
-const authApi = new AuthApi(cfg);
+import { configuration, AuthApi } from "@/components/ApiConfig";
+const authApi = new AuthApi(configuration);
 
 function RegisterPage() {
     const [email, setEmail] = useState("");

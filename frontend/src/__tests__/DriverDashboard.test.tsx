@@ -1,9 +1,16 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import DriverDashboard from '@/pages/Driver/DriverDashboard';
 import { MemoryRouter } from 'react-router-dom';
-import { vi } from 'vitest';
+import { vi, type Mock } from 'vitest';
 
-vi.mock('@/services/tokenStore', () => ({ getAccessToken: () => 'tok' }));
+vi.mock('@/components/ApiConfig', () => ({
+  driverBookingsApi: {
+    listBookingsApiV1DriverBookingsGet: vi.fn(),
+    confirmBookingApiV1DriverBookingsBookingIdConfirmPost: vi.fn(),
+  },
+}));
+
+import DriverDashboard from '@/pages/Driver/DriverDashboard';
+import { driverBookingsApi } from '@/components/ApiConfig';
 
 describe('DriverDashboard', () => {
   it('loads and confirms booking', async () => {
@@ -16,9 +23,8 @@ describe('DriverDashboard', () => {
         status: 'PENDING'
       }
     ];
-    global.fetch = vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => bookings })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ status: 'DRIVER_CONFIRMED' }) });
+    (driverBookingsApi.listBookingsApiV1DriverBookingsGet as Mock).mockResolvedValueOnce({ data: bookings });
+    (driverBookingsApi.confirmBookingApiV1DriverBookingsBookingIdConfirmPost as Mock).mockResolvedValueOnce({ data: { status: 'DRIVER_CONFIRMED' } });
 
     render(
       <MemoryRouter>
@@ -30,4 +36,37 @@ describe('DriverDashboard', () => {
     fireEvent.click(screen.getByRole('tab', { name: /driver confirmed/i }));
     await waitFor(() => expect(screen.getByText('Leave now')).toBeInTheDocument());
   });
+
+  it('shows error message when confirm fails', async () => {
+    const bookings = [
+      {
+        id: '1',
+        pickup_address: 'A',
+        dropoff_address: 'B',
+        pickup_when: new Date().toISOString(),
+        status: 'PENDING'
+      }
+    ];
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => bookings })
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        json: async () => ({ message: 'fail' })
+      });
+
+    render(
+      <MemoryRouter>
+        <DriverDashboard />
+      </MemoryRouter>
+    );
+    expect(await screen.findByText('A → B')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Confirm'));
+    await waitFor(() =>
+      expect(screen.getByText(/500 fail/i)).toBeInTheDocument()
+    );
+  });
 });
+

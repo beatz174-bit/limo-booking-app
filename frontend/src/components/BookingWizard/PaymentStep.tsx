@@ -38,6 +38,7 @@ interface Props {
 function PaymentInner({ data, onBack }: Props) {
   const stripe = useStripe();
   const elements = useElements();
+  const navigate = useNavigate();
   const { createBooking } = useStripeSetupIntent();
   const { data: settings } = useSettings(settingsApi);
   interface SettingsAliases {
