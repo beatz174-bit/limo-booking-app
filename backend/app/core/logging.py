@@ -7,6 +7,7 @@ from typing import Callable, Optional
 from uuid import uuid4
 
 import graypy
+from fastapi import HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
@@ -95,6 +96,15 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         start = time()
         try:
             response = await call_next(request)
+        except HTTPException as exc:
+            logger.warning(
+                "%s %s status=%s detail=%s",
+                request.method,
+                request.url.path,
+                exc.status_code,
+                exc.detail,
+            )
+            raise
         except Exception:
             logger.exception("%s %s unhandled error", request.method, request.url.path)
             raise
