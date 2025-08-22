@@ -5,6 +5,7 @@ import os
 
 """Application configuration using Pydantic settings."""
 
+import logging
 import os
 from functools import lru_cache
 from pathlib import Path
@@ -12,6 +13,8 @@ from typing import List, Optional
 
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+logger = logging.getLogger(__name__)
 
 # --- Resolve which .env to load ------------------------------------------------
 
@@ -195,4 +198,5 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     """Singleton-style accessor so we don't re-parse env every import."""
+    logger.debug("loading settings", extra={"env": _ENV, "env_file": _ENV_FILE})
     return Settings()

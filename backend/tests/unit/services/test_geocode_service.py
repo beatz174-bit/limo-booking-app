@@ -1,6 +1,11 @@
+import logging
+import os
+
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
+from app.core.config import get_settings
+from app.core.logging import setup_logging
 from app.services import geocode_service
 
 pytestmark = pytest.mark.asyncio
@@ -30,8 +35,12 @@ async def test_reverse_geocode_parses_label(monkeypatch: MonkeyPatch):
             assert params["point.lon"] == 2.0
             return DummyResp()
 
-    monkeypatch.setattr(geocode_service, "httpx", type("X", (), {"AsyncClient": DummyClient}))
-    monkeypatch.setattr(geocode_service, "get_settings", lambda: type("S", (), {"ors_api_key": "KEY"})())
+    monkeypatch.setattr(
+        geocode_service, "httpx", type("X", (), {"AsyncClient": DummyClient})
+    )
+    monkeypatch.setattr(
+        geocode_service, "get_settings", lambda: type("S", (), {"ors_api_key": "KEY"})()
+    )
 
     addr = await geocode_service.reverse_geocode(1.0, 2.0)
     assert addr == "123 Fake St"
@@ -71,8 +80,12 @@ async def test_search_geocode_parses_results(monkeypatch: MonkeyPatch):
             assert params["size"] == 5
             return DummyResp()
 
-    monkeypatch.setattr(geocode_service, "httpx", type("X", (), {"AsyncClient": DummyClient}))
-    monkeypatch.setattr(geocode_service, "get_settings", lambda: type("S", (), {"ors_api_key": "KEY"})())
+    monkeypatch.setattr(
+        geocode_service, "httpx", type("X", (), {"AsyncClient": DummyClient})
+    )
+    monkeypatch.setattr(
+        geocode_service, "get_settings", lambda: type("S", (), {"ors_api_key": "KEY"})()
+    )
 
     results = await geocode_service.search_geocode("Main")
     assert results == [
@@ -109,8 +122,12 @@ async def test_reverse_geocode_falls_back_to_coordinates(monkeypatch: MonkeyPatc
         async def get(self, url, params=None, headers=None):  # type: ignore[override]
             return DummyResp()
 
-    monkeypatch.setattr(geocode_service, "httpx", type("X", (), {"AsyncClient": DummyClient}))
-    monkeypatch.setattr(geocode_service, "get_settings", lambda: type("S", (), {"ors_api_key": "KEY"})())
+    monkeypatch.setattr(
+        geocode_service, "httpx", type("X", (), {"AsyncClient": DummyClient})
+    )
+    monkeypatch.setattr(
+        geocode_service, "get_settings", lambda: type("S", (), {"ors_api_key": "KEY"})()
+    )
 
     # Expected behaviour: gracefully fall back to formatted coordinates
     addr = await geocode_service.reverse_geocode(1.0, 2.0)
@@ -138,8 +155,60 @@ async def test_search_geocode_returns_empty_when_no_features(monkeypatch: Monkey
         async def get(self, url, params=None, headers=None):  # type: ignore[override]
             return DummyResp()
 
-    monkeypatch.setattr(geocode_service, "httpx", type("X", (), {"AsyncClient": DummyClient}))
-    monkeypatch.setattr(geocode_service, "get_settings", lambda: type("S", (), {"ors_api_key": "KEY"})())
+    monkeypatch.setattr(
+        geocode_service, "httpx", type("X", (), {"AsyncClient": DummyClient})
+    )
+    monkeypatch.setattr(
+        geocode_service, "get_settings", lambda: type("S", (), {"ors_api_key": "KEY"})()
+    )
 
     results = await geocode_service.search_geocode("Nowhere")
     assert results == []
+
+
+async def test_reverse_geocode_debug_log(
+    monkeypatch: MonkeyPatch, capfd: pytest.CaptureFixture[str]
+):
+    class DummyResp:
+        status_code = 200
+
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict:
+            return {"features": [{"properties": {"label": "123 Fake St"}}]}
+
+    class DummyClient:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *exc_info):
+            return None
+
+        async def get(self, url, params=None, headers=None):
+            return DummyResp()
+
+    monkeypatch.setattr(
+        geocode_service, "httpx", type("X", (), {"AsyncClient": DummyClient})
+    )
+    monkeypatch.setattr(
+        geocode_service, "get_settings", lambda: type("S", (), {"ors_api_key": "KEY"})()
+    )
+    old = os.environ.get("LOG_LEVEL")
+    os.environ["LOG_LEVEL"] = "DEBUG"
+    monkeypatch.delenv("GRAYLOG_HOST", raising=False)
+    monkeypatch.delenv("GRAYLOG_PORT", raising=False)
+    monkeypatch.delenv("GRAYLOG_TRANSPORT", raising=False)
+    get_settings.cache_clear()
+    try:
+        setup_logging()
+        await geocode_service.reverse_geocode(1.0, 2.0)
+        captured = capfd.readouterr()
+        assert "reverse geocode request" in captured.out
+    finally:
+        logging.getLogger().handlers.clear()
+        if old is not None:
+            os.environ["LOG_LEVEL"] = old
+        else:
+            os.environ.pop("LOG_LEVEL", None)
+        get_settings.cache_clear()
