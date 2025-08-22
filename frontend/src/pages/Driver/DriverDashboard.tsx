@@ -10,8 +10,7 @@ import {
   Tab,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { driverBookingsApi } from '@/components/ApiConfig';
-import type { AppSchemasBookingV2BookingRead as Booking } from '@/api-client';
+import { driverBookingsApi as bookingsApi } from '@/components/ApiConfig';
 import { bookingStatusLabels, type BookingStatus } from '@/types/BookingStatus';
 import StatusChip from '@/components/StatusChip';
 
@@ -44,8 +43,8 @@ export default function DriverDashboard() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await driverBookingsApi.listBookingsApiV1DriverBookingsGet();
-        setBookings(res.data as Booking[]);
+        const { data } = await bookingsApi.listBookingsApiV1DriverBookingsGet();
+        setBookings(data as unknown as Booking[]);
       } catch {
         /* ignore */
       }
@@ -63,29 +62,31 @@ export default function DriverDashboard() {
       | 'arrive-dropoff'
       | 'complete',
   ) {
-    let res;
-    switch (action) {
-      case 'confirm':
-        res = await driverBookingsApi.confirmBookingApiV1DriverBookingsBookingIdConfirmPost(id);
-        break;
-      case 'decline':
-        res = await driverBookingsApi.declineBookingApiV1DriverBookingsBookingIdDeclinePost(id);
-        break;
-      case 'leave':
-        res = await driverBookingsApi.leaveBookingApiV1DriverBookingsBookingIdLeavePost(id);
-        break;
-      case 'arrive-pickup':
-        res = await driverBookingsApi.arrivePickupApiV1DriverBookingsBookingIdArrivePickupPost(id);
-        break;
-      case 'start-trip':
-        res = await driverBookingsApi.startTripApiV1DriverBookingsBookingIdStartTripPost(id);
-        break;
-      case 'arrive-dropoff':
-        res = await driverBookingsApi.arriveDropoffApiV1DriverBookingsBookingIdArriveDropoffPost(id);
-        break;
-      case 'complete':
-        res = await driverBookingsApi.completeBookingApiV1DriverBookingsBookingIdCompletePost(id);
-        break;
+    const apiMap = {
+      confirm: bookingsApi.confirmBookingApiV1DriverBookingsBookingIdConfirmPost,
+      decline: bookingsApi.declineBookingApiV1DriverBookingsBookingIdDeclinePost,
+      leave: bookingsApi.leaveBookingApiV1DriverBookingsBookingIdLeavePost,
+      'arrive-pickup': bookingsApi.arrivePickupApiV1DriverBookingsBookingIdArrivePickupPost,
+      'start-trip': bookingsApi.startTripApiV1DriverBookingsBookingIdStartTripPost,
+      'arrive-dropoff': bookingsApi.arriveDropoffApiV1DriverBookingsBookingIdArriveDropoffPost,
+      complete: bookingsApi.completeBookingApiV1DriverBookingsBookingIdCompletePost,
+    } as const;
+    try {
+      const { data } = await apiMap[action](id);
+      setBookings(b =>
+        b.map(item =>
+          item.id === id
+            ? {
+                ...item,
+                status: data.status,
+                final_price_cents:
+                  data.final_price_cents ?? item.final_price_cents,
+              }
+            : item,
+        )
+      );
+    } catch {
+      /* ignore */
     }
     const data = res.data as Booking;
     setBookings((b) =>
