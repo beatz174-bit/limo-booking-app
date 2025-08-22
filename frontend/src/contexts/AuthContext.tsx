@@ -6,6 +6,7 @@ import { setTokens, getRefreshToken } from "../services/tokenStore";
 import { beginLogin, completeLoginFromRedirect, refreshTokens, TokenResponse, OAuthConfig } from "../services/oauth";
 import { useLocation, useNavigate } from "react-router-dom";
 import { type AuthContextType } from "@/types/AuthContextType";
+import { initPush } from "@/services/push";
 
 type UserShape = { email?: string; full_name?: string; role?: string } | null;
 
@@ -36,6 +37,20 @@ const oauthCfg: OAuthConfig = {
   tokenUrl: CONFIG.OAUTH_TOKEN_URL,
   redirectUri: CONFIG.OAUTH_REDIRECT_URI,
 };
+
+function maybeInitPush() {
+  if (
+    typeof window !== "undefined" &&
+    "serviceWorker" in navigator &&
+    import.meta.env.VITE_FCM_VAPID_KEY &&
+    import.meta.env.VITE_FCM_API_KEY &&
+    import.meta.env.VITE_FCM_PROJECT_ID &&
+    import.meta.env.VITE_FCM_APP_ID &&
+    import.meta.env.VITE_FCM_SENDER_ID
+  ) {
+    initPush().catch((err) => console.warn("push init failed", err));
+  }
+}
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AuthState>({ accessToken: null, user: null, loading: true, userID: null, userName: null, role: null });
@@ -120,7 +135,15 @@ useEffect(() => {
       }
     }
     setTokens(access_token, refresh_token);
-    setState((s) => ({ ...s, accessToken: access_token, user: user ?? s.user, role: user?.role ?? s.role }));
+    setState((s) => ({
+      ...s,
+      accessToken: access_token,
+      user: user ?? s.user,
+      role: user?.role ?? s.role,
+    }));
+    if (access_token) {
+      maybeInitPush();
+    }
   }, []);
 
   const loginWithPassword = useCallback(async (email: string, password: string): Promise<string | null> => {
@@ -164,6 +187,39 @@ useEffect(() => {
       }
       throw new Error("Login failed");
     }
+
+    const body = await res.json();
+    const token = body.access_token ?? body.token ?? null;
+    const role: string | null = body.role ?? body.user?.role ?? null;
+    localStorage.setItem(
+      "auth_tokens",
+      JSON.stringify({
+        access_token: token,
+        refresh_token: body.refresh_token ?? null,
+        user: body.user ?? null,
+      })
+    );
+    if (role) {
+      localStorage.setItem("role", role);
+    } else {
+      localStorage.removeItem("role");
+    }
+
+    localStorage.setItem("userName", body.full_name);
+    localStorage.setItem("userID", String(body.id));
+
+    setState((s) => ({
+      ...s,
+      accessToken: token,
+      user: body.user ?? s.user,
+      userID: String(body.id),
+      userName: body.full_name,
+      role,
+    }));
+    if (token) {
+      maybeInitPush();
+    }
+    return role;
   }, [setState]);
 
     const registerWithPassword = useCallback(async (fullName: string, email: string, password: string) => {
