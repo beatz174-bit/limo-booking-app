@@ -4,21 +4,23 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { DevFeaturesProvider } from '@/contexts/DevFeaturesContext';
-import { ThemeProvider, CssBaseline } from '@mui/material';
-import theme from '@/theme';
 import App from '@/App';
+import { initPush } from '@/services/push';
+import { ThemeProvider, CssBaseline, createTheme } from '@mui/material';
+
+const theme = createTheme();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <AuthProvider>
-          <DevFeaturesProvider>
+      <AuthProvider>
+        <DevFeaturesProvider>
+          <ThemeProvider theme={theme}>
+            <CssBaseline />
             <App />
-          </DevFeaturesProvider>
-        </AuthProvider>
-      </ThemeProvider>
+          </ThemeProvider>
+        </DevFeaturesProvider>
+      </AuthProvider>
     </BrowserRouter>
   </StrictMode>,
 );
