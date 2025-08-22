@@ -8,6 +8,7 @@ import AvailabilityPage from '@/pages/Driver/AvailabilityPage';
 import TrackingPage from '@/pages/TrackingPage';
 import RideHistoryPage from '@/pages/Booking/RideHistoryPage';
 import RideDetailsPage from '@/pages/Booking/RideDetailsPage';
+import BookingConfirmationPage from '@/pages/Booking/BookingConfirmationPage';
 import RegisterPage from "@/pages/Auth/RegisterPage";
 import ProfilePage from '@/pages/Profile/ProfilePage';
 import { useAuth } from "@/contexts/AuthContext";
@@ -46,6 +47,10 @@ function App() {
       <Route
         path="/history/:id"
         element={ accessToken ? <RideDetailsPage /> : <Navigate to="/login" /> }
+      />
+      <Route
+        path="/confirmation/:id"
+        element={ accessToken ? <BookingConfirmationPage /> : <Navigate to="/login" /> }
       />
       <Route
         path="/me"
