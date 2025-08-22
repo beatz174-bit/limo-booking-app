@@ -1,5 +1,6 @@
 // Main application component setting up routes.
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import LoginPage from '@/pages/Auth/LoginPage';
 import BookingWizardPage from '@/pages/Booking/BookingWizardPage';
 import AdminDashboard from '@/pages/Admin/AdminDashboard';
@@ -10,6 +11,7 @@ import RideHistoryPage from '@/pages/Booking/RideHistoryPage';
 import RideDetailsPage from '@/pages/Booking/RideDetailsPage';
 import RegisterPage from "@/pages/Auth/RegisterPage";
 import ProfilePage from '@/pages/Profile/ProfilePage';
+import SetupPage from '@/pages/Setup/SetupPage';
 import { useAuth } from "@/contexts/AuthContext";
 import NavBar from '@/components/NavBar';
 import CircularProgress from "@mui/material/CircularProgress";
@@ -17,6 +19,28 @@ import PageNotFound from '@/pages/PageNotFound';
 import DevNotes from '@/components/DevNotes';
 import { useDevFeatures } from '@/contexts/DevFeaturesContext';
 import HomePage from '@/pages/Dashboard/HomePage';
+import { setupApi } from '@/components/ApiConfig';
+
+function SetupRoute() {
+  const [configured, setConfigured] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await setupApi.setupStatusSetupGet();
+        setConfigured(data !== null);
+      } catch {
+        setConfigured(false);
+      }
+    })();
+  }, []);
+
+  if (configured === null) {
+    return <CircularProgress size="large" title='Loading' />;
+  }
+
+  return configured ? <Navigate to="/login" /> : <SetupPage />;
+}
 
 function App() {
   const { accessToken, loading, userID } = useAuth(); // custom hook to get AuthContext
@@ -33,6 +57,7 @@ function App() {
       <Route path="/" element={ accessToken ? <HomePage /> : <Navigate to="/login" /> } />
       <Route path="/login" element={ !accessToken ? <LoginPage />: <Navigate to="/" />} />
       <Route path="/register" element={ !accessToken ? <RegisterPage /> : <Navigate to="/" />} />
+      <Route path="/setup" element={<SetupRoute />} />
 
       {/* Protected user routes */}
       <Route
