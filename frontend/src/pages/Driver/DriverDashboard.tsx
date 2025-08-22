@@ -7,7 +7,9 @@ import {
   Stack,
   Typography,
   Tabs,
-  Tab
+  Tab,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { CONFIG } from '@/config';
@@ -39,6 +41,7 @@ interface Booking {
 
 export default function DriverDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const bookingsByStatus = useMemo(() => {
     const groups = statuses.reduce(
       (acc, s) => ({ ...acc, [s]: [] as Booking[] }),
@@ -82,8 +85,8 @@ export default function DriverDashboard() {
         headers: { Authorization: `Bearer ${token}` }
       }
     );
+    const data = await res.json().catch(() => ({}));
     if (res.ok) {
-      const data = await res.json();
       setBookings(b =>
         b.map(item =>
           item.id === id
@@ -96,6 +99,8 @@ export default function DriverDashboard() {
             : item
         )
       );
+    } else {
+      setError(`${res.status} ${data.message ?? res.statusText}`);
     }
   }
 
@@ -206,6 +211,21 @@ export default function DriverDashboard() {
           </List>
         );
       })}
+      {error && (
+        <Snackbar
+          open
+          onClose={() => setError(null)}
+          autoHideDuration={6000}
+        >
+          <Alert
+            onClose={() => setError(null)}
+            severity="error"
+            sx={{ width: '100%' }}
+          >
+            {error}
+          </Alert>
+        </Snackbar>
+      )}
     </Stack>
   );
 }
