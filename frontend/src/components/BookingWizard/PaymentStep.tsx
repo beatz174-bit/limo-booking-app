@@ -1,7 +1,13 @@
 import { Stack, TextField, Button, Typography } from '@mui/material';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import {
+  Elements,
+  CardElement,
+  useStripe,
+  useElements,
+} from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { useState } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import { useStripeSetupIntent } from '@/hooks/useStripeSetupIntent';
 import { useSettings } from '@/hooks/useSettings';
 import { settingsApi } from '@/components/ApiConfig';
@@ -58,6 +64,7 @@ function PaymentInner({ data, onBack }: Props) {
   const [name, setName] = useState(data.customer?.name || '');
   const [email, setEmail] = useState(data.customer?.email || '');
   const [phone, setPhone] = useState(data.customer?.phone || '');
+  const [booking, setBooking] = useState<{ public_code: string } | null>(null);
 
   async function handleSubmit() {
     if (!stripe || !elements) return;
@@ -68,11 +75,26 @@ function PaymentInner({ data, onBack }: Props) {
     };
     const res = await createBooking(payload);
     if (res.clientSecret && card) {
-        await stripe.confirmCardSetup(res.clientSecret, {
-          payment_method: { card },
-        });
-        alert('Booking created');
-      }
+      await stripe.confirmCardSetup(res.clientSecret, {
+        payment_method: { card },
+      });
+      setBooking(res.booking);
+    }
+  }
+
+  if (booking) {
+    return (
+      <Stack spacing={2}>
+        <Typography>Booking created</Typography>
+        <Button
+          component={RouterLink}
+          to={`/t/${booking.public_code}`}
+          variant="contained"
+        >
+          Track this ride
+        </Button>
+      </Stack>
+    );
   }
 
   return (
@@ -90,7 +112,9 @@ function PaymentInner({ data, onBack }: Props) {
       <CardElement />
       <Stack direction="row" spacing={1}>
         <Button onClick={onBack}>Back</Button>
-        <Button variant="contained" onClick={handleSubmit}>Submit</Button>
+        <Button variant="contained" onClick={handleSubmit}>
+          Submit
+        </Button>
       </Stack>
     </Stack>
   );
