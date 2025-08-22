@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import App from '@/App';
 import { AuthContextType, UserShape } from '@/types/AuthContextType';
 import { AuthContext } from '@/contexts/AuthContext';
+import { DevFeaturesProvider } from '@/contexts/DevFeaturesContext';
 import { vi } from 'vitest';
 
 vi.mock('@/pages/Admin/AdminDashboard', () => ({ default: () => <div>Admin Page</div> }));
@@ -28,9 +29,11 @@ const baseAuth: AuthContextType = {
 function renderWithAuth(value: Partial<AuthContextType>, initial: string) {
   return render(
     <AuthContext.Provider value={{ ...baseAuth, ...value }}>
-      <MemoryRouter initialEntries={[initial]}>
-        <App />
-      </MemoryRouter>
+      <DevFeaturesProvider>
+        <MemoryRouter initialEntries={[initial]}>
+          <App />
+        </MemoryRouter>
+      </DevFeaturesProvider>
     </AuthContext.Provider>
   );
 }

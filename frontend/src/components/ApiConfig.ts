@@ -10,15 +10,36 @@ export const configuration = new Configuration({
 });
 
 // Export **instances** (singletons)
-export const authApi          = new AuthApi(configuration);
-export const bookingsApi      = new BookingsApi(configuration);
+export const authApi           = new AuthApi(configuration);
+export const bookingsApi       = new BookingsApi(configuration);
 export const driverBookingsApi = new DriverBookingsApi(configuration);
-export const usersApi         = new UsersApi(configuration);
-export const setupApi         = new SetupApi(configuration);
-export const settingsApi      = new SettingsApi(configuration);
+export const usersApi          = new UsersApi(configuration);
+export const setupApi          = new SetupApi(configuration);
+export const settingsApi       = new SettingsApi(configuration);
+export const availabilityApi   = new AvailabilityApi(configuration);
+
+export const customerBookingsApi = {
+  async listMyBookingsApiV1CustomersMeBookingsGet() {
+    const token = await getAccessToken();
+    const res = await fetch(`${CONFIG.API_BASE_URL}/api/v1/customers/me/bookings`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return { data: await res.json() } as const;
+  },
+};
 
 // (Keep if you still want the classes too)
-export { AuthApi, BookingsApi, DriverBookingsApi, UsersApi, SetupApi, SettingsApi } from "@/api-client";
+export {
+  AuthApi,
+  BookingsApi,
+  DriverBookingsApi,
+  UsersApi,
+  SetupApi,
+  SettingsApi,
+  AvailabilityApi,
+} from "@/api-client";
+
+export default configuration;
 
 // Optional: token change hook
 // onTokenChange(() => { /* e.g. invalidate caches if needed */ });
