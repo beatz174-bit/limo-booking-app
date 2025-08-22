@@ -4,20 +4,22 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { DevFeaturesProvider } from '@/contexts/DevFeaturesContext';
-import '@/index.css';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import theme from '@/theme';
 import App from '@/App';
-import { initPush } from '@/services/push';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <DevFeaturesProvider>
-          <App />
-        </DevFeaturesProvider>
-      </AuthProvider>
-    </BrowserRouter>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <BrowserRouter>
+        <AuthProvider>
+          <DevFeaturesProvider>
+            <App />
+          </DevFeaturesProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   </StrictMode>,
 );
-
-initPush();
