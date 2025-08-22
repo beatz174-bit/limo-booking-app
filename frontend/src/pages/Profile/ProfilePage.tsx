@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Box, Button, TextField, Typography, Tooltip } from '@mui/material';
 import { AddressField } from '@/components/AddressField';
 import { useAuth } from '@/contexts/AuthContext';
-import { CONFIG } from '@/config';
+import { usersApi, authApi } from '@/components/ApiConfig';
 
 const ProfilePage = () => {
   const { ensureFreshToken } = useAuth();
@@ -18,15 +18,10 @@ const ProfilePage = () => {
     const load = async () => {
       const token = await ensureFreshToken();
       if (!token) return;
-      const res = await fetch(`${CONFIG.API_BASE_URL}/users/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setFullName(data.full_name || '');
-        setEmail(data.email || '');
-        setDefaultPickup(data.default_pickup_address || '');
-      }
+      const { data } = await usersApi.apiGetMeUsersMeGet();
+      setFullName(data.full_name || '');
+      setEmail(data.email || '');
+      setDefaultPickup(data.default_pickup_address || '');
     };
     load();
   }, [ensureFreshToken]);
@@ -39,16 +34,12 @@ const ProfilePage = () => {
 
   const verifyOldPassword = async () => {
     if (!oldPassword) return;
-    const form = new URLSearchParams({
-      username: email,
-      password: oldPassword,
-    });
-    const res = await fetch(`${CONFIG.API_BASE_URL}/auth/token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: form.toString(),
-    });
-    setOldPasswordValid(res.ok);
+    try {
+      await authApi.tokenAuthTokenPost(email, oldPassword);
+      setOldPasswordValid(true);
+    } catch {
+      setOldPasswordValid(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,17 +54,11 @@ const ProfilePage = () => {
     if (newPassword && newPassword === confirmPassword && oldPasswordValid) {
       body.password = newPassword;
     }
-    const res = await fetch(`${CONFIG.API_BASE_URL}/users/me`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(body),
-    });
-    if (res.ok) {
-      const data = await res.json();
+    try {
+      const { data } = await usersApi.apiUpdateMeUsersMePatch(body);
       localStorage.setItem('userName', data.full_name);
+    } catch {
+      /* ignore */
     }
     setOldPassword('');
     setNewPassword('');

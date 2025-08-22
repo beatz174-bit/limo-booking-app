@@ -10,8 +10,7 @@ import {
   Tab
 } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { CONFIG } from '@/config';
-import { getAccessToken } from '@/services/tokenStore';
+import { driverBookingsApi as bookingsApi } from '@/components/ApiConfig';
 import { bookingStatusLabels, type BookingStatus } from '@/types/BookingStatus';
 import StatusChip from '@/components/StatusChip';
 
@@ -53,12 +52,11 @@ export default function DriverDashboard() {
 
   useEffect(() => {
     (async () => {
-      const token = getAccessToken();
-      const res = await fetch(`${CONFIG.API_BASE_URL}/api/v1/driver/bookings`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        setBookings(await res.json());
+      try {
+        const { data } = await bookingsApi.listBookingsApiV1DriverBookingsGet();
+        setBookings(data as unknown as Booking[]);
+      } catch {
+        /* ignore */
       }
     })();
   }, []);
@@ -74,16 +72,17 @@ export default function DriverDashboard() {
       | 'arrive-dropoff'
       | 'complete'
   ) {
-    const token = getAccessToken();
-    const res = await fetch(
-      `${CONFIG.API_BASE_URL}/api/v1/driver/bookings/${id}/${action}`,
-      {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
-      }
-    );
-    if (res.ok) {
-      const data = await res.json();
+    const apiMap = {
+      confirm: bookingsApi.confirmBookingApiV1DriverBookingsBookingIdConfirmPost,
+      decline: bookingsApi.declineBookingApiV1DriverBookingsBookingIdDeclinePost,
+      leave: bookingsApi.leaveBookingApiV1DriverBookingsBookingIdLeavePost,
+      'arrive-pickup': bookingsApi.arrivePickupApiV1DriverBookingsBookingIdArrivePickupPost,
+      'start-trip': bookingsApi.startTripApiV1DriverBookingsBookingIdStartTripPost,
+      'arrive-dropoff': bookingsApi.arriveDropoffApiV1DriverBookingsBookingIdArriveDropoffPost,
+      complete: bookingsApi.completeBookingApiV1DriverBookingsBookingIdCompletePost,
+    } as const;
+    try {
+      const { data } = await apiMap[action](id);
       setBookings(b =>
         b.map(item =>
           item.id === id
@@ -91,11 +90,13 @@ export default function DriverDashboard() {
                 ...item,
                 status: data.status,
                 final_price_cents:
-                  data.final_price_cents ?? item.final_price_cents
+                  data.final_price_cents ?? item.final_price_cents,
               }
-            : item
+            : item,
         )
       );
+    } catch {
+      /* ignore */
     }
   }
 
