@@ -1,6 +1,7 @@
 // Hook to fetch distance and duration between two addresses.
 import { CONFIG } from "@/config";
 import { useCallback } from "react";
+import * as logger from "@/lib/logger";
 
 export function useRouteMetrics() {
   return useCallback(
@@ -22,7 +23,7 @@ export function useRouteMetrics() {
         url.search = params.toString();
         const res = await fetch(url.toString());
         if (!res.ok) {
-          console.error("Route metrics request failed", res.status);
+          logger.error("hooks/useRouteMetrics", "Route metrics request failed", res.status);
           return null;
         }
         const data = await res.json();
@@ -31,7 +32,7 @@ export function useRouteMetrics() {
         if (!Number.isFinite(km) || !Number.isFinite(min)) return null;
         return { km, min };
       } catch (err) {
-        console.error(err);
+        logger.error("hooks/useRouteMetrics", err);
         return null;
       }
     },

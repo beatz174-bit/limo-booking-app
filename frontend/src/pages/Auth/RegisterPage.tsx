@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext"
+import { useAuth } from "@/contexts/AuthContext";
+import * as logger from "@/lib/logger";
 
 import type { RegisterRequest } from "@/api-client/api";
 
@@ -55,7 +56,7 @@ function RegisterPage() {
             } else {
                 setError("Registration failed. Please try again.");
             }
-            console.error("Registration error:", err);
+            logger.error("pages/Auth/RegisterPage", "Registration error:", err);
         }
     };
 

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Box, Button, TextField, Typography, Tooltip, FormControlLabel, Switch } from '@mui/material';
 import { AddressField } from '@/components/AddressField';
 import { useAuth } from '@/contexts/AuthContext';
-import { CONFIG } from '@/config';
 import PushToggle from '@/components/PushToggle';
 
   const ProfilePage = () => {

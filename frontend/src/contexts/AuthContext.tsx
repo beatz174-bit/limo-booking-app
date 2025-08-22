@@ -7,6 +7,7 @@ import { beginLogin, completeLoginFromRedirect, refreshTokens, TokenResponse, OA
 import { useLocation, useNavigate } from "react-router-dom";
 import { type AuthContextType } from "@/types/AuthContextType";
 import { initPush } from "@/services/push";
+import * as logger from "@/lib/logger";
 
 type UserShape = { email?: string; full_name?: string; role?: string } | null;
 
@@ -48,7 +49,7 @@ function maybeInitPush() {
     import.meta.env.VITE_FCM_APP_ID &&
     import.meta.env.VITE_FCM_SENDER_ID
   ) {
-    initPush().catch((err) => console.warn("push init failed", err));
+    initPush().catch((err) => logger.warn("contexts/AuthContext", "push init failed", err));
   }
 }
 

@@ -1,6 +1,7 @@
 // Reverse geocode helper. Prefer backend proxy; fall back to Nominatim in dev.
 import { CONFIG } from "@/config";
 import { formatAddress } from "@/lib/formatAddress";
+import * as logger from "@/lib/logger";
 
 export async function reverseGeocode(lat: number, lon: number): Promise<string> {
     
@@ -15,7 +16,7 @@ export async function reverseGeocode(lat: number, lon: number): Promise<string> 
     }
   } catch (e) {
     // continue to dev fallback
-    console.warn("Backend reverseGeocode error, falling back to Nominatim", e);
+    logger.warn("lib/geocoding", "Backend reverseGeocode error, falling back to Nominatim", e);
   }
 
   // Dev-only fallback (rate limited; do not ship to prod without a proxy)

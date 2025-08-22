@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import * as logger from '@/lib/logger';
 
 const endpoints: [string, string][] = [
   ['OpenRouteService', 'https://api.openrouteservice.org/'],
@@ -13,7 +14,7 @@ describe.skip('external services', () => {
         const res = await fetch(url, { method: 'HEAD' });
         expect(res.status).toBeLessThan(500);
       } catch (err) {
-        console.warn(`${name} unreachable`, err);
+        logger.warn('__tests__/externalServices', `${name} unreachable`, err);
       }
     });
   });
