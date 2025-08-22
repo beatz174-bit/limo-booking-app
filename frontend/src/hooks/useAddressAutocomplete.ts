@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { CONFIG } from "@/config";
 import { formatAddress } from "@/lib/formatAddress";
+import * as logger from "@/lib/logger";
 
 export interface AddressSuggestion {
   display: string;
@@ -42,7 +43,7 @@ export function useAddressAutocomplete(query: string, options?: { debounceMs?: n
         );
       } catch (e) {
         if (!controller.signal.aborted) {
-          console.warn(e);
+          logger.warn("hooks/useAddressAutocomplete", e);
           setSuggestions([]);
         }
       } finally {

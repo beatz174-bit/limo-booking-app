@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { deleteToken, getMessaging, getToken, onMessage } from 'firebase/messaging';
+import * as logger from '@/lib/logger';
 
 let messaging: ReturnType<typeof getMessaging> | null = null;
 
@@ -30,11 +31,11 @@ export async function subscribePush(): Promise<string | null> {
       serviceWorkerRegistration: registration,
     });
     onMessage(messaging, (payload) => {
-      console.log('FCM message', payload);
+      logger.info('services/push', 'FCM message', payload);
     });
     return token;
   } catch (err) {
-    console.warn('FCM init failed', err);
+    logger.warn('services/push', 'FCM init failed', err);
     return null;
   }
 }
@@ -46,6 +47,6 @@ export async function unsubscribePush(): Promise<void> {
   try {
     await deleteToken(messaging);
   } catch (err) {
-    console.warn('FCM delete failed', err);
+    logger.warn('services/push', 'FCM delete failed', err);
   }
 }

@@ -1,6 +1,7 @@
 // Hook that fetches route metrics and computes fare estimate.
 import { useCallback, useRef } from "react";
 import { CONFIG } from "@/config";
+import * as logger from "@/lib/logger";
 
 interface DirectionsMetrics {
   km: number;
@@ -41,7 +42,7 @@ export function useDirections() {
         cache.current.set(key, metrics);
         return metrics;
       } catch (err) {
-        console.error(err);
+        logger.error("hooks/useDirections", err);
         return null;
       }
     },
