@@ -1,8 +1,15 @@
 import { createTheme } from '@mui/material/styles';
 
+// Application-wide Material UI theme configuration
 const theme = createTheme({
-  typography: {
-    fontFamily: 'system-ui, Avenir, Helvetica, Arial, sans-serif',
+  palette: {
+    mode: 'light',
+    primary: {
+      main: '#1976d2',
+    },
+    secondary: {
+      main: '#9c27b0',
+    },
   },
 });
 
