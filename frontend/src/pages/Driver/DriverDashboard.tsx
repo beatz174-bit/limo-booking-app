@@ -8,6 +8,8 @@ import {
   Typography,
   Tabs,
   Tab,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { driverBookingsApi as bookingsApi } from '@/components/ApiConfig';
@@ -28,6 +30,7 @@ const statuses: BookingStatus[] = [
 
 export default function DriverDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const bookingsByStatus = useMemo(() => {
     const groups = statuses.reduce(
       (acc, s) => ({ ...acc, [s]: [] as Booking[] }),
@@ -62,17 +65,16 @@ export default function DriverDashboard() {
       | 'arrive-dropoff'
       | 'complete',
   ) {
-    const apiMap = {
-      confirm: bookingsApi.confirmBookingApiV1DriverBookingsBookingIdConfirmPost,
-      decline: bookingsApi.declineBookingApiV1DriverBookingsBookingIdDeclinePost,
-      leave: bookingsApi.leaveBookingApiV1DriverBookingsBookingIdLeavePost,
-      'arrive-pickup': bookingsApi.arrivePickupApiV1DriverBookingsBookingIdArrivePickupPost,
-      'start-trip': bookingsApi.startTripApiV1DriverBookingsBookingIdStartTripPost,
-      'arrive-dropoff': bookingsApi.arriveDropoffApiV1DriverBookingsBookingIdArriveDropoffPost,
-      complete: bookingsApi.completeBookingApiV1DriverBookingsBookingIdCompletePost,
-    } as const;
-    try {
-      const { data } = await apiMap[action](id);
+    const token = getAccessToken();
+    const res = await fetch(
+      `${CONFIG.API_BASE_URL}/api/v1/driver/bookings/${id}/${action}`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
       setBookings(b =>
         b.map(item =>
           item.id === id
@@ -85,8 +87,8 @@ export default function DriverDashboard() {
             : item,
         )
       );
-    } catch {
-      /* ignore */
+    } else {
+      setError(`${res.status} ${data.message ?? res.statusText}`);
     }
     const data = res.data as Booking;
     setBookings((b) =>
@@ -209,6 +211,21 @@ export default function DriverDashboard() {
           </List>
         );
       })}
+      {error && (
+        <Snackbar
+          open
+          onClose={() => setError(null)}
+          autoHideDuration={6000}
+        >
+          <Alert
+            onClose={() => setError(null)}
+            severity="error"
+            sx={{ width: '100%' }}
+          >
+            {error}
+          </Alert>
+        </Snackbar>
+      )}
     </Stack>
   );
 }
