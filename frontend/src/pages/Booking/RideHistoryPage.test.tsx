@@ -5,6 +5,9 @@ import RideHistoryPage from './RideHistoryPage';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { customerBookingsApi } from '@/components/ApiConfig';
 import { vi } from 'vitest';
+import { server } from '@/__tests__/setup/msw.server';
+import { http, HttpResponse } from 'msw';
+import { apiUrl } from '@/__tests__/setup/msw.handlers';
 
 test('shows track link for trackable bookings', async () => {
   const bookings = [

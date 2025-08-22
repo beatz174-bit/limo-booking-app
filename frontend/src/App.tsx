@@ -10,6 +10,7 @@ import RideHistoryPage from "@/pages/Booking/RideHistoryPage";
 import RideDetailsPage from "@/pages/Booking/RideDetailsPage";
 import RegisterPage from "@/pages/Auth/RegisterPage";
 import ProfilePage from "@/pages/Profile/ProfilePage";
+import SetupPage from "@/pages/Setup/SetupPage";
 import { useAuth, RequireAuth, RequireRole } from "@/contexts/AuthContext";
 import NavBar from "@/components/NavBar";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -31,8 +32,9 @@ function App() {
     {accessToken && <NavBar />}
     <Routes>
       <Route path="/" element={<RequireAuth><HomePage /></RequireAuth>} />
-      <Route path="/login" element={!accessToken ? <LoginPage /> : <Navigate to="/" />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={!accessToken ? <RegisterPage /> : <Navigate to="/" />} />
+      <Route path="/setup" element={<SetupPage />} />
 
       {/* Protected user routes */}
       <Route path="/book" element={<RequireAuth><BookingWizardPage /></RequireAuth>} />

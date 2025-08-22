@@ -15,6 +15,8 @@ import { Link } from 'react-router-dom';
 import { driverBookingsApi as bookingsApi } from '@/components/ApiConfig';
 import { bookingStatusLabels, type BookingStatus } from '@/types/BookingStatus';
 import StatusChip from '@/components/StatusChip';
+import { CONFIG } from '@/config';
+import { getAccessToken } from '@/services/tokenStore';
 
 const statuses: BookingStatus[] = [
   'PENDING',
@@ -75,8 +77,8 @@ export default function DriverDashboard() {
     );
     const data = await res.json().catch(() => ({}));
     if (res.ok) {
-      setBookings(b =>
-        b.map(item =>
+      setBookings((b) =>
+        b.map((item) =>
           item.id === id
             ? {
                 ...item,
@@ -85,23 +87,11 @@ export default function DriverDashboard() {
                   data.final_price_cents ?? item.final_price_cents,
               }
             : item,
-        )
+        ),
       );
     } else {
       setError(`${res.status} ${data.message ?? res.statusText}`);
     }
-    const data = res.data as Booking;
-    setBookings((b) =>
-      b.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              status: data.status,
-              final_price_cents: data.final_price_cents ?? item.final_price_cents,
-            }
-          : item,
-      ),
-    );
   }
 
   const [now, setNow] = useState(Date.now());

@@ -5,7 +5,6 @@ import { vi, type Mock } from 'vitest';
 vi.mock('@/components/ApiConfig', () => ({
   driverBookingsApi: {
     listBookingsApiV1DriverBookingsGet: vi.fn(),
-    confirmBookingApiV1DriverBookingsBookingIdConfirmPost: vi.fn(),
   },
 }));
 
@@ -24,7 +23,7 @@ describe('DriverDashboard', () => {
       }
     ];
     (driverBookingsApi.listBookingsApiV1DriverBookingsGet as Mock).mockResolvedValueOnce({ data: bookings });
-    (driverBookingsApi.confirmBookingApiV1DriverBookingsBookingIdConfirmPost as Mock).mockResolvedValueOnce({ data: { status: 'DRIVER_CONFIRMED' } });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: 'DRIVER_CONFIRMED' }) }) as unknown as Response);
 
     render(
       <MemoryRouter>
@@ -35,6 +34,7 @@ describe('DriverDashboard', () => {
     fireEvent.click(screen.getByText('Confirm'));
     fireEvent.click(screen.getByRole('tab', { name: /driver confirmed/i }));
     await waitFor(() => expect(screen.getByText('Leave now')).toBeInTheDocument());
+    vi.unstubAllGlobals();
   });
 
   it('shows error message when confirm fails', async () => {
@@ -44,29 +44,31 @@ describe('DriverDashboard', () => {
         pickup_address: 'A',
         dropoff_address: 'B',
         pickup_when: new Date().toISOString(),
-        status: 'PENDING'
-      }
+        status: 'PENDING',
+      },
     ];
-    global.fetch = vi
-      .fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => bookings })
-      .mockResolvedValueOnce({
+    (driverBookingsApi.listBookingsApiV1DriverBookingsGet as Mock).mockResolvedValueOnce({ data: bookings });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
         ok: false,
         status: 500,
         statusText: 'Internal Server Error',
-        json: async () => ({ message: 'fail' })
-      });
+        json: async () => ({ message: 'fail' }),
+      }) as unknown as Response,
+    );
 
     render(
       <MemoryRouter>
         <DriverDashboard />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
     expect(await screen.findByText('A → B')).toBeInTheDocument();
     fireEvent.click(screen.getByText('Confirm'));
     await waitFor(() =>
-      expect(screen.getByText(/500 fail/i)).toBeInTheDocument()
+      expect(screen.getByText(/500 fail/i)).toBeInTheDocument(),
     );
+    vi.unstubAllGlobals();
   });
 });
 

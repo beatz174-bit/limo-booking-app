@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Stack, TextField, Button, List, ListItem, ListItemText, Typography } from '@mui/material';
 import useAvailability from '@/hooks/useAvailability';
-import { availabilityApi } from '@/components/ApiConfig';
+import { CONFIG } from '@/config';
 
 export default function AvailabilityPage() {
   const month = new Date().toISOString().slice(0, 7);
@@ -10,9 +10,10 @@ export default function AvailabilityPage() {
   const [end, setEnd] = useState('');
 
   async function create() {
-    await availabilityApi.createSlotApiV1AvailabilityPost({
-      start_dt: start,
-      end_dt: end,
+    await fetch(`${CONFIG.API_BASE_URL}/api/v1/availability`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ start_dt: start, end_dt: end }),
     });
     setStart('');
     setEnd('');

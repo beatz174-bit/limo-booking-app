@@ -1,4 +1,4 @@
-import { useState, ChangeEvent } from "react";
+import { useState, ChangeEvent, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Container, Box, Typography, TextField, Button, Alert, Switch, FormControlLabel } from "@mui/material";
 import { setupApi } from "@/components/ApiConfig";
@@ -15,6 +15,19 @@ export default function SetupPage() {
   const [perMinuteRate, setPerMinuteRate] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await setupApi.setupStatusSetupGet();
+        if (res.data) {
+          navigate("/login", { replace: true });
+        }
+      } catch {
+        /* ignore */
+      }
+    })();
+  }, [navigate]);
 
   const onChange = (setter: (v: string) => void) => (e: ChangeEvent<HTMLInputElement>) => setter(e.currentTarget.value);
 
