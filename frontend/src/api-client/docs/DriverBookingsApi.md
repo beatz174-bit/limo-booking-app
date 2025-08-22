@@ -320,7 +320,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **listBookingsApiV1DriverBookingsGet**
-> Array<AppSchemasBookingV2BookingRead> listBookingsApiV1DriverBookingsGet()
+> Array<BookingRead> listBookingsApiV1DriverBookingsGet()
 
 
 ### Example
@@ -350,7 +350,7 @@ const { status, data } = await apiInstance.listBookingsApiV1DriverBookingsGet(
 
 ### Return type
 
-**Array<AppSchemasBookingV2BookingRead>**
+**Array<BookingRead>**
 
 ### Authorization
 

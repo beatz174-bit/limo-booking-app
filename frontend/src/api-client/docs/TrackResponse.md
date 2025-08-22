@@ -5,7 +5,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**booking** | [**AppSchemasBookingV2BookingRead**](AppSchemasBookingV2BookingRead.md) |  | [default to undefined]
+**booking** | [**BookingRead**](BookingRead.md) |  | [default to undefined]
 **ws_url** | **string** |  | [default to undefined]
 
 ## Example

@@ -93,7 +93,7 @@ async def connect() -> None:
     # still imported for backward compatibility.
     # New domain models
     from app.models import availability_slot  # noqa: F401
-    from app.models import booking_v2  # noqa: F401
+    from app.models import booking  # noqa: F401
     from app.models import notification  # noqa: F401
     from app.models import route_point  # noqa: F401
     from app.models import trip  # noqa: F401

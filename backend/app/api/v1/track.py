@@ -3,8 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.db.database import get_async_session
-from app.models.booking_v2 import Booking
-from app.schemas.booking_v2 import BookingRead
+from app.models.booking import Booking
+from app.schemas.booking import BookingRead
 from app.schemas.api_track import TrackResponse
 from app.core.config import get_settings
 

@@ -1,45 +1,43 @@
-# app/schemas/booking.py
-"""Pydantic schemas for booking operations."""
+"""Pydantic schemas for the new Booking model."""
 
+import uuid
 from datetime import datetime
-from typing import Literal, Optional
-from pydantic import BaseModel, Field, ConfigDict
-from decimal import Decimal
+from typing import Optional
 
-Status = Literal["pending", "accepted", "completed", "cancelled"]
+from pydantic import BaseModel
 
-
-class BookingCreate(BaseModel):
-    """Payload to create a new booking."""
-    pickup_location: str
-    destination: str
-    ride_time: datetime
-    price: Decimal = Decimal("0")
-    status: Status = "pending"
-
-    model_config = {
-        "from_attributes": True
-    }
+from app.models.booking import BookingStatus
 
 
-class BookingRead(BaseModel):
-    """Representation of a booking returned from API."""
-    id: int
-    user_id: int
-    pickup_location: str
-    destination: str = Field(alias="dropoff_location")
-    ride_time: datetime = Field(alias="time")
-    price: Decimal
-    status: Status
-    created_at: Optional[datetime] = None
+class BookingBase(BaseModel):
+    customer_id: uuid.UUID
+    pickup_address: str
+    pickup_lat: float
+    pickup_lng: float
+    dropoff_address: str
+    dropoff_lat: float
+    dropoff_lng: float
+    pickup_when: datetime
+    notes: Optional[str] = None
+    passengers: int
+    estimated_price_cents: int
+    final_price_cents: Optional[int] = None
+    deposit_required_cents: int
+    deposit_payment_intent_id: Optional[str] = None
+    final_payment_intent_id: Optional[str] = None
 
-    model_config = ConfigDict(
-        from_attributes=True,
-        populate_by_name=True,   # ensures aliases are used when serializing
-    )
+
+class BookingCreate(BookingBase):
+    public_code: str
 
 
-class BookingUpdate(BaseModel):
-    """Allowed fields when updating a booking."""
-    status: Status
+class BookingRead(BookingBase):
+    id: uuid.UUID
+    public_code: str
+    status: BookingStatus
+    created_at: datetime
+    updated_at: datetime
+    leave_at: Optional[datetime] = None
 
+    class Config:
+        from_attributes = True

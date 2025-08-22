@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 from pydantic import BaseModel, Field
 from typing import Optional
-from app.models.booking_v2 import BookingStatus
+from app.models.booking import BookingStatus
 
 class Location(BaseModel):
     address: str

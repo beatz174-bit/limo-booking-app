@@ -5,7 +5,7 @@ import uuid
 from sqlalchemy import select
 
 from app.models.user_v2 import User, UserRole
-from app.models.booking_v2 import Booking, BookingStatus
+from app.models.booking import Booking, BookingStatus
 from app.models.notification import Notification, NotificationType
 
 pytestmark = pytest.mark.asyncio

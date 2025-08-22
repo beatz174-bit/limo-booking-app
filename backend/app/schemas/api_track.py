@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from app.schemas.booking_v2 import BookingRead
+from app.schemas.booking import BookingRead
 
 class TrackResponse(BaseModel):
     booking: BookingRead

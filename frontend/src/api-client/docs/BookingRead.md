@@ -5,14 +5,27 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**id** | **number** |  | [default to undefined]
-**user_id** | **number** |  | [default to undefined]
-**pickup_location** | **string** |  | [default to undefined]
-**dropoff_location** | **string** |  | [default to undefined]
-**time** | **string** |  | [default to undefined]
-**price** | **string** |  | [default to undefined]
-**status** | **string** |  | [default to undefined]
-**created_at** | **string** |  | [optional] [default to undefined]
+**customer_id** | **string** |  | [default to undefined]
+**pickup_address** | **string** |  | [default to undefined]
+**pickup_lat** | **number** |  | [default to undefined]
+**pickup_lng** | **number** |  | [default to undefined]
+**dropoff_address** | **string** |  | [default to undefined]
+**dropoff_lat** | **number** |  | [default to undefined]
+**dropoff_lng** | **number** |  | [default to undefined]
+**pickup_when** | **string** |  | [default to undefined]
+**notes** | **string** |  | [optional] [default to undefined]
+**passengers** | **number** |  | [default to undefined]
+**estimated_price_cents** | **number** |  | [default to undefined]
+**final_price_cents** | **number** |  | [optional] [default to undefined]
+**deposit_required_cents** | **number** |  | [default to undefined]
+**deposit_payment_intent_id** | **string** |  | [optional] [default to undefined]
+**final_payment_intent_id** | **string** |  | [optional] [default to undefined]
+**id** | **string** |  | [default to undefined]
+**public_code** | **string** |  | [default to undefined]
+**status** | [**BookingStatus**](BookingStatus.md) |  | [default to undefined]
+**created_at** | **string** |  | [default to undefined]
+**updated_at** | **string** |  | [default to undefined]
+**leave_at** | **string** |  | [optional] [default to undefined]
 
 ## Example
 
@@ -20,14 +33,27 @@ Name | Type | Description | Notes
 import { BookingRead } from './api';
 
 const instance: BookingRead = {
+    customer_id,
+    pickup_address,
+    pickup_lat,
+    pickup_lng,
+    dropoff_address,
+    dropoff_lat,
+    dropoff_lng,
+    pickup_when,
+    notes,
+    passengers,
+    estimated_price_cents,
+    final_price_cents,
+    deposit_required_cents,
+    deposit_payment_intent_id,
+    final_payment_intent_id,
     id,
-    user_id,
-    pickup_location,
-    dropoff_location,
-    time,
-    price,
+    public_code,
     status,
     created_at,
+    updated_at,
+    leave_at,
 };
 ```
 
