@@ -4,10 +4,10 @@ from sqlalchemy import select
 import uuid
 
 from app.db.database import get_async_session
-from app.models.booking_v2 import Booking, BookingStatus
-from app.schemas.booking_v2 import BookingRead
+from app.models.booking import Booking, BookingStatus
+from app.schemas.booking import BookingRead
 from app.schemas.api_booking import BookingStatusResponse
-from app.services import booking_service_v2, scheduler, notifications
+from app.services import booking_service, scheduler, notifications
 from app.models.notification import NotificationType
 from app.models.user_v2 import UserRole
 
@@ -33,7 +33,7 @@ async def list_bookings(status: BookingStatus | None = None, db: AsyncSession = 
 @router.post("/{booking_id}/confirm", response_model=BookingStatusResponse)
 async def confirm_booking(booking_id: uuid.UUID, db: AsyncSession = Depends(get_async_session)):
     try:
-        booking = await booking_service_v2.confirm_booking(db, booking_id)
+        booking = await booking_service.confirm_booking(db, booking_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     leave_at = await scheduler.schedule_leave_now(booking)
@@ -43,7 +43,7 @@ async def confirm_booking(booking_id: uuid.UUID, db: AsyncSession = Depends(get_
 @router.post("/{booking_id}/decline", response_model=BookingStatusResponse)
 async def decline_booking(booking_id: uuid.UUID, db: AsyncSession = Depends(get_async_session)):
     try:
-        booking = await booking_service_v2.decline_booking(db, booking_id)
+        booking = await booking_service.decline_booking(db, booking_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return BookingStatusResponse(status=booking.status)
@@ -52,7 +52,7 @@ async def decline_booking(booking_id: uuid.UUID, db: AsyncSession = Depends(get_
 @router.post("/{booking_id}/leave", response_model=BookingStatusResponse)
 async def leave_booking(booking_id: uuid.UUID, db: AsyncSession = Depends(get_async_session)):
     try:
-        booking = await booking_service_v2.leave_booking(db, booking_id)
+        booking = await booking_service.leave_booking(db, booking_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     await notifications.create_notification(
@@ -68,7 +68,7 @@ async def leave_booking(booking_id: uuid.UUID, db: AsyncSession = Depends(get_as
 @router.post("/{booking_id}/arrive-pickup", response_model=BookingStatusResponse)
 async def arrive_pickup(booking_id: uuid.UUID, db: AsyncSession = Depends(get_async_session)):
     try:
-        booking = await booking_service_v2.arrive_pickup(db, booking_id)
+        booking = await booking_service.arrive_pickup(db, booking_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return BookingStatusResponse(status=booking.status)
@@ -77,7 +77,7 @@ async def arrive_pickup(booking_id: uuid.UUID, db: AsyncSession = Depends(get_as
 @router.post("/{booking_id}/start-trip", response_model=BookingStatusResponse)
 async def start_trip(booking_id: uuid.UUID, db: AsyncSession = Depends(get_async_session)):
     try:
-        booking = await booking_service_v2.start_trip(db, booking_id)
+        booking = await booking_service.start_trip(db, booking_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return BookingStatusResponse(status=booking.status)
@@ -86,7 +86,7 @@ async def start_trip(booking_id: uuid.UUID, db: AsyncSession = Depends(get_async
 @router.post("/{booking_id}/arrive-dropoff", response_model=BookingStatusResponse)
 async def arrive_dropoff(booking_id: uuid.UUID, db: AsyncSession = Depends(get_async_session)):
     try:
-        booking = await booking_service_v2.arrive_dropoff(db, booking_id)
+        booking = await booking_service.arrive_dropoff(db, booking_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return BookingStatusResponse(status=booking.status)
@@ -95,7 +95,7 @@ async def arrive_dropoff(booking_id: uuid.UUID, db: AsyncSession = Depends(get_a
 @router.post("/{booking_id}/complete", response_model=BookingStatusResponse)
 async def complete_booking(booking_id: uuid.UUID, db: AsyncSession = Depends(get_async_session)):
     try:
-        booking = await booking_service_v2.complete_booking(db, booking_id)
+        booking = await booking_service.complete_booking(db, booking_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return BookingStatusResponse(status=booking.status, final_price_cents=booking.final_price_cents)

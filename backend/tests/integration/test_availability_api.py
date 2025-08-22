@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from httpx import AsyncClient
 
 from app.models.user_v2 import User, UserRole
-from app.models.booking_v2 import Booking, BookingStatus
+from app.models.booking import Booking, BookingStatus
 from _pytest.monkeypatch import MonkeyPatch
 import uuid
 

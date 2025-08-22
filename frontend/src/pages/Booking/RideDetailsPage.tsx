@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
-import { bookingsApi } from '@/components/ApiConfig';
+import { driverBookingsApi } from '@/components/ApiConfig';
 import type { BookingRead } from '@/api-client';
 import { MapRoute } from '@/components/MapRoute';
 import { MapProvider } from '@/components/MapProvider';
@@ -32,8 +32,8 @@ function RideDetailsPage() {
     setLoading(true);
     (async () => {
       try {
-        const res = await bookingsApi.apiListBookingsBookingsGet();
-        const found = (res.data as BookingRead[]).find((b) => b.id === Number(id));
+        const res = await driverBookingsApi.listBookingsApiV1DriverBookingsGet();
+        const found = (res.data as BookingRead[]).find((b) => b.id === id);
         if (alive) {
           if (found) {
             setBooking(found);
@@ -92,16 +92,16 @@ function RideDetailsPage() {
 
       <Stack spacing={1} sx={{ mb: 2 }}>
         <Typography>
-          <strong>Pickup:</strong> {booking.pickup_location}
+          <strong>Pickup:</strong> {booking.pickup_address}
         </Typography>
         <Typography>
-          <strong>Destination:</strong> {booking.dropoff_location}
+          <strong>Destination:</strong> {booking.dropoff_address}
         </Typography>
         <Typography>
-          <strong>Ride Time:</strong> {new Date(booking.time).toLocaleString()}
+          <strong>Ride Time:</strong> {new Date(booking.pickup_when).toLocaleString()}
         </Typography>
         <Typography>
-          <strong>Price:</strong> ${booking.price}
+          <strong>Price:</strong> ${((booking.final_price_cents ?? booking.estimated_price_cents) / 100).toFixed(2)}
         </Typography>
         <Typography>
           <strong>Status:</strong> {booking.status}
@@ -114,7 +114,7 @@ function RideDetailsPage() {
       </Stack>
 
       <MapProvider>
-        <MapRoute pickup={booking.pickup_location} dropoff={booking.dropoff_location} />
+        <MapRoute pickup={booking.pickup_address} dropoff={booking.dropoff_address} />
       </MapProvider>
     </Box>
   );

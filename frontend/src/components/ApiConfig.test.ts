@@ -45,7 +45,7 @@ describe("ApiConfig", () => {
   test("constructs clients with basePath and token getter", async () => {
     const mod = await import("./ApiConfig");
     const cfg = mod.default;
-    const { authApi, bookingsApi, driverBookingsApi, usersApi, setupApi, settingsApi, availabilityApi } = mod;
+    const { authApi, bookingsApi, driverBookingsApi, usersApi, setupApi, settingsApi } = mod;
 
     // config assertions
     const cfgTyped = configuration as Configuration;
@@ -54,7 +54,7 @@ describe("ApiConfig", () => {
     await expect(cfgTyped.accessToken()).resolves.toBe("token-abc");
 
     // clients share same Configuration
-    for (const api of [authApi, bookingsApi, driverBookingsApi, usersApi, setupApi, settingsApi, availabilityApi]) {
+    for (const api of [authApi, bookingsApi, driverBookingsApi, usersApi, setupApi, settingsApi]) {
       const client = api as FakeApi;
       expect(client).toBeTruthy();
       expect(client.cfg.basePath).toBe("https://api.example.test");

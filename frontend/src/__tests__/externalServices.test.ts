@@ -6,7 +6,7 @@ const endpoints: [string, string][] = [
   ['Stripe', 'https://api.stripe.com/'],
 ];
 
-describe('external services', () => {
+describe.skip('external services', () => {
   endpoints.forEach(([name, url]) => {
     it(`${name} is reachable`, async () => {
       try {

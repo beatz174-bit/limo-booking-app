@@ -5,7 +5,7 @@ import pytest
 from httpx import AsyncClient
 
 from app.models.user_v2 import User, UserRole
-from app.models.booking_v2 import Booking, BookingStatus
+from app.models.booking import Booking, BookingStatus
 from app.models.route_point import RoutePoint
 from app.models.settings import AdminConfig
 

@@ -1,44 +1,58 @@
-"""SQLAlchemy model for ride bookings."""
-
-from sqlalchemy import Integer, Float, String, ForeignKey, Text, DateTime
-from app.db.database import Base
-from decimal import Decimal
-from typing import Dict, Any, Literal
-from sqlalchemy.orm import Mapped, mapped_column
+import enum
+import uuid
 from datetime import datetime
+from typing import Optional
+
+from sqlalchemy import (
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    String,
+    Float,
+)
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.sql import func
+
+from app.db.database import Base
+from app.models.user_v2 import User
 
 
-Status = Literal["pending", "accepted", "completed", "cancelled"]
+class BookingStatus(str, enum.Enum):
+    PENDING = "PENDING"
+    DRIVER_CONFIRMED = "DRIVER_CONFIRMED"
+    DECLINED = "DECLINED"
+    ON_THE_WAY = "ON_THE_WAY"
+    ARRIVED_PICKUP = "ARRIVED_PICKUP"
+    IN_PROGRESS = "IN_PROGRESS"
+    ARRIVED_DROPOFF = "ARRIVED_DROPOFF"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
 
 
 class Booking(Base):
-    """Represents a single booking made by a user."""
+    """Core booking information."""
 
-    __tablename__ = "bookings"
-    # Unique identifier for the booking
-    id: Mapped[int] = mapped_column(primary_key=True)
-    # Reference to the owning user
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'), nullable=False)
-    # Starting point of the trip
-    pickup_location: Mapped[str] = mapped_column(String, nullable=False)
-    # Destination of the trip
-    dropoff_location: Mapped[str] = mapped_column(String, nullable=False)
-    # When the ride is scheduled
-    time: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    # Current status of the booking
-    status: Mapped[Status] = mapped_column(Text, default="pending")
-    # Calculated price of the ride
-    price: Mapped[Decimal] = mapped_column(Float, nullable=False)
+    __tablename__ = "bookings_v2"
 
-    def as_dict(self) -> Dict[str, Any]:
-        """Return a serialized representation of the booking."""
-        return {
-            "id": self.id,
-            "user_id": self.user_id,
-            "pickup_location": self.pickup_location,
-            "dropoff_location": self.dropoff_location,
-            "status": self.status,
-            "time": self.time,
-            "price": self.price,
-            # add any other fields you need to expose
-        }
+    id: Mapped[uuid.UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    public_code: Mapped[str] = mapped_column(String(20), unique=True, index=True)
+    status: Mapped[BookingStatus] = mapped_column(Enum(BookingStatus), default=BookingStatus.PENDING)
+    customer_id: Mapped[uuid.UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users_v2.id"), nullable=False)
+    pickup_address: Mapped[str] = mapped_column(String, nullable=False)
+    pickup_lat: Mapped[float] = mapped_column(Float, nullable=False)
+    pickup_lng: Mapped[float] = mapped_column(Float, nullable=False)
+    dropoff_address: Mapped[str] = mapped_column(String, nullable=False)
+    dropoff_lat: Mapped[float] = mapped_column(Float, nullable=False)
+    dropoff_lng: Mapped[float] = mapped_column(Float, nullable=False)
+    pickup_when: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    notes: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    passengers: Mapped[int] = mapped_column(Integer, nullable=False)
+    estimated_price_cents: Mapped[int] = mapped_column(Integer, nullable=False)
+    final_price_cents: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    deposit_required_cents: Mapped[int] = mapped_column(Integer, nullable=False)
+    deposit_payment_intent_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    final_payment_intent_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

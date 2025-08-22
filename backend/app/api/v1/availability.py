@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_async_session
 from app.models.availability_slot import AvailabilitySlot
-from app.models.booking_v2 import Booking, BookingStatus
+from app.models.booking import Booking, BookingStatus
 from app.schemas.availability_slot import AvailabilitySlotCreate, AvailabilitySlotRead
 from app.schemas.api_availability import AvailabilityResponse, BookingSlot
 

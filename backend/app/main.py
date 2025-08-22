@@ -18,7 +18,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from app.api import auth as auth_router
-from app.api import bookings as bookings_router
 from app.api import geocode as geocode_router
 from app.api import route_metrics as route_metrics_router
 from app.api import settings as settings_router
@@ -27,7 +26,6 @@ from app.api import users as users_router
 from app.api import ws as ws_router
 from app.api.v1 import availability as availability_v1_router
 from app.api.v1 import bookings as bookings_v1_router
-from app.api.v1 import customers as customers_v1_router
 from app.api.v1 import driver_bookings as driver_bookings_v1_router
 from app.api.v1 import track as track_v1_router
 from app.db.database import database
@@ -76,7 +74,6 @@ if not settings.env == "production":
     )
 
 app.include_router(auth_router.router)
-app.include_router(bookings_router.router)
 app.include_router(geocode_router.router)
 app.include_router(setup_router.router)
 app.include_router(settings_router.router)
@@ -86,7 +83,6 @@ app.include_router(bookings_v1_router.router)
 app.include_router(driver_bookings_v1_router.router)
 app.include_router(track_v1_router.router)
 app.include_router(availability_v1_router.router)
-app.include_router(customers_v1_router.router)
 app.include_router(ws_router.router)
 
 

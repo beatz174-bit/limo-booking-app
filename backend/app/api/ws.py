@@ -6,7 +6,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from broadcaster import Broadcast
 
 from app.db.database import AsyncSessionLocal
-from app.models.booking_v2 import Booking, BookingStatus
+from app.models.booking import Booking, BookingStatus
 from app.models.route_point import RoutePoint
 
 router = APIRouter()

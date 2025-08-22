@@ -10,16 +10,15 @@ export const configuration = new Configuration({
 });
 
 // Export **instances** (singletons)
-export const authApi           = new AuthApi(configuration);
-export const bookingsApi       = new BookingsApi(configuration);
+export const authApi          = new AuthApi(configuration);
+export const bookingsApi      = new BookingsApi(configuration);
 export const driverBookingsApi = new DriverBookingsApi(configuration);
-export const usersApi          = new UsersApi(configuration);
-export const setupApi          = new SetupApi(configuration);
-export const settingsApi       = new SettingsApi(configuration);
-export const availabilityApi   = new AvailabilityApi(configuration);
+export const usersApi         = new UsersApi(configuration);
+export const setupApi         = new SetupApi(configuration);
+export const settingsApi      = new SettingsApi(configuration);
 
 // (Keep if you still want the classes too)
-export { AuthApi, BookingsApi, UsersApi, SetupApi, SettingsApi, DriverBookingsApi, AvailabilityApi } from "@/api-client";
+export { AuthApi, BookingsApi, DriverBookingsApi, UsersApi, SetupApi, SettingsApi } from "@/api-client";
 
 // Optional: token change hook
 // onTokenChange(() => { /* e.g. invalidate caches if needed */ });

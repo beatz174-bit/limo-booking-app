@@ -61,206 +61,6 @@ export interface AddressComponents {
     'postcode'?: string | null;
 }
 /**
- * Representation of a booking returned from API.
- * @export
- * @interface AppSchemasBookingBookingRead
- */
-export interface AppSchemasBookingBookingRead {
-    /**
-     * 
-     * @type {number}
-     * @memberof AppSchemasBookingBookingRead
-     */
-    'id': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof AppSchemasBookingBookingRead
-     */
-    'user_id': number;
-    /**
-     * 
-     * @type {string}
-     * @memberof AppSchemasBookingBookingRead
-     */
-    'pickup_location': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof AppSchemasBookingBookingRead
-     */
-    'dropoff_location': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof AppSchemasBookingBookingRead
-     */
-    'time': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof AppSchemasBookingBookingRead
-     */
-    'price': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof AppSchemasBookingBookingRead
-     */
-    'status': AppSchemasBookingBookingReadStatusEnum;
-    /**
-     * 
-     * @type {string}
-     * @memberof AppSchemasBookingBookingRead
-     */
-    'created_at'?: string | null;
-}
-
-export const AppSchemasBookingBookingReadStatusEnum = {
-    Pending: 'pending',
-    Accepted: 'accepted',
-    Completed: 'completed',
-    Cancelled: 'cancelled'
-} as const;
-
-export type AppSchemasBookingBookingReadStatusEnum = typeof AppSchemasBookingBookingReadStatusEnum[keyof typeof AppSchemasBookingBookingReadStatusEnum];
-
-/**
- * 
- * @export
- * @interface AppSchemasBookingV2BookingRead
- */
-export interface AppSchemasBookingV2BookingRead {
-    /**
-     * 
-     * @type {string}
-     * @memberof AppSchemasBookingV2BookingRead
-     */
-    'customer_id': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof AppSchemasBookingV2BookingRead
-     */
-    'pickup_address': string;
-    /**
-     * 
-     * @type {number}
-     * @memberof AppSchemasBookingV2BookingRead
-     */
-    'pickup_lat': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof AppSchemasBookingV2BookingRead
-     */
-    'pickup_lng': number;
-    /**
-     * 
-     * @type {string}
-     * @memberof AppSchemasBookingV2BookingRead
-     */
-    'dropoff_address': string;
-    /**
-     * 
-     * @type {number}
-     * @memberof AppSchemasBookingV2BookingRead
-     */
-    'dropoff_lat': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof AppSchemasBookingV2BookingRead
-     */
-    'dropoff_lng': number;
-    /**
-     * 
-     * @type {string}
-     * @memberof AppSchemasBookingV2BookingRead
-     */
-    'pickup_when': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof AppSchemasBookingV2BookingRead
-     */
-    'notes'?: string | null;
-    /**
-     * 
-     * @type {number}
-     * @memberof AppSchemasBookingV2BookingRead
-     */
-    'passengers': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof AppSchemasBookingV2BookingRead
-     */
-    'estimated_price_cents': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof AppSchemasBookingV2BookingRead
-     */
-    'final_price_cents'?: number | null;
-    /**
-     * 
-     * @type {number}
-     * @memberof AppSchemasBookingV2BookingRead
-     */
-    'deposit_required_cents': number;
-    /**
-     * 
-     * @type {string}
-     * @memberof AppSchemasBookingV2BookingRead
-     */
-    'deposit_payment_intent_id'?: string | null;
-    /**
-     * 
-     * @type {string}
-     * @memberof AppSchemasBookingV2BookingRead
-     */
-    'final_payment_intent_id'?: string | null;
-    /**
-     * 
-     * @type {string}
-     * @memberof AppSchemasBookingV2BookingRead
-     */
-    'id': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof AppSchemasBookingV2BookingRead
-     */
-    'public_code': string;
-    /**
-     * 
-     * @type {BookingStatus}
-     * @memberof AppSchemasBookingV2BookingRead
-     */
-    'status': BookingStatus;
-    /**
-     * 
-     * @type {string}
-     * @memberof AppSchemasBookingV2BookingRead
-     */
-    'created_at': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof AppSchemasBookingV2BookingRead
-     */
-    'updated_at': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof AppSchemasBookingV2BookingRead
-     */
-    'leave_at'?: string | null;
-}
-
-
-/**
  * 
  * @export
  * @interface AvailabilityResponse
@@ -335,53 +135,6 @@ export interface AvailabilitySlotRead {
      */
     'id': number;
 }
-/**
- * Payload to create a new booking.
- * @export
- * @interface BookingCreate
- */
-export interface BookingCreate {
-    /**
-     * 
-     * @type {string}
-     * @memberof BookingCreate
-     */
-    'pickup_location': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof BookingCreate
-     */
-    'destination': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof BookingCreate
-     */
-    'ride_time': string;
-    /**
-     * 
-     * @type {Price}
-     * @memberof BookingCreate
-     */
-    'price'?: Price;
-    /**
-     * 
-     * @type {string}
-     * @memberof BookingCreate
-     */
-    'status'?: BookingCreateStatusEnum;
-}
-
-export const BookingCreateStatusEnum = {
-    Pending: 'pending',
-    Accepted: 'accepted',
-    Completed: 'completed',
-    Cancelled: 'cancelled'
-} as const;
-
-export type BookingCreateStatusEnum = typeof BookingCreateStatusEnum[keyof typeof BookingCreateStatusEnum];
-
 /**
  * 
  * @export
@@ -486,6 +239,141 @@ export interface BookingPublic {
 /**
  * 
  * @export
+ * @interface BookingRead
+ */
+export interface BookingRead {
+    /**
+     * 
+     * @type {string}
+     * @memberof BookingRead
+     */
+    'customer_id': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BookingRead
+     */
+    'pickup_address': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof BookingRead
+     */
+    'pickup_lat': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof BookingRead
+     */
+    'pickup_lng': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof BookingRead
+     */
+    'dropoff_address': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof BookingRead
+     */
+    'dropoff_lat': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof BookingRead
+     */
+    'dropoff_lng': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof BookingRead
+     */
+    'pickup_when': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BookingRead
+     */
+    'notes'?: string | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof BookingRead
+     */
+    'passengers': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof BookingRead
+     */
+    'estimated_price_cents': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof BookingRead
+     */
+    'final_price_cents'?: number | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof BookingRead
+     */
+    'deposit_required_cents': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof BookingRead
+     */
+    'deposit_payment_intent_id'?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof BookingRead
+     */
+    'final_payment_intent_id'?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof BookingRead
+     */
+    'id': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BookingRead
+     */
+    'public_code': string;
+    /**
+     * 
+     * @type {BookingStatus}
+     * @memberof BookingRead
+     */
+    'status': BookingStatus;
+    /**
+     * 
+     * @type {string}
+     * @memberof BookingRead
+     */
+    'created_at': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BookingRead
+     */
+    'updated_at': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof BookingRead
+     */
+    'leave_at'?: string | null;
+}
+
+
+/**
+ * 
+ * @export
  * @interface BookingSlot
  */
 export interface BookingSlot {
@@ -549,29 +437,6 @@ export interface BookingStatusResponse {
     'final_price_cents'?: number | null;
 }
 
-
-/**
- * Allowed fields when updating a booking.
- * @export
- * @interface BookingUpdate
- */
-export interface BookingUpdate {
-    /**
-     * 
-     * @type {string}
-     * @memberof BookingUpdate
-     */
-    'status': BookingUpdateStatusEnum;
-}
-
-export const BookingUpdateStatusEnum = {
-    Pending: 'pending',
-    Accepted: 'accepted',
-    Completed: 'completed',
-    Cancelled: 'cancelled'
-} as const;
-
-export type BookingUpdateStatusEnum = typeof BookingUpdateStatusEnum[keyof typeof BookingUpdateStatusEnum];
 
 /**
  * 
@@ -714,13 +579,6 @@ export interface OAuth2Token {
     'token_type'?: string;
 }
 /**
- * 
- * @export
- * @interface Price
- */
-export interface Price {
-}
-/**
  * Payload required to create a new user.
  * @export
  * @interface RegisterRequest
@@ -828,10 +686,10 @@ export interface StripeSetupIntent {
 export interface TrackResponse {
     /**
      * 
-     * @type {AppSchemasBookingV2BookingRead}
+     * @type {BookingRead}
      * @memberof TrackResponse
      */
-    'booking': AppSchemasBookingV2BookingRead;
+    'booking': BookingRead;
     /**
      * 
      * @type {string}
@@ -1571,172 +1429,6 @@ export class AvailabilityApi extends BaseAPI {
 export const BookingsApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
         /**
-         * Create a new booking for the current user.
-         * @summary Api Create Booking
-         * @param {BookingCreate} bookingCreate 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiCreateBookingBookingsPost: async (bookingCreate: BookingCreate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'bookingCreate' is not null or undefined
-            assertParamExists('apiCreateBookingBookingsPost', 'bookingCreate', bookingCreate)
-            const localVarPath = `/bookings`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication OAuth2PasswordBearer required
-            // oauth required
-            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(bookingCreate, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * Remove a booking from the system.
-         * @summary Api Delete Booking
-         * @param {number} bookingId 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiDeleteBookingBookingsBookingIdDelete: async (bookingId: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'bookingId' is not null or undefined
-            assertParamExists('apiDeleteBookingBookingsBookingIdDelete', 'bookingId', bookingId)
-            const localVarPath = `/bookings/{booking_id}`
-                .replace(`{${"booking_id"}}`, encodeURIComponent(String(bookingId)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication OAuth2PasswordBearer required
-            // oauth required
-            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * List bookings for the authenticated user.
-         * @summary Api List Bookings
-         * @param {number} [skip] 
-         * @param {number} [limit] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiListBookingsBookingsGet: async (skip?: number, limit?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/bookings`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication OAuth2PasswordBearer required
-            // oauth required
-            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
-
-            if (skip !== undefined) {
-                localVarQueryParameter['skip'] = skip;
-            }
-
-            if (limit !== undefined) {
-                localVarQueryParameter['limit'] = limit;
-            }
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * Update the status of an existing booking.
-         * @summary Api Update Status
-         * @param {number} bookingId 
-         * @param {BookingUpdate} bookingUpdate 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiUpdateStatusBookingsBookingIdStatusPatch: async (bookingId: number, bookingUpdate: BookingUpdate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'bookingId' is not null or undefined
-            assertParamExists('apiUpdateStatusBookingsBookingIdStatusPatch', 'bookingId', bookingId)
-            // verify required parameter 'bookingUpdate' is not null or undefined
-            assertParamExists('apiUpdateStatusBookingsBookingIdStatusPatch', 'bookingUpdate', bookingUpdate)
-            const localVarPath = `/bookings/{booking_id}/status`
-                .replace(`{${"booking_id"}}`, encodeURIComponent(String(bookingId)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication OAuth2PasswordBearer required
-            // oauth required
-            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(bookingUpdate, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
          * 
          * @summary Create Booking Endpoint
          * @param {BookingCreateRequest} bookingCreateRequest 
@@ -1783,60 +1475,6 @@ export const BookingsApiFp = function(configuration?: Configuration) {
     const localVarAxiosParamCreator = BookingsApiAxiosParamCreator(configuration)
     return {
         /**
-         * Create a new booking for the current user.
-         * @summary Api Create Booking
-         * @param {BookingCreate} bookingCreate 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiCreateBookingBookingsPost(bookingCreate: BookingCreate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AppSchemasBookingBookingRead>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiCreateBookingBookingsPost(bookingCreate, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['BookingsApi.apiCreateBookingBookingsPost']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * Remove a booking from the system.
-         * @summary Api Delete Booking
-         * @param {number} bookingId 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiDeleteBookingBookingsBookingIdDelete(bookingId: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiDeleteBookingBookingsBookingIdDelete(bookingId, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['BookingsApi.apiDeleteBookingBookingsBookingIdDelete']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * List bookings for the authenticated user.
-         * @summary Api List Bookings
-         * @param {number} [skip] 
-         * @param {number} [limit] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiListBookingsBookingsGet(skip?: number, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<AppSchemasBookingBookingRead>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiListBookingsBookingsGet(skip, limit, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['BookingsApi.apiListBookingsBookingsGet']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * Update the status of an existing booking.
-         * @summary Api Update Status
-         * @param {number} bookingId 
-         * @param {BookingUpdate} bookingUpdate 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiUpdateStatusBookingsBookingIdStatusPatch(bookingId: number, bookingUpdate: BookingUpdate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AppSchemasBookingBookingRead>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiUpdateStatusBookingsBookingIdStatusPatch(bookingId, bookingUpdate, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['BookingsApi.apiUpdateStatusBookingsBookingIdStatusPatch']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
          * 
          * @summary Create Booking Endpoint
          * @param {BookingCreateRequest} bookingCreateRequest 
@@ -1860,48 +1498,6 @@ export const BookingsApiFactory = function (configuration?: Configuration, baseP
     const localVarFp = BookingsApiFp(configuration)
     return {
         /**
-         * Create a new booking for the current user.
-         * @summary Api Create Booking
-         * @param {BookingCreate} bookingCreate 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiCreateBookingBookingsPost(bookingCreate: BookingCreate, options?: RawAxiosRequestConfig): AxiosPromise<AppSchemasBookingBookingRead> {
-            return localVarFp.apiCreateBookingBookingsPost(bookingCreate, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * Remove a booking from the system.
-         * @summary Api Delete Booking
-         * @param {number} bookingId 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiDeleteBookingBookingsBookingIdDelete(bookingId: number, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiDeleteBookingBookingsBookingIdDelete(bookingId, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * List bookings for the authenticated user.
-         * @summary Api List Bookings
-         * @param {number} [skip] 
-         * @param {number} [limit] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiListBookingsBookingsGet(skip?: number, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<Array<AppSchemasBookingBookingRead>> {
-            return localVarFp.apiListBookingsBookingsGet(skip, limit, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * Update the status of an existing booking.
-         * @summary Api Update Status
-         * @param {number} bookingId 
-         * @param {BookingUpdate} bookingUpdate 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiUpdateStatusBookingsBookingIdStatusPatch(bookingId: number, bookingUpdate: BookingUpdate, options?: RawAxiosRequestConfig): AxiosPromise<AppSchemasBookingBookingRead> {
-            return localVarFp.apiUpdateStatusBookingsBookingIdStatusPatch(bookingId, bookingUpdate, options).then((request) => request(axios, basePath));
-        },
-        /**
          * 
          * @summary Create Booking Endpoint
          * @param {BookingCreateRequest} bookingCreateRequest 
@@ -1922,56 +1518,6 @@ export const BookingsApiFactory = function (configuration?: Configuration, baseP
  */
 export class BookingsApi extends BaseAPI {
     /**
-     * Create a new booking for the current user.
-     * @summary Api Create Booking
-     * @param {BookingCreate} bookingCreate 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof BookingsApi
-     */
-    public apiCreateBookingBookingsPost(bookingCreate: BookingCreate, options?: RawAxiosRequestConfig) {
-        return BookingsApiFp(this.configuration).apiCreateBookingBookingsPost(bookingCreate, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * Remove a booking from the system.
-     * @summary Api Delete Booking
-     * @param {number} bookingId 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof BookingsApi
-     */
-    public apiDeleteBookingBookingsBookingIdDelete(bookingId: number, options?: RawAxiosRequestConfig) {
-        return BookingsApiFp(this.configuration).apiDeleteBookingBookingsBookingIdDelete(bookingId, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * List bookings for the authenticated user.
-     * @summary Api List Bookings
-     * @param {number} [skip] 
-     * @param {number} [limit] 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof BookingsApi
-     */
-    public apiListBookingsBookingsGet(skip?: number, limit?: number, options?: RawAxiosRequestConfig) {
-        return BookingsApiFp(this.configuration).apiListBookingsBookingsGet(skip, limit, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * Update the status of an existing booking.
-     * @summary Api Update Status
-     * @param {number} bookingId 
-     * @param {BookingUpdate} bookingUpdate 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof BookingsApi
-     */
-    public apiUpdateStatusBookingsBookingIdStatusPatch(bookingId: number, bookingUpdate: BookingUpdate, options?: RawAxiosRequestConfig) {
-        return BookingsApiFp(this.configuration).apiUpdateStatusBookingsBookingIdStatusPatch(bookingId, bookingUpdate, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
      * 
      * @summary Create Booking Endpoint
      * @param {BookingCreateRequest} bookingCreateRequest 
@@ -1981,111 +1527,6 @@ export class BookingsApi extends BaseAPI {
      */
     public createBookingEndpointApiV1BookingsPost(bookingCreateRequest: BookingCreateRequest, options?: RawAxiosRequestConfig) {
         return BookingsApiFp(this.configuration).createBookingEndpointApiV1BookingsPost(bookingCreateRequest, options).then((request) => request(this.axios, this.basePath));
-    }
-}
-
-
-
-/**
- * CustomerBookingsApi - axios parameter creator
- * @export
- */
-export const CustomerBookingsApiAxiosParamCreator = function (configuration?: Configuration) {
-    return {
-        /**
-         * 
-         * @summary List My Bookings
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        listMyBookingsApiV1CustomersMeBookingsGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v1/customers/me/bookings`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication OAuth2PasswordBearer required
-            // oauth required
-            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-    }
-};
-
-/**
- * CustomerBookingsApi - functional programming interface
- * @export
- */
-export const CustomerBookingsApiFp = function(configuration?: Configuration) {
-    const localVarAxiosParamCreator = CustomerBookingsApiAxiosParamCreator(configuration)
-    return {
-        /**
-         * 
-         * @summary List My Bookings
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async listMyBookingsApiV1CustomersMeBookingsGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<AppSchemasBookingV2BookingRead>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.listMyBookingsApiV1CustomersMeBookingsGet(options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['CustomerBookingsApi.listMyBookingsApiV1CustomersMeBookingsGet']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-    }
-};
-
-/**
- * CustomerBookingsApi - factory interface
- * @export
- */
-export const CustomerBookingsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
-    const localVarFp = CustomerBookingsApiFp(configuration)
-    return {
-        /**
-         * 
-         * @summary List My Bookings
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        listMyBookingsApiV1CustomersMeBookingsGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<AppSchemasBookingV2BookingRead>> {
-            return localVarFp.listMyBookingsApiV1CustomersMeBookingsGet(options).then((request) => request(axios, basePath));
-        },
-    };
-};
-
-/**
- * CustomerBookingsApi - object-oriented interface
- * @export
- * @class CustomerBookingsApi
- * @extends {BaseAPI}
- */
-export class CustomerBookingsApi extends BaseAPI {
-    /**
-     * 
-     * @summary List My Bookings
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof CustomerBookingsApi
-     */
-    public listMyBookingsApiV1CustomersMeBookingsGet(options?: RawAxiosRequestConfig) {
-        return CustomerBookingsApiFp(this.configuration).listMyBookingsApiV1CustomersMeBookingsGet(options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -2465,7 +1906,7 @@ export const DriverBookingsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async listBookingsApiV1DriverBookingsGet(status?: BookingStatus | null, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<AppSchemasBookingV2BookingRead>>> {
+        async listBookingsApiV1DriverBookingsGet(status?: BookingStatus | null, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<BookingRead>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.listBookingsApiV1DriverBookingsGet(status, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DriverBookingsApi.listBookingsApiV1DriverBookingsGet']?.[localVarOperationServerIndex]?.url;
@@ -2561,7 +2002,7 @@ export const DriverBookingsApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listBookingsApiV1DriverBookingsGet(status?: BookingStatus | null, options?: RawAxiosRequestConfig): AxiosPromise<Array<AppSchemasBookingV2BookingRead>> {
+        listBookingsApiV1DriverBookingsGet(status?: BookingStatus | null, options?: RawAxiosRequestConfig): AxiosPromise<Array<BookingRead>> {
             return localVarFp.listBookingsApiV1DriverBookingsGet(status, options).then((request) => request(axios, basePath));
         },
         /**
