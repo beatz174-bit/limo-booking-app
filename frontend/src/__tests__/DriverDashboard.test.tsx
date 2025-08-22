@@ -2,8 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import DriverDashboard from '@/pages/Driver/DriverDashboard';
 import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
-
-vi.mock('@/services/tokenStore', () => ({ getAccessToken: () => 'tok' }));
+import { driverBookingsApi } from '@/components/ApiConfig';
 
 describe('DriverDashboard', () => {
   it('loads and confirms booking', async () => {
@@ -16,9 +15,14 @@ describe('DriverDashboard', () => {
         status: 'PENDING'
       }
     ];
-    global.fetch = vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => bookings })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ status: 'DRIVER_CONFIRMED' }) });
+    vi
+      .spyOn(driverBookingsApi, 'listBookingsApiV1DriverBookingsGet')
+      .mockResolvedValue({ data: bookings } as never);
+    vi
+      .spyOn(driverBookingsApi, 'confirmBookingApiV1DriverBookingsBookingIdConfirmPost')
+      .mockResolvedValue({
+        data: { ...bookings[0], status: 'DRIVER_CONFIRMED' },
+      } as never);
 
     render(
       <MemoryRouter>
