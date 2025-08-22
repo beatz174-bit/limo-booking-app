@@ -3,6 +3,7 @@ import { Box, Button, TextField, Typography, Tooltip } from '@mui/material';
 import { AddressField } from '@/components/AddressField';
 import { useAuth } from '@/contexts/AuthContext';
 import { CONFIG } from '@/config';
+import { usersApi } from '@/components/ApiConfig';
 
 const ProfilePage = () => {
   const { ensureFreshToken } = useAuth();
@@ -16,16 +17,15 @@ const ProfilePage = () => {
 
   useEffect(() => {
     const load = async () => {
-      const token = await ensureFreshToken();
-      if (!token) return;
-      const res = await fetch(`${CONFIG.API_BASE_URL}/users/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
+      await ensureFreshToken();
+      try {
+        const res = await usersApi.apiGetMeUsersMeGet();
+        const data = res.data;
         setFullName(data.full_name || '');
         setEmail(data.email || '');
         setDefaultPickup(data.default_pickup_address || '');
+      } catch {
+        /* ignore */
       }
     };
     load();
@@ -53,8 +53,7 @@ const ProfilePage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = await ensureFreshToken();
-    if (!token) return;
+    await ensureFreshToken();
     const body: Record<string, unknown> = {
       full_name: fullName,
       email,
@@ -63,17 +62,12 @@ const ProfilePage = () => {
     if (newPassword && newPassword === confirmPassword && oldPasswordValid) {
       body.password = newPassword;
     }
-    const res = await fetch(`${CONFIG.API_BASE_URL}/users/me`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(body),
-    });
-    if (res.ok) {
-      const data = await res.json();
+    try {
+      const res = await usersApi.apiUpdateMeUsersMePatch(body);
+      const data = res.data;
       localStorage.setItem('userName', data.full_name);
+    } catch {
+      /* ignore */
     }
     setOldPassword('');
     setNewPassword('');

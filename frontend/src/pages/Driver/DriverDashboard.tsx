@@ -7,11 +7,11 @@ import {
   Stack,
   Typography,
   Tabs,
-  Tab
+  Tab,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { CONFIG } from '@/config';
-import { getAccessToken } from '@/services/tokenStore';
+import { driverBookingsApi } from '@/components/ApiConfig';
+import type { AppSchemasBookingV2BookingRead as Booking } from '@/api-client';
 import { bookingStatusLabels, type BookingStatus } from '@/types/BookingStatus';
 import StatusChip from '@/components/StatusChip';
 
@@ -24,27 +24,17 @@ const statuses: BookingStatus[] = [
   'ARRIVED_DROPOFF',
   'COMPLETED',
   'DECLINED',
-  'CANCELLED'
+  'CANCELLED',
 ];
-
-interface Booking {
-  id: string;
-  pickup_address: string;
-  dropoff_address: string;
-  pickup_when: string;
-  status: BookingStatus;
-  leave_at?: string;
-  final_price_cents?: number;
-}
 
 export default function DriverDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const bookingsByStatus = useMemo(() => {
     const groups = statuses.reduce(
       (acc, s) => ({ ...acc, [s]: [] as Booking[] }),
-      {} as Record<BookingStatus, Booking[]>
+      {} as Record<BookingStatus, Booking[]>,
     );
-    bookings.forEach(b => {
+    bookings.forEach((b) => {
       groups[b.status].push(b);
     });
     return groups;
@@ -53,12 +43,11 @@ export default function DriverDashboard() {
 
   useEffect(() => {
     (async () => {
-      const token = getAccessToken();
-      const res = await fetch(`${CONFIG.API_BASE_URL}/api/v1/driver/bookings`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        setBookings(await res.json());
+      try {
+        const res = await driverBookingsApi.listBookingsApiV1DriverBookingsGet();
+        setBookings(res.data as Booking[]);
+      } catch {
+        /* ignore */
       }
     })();
   }, []);
@@ -72,31 +61,44 @@ export default function DriverDashboard() {
       | 'arrive-pickup'
       | 'start-trip'
       | 'arrive-dropoff'
-      | 'complete'
+      | 'complete',
   ) {
-    const token = getAccessToken();
-    const res = await fetch(
-      `${CONFIG.API_BASE_URL}/api/v1/driver/bookings/${id}/${action}`,
-      {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
-      }
-    );
-    if (res.ok) {
-      const data = await res.json();
-      setBookings(b =>
-        b.map(item =>
-          item.id === id
-            ? {
-                ...item,
-                status: data.status,
-                final_price_cents:
-                  data.final_price_cents ?? item.final_price_cents
-              }
-            : item
-        )
-      );
+    let res;
+    switch (action) {
+      case 'confirm':
+        res = await driverBookingsApi.confirmBookingApiV1DriverBookingsBookingIdConfirmPost(id);
+        break;
+      case 'decline':
+        res = await driverBookingsApi.declineBookingApiV1DriverBookingsBookingIdDeclinePost(id);
+        break;
+      case 'leave':
+        res = await driverBookingsApi.leaveBookingApiV1DriverBookingsBookingIdLeavePost(id);
+        break;
+      case 'arrive-pickup':
+        res = await driverBookingsApi.arrivePickupApiV1DriverBookingsBookingIdArrivePickupPost(id);
+        break;
+      case 'start-trip':
+        res = await driverBookingsApi.startTripApiV1DriverBookingsBookingIdStartTripPost(id);
+        break;
+      case 'arrive-dropoff':
+        res = await driverBookingsApi.arriveDropoffApiV1DriverBookingsBookingIdArriveDropoffPost(id);
+        break;
+      case 'complete':
+        res = await driverBookingsApi.completeBookingApiV1DriverBookingsBookingIdCompletePost(id);
+        break;
     }
+    const data = res.data as Booking;
+    setBookings((b) =>
+      b.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              status: data.status,
+              final_price_cents: data.final_price_cents ?? item.final_price_cents,
+            }
+          : item,
+      ),
+    );
   }
 
   const [now, setNow] = useState(Date.now());
@@ -117,15 +119,15 @@ export default function DriverDashboard() {
         variant="scrollable"
         scrollButtons="auto"
       >
-        {statuses.map(s => (
+        {statuses.map((s) => (
           <Tab key={s} label={bookingStatusLabels[s]} value={s} />
         ))}
       </Tabs>
-      {statuses.map(s => {
+      {statuses.map((s) => {
         const list = bookingsByStatus[s];
         return (
           <List key={s} hidden={tab !== s}>
-            {list.map(b => (
+            {list.map((b) => (
               <ListItem key={b.id} divider>
                 <ListItemText
                   primary={`${b.pickup_address} → ${b.dropoff_address}`}
