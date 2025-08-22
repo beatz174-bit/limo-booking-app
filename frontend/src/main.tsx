@@ -4,7 +4,6 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { DevFeaturesProvider } from '@/contexts/DevFeaturesContext';
-import '@/index.css';
 import App from '@/App';
 
 createRoot(document.getElementById('root')!).render(
@@ -12,7 +11,10 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <AuthProvider>
         <DevFeaturesProvider>
-          <App />
+          <ThemeProvider theme={theme}>
+            <CssBaseline />
+            <App />
+          </ThemeProvider>
         </DevFeaturesProvider>
       </AuthProvider>
     </BrowserRouter>

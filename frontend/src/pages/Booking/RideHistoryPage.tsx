@@ -12,19 +12,8 @@ import {
   Typography,
 } from '@mui/material';
 
-import { CONFIG } from '@/config';
-import { getAccessToken } from '@/services/tokenStore';
-
-interface Booking {
-  id: string;
-  pickup_address: string;
-  dropoff_address: string;
-  pickup_when: string;
-  status: string;
-  public_code: string;
-  estimated_price_cents: number;
-  final_price_cents?: number;
-}
+import { customerBookingsApi } from '@/components/ApiConfig';
+import type { AppSchemasBookingV2BookingRead as Booking } from '@/api-client';
 
 function RideHistoryPage() {
   const navigate = useNavigate();
@@ -38,15 +27,13 @@ function RideHistoryPage() {
 
     (async () => {
       try {
-        const token = getAccessToken();
-        const res = await fetch(`${CONFIG.API_BASE_URL}/api/v1/customers/me/bookings`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!res.ok) throw new Error('Failed to load bookings');
-        const data = await res.json();
-        if (alive) setBookings(data as Booking[]);
+        const res = await customerBookingsApi.listMyBookingsApiV1CustomersMeBookingsGet();
+        if (alive) setBookings(res.data as Booking[]);
       } catch (e: unknown) {
-        if (alive) setError(e instanceof Error ? e.message : 'Failed to load bookings');
+        if (alive)
+          setError(
+            e instanceof Error ? e.message : 'Failed to load bookings',
+          );
       } finally {
         if (alive) setLoading(false);
       }

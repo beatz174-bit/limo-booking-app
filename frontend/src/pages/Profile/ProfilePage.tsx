@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Box, Button, TextField, Typography, Tooltip } from '@mui/material';
+import { Box, Button, TextField, Typography, Tooltip, FormControlLabel, Switch } from '@mui/material';
 import { AddressField } from '@/components/AddressField';
 import { useAuth } from '@/contexts/AuthContext';
 import { CONFIG } from '@/config';
 import PushToggle from '@/components/PushToggle';
 
-const ProfilePage = () => {
+  const ProfilePage = () => {
   const { ensureFreshToken } = useAuth();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -14,20 +14,16 @@ const ProfilePage = () => {
   const [oldPasswordValid, setOldPasswordValid] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(Notification.permission === 'granted');
 
   useEffect(() => {
     const load = async () => {
       const token = await ensureFreshToken();
       if (!token) return;
-      const res = await fetch(`${CONFIG.API_BASE_URL}/users/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setFullName(data.full_name || '');
-        setEmail(data.email || '');
-        setDefaultPickup(data.default_pickup_address || '');
-      }
+      const { data } = await usersApi.apiGetMeUsersMeGet();
+      setFullName(data.full_name || '');
+      setEmail(data.email || '');
+      setDefaultPickup(data.default_pickup_address || '');
     };
     load();
   }, [ensureFreshToken]);
@@ -40,22 +36,17 @@ const ProfilePage = () => {
 
   const verifyOldPassword = async () => {
     if (!oldPassword) return;
-    const form = new URLSearchParams({
-      username: email,
-      password: oldPassword,
-    });
-    const res = await fetch(`${CONFIG.API_BASE_URL}/auth/token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: form.toString(),
-    });
-    setOldPasswordValid(res.ok);
+    try {
+      await authApi.tokenAuthTokenPost(email, oldPassword);
+      setOldPasswordValid(true);
+    } catch {
+      setOldPasswordValid(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = await ensureFreshToken();
-    if (!token) return;
+    await ensureFreshToken();
     const body: Record<string, unknown> = {
       full_name: fullName,
       email,
@@ -64,21 +55,22 @@ const ProfilePage = () => {
     if (newPassword && newPassword === confirmPassword && oldPasswordValid) {
       body.password = newPassword;
     }
-    const res = await fetch(`${CONFIG.API_BASE_URL}/users/me`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(body),
-    });
-    if (res.ok) {
-      const data = await res.json();
+    try {
+      const { data } = await usersApi.apiUpdateMeUsersMePatch(body);
       localStorage.setItem('userName', data.full_name);
+    } catch {
+      /* ignore */
     }
     setOldPassword('');
     setNewPassword('');
     setConfirmPassword('');
+  };
+
+  const handleNotificationsChange = async (_e: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
+    setNotificationsEnabled(checked);
+    if (checked) {
+      await initPush();
+    }
   };
 
   return (
@@ -117,6 +109,11 @@ const ProfilePage = () => {
         margin="normal"
         fullWidth
         disabled={!newPassword || !oldPasswordValid}
+      />
+      <FormControlLabel
+        control={<Switch checked={notificationsEnabled} onChange={handleNotificationsChange} />}
+        label="Enable notifications"
+        sx={{ mt: 2 }}
       />
       <Tooltip title={newPassword === confirmPassword ? '' : 'new password and confirm password must match'} disableHoverListener={newPassword === confirmPassword}>
         <span>

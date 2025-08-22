@@ -34,6 +34,11 @@ const NavBar: React.FC = () => {
     navigate('/login');  // navigate to login page after logout
   };
 
+  const navHome = () => {
+    handleMenuClose();
+    navigate('/');
+  };
+
   const navBook = () => {
     handleMenuClose();
     navigate('/book');
@@ -100,6 +105,7 @@ const NavBar: React.FC = () => {
           transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         >
           <MenuItem onClick={handleLogout}>Logout</MenuItem>
+          <MenuItem onClick={navHome}>Home</MenuItem>
           <MenuItem onClick={navBook}>Book</MenuItem>
           <MenuItem onClick={navHistory}>Ride History</MenuItem>
           <MenuItem onClick={navProfile}>Profile</MenuItem>
