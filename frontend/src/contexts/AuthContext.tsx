@@ -28,8 +28,8 @@ type AuthState = {
   userName: string | null;
   role: string | null;
 };
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// eslint-disable-next-line react-refresh/only-export-components
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const oauthCfg: OAuthConfig = {
   clientId: CONFIG.OAUTH_CLIENT_ID,
@@ -302,5 +302,26 @@ export const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [loading, accessToken, location, navigate]);
 
   if (loading || !accessToken) return null;
+  return <>{children}</>;
+};
+
+export const RequireRole: React.FC<{ role: string; children: React.ReactNode }> = ({
+  role,
+  children,
+}) => {
+  const { accessToken, loading, role: userRole } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!loading) {
+      const from = encodeURIComponent(location.pathname + location.search);
+      if (!accessToken || userRole !== role) {
+        navigate(`/login?from=${from}`, { replace: true });
+      }
+    }
+  }, [loading, accessToken, userRole, role, location, navigate]);
+
+  if (loading || !accessToken || userRole !== role) return null;
   return <>{children}</>;
 };
