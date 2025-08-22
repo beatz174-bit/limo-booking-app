@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, Button, TextField, Typography, Tooltip } from '@mui/material';
+import { Box, Button, TextField, Typography, Tooltip, FormControlLabel, Switch } from '@mui/material';
 import { AddressField } from '@/components/AddressField';
 import { useAuth } from '@/contexts/AuthContext';
 import { CONFIG } from '@/config';
@@ -14,6 +14,7 @@ const ProfilePage = () => {
   const [oldPasswordValid, setOldPasswordValid] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(Notification.permission === 'granted');
 
   useEffect(() => {
     const load = async () => {
@@ -74,6 +75,13 @@ const ProfilePage = () => {
     setConfirmPassword('');
   };
 
+  const handleNotificationsChange = async (_e: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
+    setNotificationsEnabled(checked);
+    if (checked) {
+      await initPush();
+    }
+  };
+
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ p: 2, maxWidth: 400, m: '0 auto' }}>
       <Typography variant="h5" gutterBottom>
@@ -110,6 +118,11 @@ const ProfilePage = () => {
         margin="normal"
         fullWidth
         disabled={!newPassword || !oldPasswordValid}
+      />
+      <FormControlLabel
+        control={<Switch checked={notificationsEnabled} onChange={handleNotificationsChange} />}
+        label="Enable notifications"
+        sx={{ mt: 2 }}
       />
       <Tooltip title={newPassword === confirmPassword ? '' : 'new password and confirm password must match'} disableHoverListener={newPassword === confirmPassword}>
         <span>
