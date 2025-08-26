@@ -10,9 +10,24 @@ function getMessagingConfig() {
   const projectId = import.meta.env.VITE_FCM_PROJECT_ID;
   const appId = import.meta.env.VITE_FCM_APP_ID;
   const senderId = import.meta.env.VITE_FCM_SENDER_ID;
-  if (!vapid || !apiKey || !('serviceWorker' in navigator)) return null;
+
+  if (!vapid || !apiKey || !projectId || !appId || !senderId) {
+    logger.warn('services/push', 'Missing FCM configuration');
+    return null;
+  }
+
+  if (!('serviceWorker' in navigator)) {
+    logger.warn('services/push', 'Service worker not supported');
+    return null;
+  }
+
   if (!messaging) {
-    const app = initializeApp({ apiKey, projectId, appId, messagingSenderId: senderId });
+    const app = initializeApp({
+      apiKey,
+      projectId,
+      appId,
+      messagingSenderId: senderId,
+    });
     messaging = getMessaging(app);
   }
   return { messaging, vapid } as const;
