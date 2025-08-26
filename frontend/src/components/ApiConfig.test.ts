@@ -44,7 +44,17 @@ vi.mock("@/config", () => ({ CONFIG: { API_BASE_URL: "https://api.example.test" 
 describe("ApiConfig", () => {
   test("constructs clients with basePath and token getter", async () => {
     const mod = await import("./ApiConfig");
-    const { authApi, bookingsApi, driverBookingsApi, usersApi, setupApi, settingsApi } = mod;
+    const {
+      configuration,
+      authApi,
+      bookingsApi,
+      customerBookingsApi,
+      driverBookingsApi,
+      usersApi,
+      setupApi,
+      settingsApi,
+      availabilityApi,
+    } = mod;
 
     // config assertions
     const cfgTyped = configuration as Configuration;
@@ -53,7 +63,16 @@ describe("ApiConfig", () => {
     await expect(cfgTyped.accessToken()).resolves.toBe("token-abc");
 
     // clients share same Configuration
-    for (const api of [authApi, bookingsApi, driverBookingsApi, usersApi, setupApi, settingsApi]) {
+    for (const api of [
+      authApi,
+      bookingsApi,
+      customerBookingsApi,
+      driverBookingsApi,
+      usersApi,
+      setupApi,
+      settingsApi,
+      availabilityApi,
+    ]) {
       const client = api as FakeApi;
       expect(client).toBeTruthy();
       expect(client.cfg.basePath).toBe("https://api.example.test");
