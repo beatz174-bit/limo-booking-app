@@ -6,7 +6,7 @@ import { setTokens, getRefreshToken } from "../services/tokenStore";
 import { beginLogin, completeLoginFromRedirect, refreshTokens, TokenResponse, OAuthConfig } from "../services/oauth";
 import { useLocation, useNavigate } from "react-router-dom";
 import { type AuthContextType } from "@/types/AuthContextType";
-import { initPush } from "@/services/push";
+import { subscribePush } from "@/services/push";
 import * as logger from "@/lib/logger";
 
 type UserShape = { email?: string; full_name?: string; role?: string } | null;
@@ -39,7 +39,7 @@ const oauthCfg: OAuthConfig = {
   redirectUri: CONFIG.OAUTH_REDIRECT_URI,
 };
 
-function maybeInitPush() {
+async function maybeSubscribePush() {
   if (
     typeof window !== "undefined" &&
     "serviceWorker" in navigator &&
@@ -49,7 +49,11 @@ function maybeInitPush() {
     import.meta.env.VITE_FCM_APP_ID &&
     import.meta.env.VITE_FCM_SENDER_ID
   ) {
-    initPush().catch((err) => logger.warn("contexts/AuthContext", "push init failed", err));
+    try {
+      await subscribePush();
+    } catch (err) {
+      logger.warn("contexts/AuthContext", "push subscribe failed", err);
+    }
   }
 }
 
@@ -143,7 +147,7 @@ useEffect(() => {
       role: user?.role ?? s.role,
     }));
     if (access_token) {
-      maybeInitPush();
+      maybeSubscribePush();
     }
   }, []);
 
@@ -218,7 +222,7 @@ useEffect(() => {
       role,
     }));
     if (token) {
-      maybeInitPush();
+      maybeSubscribePush();
     }
     return role;
   }, [setState]);
