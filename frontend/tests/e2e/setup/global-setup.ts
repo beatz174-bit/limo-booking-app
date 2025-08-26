@@ -18,6 +18,10 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@example.com";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "pw";
 const ADMIN_FULLNAME = process.env.ADMIN_FULLNAME ?? "Admin User";
 
+const DRIVER_EMAIL = process.env.DRIVER_EMAIL ?? "driver@example.com";
+const DRIVER_PASSWORD = process.env.DRIVER_PASSWORD ?? "pw";
+const DRIVER_FULLNAME = process.env.DRIVER_FULLNAME ?? "Driver";
+
 const STORAGE_PATH = path.join(process.cwd(), "storage", "admin.json");
 
 async function bodyText(res: APIResponse) {
@@ -76,17 +80,37 @@ export default async function globalSetup(): Promise<void> {
   // Speak to the API behind API_BASE_URL (TEST backend)
   const api = await request.newContext({ baseURL: API });
 
-  // 1) Register admin (JSON), tolerate "already exists"
-  const registerRes = await api.post("/auth/register", {
-    data: { email: ADMIN_EMAIL, full_name: ADMIN_FULLNAME, password: ADMIN_PASSWORD },
+  // 1) Seed admin user and default settings via setup endpoint
+  const setupRes = await api.post("/setup", {
+    data: {
+      admin_email: ADMIN_EMAIL,
+      full_name: ADMIN_FULLNAME,
+      admin_password: ADMIN_PASSWORD,
+      settings: {
+        account_mode: false,
+        flagfall: 5,
+        per_km_rate: 2,
+        per_minute_rate: 1,
+      },
+    },
   });
-  if (!registerRes.ok() && registerRes.status() !== 400 && registerRes.status() !== 409) {
+  if (!setupRes.ok() && setupRes.status() !== 400) {
     throw new Error(
-      `Register failed: ${registerRes.status()} ${registerRes.statusText()} ${await bodyText(registerRes)}`
+      `Setup failed: ${setupRes.status()} ${setupRes.statusText()} ${await bodyText(setupRes)}`
     );
   }
 
-  // 2) OAuth2 password flow (FORM) for token per spec
+  // 2) Ensure a driver user exists for login flows
+  const driverRes = await api.post("/auth/register", {
+    data: { email: DRIVER_EMAIL, full_name: DRIVER_FULLNAME, password: DRIVER_PASSWORD },
+  });
+  if (!driverRes.ok() && driverRes.status() !== 400 && driverRes.status() !== 409) {
+    throw new Error(
+      `Driver seed failed: ${driverRes.status()} ${driverRes.statusText()} ${await bodyText(driverRes)}`
+    );
+  }
+
+  // 3) OAuth2 password flow (FORM) for admin token per spec
   const tokenRes = await api.post("/auth/token", {
     form: { username: ADMIN_EMAIL, password: ADMIN_PASSWORD, grant_type: "password" },
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -98,7 +122,17 @@ export default async function globalSetup(): Promise<void> {
   const accessToken: string | undefined = tokenJson?.access_token; // spec: OAuth2Token { access_token, token_type }
   if (!accessToken) throw new Error("Token fetch succeeded but no access_token in response.");
 
-  // 3) Persist storage for the UI origin (front-end reads localStorage.access_token)
+  // 4) Verify settings endpoint returns seeded config
+  const settingsRes = await api.get("/settings", {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!settingsRes.ok()) {
+    throw new Error(
+      `Fetching settings failed: ${settingsRes.status()} ${settingsRes.statusText()} ${await bodyText(settingsRes)}`
+    );
+  }
+
+  // 5) Persist storage for the UI origin (front-end reads localStorage.access_token)
 const storageState = {
   cookies: [],
   origins: [
@@ -111,12 +145,14 @@ const storageState = {
           value: JSON.stringify({
             access_token: accessToken,
             refresh_token: null,                   // if you want, you could fetch and store a real refresh token
-            user: { email: ADMIN_EMAIL, full_name: ADMIN_FULLNAME },
+            user: { email: ADMIN_EMAIL, full_name: ADMIN_FULLNAME, role: "admin" },
+            role: "admin",
           }),
         },
         // Your app also reads these:
         { name: "userID", value: "1" },           // gates admin
-        { name: "userName", value: ADMIN_FULLNAME }
+        { name: "userName", value: ADMIN_FULLNAME },
+        { name: "role", value: "admin" },
       ],
     },
   ],
