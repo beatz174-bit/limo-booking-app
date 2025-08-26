@@ -50,6 +50,7 @@ describe("ApiConfig", () => {
       authApi,
       bookingsApi,
       customerBookingsApi,
+
       driverBookingsApi,
       usersApi,
       setupApi,
