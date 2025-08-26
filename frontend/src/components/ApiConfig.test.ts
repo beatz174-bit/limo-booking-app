@@ -43,8 +43,15 @@ vi.mock("@/config", () => ({ CONFIG: { API_BASE_URL: "https://api.example.test" 
 
 describe("ApiConfig", () => {
   test("constructs clients with basePath and token getter", async () => {
-    const mod = await import("./ApiConfig");
-    const { authApi, bookingsApi, driverBookingsApi, usersApi, setupApi, settingsApi } = mod;
+    const {
+      configuration,
+      authApi,
+      bookingsApi,
+      driverBookingsApi,
+      usersApi,
+      setupApi,
+      settingsApi,
+    } = await import("./ApiConfig");
 
     // config assertions
     const cfgTyped = configuration as Configuration;
