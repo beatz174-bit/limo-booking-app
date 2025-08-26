@@ -758,6 +758,12 @@ export interface UserRead {
      * @memberof UserRead
      */
     'id': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof UserRead
+     */
+    'fcm_token'?: string | null;
 }
 /**
  * Optional fields for updating a user.
@@ -789,6 +795,12 @@ export interface UserUpdate {
      * @memberof UserUpdate
      */
     'default_pickup_address'?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof UserUpdate
+     */
+    'fcm_token'?: string | null;
 }
 /**
  * 
@@ -1527,6 +1539,103 @@ export class BookingsApi extends BaseAPI {
      */
     public createBookingEndpointApiV1BookingsPost(bookingCreateRequest: BookingCreateRequest, options?: RawAxiosRequestConfig) {
         return BookingsApiFp(this.configuration).createBookingEndpointApiV1BookingsPost(bookingCreateRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * CustomerBookingsApi - axios parameter creator
+ * @export
+ */
+export const CustomerBookingsApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listMyBookingsApiV1CustomersMeBookingsGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/customers/me/bookings`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * CustomerBookingsApi - functional programming interface
+ * @export
+ */
+export const CustomerBookingsApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = CustomerBookingsApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async listMyBookingsApiV1CustomersMeBookingsGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<BookingRead>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.listMyBookingsApiV1CustomersMeBookingsGet(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CustomerBookingsApi.listMyBookingsApiV1CustomersMeBookingsGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * CustomerBookingsApi - factory interface
+ * @export
+ */
+export const CustomerBookingsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = CustomerBookingsApiFp(configuration)
+    return {
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        listMyBookingsApiV1CustomersMeBookingsGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<BookingRead>> {
+            return localVarFp.listMyBookingsApiV1CustomersMeBookingsGet(options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * CustomerBookingsApi - object-oriented interface
+ * @export
+ * @class CustomerBookingsApi
+ * @extends {BaseAPI}
+ */
+export class CustomerBookingsApi extends BaseAPI {
+    /**
+     * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CustomerBookingsApi
+     */
+    public listMyBookingsApiV1CustomersMeBookingsGet(options?: RawAxiosRequestConfig) {
+        return CustomerBookingsApiFp(this.configuration).listMyBookingsApiV1CustomersMeBookingsGet(options).then((request) => request(this.axios, this.basePath));
     }
 }
 

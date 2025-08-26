@@ -1,5 +1,14 @@
 // Shared configuration and API client singletons.
-import { Configuration, AuthApi, BookingsApi, UsersApi, SetupApi, SettingsApi, DriverBookingsApi } from "@/api-client";
+import {
+  Configuration,
+  AuthApi,
+  BookingsApi,
+  CustomerBookingsApi,
+  UsersApi,
+  SetupApi,
+  SettingsApi,
+  DriverBookingsApi,
+} from "@/api-client";
 import { CONFIG } from "@/config";
 import { getAccessToken } from "@/services/tokenStore";
 
@@ -12,6 +21,7 @@ export const configuration = new Configuration({
 // Export **instances** (singletons)
 export const authApi = new AuthApi(configuration);
 export const bookingsApi = new BookingsApi(configuration);
+export const customerBookingsApi = new CustomerBookingsApi(configuration);
 export const driverBookingsApi = new DriverBookingsApi(configuration);
 export const usersApi = new UsersApi(configuration);
 export const setupApi = new SetupApi(configuration);
@@ -21,6 +31,7 @@ export const settingsApi = new SettingsApi(configuration);
 export {
   AuthApi,
   BookingsApi,
+  CustomerBookingsApi,
   DriverBookingsApi,
   UsersApi,
   SetupApi,
