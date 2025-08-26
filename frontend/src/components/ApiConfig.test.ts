@@ -60,7 +60,16 @@ describe("ApiConfig", () => {
     await expect(cfgTyped.accessToken()).resolves.toBe("token-abc");
 
     // clients share same Configuration
-    for (const api of [authApi, bookingsApi, driverBookingsApi, usersApi, setupApi, settingsApi]) {
+    for (const api of [
+      authApi,
+      bookingsApi,
+      customerBookingsApi,
+      driverBookingsApi,
+      usersApi,
+      setupApi,
+      settingsApi,
+      availabilityApi,
+    ]) {
       const client = api as FakeApi;
       expect(client).toBeTruthy();
       expect(client.cfg.basePath).toBe("https://api.example.test");
