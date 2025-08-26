@@ -37,7 +37,7 @@
 
     {
       "name": "Development Backend",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "module": "uvicorn",
       "args": [
@@ -54,7 +54,8 @@
       "env": {
         "ENVIRONMENT": "development"
       },
-      "console": "integratedTerminal"
+      "console": "integratedTerminal",
+      "preLaunchTask": "stripe-listen" 
     },
     {
       "name": "Development Frontend",

@@ -15,6 +15,14 @@
       "command": "${workspaceFolder}/backend/venv/bin/python -m dotenv -f ${workspaceFolder}/backend/.env.test run -- ${workspaceFolder}/backend/venv/bin/python -m alembic upgrade head",
       "options": { "cwd": "${workspaceFolder}/backend" },
       "problemMatcher": []
+    },
+    {
+    "label": "stripe-listen",
+    "type": "shell",
+    "command": "stripe listen --forward-to localhost:8000/api/webhook/stripe",
+    "isBackground": true,
+    "problemMatcher": []
     }
+
   ]
 }
