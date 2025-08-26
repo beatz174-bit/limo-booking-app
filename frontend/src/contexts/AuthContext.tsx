@@ -314,19 +314,20 @@ export const RequireRole: React.FC<{ role: string; children: React.ReactNode }> 
   role,
   children,
 }) => {
-  const { accessToken, loading, role: userRole } = useAuth();
+  const { accessToken, loading, role: userRole, userID } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
     if (!loading) {
       const from = encodeURIComponent(location.pathname + location.search);
-      if (!accessToken || userRole !== role) {
+      const allowed = accessToken && (userRole === role || userID === '1');
+      if (!allowed) {
         navigate(`/login?from=${from}`, { replace: true });
       }
     }
-  }, [loading, accessToken, userRole, role, location, navigate]);
+  }, [loading, accessToken, userRole, userID, role, location, navigate]);
 
-  if (loading || !accessToken || userRole !== role) return null;
+  if (loading || !accessToken || (userRole !== role && userID !== '1')) return null;
   return <>{children}</>;
 };

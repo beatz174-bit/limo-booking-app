@@ -8,20 +8,17 @@ interface Tile {
 }
 
 export default function HomePage() {
-  const { userID, role } = useAuth();
+  const { userID } = useAuth();
 
   const tiles: Tile[] = [
     { label: 'Book a Ride', path: '/book' },
     { label: 'Ride History', path: '/history' },
-    { label: 'Driver Dashboard', path: '/driver' },
     { label: 'Profile', path: '/me' },
   ];
 
-  if (role?.toLowerCase() === 'driver') {
-    tiles.splice(3, 0, { label: 'Availability', path: '/driver/availability' });
-  }
-
   if (userID === '1') {
+    tiles.splice(2, 0, { label: 'Driver Dashboard', path: '/driver' });
+    tiles.splice(3, 0, { label: 'Availability', path: '/driver/availability' });
     tiles.push({ label: 'Admin Dashboard', path: '/admin' });
   }
 

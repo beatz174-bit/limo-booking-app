@@ -39,23 +39,23 @@ function renderWithAuth(value: Partial<AuthContextType>, initial: string) {
 }
 
 describe('route access control', () => {
-  it('allows admin to access admin dashboard', () => {
-    renderWithAuth({ accessToken: 'tok', role: 'admin' }, '/admin');
+  it('allows first user to access admin dashboard', () => {
+    renderWithAuth({ accessToken: 'tok', userID: '1' }, '/admin');
     expect(screen.getByText('Admin Page')).toBeInTheDocument();
   });
 
-  it('redirects non-admin from admin dashboard', async () => {
-    renderWithAuth({ accessToken: 'tok', role: 'driver' }, '/admin');
+  it('redirects other users from admin dashboard', async () => {
+    renderWithAuth({ accessToken: 'tok', userID: '2' }, '/admin');
     await waitFor(() => expect(screen.getByText('Login Page')).toBeInTheDocument());
   });
 
-  it('allows driver to access driver dashboard', () => {
-    renderWithAuth({ accessToken: 'tok', role: 'driver' }, '/driver');
+  it('allows first user to access driver dashboard', () => {
+    renderWithAuth({ accessToken: 'tok', userID: '1' }, '/driver');
     expect(screen.getByText('Driver Page')).toBeInTheDocument();
   });
 
-  it('redirects non-driver from driver dashboard', async () => {
-    renderWithAuth({ accessToken: 'tok', role: 'admin' }, '/driver');
+  it('redirects other users from driver dashboard', async () => {
+    renderWithAuth({ accessToken: 'tok', userID: '2' }, '/driver');
     await waitFor(() => expect(screen.getByText('Login Page')).toBeInTheDocument());
   });
 });

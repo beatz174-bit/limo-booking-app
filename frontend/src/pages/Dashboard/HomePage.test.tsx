@@ -24,8 +24,8 @@ describe('HomePage', () => {
     renderWithProviders(<HomePage />);
     expect(screen.getByRole('link', { name: /book a ride/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /ride history/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /driver dashboard/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /profile/i })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /driver dashboard/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /admin dashboard/i })).not.toBeInTheDocument();
   });
 
@@ -57,8 +57,8 @@ describe('HomePage', () => {
     ).toBeInTheDocument();
   });
 
-  it('navigates to driver dashboard', async () => {
-    seedAuth('2');
+  it('navigates to driver dashboard for first user', async () => {
+    seedAuth('1');
     renderWithProviders(<HomePage />, {
       extraRoutes: <Route path="/driver" element={<h1>Driver</h1>} />,
     });
