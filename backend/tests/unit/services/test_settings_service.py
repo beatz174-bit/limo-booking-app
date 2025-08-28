@@ -1,6 +1,5 @@
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
-from _pytest.monkeypatch import MonkeyPatch
 from fastapi import HTTPException
 from sqlalchemy import text
 
@@ -10,23 +9,17 @@ from app.schemas.user import UserRead
 
 pytestmark = pytest.mark.asyncio
 
-async def test_get_settings_404_when_missing(monkeypatch: MonkeyPatch, async_session: AsyncSession):
-    """Service currently raises 404 when no settings row exists."""
+async def test_get_settings_404_when_missing(async_session: AsyncSession):
+    """Service raises 404 when no settings row exists."""
     await async_session.execute(text("DELETE FROM admin_config"))
     await async_session.commit()
-
-    # Bypass admin check inside the service
-    monkeypatch.setattr(settings_service, "ensure_admin", lambda *_args, **_kwargs: None) # type: ignore
 
     with pytest.raises(HTTPException) as exc:
         await settings_service.get_settings(async_session)
     assert exc.value.status_code == 404
 
 
-async def test_update_then_get_returns_values(monkeypatch: MonkeyPatch, async_session: AsyncSession):
-    # Bypass admin check inside the service
-    monkeypatch.setattr(settings_service, "ensure_admin", lambda *_args, **_kwargs: None) # type: ignore
-
+async def test_update_then_get_returns_values(async_session: AsyncSession):
     user: UserRead = UserRead(
         email="test@na.com",
         full_name="bloke",

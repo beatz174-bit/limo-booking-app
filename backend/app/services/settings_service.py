@@ -6,7 +6,7 @@ from fastapi import Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.dependencies import get_current_user, get_db
+from app.dependencies import get_db
 from app.models.settings import AdminConfig
 from app.schemas.setup import SettingsPayload
 from app.schemas.user import UserRead
@@ -20,15 +20,11 @@ def ensure_admin(user: UserRead):
         raise HTTPException(status_code=403, detail="Admin only")
 
 
-async def get_settings(
-    db: AsyncSession = Depends(get_db), user: UserRead = Depends(get_current_user)
-) -> SettingsPayload:
-    """Fetch pricing configuration from the database."""
-    ensure_admin(user)
-    logger.info(
-        "retrieving settings",
-        extra={"user_id": getattr(user, "id", "unknown")},
-    )
+async def get_settings(db: AsyncSession = Depends(get_db)) -> SettingsPayload:
+    """Fetch pricing configuration from the database.
+
+    This endpoint is now public, so no user check occurs here."""
+    logger.info("retrieving settings")
     row = await db.get(AdminConfig, 1)
     if not row:
         raise HTTPException(status_code=404, detail="No settings yet")
