@@ -102,11 +102,11 @@ function PaymentInner({ data, onBack }: Props) {
       <TextField label="Name" value={name} onChange={(e) => setName(e.target.value)} />
       <TextField label="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
       <TextField label="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
-      {price !== null && (
+      {price != null && (
         <Typography>Estimated fare: ${price.toFixed(2)}</Typography>
       )}
       <Typography variant="body2">
-        50% deposit{price !== null ? ` ($${(price * 0.5).toFixed(2)})` : ''} charged on
+        50% deposit{price != null ? ` ($${(price * 0.5).toFixed(2)})` : ''} charged on
         confirmation
       </Typography>
       <CardElement />
