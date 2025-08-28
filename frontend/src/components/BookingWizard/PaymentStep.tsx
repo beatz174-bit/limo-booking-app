@@ -11,7 +11,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { useStripeSetupIntent } from '@/hooks/useStripeSetupIntent';
 import { useSettings } from '@/hooks/useSettings';
 import { settingsApi } from '@/components/ApiConfig';
-import { useDirections } from '@/hooks/useDirections';
+import { useRouteMetrics } from '@/hooks/useRouteMetrics';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
 
@@ -53,13 +53,13 @@ function PaymentInner({ data, onBack }: Props) {
     perKm: Number(s?.per_km_rate ?? s?.perKm ?? 0),
     perMin: Number(s?.per_minute_rate ?? s?.perMin ?? 0),
   };
-  const getDirections = useDirections();
+  const getMetrics = useRouteMetrics();
   const [price, setPrice] = useState<number | null>(null);
 
   useEffect(() => {
     let ignore = false;
     async function fetchPrice() {
-      const metrics = await getDirections(
+      const metrics = await getMetrics(
         data.pickup?.address || '',
         data.dropoff?.address || ''
       );
@@ -76,7 +76,7 @@ function PaymentInner({ data, onBack }: Props) {
       ignore = true;
     };
   }, [
-    getDirections,
+    getMetrics,
     data.pickup,
     data.dropoff,
     tariff.flagfall,
