@@ -6,7 +6,7 @@ import {
   useElements,
 } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useStripeSetupIntent } from '@/hooks/useStripeSetupIntent';
 import { useSettings } from '@/hooks/useSettings';
@@ -53,14 +53,36 @@ function PaymentInner({ data, onBack }: Props) {
     perKm: Number(s?.per_km_rate ?? s?.perKm ?? 0),
     perMin: Number(s?.per_minute_rate ?? s?.perMin ?? 0),
   };
-  const { price } = useDirections({
-    pickup: data.pickup?.address ?? data.pickup ?? '',
-    dropoff: data.dropoff?.address ?? data.dropoff ?? '',
-    rideTime: data.pickup_when || '',
-    flagfall: tariff.flagfall,
-    perKm: tariff.perKm,
-    perMin: tariff.perMin,
-  });
+  const getDirections = useDirections();
+  const [price, setPrice] = useState<number | null>(null);
+
+  useEffect(() => {
+    let ignore = false;
+    async function fetchPrice() {
+      const metrics = await getDirections(
+        data.pickup?.address || '',
+        data.dropoff?.address || ''
+      );
+      if (!ignore && metrics) {
+        const estimate =
+          tariff.flagfall +
+          metrics.km * tariff.perKm +
+          metrics.min * tariff.perMin;
+        setPrice(estimate);
+      }
+    }
+    fetchPrice();
+    return () => {
+      ignore = true;
+    };
+  }, [
+    getDirections,
+    data.pickup,
+    data.dropoff,
+    tariff.flagfall,
+    tariff.perKm,
+    tariff.perMin,
+  ]);
   const [name, setName] = useState(data.customer?.name || '');
   const [email, setEmail] = useState(data.customer?.email || '');
   const [phone, setPhone] = useState(data.customer?.phone || '');

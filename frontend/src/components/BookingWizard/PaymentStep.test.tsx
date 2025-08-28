@@ -18,7 +18,7 @@ vi.mock('@/hooks/useSettings', () => ({
   useSettings: () => ({ data: {} }),
 }));
 vi.mock('@/hooks/useDirections', () => ({
-  useDirections: () => ({ price: null }),
+  useDirections: () => async () => null,
 }));
 vi.mock('@stripe/react-stripe-js', () => ({
   Elements: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
