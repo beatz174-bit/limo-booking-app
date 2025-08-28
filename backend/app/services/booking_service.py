@@ -5,6 +5,9 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from math import atan2, cos, radians, sin, sqrt
 
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.availability_slot import AvailabilitySlot
 from app.models.booking import Booking, BookingStatus
 from app.models.route_point import RoutePoint
@@ -13,16 +16,15 @@ from app.models.trip import Trip
 from app.models.user_v2 import User, UserRole
 from app.schemas.api_booking import BookingCreateRequest
 from app.services import pricing_service, routing, stripe_client
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def create_booking(
     db: AsyncSession, data: BookingCreateRequest
 ) -> tuple[Booking, str]:
     """Create a booking and corresponding Stripe SetupIntent."""
-    now = datetime.now(timezone.utc)
-    if data.pickup_when <= now:
+    # ``pickup_when`` is normalized to UTC by the request schema validator.
+    now_utc = datetime.now(timezone.utc)
+    if data.pickup_when <= now_utc:
         raise ValueError("pickup time must be in the future")
 
     result = await db.execute(select(User).where(User.email == data.customer.email))

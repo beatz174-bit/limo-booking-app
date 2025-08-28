@@ -1,19 +1,25 @@
 """API schemas for booking creation."""
+
 import uuid
-from datetime import datetime
-from pydantic import BaseModel, Field
+from datetime import datetime, timezone
 from typing import Optional
+
+from pydantic import BaseModel, Field, field_validator
+
 from app.models.booking import BookingStatus
+
 
 class Location(BaseModel):
     address: str
     lat: float
     lng: float
 
+
 class CustomerInfo(BaseModel):
     name: str
     email: str
     phone: Optional[str] = None
+
 
 class BookingCreateRequest(BaseModel):
     customer: CustomerInfo
@@ -22,6 +28,14 @@ class BookingCreateRequest(BaseModel):
     dropoff: Location
     passengers: int
     notes: Optional[str] = None
+
+    @field_validator("pickup_when")
+    @classmethod
+    def ensure_pickup_when_has_tz(cls, value: datetime) -> datetime:
+        if value.tzinfo is None:
+            raise ValueError("pickup_when must include timezone information")
+        return value.astimezone(timezone.utc)
+
 
 class BookingPublic(BaseModel):
     id: uuid.UUID
@@ -33,8 +47,10 @@ class BookingPublic(BaseModel):
     class Config:
         from_attributes = True
 
+
 class StripeSetupIntent(BaseModel):
     setup_intent_client_secret: str = Field(..., alias="setup_intent_client_secret")
+
 
 class BookingCreateResponse(BaseModel):
     booking: BookingPublic
