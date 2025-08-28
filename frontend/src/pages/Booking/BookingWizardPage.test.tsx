@@ -29,7 +29,7 @@ vi.mock('@/hooks/useSettings', () => ({
   useSettings: () => ({ data: { flagfall: 0, per_km_rate: 0, per_minute_rate: 0 } }),
 }));
 vi.mock('@/hooks/useDirections', () => ({
-  useDirections: () => ({ price: 100 }),
+  useDirections: () => async () => ({ km: 0, min: 0 }),
 }));
 vi.mock('@/hooks/useAddressAutocomplete', () => ({
   useAddressAutocomplete: () => ({ suggestions: [], loading: false }),
