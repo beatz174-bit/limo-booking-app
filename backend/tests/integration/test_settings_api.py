@@ -28,11 +28,7 @@ async def _ensure_admin_id1(async_session: AsyncSession) -> User:
 
 
 @pytest.mark.asyncio
-async def test_settings_requires_auth(client: AsyncClient):
-    # GET without a bearer token should be unauthorized
-    resp = await client.get("/settings")
-    assert resp.status_code in (401, 403)
-
+async def test_settings_put_requires_auth(client: AsyncClient):
     # PUT without a bearer token should be unauthorized
     resp2 = await client.put(
         "/settings",
@@ -66,12 +62,8 @@ async def test_get_settings_after_setup(
     # Allow 400 if setup was already completed by a previous test run
     assert setup_resp.status_code in (200, 201, 400)
 
-    # Authenticate explicitly as id=1 (matches ensure_admin rule)
-    u1 = await _ensure_admin_id1(async_session)
-    token = create_jwt_token(u1.id)
-    headers = {"Authorization": f"Bearer {token}"}
-
-    resp = await client.get("/settings", headers=headers)
+    # GET should succeed without authentication
+    resp = await client.get("/settings")
     assert resp.status_code == 200
     data = resp.json()
     assert data == {
@@ -120,7 +112,7 @@ async def test_put_settings_updates_values(
     data = put_resp.json()
     assert data == new_values.model_dump()
 
-    # Subsequent GET reflects new values
-    get_resp = await client.get("/settings", headers=headers)
+    # Subsequent GET reflects new values without auth
+    get_resp = await client.get("/settings")
     assert get_resp.status_code == 200
     assert get_resp.json() == new_values.model_dump()
