@@ -13,7 +13,16 @@ import { useSettings } from '@/hooks/useSettings';
 import { settingsApi } from '@/components/ApiConfig';
 import { useRouteMetrics } from '@/hooks/useRouteMetrics';
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
+const stripePromise = (async () => {
+  try {
+    return await loadStripe(
+      import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || ''
+    );
+  } catch (error) {
+    console.warn('Stripe initialization failed', error);
+    return null;
+  }
+})();
 
 interface Location {
   address: string;
