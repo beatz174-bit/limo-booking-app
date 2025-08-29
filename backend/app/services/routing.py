@@ -5,6 +5,7 @@ from math import atan2, cos, radians, sin, sqrt
 from typing import Tuple
 
 import httpx
+
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -53,12 +54,18 @@ async def estimate_route(
                 if resp.status_code < 500:
                     resp.raise_for_status()
                     data = resp.json()
+                    status = data.get("status")
+                    error_message = data.get("error_message")
+                    if status != "OK":
+                        if status == "ZERO_RESULTS":
+                            raise ValueError("no route found")
+                        if status == "REQUEST_DENIED":
+                            raise ValueError(error_message or "request denied")
+                        raise ValueError(
+                            error_message or f"route error: {status.lower()}"
+                        )
                     routes = data.get("routes") or []
-                    if (
-                        data.get("status") != "OK"
-                        or not routes
-                        or not routes[0].get("legs")
-                    ):
+                    if not routes or not routes[0].get("legs"):
                         raise ValueError("no route found")
                     leg = routes[0]["legs"][0]
                     distance_km = leg["distance"]["value"] / 1000.0
