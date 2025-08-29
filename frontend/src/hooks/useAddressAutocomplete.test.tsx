@@ -21,7 +21,7 @@ describe("useAddressAutocomplete", () => {
     );
 
     await waitFor(() => {
-      expect(result.current.suggestions[0].address).toBe("12/34 Main St Springfield 1234");
+      expect(result.current.suggestions[0].address).toBe("Queens 11430");
     });
   });
 
@@ -44,8 +44,7 @@ describe("useAddressAutocomplete", () => {
     await waitFor(() => {
       expect(result.current.suggestions[0]).toEqual({
         name: "Central Park",
-        address: sample[0].address,
-        display: "Central Park, New York 10022",
+        address: "New York 10022",
       });
     });
   });

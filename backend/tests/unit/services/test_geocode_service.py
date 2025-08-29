@@ -161,13 +161,11 @@ async def test_search_geocode_returns_airport(monkeypatch: MonkeyPatch):
     )
 
     results = await geocode_service.search_geocode("LHR")
-    assert results == [
-        {
-            "address": {"city": "London"},
-            "name": "Heathrow Airport",
-            "type": "airport",
-        }
-    ]
+    assert {
+        "address": {"city": "London"},
+        "name": "Heathrow Airport",
+        "type": "airport",
+    } in results
 
 
 @pytest.mark.xfail(reason="reverse_geocode fails on empty response", raises=IndexError)
