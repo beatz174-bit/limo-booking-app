@@ -20,6 +20,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 
 from app.api import auth as auth_router
 from app.api import geocode as geocode_router
+from app.api import health as health_router
 from app.api import route_metrics as route_metrics_router
 from app.api import settings as settings_router
 from app.api import setup as setup_router
@@ -78,6 +79,7 @@ app.include_router(auth_router.router)
 app.include_router(geocode_router.router)
 app.include_router(setup_router.router)
 app.include_router(settings_router.router)
+app.include_router(health_router.router)
 app.include_router(route_metrics_router.router)
 app.include_router(users_router.router)
 app.include_router(bookings_v1_router.router)
