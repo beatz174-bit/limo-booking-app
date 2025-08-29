@@ -1,5 +1,6 @@
 """Helpers for Google Directions API."""
 
+import asyncio
 from math import atan2, cos, radians, sin, sqrt
 from typing import Tuple
 
@@ -42,10 +43,21 @@ async def estimate_route(
     }
     url = "https://maps.googleapis.com/maps/api/directions/json"
     async with httpx.AsyncClient() as client:
-        resp = await client.get(url, params=params, timeout=10)
-    resp.raise_for_status()
-    data = resp.json()
-    leg = data["routes"][0]["legs"][0]
-    distance_km = leg["distance"]["value"] / 1000.0
-    duration_min = leg["duration"]["value"] / 60.0
-    return distance_km, duration_min
+        for attempt in range(3):
+            try:
+                resp = await client.get(url, params=params, timeout=10)
+            except httpx.RequestError as exc:
+                if attempt == 2:
+                    raise ValueError("route service unavailable") from exc
+            else:
+                if resp.status_code < 500:
+                    resp.raise_for_status()
+                    data = resp.json()
+                    leg = data["routes"][0]["legs"][0]
+                    distance_km = leg["distance"]["value"] / 1000.0
+                    duration_min = leg["duration"]["value"] / 60.0
+                    return distance_km, duration_min
+                if attempt == 2:
+                    raise ValueError("route service unavailable")
+            await asyncio.sleep(2**attempt)
+    raise ValueError("route service unavailable")
