@@ -1,24 +1,27 @@
 # tests/unit/api/test_settings_router.py
-import pytest
+import uuid
 from types import SimpleNamespace
-from httpx import AsyncClient
-from _pytest.monkeypatch import MonkeyPatch
 
-from app.main import app
+import pytest
+from _pytest.monkeypatch import MonkeyPatch
 from app.dependencies import get_current_user
+from app.main import app
 from app.schemas.setup import SettingsPayload
+from httpx import AsyncClient
+
+ADMIN_ID = uuid.UUID(int=1)
 
 
 def _admin_override():
     # Minimal object with id=1 so your admin guard passes
-    return SimpleNamespace(id=1)
+    return SimpleNamespace(id=ADMIN_ID)
 
 
 @pytest.mark.asyncio
 async def test_get_settings_router(monkeypatch: MonkeyPatch, client: AsyncClient):
     from app.api import settings as settings_router
 
-    async def fake_get_settings(*_args, **_kwargs): # type: ignore
+    async def fake_get_settings(*_args, **_kwargs):  # type: ignore
         return SettingsPayload(
             account_mode=True,
             flagfall=10.5,
@@ -54,10 +57,10 @@ async def test_put_settings_router(monkeypatch: MonkeyPatch, client: AsyncClient
         per_minute_rate=1.25,
     )
 
-    async def fake_update_settings(*_args, **_kwargs): # type: ignore
+    async def fake_update_settings(*_args, **_kwargs):  # type: ignore
         return body
 
-    monkeypatch.setattr(settings_router, "update_settings", fake_update_settings) # type: ignore
+    monkeypatch.setattr(settings_router, "update_settings", fake_update_settings)  # type: ignore
 
     app.dependency_overrides[get_current_user] = _admin_override
     try:
@@ -73,13 +76,13 @@ async def test_put_settings_router_validation_error(client: AsyncClient):
     # Validation happens before the service; still need auth override to avoid 401
     app.dependency_overrides[get_current_user] = _admin_override
     try:
-        bad_body = { # type: ignore
+        bad_body = {  # type: ignore
             "account_mode": "open",  # wrong type: should be boolean
             "flagfall": 10.5,
             "per_km_rate": 2.75,
             "per_minute_rate": 1.1,
         }
-        res = await client.put("/settings", json=bad_body) # type: ignore
+        res = await client.put("/settings", json=bad_body)  # type: ignore
         assert res.status_code == 422
     finally:
         app.dependency_overrides.pop(get_current_user, None)

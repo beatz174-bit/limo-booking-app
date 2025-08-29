@@ -3,15 +3,15 @@
 """Service helpers for user CRUD operations."""
 
 import logging
+import uuid
 from typing import Optional
 
+from app.core.security import hash_password
+from app.models.user_v2 import User
+from app.schemas.user import UserCreate, UserRead, UserUpdate
 from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.security import hash_password
-from app.models.user import User
-from app.schemas.user import UserCreate, UserRead, UserUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,6 @@ async def create_user(db: AsyncSession, data: UserCreate) -> UserRead:
         email=data.email,
         full_name=data.full_name,
         hashed_password=hash_password(data.password),
-        default_pickup_address=data.default_pickup_address,
     )
     db.add(user)
     await db.commit()
@@ -46,7 +45,7 @@ async def create_user(db: AsyncSession, data: UserCreate) -> UserRead:
     return UserRead.model_validate(user)
 
 
-async def get_user(db: AsyncSession, user_id: int) -> UserRead:
+async def get_user(db: AsyncSession, user_id: uuid.UUID) -> UserRead:
     """Fetch a user by primary key."""
     logger.info("retrieving user", extra={"user_id": user_id})
     user = await db.get(User, user_id)
@@ -68,7 +67,9 @@ async def list_users(
     return [UserRead.model_validate(u) for u in users]
 
 
-async def update_user(db: AsyncSession, user_id: int, data: UserUpdate) -> UserRead:
+async def update_user(
+    db: AsyncSession, user_id: uuid.UUID, data: UserUpdate
+) -> UserRead:
     """Update user fields, hashing password if supplied."""
     logger.info("updating user", extra={"user_id": user_id})
     user = await db.get(User, user_id)
@@ -85,14 +86,15 @@ async def update_user(db: AsyncSession, user_id: int, data: UserUpdate) -> UserR
         user.hashed_password = hash_password(update_data.pop("password"))
 
     for field, value in update_data.items():
-        setattr(user, field, value)
+        if hasattr(user, field):
+            setattr(user, field, value)
 
     await db.commit()
     await db.refresh(user)
     return UserRead.model_validate(user)
 
 
-async def delete_user(db: AsyncSession, user_id: int):
+async def delete_user(db: AsyncSession, user_id: uuid.UUID):
     """Remove a user record from the database."""
     logger.info("deleting user", extra={"user_id": user_id})
     user = await db.get(User, user_id)

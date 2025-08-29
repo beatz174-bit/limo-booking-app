@@ -1,25 +1,26 @@
+import uuid
 from typing import Dict
 
 import pytest
+from app.core.security import create_jwt_token
+from app.models.user_v2 import User
+from app.schemas.setup import SettingsPayload
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import create_jwt_token
-from app.models.user import User
-from app.schemas.setup import SettingsPayload
+ADMIN_ID = uuid.UUID(int=1)
 
 
 async def _ensure_admin_id1(async_session: AsyncSession) -> User:
     """Make sure a user with id=1 exists (service checks admin via id==1)."""
-    u1 = await async_session.get(User, 1)
+    u1 = await async_session.get(User, ADMIN_ID)
     if u1 is None:
         # Create a minimal active user record with id=1
         u1 = User(
-            id=1,
+            id=ADMIN_ID,
             email="settings-admin-override@example.com",
             full_name="Settings Admin Override",
             hashed_password="x",
-            is_active=True,
         )
         async_session.add(u1)
         await async_session.commit()

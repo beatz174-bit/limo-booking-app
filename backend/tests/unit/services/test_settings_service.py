@@ -1,13 +1,15 @@
-import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import HTTPException
-from sqlalchemy import text
+import uuid
 
-from app.services import settings_service
+import pytest
 from app.schemas.setup import SettingsPayload
 from app.schemas.user import UserRead
+from app.services import settings_service
+from fastapi import HTTPException
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 pytestmark = pytest.mark.asyncio
+
 
 async def test_get_settings_404_when_missing(async_session: AsyncSession):
     """Service raises 404 when no settings row exists."""
@@ -23,7 +25,7 @@ async def test_update_then_get_returns_values(async_session: AsyncSession):
     user: UserRead = UserRead(
         email="test@na.com",
         full_name="bloke",
-        id=1
+        id=uuid.UUID(int=1),
     )
 
     payload: SettingsPayload = SettingsPayload(

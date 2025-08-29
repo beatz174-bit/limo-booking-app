@@ -1,21 +1,22 @@
 """Service functions for initial application setup."""
 
 import logging
-
-from fastapi import HTTPException
-from app.models.user import User
-from app.models.settings import AdminConfig
-from app.core.security import hash_password
-from app.schemas.setup import SetupPayload, SettingsPayload
-from sqlalchemy.sql import select
-from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Union
+
+from app.core.security import hash_password
+from app.models.settings import AdminConfig
+from app.models.user_v2 import User
+from app.schemas.setup import SettingsPayload, SetupPayload
+from fastapi import HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql import select
 
 logger = logging.getLogger(__name__)
 
 
 async def complete_initial_setup(db: AsyncSession, data: SetupPayload):
     from app.db.database import Base, async_engine
+
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     if await is_setup_complete(db):
@@ -25,7 +26,7 @@ async def complete_initial_setup(db: AsyncSession, data: SetupPayload):
     admin_user = User(
         email=data.admin_email,
         full_name=data.full_name,
-        hashed_password=hash_password(data.admin_password)
+        hashed_password=hash_password(data.admin_password),
     )
     db.add(admin_user)
 
@@ -41,6 +42,7 @@ async def complete_initial_setup(db: AsyncSession, data: SetupPayload):
     logger.info("setup complete")
     return {"message": "Setup complete"}
 
+
 async def is_setup_complete(db: AsyncSession) -> Union[SettingsPayload, None]:
     logger.debug("checking setup status")
     res = await db.execute(select(AdminConfig).limit(1))
@@ -53,4 +55,3 @@ async def is_setup_complete(db: AsyncSession) -> Union[SettingsPayload, None]:
         per_km_rate=cfg.per_km_rate,
         per_minute_rate=cfg.per_minute_rate,
     )
-
