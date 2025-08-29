@@ -6,8 +6,7 @@ import * as logger from "@/lib/logger";
 
 export interface AddressSuggestion {
   name: string;
-  address: AddressComponents;
-  display: string;
+  address: string;
 }
 
 export function useAddressAutocomplete(query: string, options?: { debounceMs?: number }) {
@@ -33,16 +32,11 @@ export function useAddressAutocomplete(query: string, options?: { debounceMs?: n
         const list = Array.isArray(data) ? data : data?.results || [];
         setSuggestions(
           list
-            .map((item: { name?: string; address?: AddressComponents }) => {
-              const name = item.name || "";
-              const address = (item.address || {}) as AddressComponents;
-              return {
-                name,
-                address,
-                display: [name, formatAddress(address)].filter(Boolean).join(", "),
-              };
-            })
-            .filter((s: AddressSuggestion) => !!s.display)
+            .map((item: Record<string, unknown>) => ({
+              name: (item as { name?: string }).name || "",
+              address: formatAddress((item as { address?: Record<string, unknown> }).address || item),
+            }))
+            .filter((s: AddressSuggestion) => !!s.address)
         );
       } catch (e) {
         if (!controller.signal.aborted) {

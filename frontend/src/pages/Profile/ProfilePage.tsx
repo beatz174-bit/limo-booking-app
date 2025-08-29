@@ -4,6 +4,7 @@ import { AddressField } from '@/components/AddressField';
 import { useAuth } from '@/contexts/AuthContext';
 import PushToggle from '@/components/PushToggle';
 import { CONFIG } from '@/config';
+import { useAddressAutocomplete } from '@/hooks/useAddressAutocomplete';
 
 const ProfilePage = () => {
   const { ensureFreshToken } = useAuth();
@@ -14,6 +15,8 @@ const ProfilePage = () => {
   const [oldPasswordValid, setOldPasswordValid] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  const auto = useAddressAutocomplete(defaultPickup);
 
   useEffect(() => {
     const load = async () => {
@@ -93,7 +96,14 @@ const ProfilePage = () => {
       </Typography>
       <TextField label="Full Name" value={fullName} onChange={e => setFullName(e.target.value)} margin="normal" fullWidth />
       <TextField label="Email" value={email} onChange={e => setEmail(e.target.value)} margin="normal" fullWidth />
-      <AddressField id="defaultPickup" label="Default Pickup Address" value={defaultPickup} onChange={setDefaultPickup} />
+      <AddressField
+        id="defaultPickup"
+        label="Default Pickup Address"
+        value={defaultPickup}
+        onChange={setDefaultPickup}
+        suggestions={auto.suggestions}
+        loading={auto.loading}
+      />
       <TextField
         label="Current Password"
         type="password"

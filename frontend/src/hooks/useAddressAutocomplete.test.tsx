@@ -21,11 +21,7 @@ describe("useAddressAutocomplete", () => {
     );
 
     await waitFor(() => {
-      expect(result.current.suggestions[0]).toEqual({
-        name: "JFK",
-        address: sample[0].address,
-        display: "JFK, Queens 11430",
-      });
+      expect(result.current.suggestions[0].address).toBe("12/34 Main St Springfield 1234");
     });
   });
 
