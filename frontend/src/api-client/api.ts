@@ -784,10 +784,10 @@ export interface UserRead {
   default_pickup_address?: string | null;
   /**
    *
-   * @type {number}
+   * @type {string}
    * @memberof UserRead
    */
-  id: number;
+  id: string;
   /**
    *
    * @type {string}

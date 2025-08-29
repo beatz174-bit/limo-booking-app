@@ -6,6 +6,7 @@ import { DevFeaturesProvider } from '@/contexts/DevFeaturesContext';
 import NavBar from './NavBar';
 import { render } from '@testing-library/react';
 import type { ReactNode } from 'react';
+import { CONFIG } from '@/config';
 
 function seedAuth({ id, name, role }: { id: string; name: string; role: string }) {
   localStorage.setItem('auth_tokens', JSON.stringify({ access_token: 't', refresh_token: 'r', user: { email: 'x' }, role }));
@@ -33,7 +34,7 @@ function renderWithAuth(initialPath = '/book', extraRoutes?: ReactNode) {
 
 describe('NavBar', () => {
   test.skip('shows Admin Dashboard when role is ADMIN', async () => {
-    seedAuth({ id: '1', name: 'Admin User', role: 'ADMIN' });
+    seedAuth({ id: CONFIG.ADMIN_USER_ID, name: 'Admin User', role: 'ADMIN' });
     renderWithAuth();
 
     const accountBtn = await screen.findByLabelText(/account/i);
@@ -42,7 +43,7 @@ describe('NavBar', () => {
   });
 
   test.skip('shows driver menu items for DRIVER role', async () => {
-    seedAuth({ id: '2', name: 'Driver User', role: 'DRIVER' });
+    seedAuth({ id: '00000000-0000-0000-0000-000000000002', name: 'Driver User', role: 'DRIVER' });
     renderWithAuth();
 
     const accountBtn = await screen.findByLabelText(/account/i);
@@ -53,7 +54,7 @@ describe('NavBar', () => {
   });
 
   test('hides role-specific items for CUSTOMER role', async () => {
-    seedAuth({ id: '3', name: 'Regular User', role: 'CUSTOMER' });
+    seedAuth({ id: '00000000-0000-0000-0000-000000000003', name: 'Regular User', role: 'CUSTOMER' });
     renderWithAuth();
 
     const accountBtn = await screen.findByLabelText(/account/i);
@@ -63,7 +64,7 @@ describe('NavBar', () => {
   });
 
   test('Logout clears state and navigates to /login', async () => {
-    seedAuth({ id: '1', name: 'Admin User', role: 'ADMIN' });
+    seedAuth({ id: CONFIG.ADMIN_USER_ID, name: 'Admin User', role: 'ADMIN' });
     renderWithAuth('/book');
 
     const accountBtn = await screen.findByLabelText(/account/i);
@@ -79,7 +80,7 @@ describe('NavBar', () => {
   });
 
   test('book menu item navigates to booking wizard', async () => {
-    seedAuth({ id: '3', name: 'Regular User', role: 'CUSTOMER' });
+    seedAuth({ id: '00000000-0000-0000-0000-000000000003', name: 'Regular User', role: 'CUSTOMER' });
     renderWithAuth('/home', <Route path="/book" element={<h1>Book</h1>} />);
 
     const accountBtn = await screen.findByLabelText(/account/i);
@@ -91,7 +92,7 @@ describe('NavBar', () => {
   });
 
   test('ride history menu item navigates to history page', async () => {
-    seedAuth({ id: '3', name: 'Regular User', role: 'CUSTOMER' });
+    seedAuth({ id: '00000000-0000-0000-0000-000000000003', name: 'Regular User', role: 'CUSTOMER' });
     renderWithAuth('/home', <Route path="/history" element={<h1>History</h1>} />);
 
     const accountBtn = await screen.findByLabelText(/account/i);
@@ -103,7 +104,7 @@ describe('NavBar', () => {
   });
 
   test('driver dashboard menu navigates to driver dashboard', async () => {
-    seedAuth({ id: '2', name: 'Driver User', role: 'DRIVER' });
+    seedAuth({ id: '00000000-0000-0000-0000-000000000002', name: 'Driver User', role: 'DRIVER' });
     renderWithAuth('/book', <Route path="/driver" element={<h1>Driver</h1>} />);
 
     const accountBtn = await screen.findByLabelText(/account/i);
@@ -117,7 +118,7 @@ describe('NavBar', () => {
   });
 
   test('availability menu navigates to driver availability', async () => {
-    seedAuth({ id: '2', name: 'Driver User', role: 'DRIVER' });
+    seedAuth({ id: '00000000-0000-0000-0000-000000000002', name: 'Driver User', role: 'DRIVER' });
     renderWithAuth(
       '/book',
       <Route path="/driver/availability" element={<h1>Availability</h1>} />,
@@ -134,7 +135,7 @@ describe('NavBar', () => {
   });
 
   test('admin menu item navigates to admin dashboard', async () => {
-    seedAuth({ id: '1', name: 'Admin User', role: 'ADMIN' });
+    seedAuth({ id: CONFIG.ADMIN_USER_ID, name: 'Admin User', role: 'ADMIN' });
     renderWithAuth('/book', <Route path="/admin" element={<h1>Admin</h1>} />);
 
     const accountBtn = await screen.findByLabelText(/account/i);

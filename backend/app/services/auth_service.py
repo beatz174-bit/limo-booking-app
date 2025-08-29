@@ -2,16 +2,15 @@
 
 import logging
 
+from app.core.security import create_jwt_token, hash_password, verify_password
+from app.dependencies import get_db
+from app.models.user_v2 import User as UserV2  # <- ORM model
+from app.schemas.auth import LoginRequest, LoginResponse, RegisterRequest
+from app.schemas.user import UserRead  # <- your output schema
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.security import create_jwt_token, hash_password, verify_password
-from app.dependencies import get_db
-from app.models.user import User  # <- ORM model
-from app.schemas.auth import LoginRequest, LoginResponse, RegisterRequest
-from app.schemas.user import UserRead  # <- your output schema
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +18,7 @@ logger = logging.getLogger(__name__)
 async def authenticate_user(db: AsyncSession, data: LoginRequest) -> LoginResponse:
     """Verify credentials and return a JWT token on success."""
     logger.debug("authenticating user", extra={"email": data.email})
-    stmt = select(User).where(User.email == data.email)
+    stmt = select(UserV2).where(UserV2.email == data.email)
     user = (await db.execute(stmt)).scalar_one_or_none()
 
     if user is None or not verify_password(data.password, user.hashed_password):
@@ -41,7 +40,7 @@ async def register_user(db: AsyncSession, data: RegisterRequest) -> UserRead:
     """Create a new user after checking email uniqueness."""
     logger.info("registering user", extra={"email": data.email})
     existing = (
-        await db.execute(select(User).where(User.email == data.email))
+        await db.execute(select(UserV2).where(UserV2.email == data.email))
     ).scalar_one_or_none()
     if existing:
         logger.warning("registration failed email exists", extra={"email": data.email})
@@ -50,7 +49,7 @@ async def register_user(db: AsyncSession, data: RegisterRequest) -> UserRead:
         )
 
     # Build ORM entity (not a Pydantic schema)
-    user = User(
+    user = UserV2(
         email=data.email,
         full_name=data.full_name,
         hashed_password=hash_password(data.password),
