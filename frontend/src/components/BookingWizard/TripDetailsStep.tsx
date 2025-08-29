@@ -3,6 +3,7 @@ import { Stack, TextField, Button } from '@mui/material';
 import { AddressField } from '@/components/AddressField';
 import { CONFIG } from '@/config';
 import { useAddressAutocomplete } from '@/hooks/useAddressAutocomplete';
+import * as logger from '@/lib/logger';
 
 interface Location {
   address: string;
@@ -24,6 +25,7 @@ interface Props {
 }
 
 async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+  logger.debug('components/BookingWizard/TripDetailsStep', 'geocodeAddress input', address);
   if (!address) return null;
   try {
     const backend = CONFIG.API_BASE_URL as string | undefined;
@@ -33,18 +35,33 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lng: numb
       u.searchParams.set('q', address);
       url = u.toString();
     } else {
-      url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`;
+      url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(
+        address,
+      )}`;
     }
+    logger.debug('components/BookingWizard/TripDetailsStep', 'geocodeAddress url', url);
     const res = await fetch(url);
-    if (!res.ok) return null;
+    if (!res.ok) {
+      logger.error(
+        'components/BookingWizard/TripDetailsStep',
+        'geocodeAddress non-200 response',
+        res.status,
+      );
+      return null;
+    }
     const data = await res.json();
     const first = Array.isArray(data) ? data[0] : data?.results?.[0];
     if (!first) return null;
     const lat = Number(first.lat || first.latitude);
     const lng = Number(first.lon || first.longitude);
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+    logger.debug('components/BookingWizard/TripDetailsStep', 'geocodeAddress coords', {
+      lat,
+      lng,
+    });
     return { lat, lng };
-  } catch {
+  } catch (err) {
+    logger.error('components/BookingWizard/TripDetailsStep', 'geocodeAddress error', err);
     return null;
   }
 }

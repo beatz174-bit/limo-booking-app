@@ -1,7 +1,7 @@
 // Hook to fetch address suggestions as the user types.
 import { useEffect, useState } from "react";
 import { CONFIG } from "@/config";
-import { formatAddress, type AddressComponents } from "@/lib/formatAddress";
+import { formatAddress } from "@/lib/formatAddress";
 import * as logger from "@/lib/logger";
 
 export interface AddressSuggestion {
