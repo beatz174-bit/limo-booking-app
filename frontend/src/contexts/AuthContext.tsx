@@ -18,7 +18,7 @@ type LoginResponse = {
   role?: string | null;
   user?: { role?: string } | null;
   full_name?: string;
-  id?: number | string;
+  id?: string;
 };
 
 type AuthState = {
@@ -321,13 +321,19 @@ export const RequireRole: React.FC<{ role: string; children: React.ReactNode }> 
   useEffect(() => {
     if (!loading) {
       const from = encodeURIComponent(location.pathname + location.search);
-      const allowed = accessToken && (userRole === role || userID === '1');
+      const allowed =
+        accessToken && (userRole === role || userID === CONFIG.ADMIN_USER_ID);
       if (!allowed) {
         navigate(`/login?from=${from}`, { replace: true });
       }
     }
   }, [loading, accessToken, userRole, userID, role, location, navigate]);
 
-  if (loading || !accessToken || (userRole !== role && userID !== '1')) return null;
+  if (
+    loading ||
+    !accessToken ||
+    (userRole !== role && userID !== CONFIG.ADMIN_USER_ID)
+  )
+    return null;
   return <>{children}</>;
 };

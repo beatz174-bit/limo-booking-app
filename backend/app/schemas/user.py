@@ -1,5 +1,6 @@
 """User-related Pydantic models."""
 
+import uuid
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr
@@ -22,7 +23,7 @@ class UserCreate(UserBase):
 class UserRead(UserBase):
     """User data returned from the API."""
 
-    id: int
+    id: uuid.UUID
     # role: str
     # is_approved: bool
     fcm_token: Optional[str] = None

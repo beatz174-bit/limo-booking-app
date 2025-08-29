@@ -3,6 +3,7 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route } from 'react-router-dom';
 import HomePage from './HomePage';
+import { CONFIG } from '@/config';
 
 function seedAuth(id: string, role = 'CUSTOMER') {
   localStorage.setItem(
@@ -20,7 +21,7 @@ describe('HomePage', () => {
   });
 
   it('shows common tiles for a regular user', () => {
-    seedAuth('2');
+    seedAuth('00000000-0000-0000-0000-000000000002');
     renderWithProviders(<HomePage />);
     expect(screen.getByRole('link', { name: /book a ride/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /ride history/i })).toBeInTheDocument();
@@ -30,13 +31,13 @@ describe('HomePage', () => {
   });
 
   it('shows admin dashboard tile for admin user', () => {
-    seedAuth('1');
+    seedAuth(CONFIG.ADMIN_USER_ID);
     renderWithProviders(<HomePage />);
     expect(screen.getByRole('link', { name: /admin dashboard/i })).toBeInTheDocument();
   });
 
   it('navigates to booking wizard', async () => {
-    seedAuth('2');
+    seedAuth('00000000-0000-0000-0000-000000000002');
     renderWithProviders(<HomePage />, {
       extraRoutes: <Route path="/book" element={<h1>Book</h1>} />,
     });
@@ -47,7 +48,7 @@ describe('HomePage', () => {
   });
 
   it('navigates to ride history details', async () => {
-    seedAuth('2');
+    seedAuth('00000000-0000-0000-0000-000000000002');
     renderWithProviders(<HomePage />, {
       extraRoutes: <Route path="/history" element={<h1>History</h1>} />,
     });
@@ -58,7 +59,7 @@ describe('HomePage', () => {
   });
 
   it('navigates to driver dashboard for first user', async () => {
-    seedAuth('1');
+    seedAuth(CONFIG.ADMIN_USER_ID);
     renderWithProviders(<HomePage />, {
       extraRoutes: <Route path="/driver" element={<h1>Driver</h1>} />,
     });
@@ -69,7 +70,7 @@ describe('HomePage', () => {
   });
 
   it('navigates to admin dashboard for admin user', async () => {
-    seedAuth('1');
+    seedAuth(CONFIG.ADMIN_USER_ID);
     renderWithProviders(<HomePage />, {
       extraRoutes: <Route path="/admin" element={<h1>Admin</h1>} />,
     });

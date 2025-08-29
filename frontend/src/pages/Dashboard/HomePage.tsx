@@ -1,6 +1,7 @@
 import { Grid, Button, Typography } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { CONFIG } from '@/config';
 
 interface Tile {
   label: string;
@@ -16,7 +17,7 @@ export default function HomePage() {
     { label: 'Profile', path: '/me' },
   ];
 
-  if (userID === '1') {
+  if (userID === CONFIG.ADMIN_USER_ID) {
     tiles.splice(2, 0, { label: 'Driver Dashboard', path: '/driver' });
     tiles.splice(3, 0, { label: 'Availability', path: '/driver/availability' });
     tiles.push({ label: 'Admin Dashboard', path: '/admin' });

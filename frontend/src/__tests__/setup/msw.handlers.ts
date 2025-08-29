@@ -32,7 +32,14 @@ export const handlers = [
     if (body.email === 'dupe@example.com') {
       return HttpResponse.json({ detail: 'Email already registered' }, { status: 400 });
     }
-    return HttpResponse.json({ id: 123, full_name: body.full_name, email: body.email }, { status: 201 });
+    return HttpResponse.json(
+      {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        full_name: body.full_name,
+        email: body.email,
+      },
+      { status: 201 },
+    );
   }),
 
   // ---- POST /auth/login ----
@@ -47,14 +54,19 @@ export const handlers = [
       access_token: 'test-token',
       token_type: 'bearer',
       role: 'CUSTOMER',
-      user: { id: 1, full_name: 'Test User', email: body.email, role: 'CUSTOMER' },
+      user: {
+        id: CONFIG.ADMIN_USER_ID,
+        full_name: 'Test User',
+        email: body.email,
+        role: 'CUSTOMER',
+      },
     });
   }),
 
   // ---- GET /users/me : return current user based on token ----
   http.get(apiUrl('/users/me'), () => {
     return HttpResponse.json({
-      id: 1,
+      id: CONFIG.ADMIN_USER_ID,
       full_name: 'Test User',
       email: 'test@example.com',
       default_pickup_address: '123 Street',
@@ -63,7 +75,13 @@ export const handlers = [
 
   http.patch(apiUrl('/users/me'), async ({ request }) => {
     const body = await request.json();
-    return HttpResponse.json({ id: 1, full_name: body.full_name ?? 'Test User', email: body.email ?? 'test@example.com', default_pickup_address: body.default_pickup_address ?? '123 Street' });
+    return HttpResponse.json({
+      id: CONFIG.ADMIN_USER_ID,
+      full_name: body.full_name ?? 'Test User',
+      email: body.email ?? 'test@example.com',
+      default_pickup_address:
+        body.default_pickup_address ?? '123 Street',
+    });
   }),
 
   // ---- Settings endpoints used by AdminDashboard ----

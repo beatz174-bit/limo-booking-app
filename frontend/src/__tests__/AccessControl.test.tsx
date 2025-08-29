@@ -5,6 +5,7 @@ import { AuthContextType, UserShape } from '@/types/AuthContextType';
 import { AuthContext } from '@/contexts/AuthContext';
 import { DevFeaturesProvider } from '@/contexts/DevFeaturesContext';
 import { vi } from 'vitest';
+import { CONFIG } from '@/config';
 
 vi.mock('@/pages/Admin/AdminDashboard', () => ({ default: () => <div>Admin Page</div> }));
 vi.mock('@/pages/Driver/DriverDashboard', () => ({ default: () => <div>Driver Page</div> }));
@@ -40,22 +41,22 @@ function renderWithAuth(value: Partial<AuthContextType>, initial: string) {
 
 describe('route access control', () => {
   it('allows first user to access admin dashboard', () => {
-    renderWithAuth({ accessToken: 'tok', userID: '1' }, '/admin');
+    renderWithAuth({ accessToken: 'tok', userID: CONFIG.ADMIN_USER_ID }, '/admin');
     expect(screen.getByText('Admin Page')).toBeInTheDocument();
   });
 
   it('redirects other users from admin dashboard', async () => {
-    renderWithAuth({ accessToken: 'tok', userID: '2' }, '/admin');
+    renderWithAuth({ accessToken: 'tok', userID: '00000000-0000-0000-0000-000000000002' }, '/admin');
     await waitFor(() => expect(screen.getByText('Login Page')).toBeInTheDocument());
   });
 
   it('allows first user to access driver dashboard', () => {
-    renderWithAuth({ accessToken: 'tok', userID: '1' }, '/driver');
+    renderWithAuth({ accessToken: 'tok', userID: CONFIG.ADMIN_USER_ID }, '/driver');
     expect(screen.getByText('Driver Page')).toBeInTheDocument();
   });
 
   it('redirects other users from driver dashboard', async () => {
-    renderWithAuth({ accessToken: 'tok', userID: '2' }, '/driver');
+    renderWithAuth({ accessToken: 'tok', userID: '00000000-0000-0000-0000-000000000002' }, '/driver');
     await waitFor(() => expect(screen.getByText('Login Page')).toBeInTheDocument());
   });
 });

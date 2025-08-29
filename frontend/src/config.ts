@@ -20,5 +20,8 @@ export const CONFIG = {
   ORS_API_KEY: import.meta.env.VITE_ORS_API_KEY || '',
   JWT_SECRET_KEY: import.meta.env.VITE_JWT_SECRET_KEY || '',
   ENV: import.meta.env.ENV || 'development',
+  ADMIN_USER_ID:
+    import.meta.env.VITE_ADMIN_USER_ID ||
+    '00000000-0000-0000-0000-000000000001',
 };
 
