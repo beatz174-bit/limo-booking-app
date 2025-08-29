@@ -17,14 +17,27 @@ import CircularProgress from "@mui/material/CircularProgress";
 import PageNotFound from "@/pages/PageNotFound";
 import DevNotes from "@/components/DevNotes";
 import { useDevFeatures } from "@/contexts/DevFeaturesContext";
+import { useBackendReady } from "@/contexts/BackendReadyContext";
 import HomePage from "@/pages/Dashboard/HomePage";
 
 function App() {
   const { accessToken, loading } = useAuth(); // custom hook to get AuthContext
   const { enabled: devEnabled } = useDevFeatures();
+  const { ready } = useBackendReady();
 
-  if (loading) {
-    return <CircularProgress size="large" title='Loading' />; // or <Spin />, <Skeleton />, or a splash screen
+  if (loading || !ready) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100vh",
+        }}
+      >
+        <CircularProgress size="large" title="Loading" />
+      </div>
+    );
   }
 
   return (

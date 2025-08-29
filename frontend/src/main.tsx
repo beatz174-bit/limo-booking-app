@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { DevFeaturesProvider } from '@/contexts/DevFeaturesContext';
+import { BackendReadyProvider } from '@/contexts/BackendReadyContext';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import theme from '@/theme';
@@ -16,7 +17,9 @@ createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <AuthProvider>
           <DevFeaturesProvider>
-            <App />
+            <BackendReadyProvider>
+              <App />
+            </BackendReadyProvider>
           </DevFeaturesProvider>
         </AuthProvider>
       </BrowserRouter>

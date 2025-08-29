@@ -1,6 +1,7 @@
 import { useState, ChangeEvent, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBackendReady } from "@/contexts/BackendReadyContext";
 import { Container, Box, Typography, TextField, Button, Alert } from "@mui/material";
 
 export default function LoginPage() {
@@ -9,6 +10,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const { loginWithPassword, finishOAuthIfCallback } = useAuth();
+  const { ready } = useBackendReady();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -75,7 +77,13 @@ export default function LoginPage() {
           value={password}
           onChange={onPassword}
         />
-        <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }} disabled={submitting}>
+        <Button
+          type="submit"
+          variant="contained"
+          fullWidth
+          sx={{ mt: 2 }}
+          disabled={submitting || !ready}
+        >
           Log in
         </Button>
 
