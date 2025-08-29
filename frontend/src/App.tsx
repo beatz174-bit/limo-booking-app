@@ -13,12 +13,12 @@ import ProfilePage from "@/pages/Profile/ProfilePage";
 import SetupPage from "@/pages/Setup/SetupPage";
 import { useAuth, RequireAuth, RequireRole } from "@/contexts/AuthContext";
 import NavBar from "@/components/NavBar";
-import CircularProgress from "@mui/material/CircularProgress";
 import PageNotFound from "@/pages/PageNotFound";
 import DevNotes from "@/components/DevNotes";
 import { useDevFeatures } from "@/contexts/DevFeaturesContext";
 import { useBackendReady } from "@/contexts/BackendReadyContext";
 import HomePage from "@/pages/Dashboard/HomePage";
+import LoadingScreen from "@/components/LoadingScreen";
 
 function App() {
   const { accessToken, loading } = useAuth(); // custom hook to get AuthContext
@@ -26,18 +26,7 @@ function App() {
   const { ready } = useBackendReady();
 
   if (loading || !ready) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          height: "100vh",
-        }}
-      >
-        <CircularProgress size="large" title="Loading" />
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (

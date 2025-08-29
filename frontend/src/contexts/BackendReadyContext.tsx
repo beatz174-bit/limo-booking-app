@@ -26,7 +26,7 @@ export const BackendReadyProvider: React.FC<{ children: React.ReactNode }> = ({ 
         // ignore network errors
       }
       if (!cancelled) {
-        setState((s) => ({ ...s, loading: false }));
+        setState({ ready: false, loading: true });
         setTimeout(check, 1000);
       }
     }
