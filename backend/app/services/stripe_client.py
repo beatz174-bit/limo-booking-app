@@ -54,19 +54,37 @@ def charge_deposit(amount_cents: int, payment_method: str = "pm_card_visa"):
         card so unit tests can run without real card details.
     """
 
-    return stripe.PaymentIntent.create(
-        amount=amount_cents,
-        currency="aud",
-        payment_method=payment_method,
-        confirm=True,
-    )
+    params = {
+        "amount": amount_cents,
+        "currency": "aud",
+        "payment_method": payment_method,
+        "confirm": True,
+        "automatic_payment_methods": {
+            "enabled": True,
+            "allow_redirects": "never",
+        },
+    }
+
+    if settings.stripe_return_url:
+        params["return_url"] = settings.stripe_return_url
+
+    return stripe.PaymentIntent.create(**params)
 
 
 def charge_final(amount_cents: int, payment_method: str = "pm_card_visa"):
     """Charge the remaining fare amount."""
-    return stripe.PaymentIntent.create(
-        amount=amount_cents,
-        currency="aud",
-        payment_method=payment_method,
-        confirm=True,
-    )
+    params = {
+        "amount": amount_cents,
+        "currency": "aud",
+        "payment_method": payment_method,
+        "confirm": True,
+        "automatic_payment_methods": {
+            "enabled": True,
+            "allow_redirects": "never",
+        },
+    }
+
+    if settings.stripe_return_url:
+        params["return_url"] = settings.stripe_return_url
+
+    return stripe.PaymentIntent.create(**params)

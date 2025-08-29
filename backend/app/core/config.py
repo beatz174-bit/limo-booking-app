@@ -117,6 +117,7 @@ class Settings(BaseSettings):
     google_maps_api_key: Optional[str] = None
     stripe_secret_key: Optional[str] = None
     stripe_webhook_secret: Optional[str] = None
+    stripe_return_url: Optional[str] = None
     fcm_project_id: Optional[str] = None
     fcm_client_email: Optional[str] = None
     fcm_private_key: Optional[str] = None
