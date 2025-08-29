@@ -93,7 +93,9 @@ describe("AddressField", () => {
   });
 
   test("renders suggestion name and address", async () => {
-    const suggestions = [{ name: "LAX", address: "1 World Way, Los Angeles" }];
+    const suggestions = [
+      { name: "LAX", address: "1 World Way, Los Angeles", lat: 1, lng: 2, placeId: "x" },
+    ];
     render(
       <AddressField
         id="a"

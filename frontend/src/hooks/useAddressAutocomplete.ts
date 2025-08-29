@@ -1,12 +1,14 @@
 // Hook to fetch address suggestions as the user types.
 import { useEffect, useState } from "react";
 import { CONFIG } from "@/config";
-import { formatAddress } from "@/lib/formatAddress";
 import * as logger from "@/lib/logger";
 
 export interface AddressSuggestion {
   name: string;
   address: string;
+  lat: number;
+  lng: number;
+  placeId: string;
 }
 
 export function useAddressAutocomplete(
@@ -31,24 +33,55 @@ export function useAddressAutocomplete(
     const timeout = setTimeout(async () => {
       try {
         setLoading(true);
-        const base =
-          (CONFIG.API_BASE_URL as string | undefined) || window.location.origin;
-        const u = new URL("/geocode/search", base);
-        u.searchParams.set("q", query);
-        const url = u.toString();
-        logger.debug("hooks/useAddressAutocomplete", "request URL", url);
-        const res = await fetch(url, { signal: controller.signal });
-        if (!res.ok) throw new Error("Autocomplete failed");
-        const data = await res.json();
-        const list = Array.isArray(data) ? data : data?.results || [];
-        const mapped = list
-          .map((item: Record<string, unknown>) => ({
-            name: (item as { name?: string }).name || "",
-            address: formatAddress(
-              (item as { address?: Record<string, unknown> }).address || item
-            ),
-          }))
-          .filter((s: AddressSuggestion) => !!s.address);
+        const key = CONFIG.GOOGLE_MAPS_API_KEY;
+        const autoUrl = new URL(
+          "https://maps.googleapis.com/maps/api/place/autocomplete/json"
+        );
+        autoUrl.searchParams.set("input", query);
+        autoUrl.searchParams.set("key", key);
+        logger.debug(
+          "hooks/useAddressAutocomplete",
+          "request URL",
+          autoUrl.toString()
+        );
+        const autoRes = await fetch(autoUrl.toString(), {
+          signal: controller.signal,
+        });
+        if (!autoRes.ok) throw new Error("Autocomplete failed");
+        const autoData = await autoRes.json();
+        const predictions = (autoData?.predictions || []).slice(0, 5);
+        const details = await Promise.all(
+          predictions.map(async (p: Record<string, unknown>) => {
+            const placeId = (p as { place_id?: string }).place_id;
+            if (!placeId) return null;
+            const detUrl = new URL(
+              "https://maps.googleapis.com/maps/api/place/details/json"
+            );
+            detUrl.searchParams.set("place_id", placeId);
+            detUrl.searchParams.set("key", key);
+            detUrl.searchParams.set(
+              "fields",
+              "place_id,name,formatted_address,geometry/location"
+            );
+            const detRes = await fetch(detUrl.toString(), {
+              signal: controller.signal,
+            });
+            if (!detRes.ok) return null;
+            const detData = await detRes.json();
+            const r = detData.result || {};
+            const loc = r.geometry?.location || {};
+            return {
+              name: r.name || "",
+              address: r.formatted_address || "",
+              lat: loc.lat,
+              lng: loc.lng,
+              placeId: r.place_id || "",
+            } as AddressSuggestion;
+          })
+        );
+        const mapped = details.filter(
+          (s): s is AddressSuggestion => !!s && !!s.address
+        );
         logger.debug(
           "hooks/useAddressAutocomplete",
           "suggestion count",

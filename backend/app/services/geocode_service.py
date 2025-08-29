@@ -4,21 +4,12 @@ from __future__ import annotations
 """Service functions wrapping external geocoding APIs."""
 
 import logging
-from typing import Any
 
 import httpx
 
 from app.core.config import get_settings
 
 logger = logging.getLogger(__name__)
-
-try:  # pragma: no cover - optional dependency
-    from airportsdata import load as load_airports
-
-    AIRPORTS: dict[str, dict[str, Any]] = load_airports("IATA")
-except Exception:  # pragma: no cover - fall back if package missing
-    logger.exception("failed to load airports data")
-    AIRPORTS = {}
 
 
 async def reverse_geocode(lat: float, lon: float) -> str:
@@ -85,121 +76,60 @@ async def reverse_geocode(lat: float, lon: float) -> str:
 
 
 async def search_geocode(query: str, limit: int = 5) -> list[dict]:
-    """Search for addresses matching free-form text.
+    """Use Google Places Autocomplete and Details to resolve addresses.
 
-    The search workflow is:
-
-    1. If the query looks like an IATA airport code, try to resolve it using
-       a local airports database.
-    2. Query the OpenRouteService geocoder for general address suggestions.
-    3. Query the OpenStreetMap Nominatim API for points of interest.
-    4. Merge the results and return at most ``limit`` entries.
-
-    Returns dictionaries with a ``name`` and structured ``address`` fields.
+    Returns dictionaries containing ``name``, ``address``, ``lat``, ``lng`` and
+    ``place_id`` for each suggestion.
     """
 
     logger.info("search geocode", extra={"query": query, "limit": limit})
+    settings = get_settings()
+    api_key = settings.google_maps_api_key
+    if not api_key or api_key == "undefined":
+        raise RuntimeError("GOOGLE_MAPS_API_KEY not configured")
+
+    autocomplete_url = "https://maps.googleapis.com/maps/api/place/autocomplete/json"
+    details_url = "https://maps.googleapis.com/maps/api/place/details/json"
     results: list[dict] = []
 
-    settings = get_settings()
-    api_key = settings.ors_api_key
-
-    ors_url = "https://api.openrouteservice.org/geocode/search"
-    ors_params: dict[str, object] = {
-        "api_key": api_key,
-        "text": query,
-        "size": limit,
-    }
-    nom_url = "https://nominatim.openstreetmap.org/search"
-    nom_params: dict[str, object] = {
-        "format": "json",
-        "addressdetails": 1,
-        "limit": limit,
-        "q": query,
-    }
-    headers = {"Accept": "application/json"}
-
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=10) as client:
         logger.debug(
-            "search geocode request",
-            extra={"url": ors_url, "query": query, "limit": limit},
+            "google autocomplete request",
+            extra={"url": autocomplete_url, "query": query, "limit": limit},
         )
-        try:
-            ors_res = await client.get(ors_url, params=ors_params, headers=headers)
-            ors_res.raise_for_status()
-        except Exception:
-            logger.exception("ORS search request failed")
-            raise
-        logger.debug(
-            "search geocode ORS response",
-            extra={
-                "status": ors_res.status_code,
-                "payload": getattr(ors_res, "text", "")[:200],
-            },
+        auto_res = await client.get(
+            autocomplete_url, params={"input": query, "key": api_key}
         )
-        ors_data = ors_res.json()
+        auto_res.raise_for_status()
+        predictions = auto_res.json().get("predictions", [])[:limit]
 
-        try:
-            nom_res = await client.get(
-                nom_url,
-                params=nom_params,
-                headers={**headers, "User-Agent": "limo-app"},
+        for pred in predictions:
+            place_id = pred.get("place_id")
+            if not place_id:
+                continue
+            params = {
+                "place_id": place_id,
+                "key": api_key,
+                "fields": "place_id,name,formatted_address,geometry/location",
+            }
+            logger.debug(
+                "google place details request",
+                extra={"url": details_url, "place_id": place_id},
             )
-            nom_res.raise_for_status()
-        except Exception:
-            logger.exception("Nominatim search request failed")
-            raise
-        logger.debug(
-            "search geocode Nominatim response",
-            extra={
-                "status": nom_res.status_code,
-                "payload": getattr(nom_res, "text", "")[:200],
-            },
-        )
-        nom_data = nom_res.json()
-
-    for feature in ors_data.get("features", []):
-        props = feature.get("properties", {})
-        address = {
-            "house_number": props.get("housenumber"),
-            "road": props.get("street"),
-            "suburb": props.get("neighbourhood"),
-            "city": props.get("locality"),
-            "postcode": props.get("postalcode"),
-            "state": props.get("region"),
-            "country": props.get("country"),
-        }
-        gid = props.get("gid")
-        result_type = (
-            gid.split(":")[1]
-            if isinstance(gid, str) and ":" in gid
-            else props.get("layer")
-        )
-        results.append(
-            {
-                "address": {k: v for k, v in address.items() if v},
-                "name": props.get("name"),
-                "type": result_type,
-            }
-        )
-
-    # Airport code lookup if no results from APIs
-    if not results and len(query) == 3 and query.isalpha():
-        airport = AIRPORTS.get(query.upper())
-        if airport:
-            address = {
-                "city": airport.get("city"),
-                "state": airport.get("subd"),
-                "country": airport.get("country"),
-            }
+            det_res = await client.get(details_url, params=params)
+            det_res.raise_for_status()
+            det = det_res.json().get("result", {})
+            location = det.get("geometry", {}).get("location", {})
             results.append(
                 {
-                    "name": airport.get("name"),
-                    "address": {k: v for k, v in address.items() if v},
+                    "name": det.get("name"),
+                    "address": det.get("formatted_address"),
+                    "lat": location.get("lat"),
+                    "lng": location.get("lng"),
+                    "place_id": det.get("place_id"),
                 }
             )
 
     if not results:
         logger.warning("no geocoding results", extra={"query": query})
-
     return results
