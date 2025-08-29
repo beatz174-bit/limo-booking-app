@@ -19,6 +19,8 @@ class AddressComponents(BaseModel):
     suburb: Optional[str] = None
     city: Optional[str] = None
     postcode: Optional[str] = None
+    state: Optional[str] = None
+    country: Optional[str] = None
 
 
 class GeocodeSearchResult(BaseModel):

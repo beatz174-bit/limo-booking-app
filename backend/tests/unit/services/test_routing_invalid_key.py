@@ -7,12 +7,15 @@ from app.services import routing
 pytestmark = pytest.mark.asyncio
 
 
-async def test_estimate_route_no_route(monkeypatch: MonkeyPatch):
+async def test_estimate_route_invalid_key(monkeypatch: MonkeyPatch) -> None:
     class DummyResp:
         status_code = 200
 
         def json(self):
-            return {"status": "ZERO_RESULTS", "routes": []}
+            return {
+                "status": "REQUEST_DENIED",
+                "error_message": "API key invalid or expired",
+            }
 
         def raise_for_status(self) -> None:  # pragma: no cover - no HTTP errors
             return None
@@ -34,5 +37,5 @@ async def test_estimate_route_no_route(monkeypatch: MonkeyPatch):
     )
     monkeypatch.setattr(routing.httpx, "AsyncClient", DummyClient)
 
-    with pytest.raises(ValueError, match="no route found"):
+    with pytest.raises(ValueError, match="API key invalid or expired"):
         await routing.estimate_route(1, 2, 3, 4)

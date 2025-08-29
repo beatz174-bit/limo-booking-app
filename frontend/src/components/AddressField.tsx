@@ -1,7 +1,7 @@
 // Text field with autocomplete and optional geolocation button.
 import { TextField, InputAdornment, IconButton, CircularProgress, Autocomplete } from "@mui/material";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
-import { useAddressAutocomplete } from "@/hooks/useAddressAutocomplete";
+import { AddressSuggestion } from "@/hooks/useAddressAutocomplete";
 
 export function AddressField(props: {
   id: string;
@@ -12,6 +12,8 @@ export function AddressField(props: {
   onUseLocation?: () => void;
   locating?: boolean;
   errorText?: string;
+  suggestions: AddressSuggestion[];
+  loading?: boolean;
 }) {
   const adornment = props.onUseLocation ? (
     <InputAdornment position="end">
@@ -21,12 +23,16 @@ export function AddressField(props: {
     </InputAdornment>
   ) : undefined;
 
-  const { suggestions, loading } = useAddressAutocomplete(props.value);
-
   return (
-    <Autocomplete
+    <Autocomplete<AddressSuggestion>
       freeSolo
-      options={suggestions.map((s) => s.display)}
+      options={props.suggestions}
+      getOptionLabel={(option) => option.address}
+      renderOption={(optionProps, option) => (
+        <li {...optionProps} key={option.address}>
+          {option.name ? `${option.name} – ${option.address}` : option.address}
+        </li>
+      )}
       inputValue={props.value}
       onInputChange={(_e, val) => props.onChange(val)}
       onBlur={() => props.onBlur?.(props.value)}
@@ -42,7 +48,7 @@ export function AddressField(props: {
             ...params.InputProps,
             endAdornment: (
               <>
-                {loading && <CircularProgress size={18} />}
+                {props.loading && <CircularProgress size={18} />}
                 {adornment}
                 {params.InputProps.endAdornment}
               </>

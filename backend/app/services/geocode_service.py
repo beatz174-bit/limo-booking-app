@@ -1,12 +1,20 @@
 # app/services/geocode_service.py
 from __future__ import annotations
 
-"""Service functions wrapping OpenRouteService geocoding APIs."""
+"""Service functions wrapping external geocoding APIs."""
 
 import logging
+from typing import Any
 
 import httpx
 from app.core.config import get_settings
+
+try:  # pragma: no cover - optional dependency
+    from airportsdata import load as load_airports
+
+    AIRPORTS: dict[str, dict[str, Any]] = load_airports("IATA")
+except Exception:  # pragma: no cover - fall back if package missing
+    AIRPORTS = {}
 
 logger = logging.getLogger(__name__)
 
@@ -63,50 +71,70 @@ async def reverse_geocode(lat: float, lon: float) -> str:
 async def search_geocode(query: str, limit: int = 5) -> list[dict]:
     """Search for addresses matching free-form text.
 
-    This function proxies to the OpenRouteService forward geocoding endpoint
-    and returns a simplified list of address components suitable for the
-    frontend autocomplete feature. It requires an API key configured via
-    settings.  The caller is expected to handle any exceptions raised by
-    network failures or non-2xx responses.
+    The search workflow is:
 
-    Parameters
-    ----------
-    query: str
-        Free-form search text.
-    limit: int, optional
-        Maximum number of suggestions to return (default 5).
+    1. If the query looks like an IATA airport code, try to resolve it using
+       a local airports database.
+    2. Query the OpenRouteService geocoder for general address suggestions.
+    3. Query the OpenStreetMap Nominatim API for points of interest.
+    4. Merge the results and return at most ``limit`` entries.
 
-    Returns
-    -------
-    list[dict]
-        A list of dictionaries each containing an ``address`` key mapping to
-        address components (``house_number``, ``road``, ``suburb``, ``city``,
-        ``postcode``) when available.
+    Returns dictionaries with a ``name`` and structured ``address`` fields.
     """
 
     logger.info("search geocode", extra={"query": query, "limit": limit})
+    results: list[dict] = []
+
+    # Airport code lookup
+    if len(query) == 3 and query.isalpha():
+        airport = AIRPORTS.get(query.upper())
+        if airport:
+            address = {
+                "city": airport.get("city"),
+                "state": airport.get("subd"),
+                "country": airport.get("country"),
+            }
+            results.append(
+                {
+                    "name": airport.get("name"),
+                    "address": {k: v for k, v in address.items() if v},
+                }
+            )
+
     settings = get_settings()
     api_key = settings.ors_api_key
 
-    url = "https://api.openrouteservice.org/geocode/search"
-    params: dict[str, object] = {
+    ors_url = "https://api.openrouteservice.org/geocode/search"
+    ors_params: dict[str, object] = {
         "api_key": api_key,
         "text": query,
         "size": limit,
     }
+    nom_url = "https://nominatim.openstreetmap.org/search"
+    nom_params: dict[str, object] = {
+        "format": "json",
+        "addressdetails": 1,
+        "limit": limit,
+        "q": query,
+    }
     headers = {"Accept": "application/json"}
-    logger.debug(
-        "search geocode request",
-        extra={"url": url, "query": query, "limit": limit},
-    )
 
     async with httpx.AsyncClient() as client:
-        res = await client.get(url, params=params, headers=headers)
-        res.raise_for_status()
-        data = res.json()
+        logger.debug(
+            "search geocode request",
+            extra={"url": ors_url, "query": query, "limit": limit},
+        )
+        ors_res = await client.get(ors_url, params=ors_params, headers=headers)
+        ors_res.raise_for_status()
+        ors_data = ors_res.json()
 
-    results: list[dict] = []
-    for feature in data.get("features", []):
+        nom_res = await client.get(
+            nom_url, params=nom_params, headers={**headers, "User-Agent": "limo-app"}
+        )
+        nom_res.raise_for_status()
+        nom_data = nom_res.json()
+
+    for feature in ors_data.get("features", []):
         props = feature.get("properties", {})
         address = {
             "house_number": props.get("housenumber"),
@@ -114,6 +142,8 @@ async def search_geocode(query: str, limit: int = 5) -> list[dict]:
             "suburb": props.get("neighbourhood"),
             "city": props.get("locality"),
             "postcode": props.get("postalcode"),
+            "state": props.get("region"),
+            "country": props.get("country"),
         }
         gid = props.get("gid")
         result_type = (

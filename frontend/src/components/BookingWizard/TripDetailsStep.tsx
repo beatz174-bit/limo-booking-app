@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Stack, TextField, Button } from '@mui/material';
 import { AddressField } from '@/components/AddressField';
 import { CONFIG } from '@/config';
+import { useAddressAutocomplete } from '@/hooks/useAddressAutocomplete';
 
 interface Location {
   address: string;
@@ -58,6 +59,9 @@ export default function TripDetailsStep({ data, onNext, onBack }: Props) {
   const [passengers, setPassengers] = useState<number>(data.passengers ?? 1);
   const [notes, setNotes] = useState(data.notes || '');
 
+  const pickupAuto = useAddressAutocomplete(pickup);
+  const dropoffAuto = useAddressAutocomplete(dropoff);
+
   return (
     <Stack spacing={2}>
       <AddressField
@@ -73,6 +77,8 @@ export default function TripDetailsStep({ data, onNext, onBack }: Props) {
             }
           });
         }}
+        suggestions={pickupAuto.suggestions}
+        loading={pickupAuto.loading}
       />
       <AddressField
         id="dropoff"
@@ -87,6 +93,8 @@ export default function TripDetailsStep({ data, onNext, onBack }: Props) {
             }
           });
         }}
+        suggestions={dropoffAuto.suggestions}
+        loading={dropoffAuto.loading}
       />
       <TextField label="Passengers" type="number" value={passengers} onChange={(e) => setPassengers(Number(e.target.value))} />
       <TextField label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} />

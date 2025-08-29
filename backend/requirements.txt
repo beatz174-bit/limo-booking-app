@@ -41,3 +41,4 @@ apscheduler
 broadcaster
 websockets
 graypy
+airportsdata
