@@ -98,7 +98,7 @@ async def connect() -> None:
     from app.models import route_point  # noqa: F401
     from app.models import trip  # noqa: F401
     from app.models import user_v2  # noqa: F401
-    from app.models import booking, settings, user  # noqa: F401  # type: ignore
+    from app.models import settings, user  # noqa: F401  # type: ignore
 
     command.upgrade(Config("alembic.ini"), "head")
 
@@ -108,11 +108,18 @@ async def connect() -> None:
     async with AsyncSessionLocal() as session:
         from sqlalchemy import select
 
+        from app.core.security import hash_password
+
         result = await session.execute(select(User).where(User.role == UserRole.DRIVER))
         driver = result.scalar_one_or_none()
         if driver is None:
             session.add(
-                User(email="driver@example.com", name="Driver", role=UserRole.DRIVER)
+                User(
+                    email="driver@example.com",
+                    full_name="Driver",
+                    hashed_password=hash_password("driver"),
+                    role=UserRole.DRIVER,
+                )
             )
             await session.commit()
 
