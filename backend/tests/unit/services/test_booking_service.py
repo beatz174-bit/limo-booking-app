@@ -3,13 +3,13 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 import stripe
-from fastapi import HTTPException
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
-
+from app.core.security import hash_password
 from app.models.booking import Booking, BookingStatus
 from app.models.user_v2 import User, UserRole
 from app.services import booking_service
+from fastapi import HTTPException
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 pytestmark = pytest.mark.asyncio
 
@@ -20,7 +20,12 @@ async def test_confirm_booking_handles_stripe_error(
     await async_session.execute(text("DELETE FROM availability_slots"))
     await async_session.commit()
 
-    user = User(email="test@example.com", name="Test", role=UserRole.CUSTOMER)
+    user = User(
+        email="test@example.com",
+        full_name="Test",
+        hashed_password=hash_password("pass"),
+        role=UserRole.CUSTOMER,
+    )
     async_session.add(user)
     await async_session.flush()
 

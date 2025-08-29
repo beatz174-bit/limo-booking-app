@@ -1,16 +1,22 @@
-import pytest
-from httpx import AsyncClient
-from datetime import datetime, timedelta, timezone
 import uuid
+from datetime import datetime, timedelta, timezone
 
-from app.models.user_v2 import User, UserRole
+import pytest
+from app.core.security import hash_password
 from app.models.booking import Booking, BookingStatus
+from app.models.user_v2 import User, UserRole
+from httpx import AsyncClient
 
 pytestmark = pytest.mark.asyncio
 
 
 async def _create_booking(async_session) -> Booking:
-    user = User(email=f"c{uuid.uuid4()}@example.com", name="C", role=UserRole.CUSTOMER)
+    user = User(
+        email=f"c{uuid.uuid4()}@example.com",
+        full_name="C",
+        hashed_password=hash_password("pass"),
+        role=UserRole.CUSTOMER,
+    )
     async_session.add(user)
     await async_session.flush()
     booking = Booking(

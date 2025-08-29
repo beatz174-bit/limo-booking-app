@@ -1,12 +1,12 @@
-import pytest
-import pytest
-from datetime import datetime, timedelta, timezone
-from httpx import AsyncClient
-
-from app.models.user_v2 import User, UserRole
-from app.models.booking import Booking, BookingStatus
-from _pytest.monkeypatch import MonkeyPatch
 import uuid
+from datetime import datetime, timedelta, timezone
+
+import pytest
+from _pytest.monkeypatch import MonkeyPatch
+from app.core.security import hash_password
+from app.models.booking import Booking, BookingStatus
+from app.models.user_v2 import User, UserRole
+from httpx import AsyncClient
 
 pytestmark = pytest.mark.asyncio
 
@@ -16,7 +16,11 @@ async def test_create_and_get_availability(async_session, client: AsyncClient):
     end = start + timedelta(hours=2)
     res = await client.post(
         "/api/v1/availability",
-        json={"start_dt": start.isoformat(), "end_dt": end.isoformat(), "reason": "vac"},
+        json={
+            "start_dt": start.isoformat(),
+            "end_dt": end.isoformat(),
+            "reason": "vac",
+        },
     )
     assert res.status_code == 201
     month = start.strftime("%Y-%m")
@@ -27,7 +31,12 @@ async def test_create_and_get_availability(async_session, client: AsyncClient):
 
 
 async def _create_booking(async_session, when: datetime) -> Booking:
-    user = User(email=f"c{uuid.uuid4()}@example.com", name="C", role=UserRole.CUSTOMER)
+    user = User(
+        email=f"c{uuid.uuid4()}@example.com",
+        full_name="C",
+        hashed_password=hash_password("pass"),
+        role=UserRole.CUSTOMER,
+    )
     async_session.add(user)
     await async_session.flush()
     booking = Booking(
@@ -51,7 +60,9 @@ async def _create_booking(async_session, when: datetime) -> Booking:
     return booking
 
 
-async def test_double_booking_blocked(async_session, client: AsyncClient, monkeypatch: MonkeyPatch):
+async def test_double_booking_blocked(
+    async_session, client: AsyncClient, monkeypatch: MonkeyPatch
+):
     when = datetime.now(timezone.utc) + timedelta(days=1)
     booking1 = await _create_booking(async_session, when)
     booking2 = await _create_booking(async_session, when)
@@ -59,9 +70,13 @@ async def test_double_booking_blocked(async_session, client: AsyncClient, monkey
     class FakePI:
         id = "pi"
 
-    monkeypatch.setattr("app.services.stripe_client.charge_deposit", lambda amount: FakePI())
+    monkeypatch.setattr(
+        "app.services.stripe_client.charge_deposit", lambda amount: FakePI()
+    )
+
     async def fake_route(*args, **kwargs):
         return (0, 0)
+
     monkeypatch.setattr("app.services.routing.estimate_route", fake_route)
 
     res1 = await client.post(f"/api/v1/driver/bookings/{booking1.id}/confirm")

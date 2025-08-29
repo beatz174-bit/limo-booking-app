@@ -6,6 +6,10 @@ import warnings
 from pathlib import Path
 from typing import Awaitable, Dict, Protocol, Union
 
+from alembic import command
+from alembic.config import Config
+from app.core.config import get_settings
+from app.core.security import hash_password
 from sqlalchemy.engine.url import URL, make_url
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -14,10 +18,6 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 from sqlalchemy.orm import DeclarativeBase
-
-from alembic import command
-from alembic.config import Config
-from app.core.config import get_settings
 
 settings = get_settings()
 
@@ -98,7 +98,7 @@ async def connect() -> None:
     from app.models import route_point  # noqa: F401
     from app.models import trip  # noqa: F401
     from app.models import user_v2  # noqa: F401
-    from app.models import booking, settings, user  # noqa: F401  # type: ignore
+    from app.models import settings, user  # noqa: F401  # type: ignore
 
     command.upgrade(Config("alembic.ini"), "head")
 
@@ -112,7 +112,12 @@ async def connect() -> None:
         driver = result.scalar_one_or_none()
         if driver is None:
             session.add(
-                User(email="driver@example.com", name="Driver", role=UserRole.DRIVER)
+                User(
+                    email="driver@example.com",
+                    full_name="Driver",
+                    hashed_password=hash_password("driverpass"),
+                    role=UserRole.DRIVER,
+                )
             )
             await session.commit()
 
