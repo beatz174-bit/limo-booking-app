@@ -5,6 +5,8 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from math import atan2, cos, radians, sin, sqrt
 
+import stripe
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -96,7 +98,13 @@ async def confirm_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
     if overlap.scalars().first():
         raise ValueError("booking overlaps existing slot")
 
-    intent = stripe_client.charge_deposit(booking.deposit_required_cents)
+    try:
+        intent = stripe_client.charge_deposit(booking.deposit_required_cents)
+    except stripe.error.StripeError as exc:
+        raise HTTPException(
+            status_code=400, detail="Failed to process deposit"
+        ) from exc
+
     booking.status = BookingStatus.DRIVER_CONFIRMED
     booking.deposit_payment_intent_id = intent.id
     slot = AvailabilitySlot(
