@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { vi, expect, test } from 'vitest';
+import { DevFeaturesProvider } from '@/contexts/DevFeaturesContext';
 import PaymentStep from './PaymentStep';
 
 const mockCreateBooking = vi.fn().mockResolvedValue({
@@ -33,16 +34,18 @@ vi.mock('@stripe/stripe-js', () => ({
 test('shows tracking link after booking', async () => {
   render(
     <MemoryRouter>
-      <PaymentStep
-        data={{
-          pickup_when: '2025-01-01T00:00:00Z',
-          pickup: { address: 'A', lat: 0, lng: 0 },
-          dropoff: { address: 'B', lat: 1, lng: 1 },
-          passengers: 1,
-          customer: { name: '', email: '' },
-        }}
-        onBack={() => {}}
-      />
+      <DevFeaturesProvider>
+        <PaymentStep
+          data={{
+            pickup_when: '2025-01-01T00:00:00Z',
+            pickup: { address: 'A', lat: 0, lng: 0 },
+            dropoff: { address: 'B', lat: 1, lng: 1 },
+            passengers: 1,
+            customer: { name: '', email: '' },
+          }}
+          onBack={() => {}}
+        />
+      </DevFeaturesProvider>
     </MemoryRouter>,
   );
 
@@ -52,4 +55,51 @@ test('shows tracking link after booking', async () => {
   );
   const link = await screen.findByRole('link', { name: /track this ride/i });
   expect(link).toHaveAttribute('href', '/t/ABC123');
+});
+
+test('renders fare breakdown when dev features enabled', () => {
+  render(
+    <MemoryRouter>
+      <DevFeaturesProvider>
+        <PaymentStep
+          data={{
+            pickup_when: '2025-01-01T00:00:00Z',
+            pickup: { address: 'A', lat: 0, lng: 0 },
+            dropoff: { address: 'B', lat: 1, lng: 1 },
+            passengers: 1,
+            customer: { name: '', email: '' },
+          }}
+          onBack={() => {}}
+        />
+      </DevFeaturesProvider>
+    </MemoryRouter>,
+  );
+  expect(screen.getByText(/fare breakdown/i)).toBeInTheDocument();
+});
+
+test('hides fare breakdown when dev features disabled', () => {
+  vi.stubEnv('ENV', 'production');
+  localStorage.setItem('devFeaturesEnabled', 'false');
+
+  render(
+    <MemoryRouter>
+      <DevFeaturesProvider>
+        <PaymentStep
+          data={{
+            pickup_when: '2025-01-01T00:00:00Z',
+            pickup: { address: 'A', lat: 0, lng: 0 },
+            dropoff: { address: 'B', lat: 1, lng: 1 },
+            passengers: 1,
+            customer: { name: '', email: '' },
+          }}
+          onBack={() => {}}
+        />
+      </DevFeaturesProvider>
+    </MemoryRouter>,
+  );
+
+  expect(screen.queryByText(/fare breakdown/i)).not.toBeInTheDocument();
+
+  vi.unstubAllEnvs();
+  localStorage.clear();
 });
