@@ -46,8 +46,8 @@ async def test_reverse_geocode_parses_label(monkeypatch: MonkeyPatch):
     assert addr == "123 Fake St"
 
 
-async def test_search_geocode_parses_results(monkeypatch: MonkeyPatch):
-    class DummyResp:
+async def test_search_geocode_merges_results(monkeypatch: MonkeyPatch):
+    class OrsResp:
         status_code = 200
 
         def raise_for_status(self) -> None:
@@ -58,6 +58,7 @@ async def test_search_geocode_parses_results(monkeypatch: MonkeyPatch):
                 "features": [
                     {
                         "properties": {
+                            "label": "10 Main St, Springfield",
                             "housenumber": "10",
                             "street": "Main St",
                             "locality": "Springfield",
@@ -67,6 +68,20 @@ async def test_search_geocode_parses_results(monkeypatch: MonkeyPatch):
                 ]
             }
 
+    class NomResp:
+        status_code = 200
+
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> list:
+            return [
+                {
+                    "display_name": "Central Park, Springfield",
+                    "address": {"city": "Springfield"},
+                }
+            ]
+
     class DummyClient:
         async def __aenter__(self):
             return self
@@ -75,10 +90,12 @@ async def test_search_geocode_parses_results(monkeypatch: MonkeyPatch):
             return None
 
         async def get(self, url, params=None, headers=None):  # type: ignore[override]
-            assert "search" in url
-            assert params["text"] == "Main"
-            assert params["size"] == 5
-            return DummyResp()
+            if "openrouteservice" in url:
+                assert params["text"] == "Main"
+                assert params["size"] == 5
+                return OrsResp()
+            assert "nominatim" in url
+            return NomResp()
 
     monkeypatch.setattr(
         geocode_service, "httpx", type("X", (), {"AsyncClient": DummyClient})
@@ -86,17 +103,20 @@ async def test_search_geocode_parses_results(monkeypatch: MonkeyPatch):
     monkeypatch.setattr(
         geocode_service, "get_settings", lambda: type("S", (), {"ors_api_key": "KEY"})()
     )
+    monkeypatch.setattr(geocode_service, "AIRPORTS", {})
 
     results = await geocode_service.search_geocode("Main")
     assert results == [
         {
+            "name": "10 Main St, Springfield",
             "address": {
                 "house_number": "10",
                 "road": "Main St",
                 "city": "Springfield",
                 "postcode": "12345",
-            }
-        }
+            },
+        },
+        {"name": "Central Park, Springfield", "address": {"city": "Springfield"}},
     ]
 
 
@@ -135,15 +155,23 @@ async def test_reverse_geocode_falls_back_to_coordinates(monkeypatch: MonkeyPatc
 
 
 async def test_search_geocode_returns_empty_when_no_features(monkeypatch: MonkeyPatch):
-    class DummyResp:
+    class OrsResp:
         status_code = 200
 
         def raise_for_status(self) -> None:
             return None
 
         def json(self) -> dict:
-            # Empty list of features from provider
             return {"features": []}
+
+    class NomResp:
+        status_code = 200
+
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> list:
+            return []
 
     class DummyClient:
         async def __aenter__(self):
@@ -153,7 +181,7 @@ async def test_search_geocode_returns_empty_when_no_features(monkeypatch: Monkey
             return None
 
         async def get(self, url, params=None, headers=None):  # type: ignore[override]
-            return DummyResp()
+            return OrsResp() if "openrouteservice" in url else NomResp()
 
     monkeypatch.setattr(
         geocode_service, "httpx", type("X", (), {"AsyncClient": DummyClient})
@@ -161,9 +189,71 @@ async def test_search_geocode_returns_empty_when_no_features(monkeypatch: Monkey
     monkeypatch.setattr(
         geocode_service, "get_settings", lambda: type("S", (), {"ors_api_key": "KEY"})()
     )
+    monkeypatch.setattr(geocode_service, "AIRPORTS", {})
 
     results = await geocode_service.search_geocode("Nowhere")
     assert results == []
+
+
+async def test_search_geocode_airport_lookup(monkeypatch: MonkeyPatch):
+    class OrsResp:
+        status_code = 200
+
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self):
+            return {"features": []}
+
+    class NomResp:
+        status_code = 200
+
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self):
+            return []
+
+    class DummyClient:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *exc_info):
+            return None
+
+        async def get(self, url, params=None, headers=None):  # type: ignore[override]
+            return OrsResp() if "openrouteservice" in url else NomResp()
+
+    monkeypatch.setattr(
+        geocode_service, "httpx", type("X", (), {"AsyncClient": DummyClient})
+    )
+    monkeypatch.setattr(
+        geocode_service, "get_settings", lambda: type("S", (), {"ors_api_key": "KEY"})()
+    )
+    monkeypatch.setattr(
+        geocode_service,
+        "AIRPORTS",
+        {
+            "JFK": {
+                "name": "John F Kennedy International Airport",
+                "city": "New York",
+                "subd": "New York",
+                "country": "US",
+            }
+        },
+    )
+
+    results = await geocode_service.search_geocode("JFK")
+    assert results == [
+        {
+            "name": "John F Kennedy International Airport",
+            "address": {
+                "city": "New York",
+                "state": "New York",
+                "country": "US",
+            },
+        }
+    ]
 
 
 async def test_reverse_geocode_debug_log(

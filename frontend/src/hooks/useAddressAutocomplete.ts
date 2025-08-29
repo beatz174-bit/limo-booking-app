@@ -1,7 +1,7 @@
 // Hook to fetch address suggestions as the user types.
 import { useEffect, useState } from "react";
 import { CONFIG } from "@/config";
-import { formatAddress } from "@/lib/formatAddress";
+import { formatAddress, type AddressComponents } from "@/lib/formatAddress";
 import * as logger from "@/lib/logger";
 
 export interface AddressSuggestion {
@@ -22,15 +22,10 @@ export function useAddressAutocomplete(query: string, options?: { debounceMs?: n
     const timeout = setTimeout(async () => {
       try {
         setLoading(true);
-        const backend = CONFIG.API_BASE_URL as string | undefined;
-        let url: string;
-        if (backend) {
-          const u = new URL("/geocode/search", backend || window.location.origin);
-          u.searchParams.set("q", query);
-          url = u.toString();
-        } else {
-          url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&q=${encodeURIComponent(query)}`;
-        }
+        const base = (CONFIG.API_BASE_URL as string | undefined) || window.location.origin;
+        const u = new URL("/geocode/search", base);
+        u.searchParams.set("q", query);
+        const url = u.toString();
         const res = await fetch(url, { signal: controller.signal });
         if (!res.ok) throw new Error("Autocomplete failed");
         const data = await res.json();
