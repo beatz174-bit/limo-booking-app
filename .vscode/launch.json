@@ -55,7 +55,7 @@
         "ENVIRONMENT": "development"
       },
       "console": "integratedTerminal",
-      "preLaunchTask": "stripe-listen" 
+      // "preLaunchTask": "dev:prep",
     },
     {
       "name": "Development Frontend",
