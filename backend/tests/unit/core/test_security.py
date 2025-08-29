@@ -1,4 +1,12 @@
-from app.core.security import hash_password, verify_password, create_jwt_token, decode_token
+import uuid
+
+from app.core.security import (
+    create_jwt_token,
+    decode_token,
+    hash_password,
+    verify_password,
+)
+
 
 def test_hash_and_verify_password():
     plain = "mysecret"
@@ -10,20 +18,20 @@ def test_hash_and_verify_password():
     # Wrong password should not verify
     assert verify_password("notsecret", hashed) is False
 
+
 def test_create_and_decode_jwt_token():
-    user_id = 42
+    user_id = uuid.uuid4()
     token = create_jwt_token(user_id)
-    # Token should be a string with three parts (header.payload.signature)
     assert token.count(".") == 2
-    # Decoding the token should yield the original user id in the payload
     payload = decode_token(token)
     sub = payload.get("sub")
-    assert isinstance(sub, (str, int)), "JWT payload missing or invalid 'sub'"
-    assert int(sub) == user_id
-    
+    assert isinstance(sub, str), "JWT payload missing or invalid 'sub'"
+    assert uuid.UUID(sub) == user_id
+
+
 def test_decode_token_invalid():
     # Create a valid token and then tamper with it to invalidate
-    token = create_jwt_token(99)
+    token = create_jwt_token(uuid.uuid4())
     # Flip the last character to break the signature
     invalid_token = token[:-1] + ("A" if token[-1] != "A" else "B")
     # Decoding an invalid token should raise a ValueError

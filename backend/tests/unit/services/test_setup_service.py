@@ -1,22 +1,24 @@
 # tests/unit/services/test_setup_service.py
-import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
-
-from app.services import setup_service
-from app.schemas.setup import SetupPayload, SettingsPayload
-from app.models.user import User
-from app.models.settings import AdminConfig
 from typing import Union
+
+import pytest
+from app.models.settings import AdminConfig
+from app.models.user_v2 import User
+from app.schemas.setup import SettingsPayload, SetupPayload
+from app.services import setup_service
+from sqlalchemy import delete, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 pytestmark = pytest.mark.asyncio
 
+
 @pytest.fixture(autouse=True)
-async def _clean_setup_state(async_session: AsyncSession): # type: ignore
+async def _clean_setup_state(async_session: AsyncSession):  # type: ignore
     # ensure each test in this module starts with a clean slate
     await async_session.execute(delete(AdminConfig))
     await async_session.execute(delete(User))
     await async_session.commit()
+
 
 async def test_is_setup_complete_initial(async_session: AsyncSession):
     # Before running setup, there should be no config
@@ -40,7 +42,9 @@ async def test_complete_initial_setup_success(async_session: AsyncSession):
     assert result == {"message": "Setup complete"}
 
     # Admin user created
-    res = await async_session.execute(select(User).where(User.email == "admin@example.com"))
+    res = await async_session.execute(
+        select(User).where(User.email == "admin@example.com")
+    )
     admin = res.scalar_one()
     assert admin.email == "admin@example.com"
 
@@ -69,7 +73,9 @@ async def test_complete_initial_setup_idempotent(async_session: AsyncSession):
     )
 
     # If setup is already complete from a prior test, we should immediately get a 400.
-    already: Union[SettingsPayload, None] = await setup_service.is_setup_complete(async_session)
+    already: Union[SettingsPayload, None] = await setup_service.is_setup_complete(
+        async_session
+    )
     if already:
         with pytest.raises(Exception) as excinfo:
             await setup_service.complete_initial_setup(async_session, payload)
