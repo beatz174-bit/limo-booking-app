@@ -53,6 +53,10 @@ except Exception:
     # If python-dotenv isn't installed or anything goes wrong, just continue.
     pass
 
+# Support legacy env variable name for CORS configuration
+if os.getenv("CORS_ALLOW_ORIGINS") and not os.getenv("ALLOW_ORIGINS"):
+    os.environ["ALLOW_ORIGINS"] = os.environ["CORS_ALLOW_ORIGINS"]
+
 
 # --- Pydantic BaseSettings import (v1 and v2 compatible) -----------------------
 
