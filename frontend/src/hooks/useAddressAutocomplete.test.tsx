@@ -10,33 +10,30 @@ afterEach(() => {
 
 describe('useAddressAutocomplete', () => {
   test('resolves SFO to full address with coordinates', async () => {
-    vi.mock('@/config', () => ({ CONFIG: { GOOGLE_MAPS_API_KEY: 'KEY' } }));
+    vi.mock('@/config', () => ({ CONFIG: { API_BASE_URL: 'http://api' } }));
     const fetchMock = vi.fn(async (url: string) => {
-      if (url.includes('autocomplete')) {
-        return {
-          ok: true,
-          json: async () => ({ predictions: [{ place_id: 'sfo1' }] }),
-        };
-      }
-      if (url.includes('details')) {
-        return {
-          ok: true,
-          json: async () => ({
-            result: {
+      expect(url).toBe('http://api/geocode/search?q=SFO');
+      return {
+        ok: true,
+        json: async () => ({
+          results: [
+            {
               name: 'San Francisco International Airport',
-              formatted_address:
+              address:
                 'San Francisco International Airport, San Francisco, CA, USA',
-              geometry: { location: { lat: 37.62, lng: -122.38 } },
-              place_id: 'sfo1',
+              lat: 37.62,
+              lng: -122.38,
+              placeId: 'sfo1',
             },
-          }),
-        };
-      }
-      throw new Error('unexpected url');
+          ],
+        }),
+      };
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    const { result } = renderHook(() => useAddressAutocomplete('SFO', { debounceMs: 0 }));
+    const { result } = renderHook(() =>
+      useAddressAutocomplete('SFO', { debounceMs: 0 })
+    );
 
     await waitFor(() => {
       expect(result.current.suggestions[0]).toEqual({
@@ -48,5 +45,6 @@ describe('useAddressAutocomplete', () => {
         placeId: 'sfo1',
       });
     });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

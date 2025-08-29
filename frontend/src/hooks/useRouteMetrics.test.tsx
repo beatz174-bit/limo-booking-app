@@ -13,7 +13,7 @@ describe("useRouteMetrics", () => {
     vi.mock("@/config", () => ({ CONFIG: { API_BASE_URL: "http://api" } }));
     const fetchMock = vi.fn(async (url: string) => {
       expect(url).toBe(
-        "http://api/route-metrics?pickup=1,2&dropoff=3,4&ride_time=2020-01-01T00%3A00%3A00.000Z"
+        "http://api/route-metrics?pickup=1%2C2&dropoff=3%2C4&ride_time=2020-01-01T00%3A00%3A00.000Z"
       );
       return { ok: true, json: async () => ({ km: 10, min: 15 }) };
     });
