@@ -6,6 +6,10 @@ import warnings
 from pathlib import Path
 from typing import Awaitable, Dict, Protocol, Union
 
+from alembic import command
+from alembic.config import Config
+from app.core.config import get_settings
+from app.core.security import hash_password
 from sqlalchemy.engine.url import URL, make_url
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -14,10 +18,6 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 from sqlalchemy.orm import DeclarativeBase
-
-from alembic import command
-from alembic.config import Config
-from app.core.config import get_settings
 
 settings = get_settings()
 

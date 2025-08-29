@@ -1,18 +1,22 @@
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.security import create_jwt_token
+from app.core.security import create_jwt_token, hash_password
 from app.models.booking import Booking, BookingStatus
 from app.models.user_v2 import User, UserRole
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 pytestmark = pytest.mark.asyncio
 
 
 async def test_list_my_bookings(client: AsyncClient, async_session: AsyncSession):
-    user = User(email="me@example.com", name="Me", role=UserRole.CUSTOMER)
+    user = User(
+        email="me@example.com",
+        full_name="Me",
+        hashed_password=hash_password("pass"),
+        role=UserRole.CUSTOMER,
+    )
     async_session.add(user)
     await async_session.flush()
 
