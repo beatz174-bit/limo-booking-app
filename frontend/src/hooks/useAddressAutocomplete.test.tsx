@@ -24,7 +24,7 @@ describe("useAddressAutocomplete", () => {
     const { result } = renderHook(() => useAddressAutocomplete("123", { debounceMs: 0 }));
 
     await waitFor(() => {
-      expect(result.current.suggestions[0].display).toBe("12/34 Main St Springfield 1234");
+      expect(result.current.suggestions[0].address).toBe("12/34 Main St Springfield 1234");
     });
 
     vi.unstubAllGlobals();

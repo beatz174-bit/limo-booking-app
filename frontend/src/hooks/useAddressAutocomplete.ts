@@ -5,7 +5,8 @@ import { formatAddress } from "@/lib/formatAddress";
 import * as logger from "@/lib/logger";
 
 export interface AddressSuggestion {
-  display: string;
+  name: string;
+  address: string;
 }
 
 export function useAddressAutocomplete(query: string, options?: { debounceMs?: number }) {
@@ -37,9 +38,10 @@ export function useAddressAutocomplete(query: string, options?: { debounceMs?: n
         setSuggestions(
           list
             .map((item: Record<string, unknown>) => ({
-              display: formatAddress((item as { address?: Record<string, unknown> }).address || item),
+              name: (item as { name?: string }).name || "",
+              address: formatAddress((item as { address?: Record<string, unknown> }).address || item),
             }))
-            .filter((s: AddressSuggestion) => !!s.display)
+            .filter((s: AddressSuggestion) => !!s.address)
         );
       } catch (e) {
         if (!controller.signal.aborted) {

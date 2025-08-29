@@ -6,7 +6,16 @@ import { AddressField } from "./AddressField";
 describe("AddressField", () => {
   test("renders label and triggers onChange", async () => {
     const onChange = vi.fn();
-    render(<AddressField id="pickup" label="Pickup" value="" onChange={onChange} />);
+    render(
+      <AddressField
+        id="pickup"
+        label="Pickup"
+        value=""
+        onChange={onChange}
+        suggestions={[]}
+        loading={false}
+      />
+    );
     const input = screen.getByLabelText(/pickup/i);
     await userEvent.type(input, "1");
     expect(onChange).toHaveBeenCalled();
@@ -16,7 +25,17 @@ describe("AddressField", () => {
     const onBlur = vi.fn();
     function Wrapper() {
       const [v, setV] = React.useState("");
-      return <AddressField id="a" label="A" value={v} onChange={setV} onBlur={onBlur} />;
+      return (
+        <AddressField
+          id="a"
+          label="A"
+          value={v}
+          onChange={setV}
+          onBlur={onBlur}
+          suggestions={[]}
+          loading={false}
+        />
+      );
     }
     render(<Wrapper />);
     const input = screen.getByLabelText(/a/i);
@@ -28,18 +47,65 @@ describe("AddressField", () => {
   test("shows location button when onUseLocation provided and handles click/disabled", async () => {
     const onUseLocation = vi.fn();
     const { rerender } = render(
-      <AddressField id="a" label="Address" value="" onChange={() => void 0} onUseLocation={onUseLocation} locating={false} />
+      <AddressField
+        id="a"
+        label="Address"
+        value=""
+        onChange={() => void 0}
+        onUseLocation={onUseLocation}
+        locating={false}
+        suggestions={[]}
+        loading={false}
+      />
     );
     const btn = screen.getByRole("button", { name: /use my location/i });
     await userEvent.click(btn);
     expect(onUseLocation).toHaveBeenCalled();
 
-    rerender(<AddressField id="a" label="Address" value="" onChange={() => void 0} onUseLocation={onUseLocation} locating={true} />);
+    rerender(
+      <AddressField
+        id="a"
+        label="Address"
+        value=""
+        onChange={() => void 0}
+        onUseLocation={onUseLocation}
+        locating={true}
+        suggestions={[]}
+        loading={false}
+      />
+    );
     expect(screen.getByRole("button", { name: /use my location/i })).toBeDisabled();
   });
 
   test("renders helperText on error", () => {
-    render(<AddressField id="a" label="A" value="" onChange={() => void 0} errorText="Nope" />);
+    render(
+      <AddressField
+        id="a"
+        label="A"
+        value=""
+        onChange={() => void 0}
+        errorText="Nope"
+        suggestions={[]}
+        loading={false}
+      />
+    );
     expect(screen.getByText("Nope")).toBeInTheDocument();
+  });
+
+  test("renders suggestion name and address", async () => {
+    const suggestions = [{ name: "LAX", address: "1 World Way, Los Angeles" }];
+    render(
+      <AddressField
+        id="a"
+        label="A"
+        value=""
+        onChange={() => void 0}
+        suggestions={suggestions}
+        loading={false}
+      />
+    );
+    const input = screen.getByLabelText(/a/i);
+    await userEvent.type(input, "{arrowdown}");
+    expect(await screen.findByText("LAX – 1 World Way, Los Angeles")).toBeInTheDocument();
   });
 });
