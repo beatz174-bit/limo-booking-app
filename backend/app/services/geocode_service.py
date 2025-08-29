@@ -6,7 +6,6 @@ from __future__ import annotations
 import logging
 
 import httpx
-
 from app.core.config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -116,6 +115,18 @@ async def search_geocode(query: str, limit: int = 5) -> list[dict]:
             "city": props.get("locality"),
             "postcode": props.get("postalcode"),
         }
-        results.append({"address": {k: v for k, v in address.items() if v}})
+        gid = props.get("gid")
+        result_type = (
+            gid.split(":")[1]
+            if isinstance(gid, str) and ":" in gid
+            else props.get("layer")
+        )
+        results.append(
+            {
+                "address": {k: v for k, v in address.items() if v},
+                "name": props.get("name"),
+                "type": result_type,
+            }
+        )
 
     return results
