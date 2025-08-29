@@ -108,6 +108,8 @@ async def connect() -> None:
     async with AsyncSessionLocal() as session:
         from sqlalchemy import select
 
+        from app.core.security import hash_password
+
         result = await session.execute(select(User).where(User.role == UserRole.DRIVER))
         driver = result.scalar_one_or_none()
         if driver is None:
@@ -115,7 +117,7 @@ async def connect() -> None:
                 User(
                     email="driver@example.com",
                     full_name="Driver",
-                    hashed_password=hash_password("driverpass"),
+                    hashed_password=hash_password("driver"),
                     role=UserRole.DRIVER,
                 )
             )
