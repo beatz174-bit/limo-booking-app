@@ -1,8 +1,6 @@
 # backend/app/core/config.py
 from __future__ import annotations
 
-import os
-
 """Application configuration using Pydantic settings."""
 
 import logging
@@ -83,51 +81,47 @@ def _project_root() -> Path:
 
 class Settings(BaseSettings):
     # App
-    app_name: str = os.getenv("PROJECT_NAME", "Limo Booking App")
-    app_version: str = os.getenv("PROJECT_VERSION", "undefined")
-    api_prefix: str = os.getenv("API_PREFIX", "undefined")
+    app_name: str = "Limo Booking App"
+    app_version: str = "undefined"
+    api_prefix: str = "undefined"
     env: str = _ENV
-    debug: bool = os.getenv("DEBUG", "false").lower() in {"1", "true", "yes", "on"}
-    log_level: str = os.getenv("LOG_LEVEL", "INFO")
-    graylog_host: Optional[str] = os.getenv("GRAYLOG_HOST")
-    graylog_port: int = int(os.getenv("GRAYLOG_PORT", "12201"))
+    debug: bool = False
+    log_level: str = "INFO"
+    graylog_host: Optional[str] = None
+    graylog_port: int = 12201
 
     # CORS (allow multiple origins via comma-separated list)
-    allow_origins: str = os.getenv("CORS_ALLOW_ORIGINS", "undefined")
+    allow_origins: str = "undefined"
     allow_credentials: bool = True
     allow_methods: List[str] = ["*"]
     allow_headers: List[str] = ["*"]
 
     # Database (prefer DATABASE_URL; else derive from DATABASE_PATH)
-    database_url: Optional[str] = os.getenv("DATABASE_URL")
-    database_path: Optional[str] = os.getenv("DATABASE_PATH")
-    database_pool_size: int = int(os.getenv("DB_POOL_SIZE", "undefined"))
-    database_max_overflow: int = int(os.getenv("DB_MAX_OVERFLOW", "undefined"))
-    database_pool_recycle: int = int(os.getenv("DB_POOL_RECYCLE", "undefined"))
+    database_url: Optional[str] = None
+    database_path: Optional[str] = None
+    database_pool_size: Optional[int] = None
+    database_max_overflow: Optional[int] = None
+    database_pool_recycle: Optional[int] = None
 
     # Auth / Security
-    jwt_secret_key: str = os.getenv(
-        "JWT_SECRET_KEY", "undefined"
-    )  # must be provided by env
-    jwt_algorithm: str = os.getenv("JWT_ALGORITHM", "HS256")
-    access_token_expire_minutes: int = int(
-        os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60")
-    )
+    jwt_secret_key: str = "undefined"  # must be provided by env
+    jwt_algorithm: str = "HS256"
+    access_token_expire_minutes: int = 60
 
     # Third-party APIs
-    ors_api_key: Optional[str] = os.getenv("ORS_API_KEY", "undefined")
-    google_maps_api_key: Optional[str] = os.getenv("GOOGLE_MAPS_API_KEY")
-    stripe_secret_key: Optional[str] = os.getenv("STRIPE_SECRET_KEY")
-    stripe_webhook_secret: Optional[str] = os.getenv("STRIPE_WEBHOOK_SECRET")
-    fcm_project_id: Optional[str] = os.getenv("FCM_PROJECT_ID")
-    fcm_client_email: Optional[str] = os.getenv("FCM_CLIENT_EMAIL")
-    fcm_private_key: Optional[str] = os.getenv("FCM_PRIVATE_KEY")
-    app_tz: str = os.getenv("APP_TZ", "Australia/Brisbane")
-    app_base_url: Optional[str] = os.getenv("APP_BASE_URL")
-    frontend_base_url: Optional[str] = os.getenv("FRONTEND_BASE_URL")
-    driver_base_lat: float = float(os.getenv("DRIVER_BASE_LAT", "-27.4698"))
-    driver_base_lng: float = float(os.getenv("DRIVER_BASE_LNG", "153.0251"))
-    leave_buffer_min: int = int(os.getenv("LEAVE_BUFFER_MIN", "5"))
+    ors_api_key: Optional[str] = None
+    google_maps_api_key: Optional[str] = None
+    stripe_secret_key: Optional[str] = None
+    stripe_webhook_secret: Optional[str] = None
+    fcm_project_id: Optional[str] = None
+    fcm_client_email: Optional[str] = None
+    fcm_private_key: Optional[str] = None
+    app_tz: str = "Australia/Brisbane"
+    app_base_url: Optional[str] = None
+    frontend_base_url: Optional[str] = None
+    driver_base_lat: float = -27.4698
+    driver_base_lng: float = 153.0251
+    leave_buffer_min: int = 5
 
     # Pydantic config (v1 vs v2)
     if _P2:
