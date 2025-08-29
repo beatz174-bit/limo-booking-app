@@ -12,7 +12,8 @@ services:
     # environment:
     #   - VITE_API_BASE_URL=https://dev.lan.ddnsgeek.com
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     labels:
       - "traefik.enable=true"
 #      - "traefik.docker.network=proxy"
@@ -42,6 +43,11 @@ services:
         # - GRAYLOG_PORT=12201
     volumes:
      - ./data:/data:rw  # If using SQLite
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     labels:
       - traefik.enable=true
       # Router for the API on the SAME host, but only when path starts with /api
