@@ -7,16 +7,18 @@ import logging
 from typing import Any
 
 import httpx
+
 from app.core.config import get_settings
+
+logger = logging.getLogger(__name__)
 
 try:  # pragma: no cover - optional dependency
     from airportsdata import load as load_airports
 
     AIRPORTS: dict[str, dict[str, Any]] = load_airports("IATA")
 except Exception:  # pragma: no cover - fall back if package missing
+    logger.exception("failed to load airports data")
     AIRPORTS = {}
-
-logger = logging.getLogger(__name__)
 
 
 async def reverse_geocode(lat: float, lon: float) -> str:
@@ -59,11 +61,25 @@ async def reverse_geocode(lat: float, lon: float) -> str:
     )
 
     async with httpx.AsyncClient() as client:
-        res = await client.get(url, params=params, headers=headers)
-        res.raise_for_status()
+        try:
+            res = await client.get(url, params=params, headers=headers)
+            res.raise_for_status()
+        except Exception:
+            logger.exception("reverse geocode request failed")
+            raise
+        logger.debug(
+            "reverse geocode response",
+            extra={
+                "status": res.status_code,
+                "payload": getattr(res, "text", "")[:200],
+            },
+        )
         data = res.json()
 
     address = data.get("features", [{}])[0].get("properties", {}).get("label")
+
+    if not address:
+        logger.warning("no address found", extra={"lat": lat, "lon": lon})
 
     return address or f"{lat:.5f}, {lon:.5f}"
 
@@ -84,22 +100,6 @@ async def search_geocode(query: str, limit: int = 5) -> list[dict]:
 
     logger.info("search geocode", extra={"query": query, "limit": limit})
     results: list[dict] = []
-
-    # Airport code lookup
-    if len(query) == 3 and query.isalpha():
-        airport = AIRPORTS.get(query.upper())
-        if airport:
-            address = {
-                "city": airport.get("city"),
-                "state": airport.get("subd"),
-                "country": airport.get("country"),
-            }
-            results.append(
-                {
-                    "name": airport.get("name"),
-                    "address": {k: v for k, v in address.items() if v},
-                }
-            )
 
     settings = get_settings()
     api_key = settings.ors_api_key
@@ -124,14 +124,38 @@ async def search_geocode(query: str, limit: int = 5) -> list[dict]:
             "search geocode request",
             extra={"url": ors_url, "query": query, "limit": limit},
         )
-        ors_res = await client.get(ors_url, params=ors_params, headers=headers)
-        ors_res.raise_for_status()
+        try:
+            ors_res = await client.get(ors_url, params=ors_params, headers=headers)
+            ors_res.raise_for_status()
+        except Exception:
+            logger.exception("ORS search request failed")
+            raise
+        logger.debug(
+            "search geocode ORS response",
+            extra={
+                "status": ors_res.status_code,
+                "payload": getattr(ors_res, "text", "")[:200],
+            },
+        )
         ors_data = ors_res.json()
 
-        nom_res = await client.get(
-            nom_url, params=nom_params, headers={**headers, "User-Agent": "limo-app"}
+        try:
+            nom_res = await client.get(
+                nom_url,
+                params=nom_params,
+                headers={**headers, "User-Agent": "limo-app"},
+            )
+            nom_res.raise_for_status()
+        except Exception:
+            logger.exception("Nominatim search request failed")
+            raise
+        logger.debug(
+            "search geocode Nominatim response",
+            extra={
+                "status": nom_res.status_code,
+                "payload": getattr(nom_res, "text", "")[:200],
+            },
         )
-        nom_res.raise_for_status()
         nom_data = nom_res.json()
 
     for feature in ors_data.get("features", []):
@@ -158,5 +182,24 @@ async def search_geocode(query: str, limit: int = 5) -> list[dict]:
                 "type": result_type,
             }
         )
+
+    # Airport code lookup if no results from APIs
+    if not results and len(query) == 3 and query.isalpha():
+        airport = AIRPORTS.get(query.upper())
+        if airport:
+            address = {
+                "city": airport.get("city"),
+                "state": airport.get("subd"),
+                "country": airport.get("country"),
+            }
+            results.append(
+                {
+                    "name": airport.get("name"),
+                    "address": {k: v for k, v in address.items() if v},
+                }
+            )
+
+    if not results:
+        logger.warning("no geocoding results", extra={"query": query})
 
     return results
