@@ -33,7 +33,10 @@ async def create_booking(
     customer = result.scalar_one_or_none()
     if customer is None:
         customer = User(
-            email=data.customer.email, name=data.customer.name, role=UserRole.CUSTOMER
+            email=data.customer.email,
+            full_name=data.customer.name,
+            hashed_password="",
+            role=UserRole.CUSTOMER,
         )
         db.add(customer)
         await db.flush()
