@@ -53,7 +53,14 @@ async def estimate_route(
                 if resp.status_code < 500:
                     resp.raise_for_status()
                     data = resp.json()
-                    leg = data["routes"][0]["legs"][0]
+                    routes = data.get("routes") or []
+                    if (
+                        data.get("status") != "OK"
+                        or not routes
+                        or not routes[0].get("legs")
+                    ):
+                        raise ValueError("no route found")
+                    leg = routes[0]["legs"][0]
                     distance_km = leg["distance"]["value"] / 1000.0
                     duration_min = leg["duration"]["value"] / 60.0
                     return distance_km, duration_min
