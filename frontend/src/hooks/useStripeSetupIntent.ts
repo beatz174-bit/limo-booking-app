@@ -20,7 +20,20 @@ export function useStripeSetupIntent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error('booking failed');
+      if (!res.ok) {
+        let message = 'booking failed';
+        try {
+          const errJson = await res.json();
+          if (typeof errJson.detail === 'string') {
+            message = errJson.detail;
+          } else if (Array.isArray(errJson.detail)) {
+            message = errJson.detail.map((d: { msg?: string }) => d.msg).join(', ');
+          }
+        } catch {
+          // ignore JSON parse errors
+        }
+        throw new Error(message);
+      }
       const json = await res.json();
       return {
         booking: json.booking,

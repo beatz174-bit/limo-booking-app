@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { useStripeSetupIntent } from '@/hooks/useStripeSetupIntent';
 
@@ -10,13 +10,36 @@ describe('useStripeSetupIntent', () => {
     };
     global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => fakeResp }) as unknown as typeof fetch;
     const { result } = renderHook(() => useStripeSetupIntent());
-    const data = await result.current.createBooking({
-      pickup_when: '2025-01-01T00:00:00Z',
-      pickup: { address: 'A', lat: 0, lng: 0 },
-      dropoff: { address: 'B', lat: 0, lng: 1 },
-      passengers: 1,
-      customer: { name: 'x', email: 'y@example.com' },
+    let data;
+    await act(async () => {
+      data = await result.current.createBooking({
+        pickup_when: '2025-01-01T00:00:00Z',
+        pickup: { address: 'A', lat: 0, lng: 0 },
+        dropoff: { address: 'B', lat: 0, lng: 1 },
+        passengers: 1,
+        customer: { name: 'x', email: 'y@example.com' },
+      });
     });
     expect(data.clientSecret).toBe('sec');
+  });
+
+  it('throws detailed error when booking fails', async () => {
+    const errorResp = { detail: 'invalid booking' };
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue({ ok: false, json: async () => errorResp }) as unknown as typeof fetch;
+    const { result } = renderHook(() => useStripeSetupIntent());
+
+    await act(async () => {
+      await expect(
+        result.current.createBooking({
+          pickup_when: '2025-01-01T00:00:00Z',
+          pickup: { address: 'A', lat: 0, lng: 0 },
+          dropoff: { address: 'B', lat: 0, lng: 1 },
+          passengers: 1,
+          customer: { name: 'x', email: 'y@example.com' },
+        }),
+      ).rejects.toThrow('invalid booking');
+    });
   });
 });
