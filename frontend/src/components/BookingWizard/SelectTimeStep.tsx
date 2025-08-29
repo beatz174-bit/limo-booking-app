@@ -35,7 +35,11 @@ export default function SelectTimeStep({ data, onNext }: Props) {
         InputLabelProps={{ shrink: true }}
       />
       {blocked && <Typography color="error">Time unavailable</Typography>}
-      <Button variant="contained" onClick={() => onNext({ pickup_when: when })} disabled={!when || blocked}>
+      <Button
+        variant="contained"
+        onClick={() => onNext({ pickup_when: new Date(when).toISOString() })}
+        disabled={!when || blocked}
+      >
         Next
       </Button>
     </Stack>

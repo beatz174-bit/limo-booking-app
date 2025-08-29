@@ -67,7 +67,7 @@ test('advances through steps and aggregates form data', async () => {
   await userEvent.click(screen.getByRole('button', { name: /submit/i }));
 
   expect(createBooking).toHaveBeenCalledWith({
-    pickup_when: '2025-01-01T10:00',
+    pickup_when: new Date('2025-01-01T10:00').toISOString(),
     pickup: { address: '123 A St', lat: 0, lng: 0 },
     dropoff: { address: '456 B St', lat: 0, lng: 0 },
     passengers: 2,

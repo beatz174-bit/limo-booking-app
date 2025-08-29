@@ -47,7 +47,9 @@ test('shows tracking link after booking', async () => {
   );
 
   await userEvent.click(screen.getByRole('button', { name: /submit/i }));
-
+  expect(mockCreateBooking).toHaveBeenCalledWith(
+    expect.objectContaining({ pickup_when: '2025-01-01T00:00:00Z' }),
+  );
   const link = await screen.findByRole('link', { name: /track this ride/i });
   expect(link).toHaveAttribute('href', '/t/ABC123');
 });
