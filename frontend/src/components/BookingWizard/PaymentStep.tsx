@@ -13,6 +13,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { settingsApi } from '@/components/ApiConfig';
 import { useRouteMetrics } from '@/hooks/useRouteMetrics';
 import FareBreakdown from '@/components/FareBreakdown';
+import * as logger from '@/lib/logger';
 
 const stripePromise = (async () => {
   try {
@@ -20,7 +21,11 @@ const stripePromise = (async () => {
       import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || ''
     );
   } catch (error) {
-    console.warn('Stripe initialization failed', error);
+    logger.warn(
+      'components/BookingWizard/PaymentStep',
+      'Stripe initialization failed',
+      error
+    );
     return null;
   }
 })();
@@ -103,18 +108,40 @@ function PaymentInner({ data, onBack }: Props) {
   const [booking, setBooking] = useState<{ public_code: string } | null>(null);
 
   async function handleSubmit() {
-    if (!stripe || !elements) return;
+    if (!stripe || !elements) {
+      logger.warn(
+        'components/BookingWizard/PaymentStep',
+        'Stripe not ready'
+      );
+      return;
+    }
     const card = elements.getElement(CardElement);
     const payload = {
       ...data,
       customer: { name, email, phone },
     };
+    logger.info(
+      'components/BookingWizard/PaymentStep',
+      'Submitting booking',
+      payload
+    );
     const res = await createBooking(payload);
     if (res.clientSecret && card) {
       await stripe.confirmCardSetup(res.clientSecret, {
         payment_method: { card },
       });
       setBooking(res.booking);
+      logger.info(
+        'components/BookingWizard/PaymentStep',
+        'Booking confirmed',
+        res.booking
+      );
+    } else {
+      logger.error(
+        'components/BookingWizard/PaymentStep',
+        'Booking creation failed',
+        res
+      );
     }
   }
 
