@@ -4,14 +4,13 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr
-
 from app.models.user_v2 import UserRole
+from pydantic import BaseModel, EmailStr
 
 
 class UserBase(BaseModel):
     email: EmailStr
-    name: str
+    full_name: str
     role: UserRole = UserRole.CUSTOMER
 
 

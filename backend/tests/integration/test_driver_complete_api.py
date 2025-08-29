@@ -2,19 +2,23 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from httpx import AsyncClient
-
-from app.models.user_v2 import User, UserRole
+from app.core.security import hash_password
 from app.models.booking import Booking, BookingStatus
 from app.models.route_point import RoutePoint
 from app.models.settings import AdminConfig
-
+from app.models.user_v2 import User, UserRole
+from httpx import AsyncClient
 
 pytestmark = pytest.mark.asyncio
 
 
 async def _create_booking(async_session) -> Booking:
-    user = User(email=f"c{uuid.uuid4()}@example.com", name="C", role=UserRole.CUSTOMER)
+    user = User(
+        email=f"c{uuid.uuid4()}@example.com",
+        full_name="C",
+        hashed_password=hash_password("pass"),
+        role=UserRole.CUSTOMER,
+    )
     async_session.add(user)
     await async_session.flush()
     booking = Booking(
@@ -40,7 +44,9 @@ async def _create_booking(async_session) -> Booking:
 
 async def test_driver_complete_booking(async_session, client: AsyncClient, monkeypatch):
     await async_session.merge(
-        AdminConfig(id=1, account_mode=False, flagfall=0, per_km_rate=100, per_minute_rate=100)
+        AdminConfig(
+            id=1, account_mode=False, flagfall=0, per_km_rate=100, per_minute_rate=100
+        )
     )
     booking = await _create_booking(async_session)
 
@@ -48,8 +54,12 @@ async def test_driver_complete_booking(async_session, client: AsyncClient, monke
         def __init__(self, id: str):
             self.id = id
 
-    monkeypatch.setattr("app.services.stripe_client.charge_deposit", lambda amount: FakePI("pi_dep"))
-    monkeypatch.setattr("app.services.stripe_client.charge_final", lambda amount: FakePI("pi_final"))
+    monkeypatch.setattr(
+        "app.services.stripe_client.charge_deposit", lambda amount: FakePI("pi_dep")
+    )
+    monkeypatch.setattr(
+        "app.services.stripe_client.charge_final", lambda amount: FakePI("pi_final")
+    )
 
     async def fake_route(*args, **kwargs):
         return (0, 0)
@@ -65,7 +75,9 @@ async def test_driver_complete_booking(async_session, client: AsyncClient, monke
     async_session.add_all(
         [
             RoutePoint(booking_id=booking.id, ts=start, lat=0, lng=0),
-            RoutePoint(booking_id=booking.id, ts=start + timedelta(minutes=10), lat=0, lng=0.01),
+            RoutePoint(
+                booking_id=booking.id, ts=start + timedelta(minutes=10), lat=0, lng=0.01
+            ),
         ]
     )
     await async_session.commit()
@@ -78,6 +90,6 @@ async def test_driver_complete_booking(async_session, client: AsyncClient, monke
     assert data["final_price_cents"] >= 1000
 
     from sqlalchemy import delete
+
     await async_session.execute(delete(AdminConfig))
     await async_session.commit()
-

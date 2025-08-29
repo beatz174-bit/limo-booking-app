@@ -1,17 +1,23 @@
-import pytest
-from httpx import AsyncClient
-from _pytest.monkeypatch import MonkeyPatch
-from datetime import datetime, timedelta, timezone
 import uuid
+from datetime import datetime, timedelta, timezone
 
-from app.models.user_v2 import User, UserRole
+import pytest
+from _pytest.monkeypatch import MonkeyPatch
+from app.core.security import hash_password
 from app.models.booking import Booking, BookingStatus
+from app.models.user_v2 import User, UserRole
+from httpx import AsyncClient
 
 pytestmark = pytest.mark.asyncio
 
 
 async def _create_booking(async_session) -> Booking:
-    user = User(email=f"c{uuid.uuid4()}@example.com", name="C", role=UserRole.CUSTOMER)
+    user = User(
+        email=f"c{uuid.uuid4()}@example.com",
+        full_name="C",
+        hashed_password=hash_password("pass"),
+        role=UserRole.CUSTOMER,
+    )
     async_session.add(user)
     await async_session.flush()
     booking = Booking(
@@ -35,13 +41,17 @@ async def _create_booking(async_session) -> Booking:
     return booking
 
 
-async def test_driver_confirm_booking(async_session, client: AsyncClient, monkeypatch: MonkeyPatch):
+async def test_driver_confirm_booking(
+    async_session, client: AsyncClient, monkeypatch: MonkeyPatch
+):
     booking = await _create_booking(async_session)
 
     class FakePI:
         id = "pi_test"
 
-    monkeypatch.setattr("app.services.stripe_client.charge_deposit", lambda amount: FakePI())
+    monkeypatch.setattr(
+        "app.services.stripe_client.charge_deposit", lambda amount: FakePI()
+    )
 
     async def fake_route(*args, **kwargs):
         return (0, 0)
