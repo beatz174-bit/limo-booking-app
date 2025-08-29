@@ -1,4 +1,3 @@
-# app/schemas/geocode.py
 """Pydantic models for geocoding responses."""
 
 from typing import List, Optional
@@ -27,8 +26,9 @@ class AddressComponents(BaseModel):
 class GeocodeSearchResult(BaseModel):
     """One item from a geocode search result list."""
 
-    name: str
     address: AddressComponents
+    name: Optional[str] = None
+    type: Optional[str] = None
 
 
 class GeocodeSearchResponse(BaseModel):

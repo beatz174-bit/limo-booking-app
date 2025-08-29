@@ -7,7 +7,6 @@ import logging
 from typing import Any
 
 import httpx
-
 from app.core.config import get_settings
 
 try:  # pragma: no cover - optional dependency
@@ -146,29 +145,18 @@ async def search_geocode(query: str, limit: int = 5) -> list[dict]:
             "state": props.get("region"),
             "country": props.get("country"),
         }
+        gid = props.get("gid")
+        result_type = (
+            gid.split(":")[1]
+            if isinstance(gid, str) and ":" in gid
+            else props.get("layer")
+        )
         results.append(
             {
-                "name": props.get("label") or props.get("name"),
                 "address": {k: v for k, v in address.items() if v},
+                "name": props.get("name"),
+                "type": result_type,
             }
         )
 
-    for item in nom_data:
-        addr = item.get("address", {})
-        address = {
-            "house_number": addr.get("house_number"),
-            "road": addr.get("road"),
-            "suburb": addr.get("suburb"),
-            "city": addr.get("city") or addr.get("town") or addr.get("village"),
-            "postcode": addr.get("postcode"),
-            "state": addr.get("state"),
-            "country": addr.get("country"),
-        }
-        results.append(
-            {
-                "name": item.get("display_name"),
-                "address": {k: v for k, v in address.items() if v},
-            }
-        )
-
-    return results[:limit]
+    return results

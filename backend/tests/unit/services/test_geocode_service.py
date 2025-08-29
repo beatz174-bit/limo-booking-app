@@ -3,7 +3,6 @@ import os
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
-
 from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.services import geocode_service
@@ -63,6 +62,8 @@ async def test_search_geocode_merges_results(monkeypatch: MonkeyPatch):
                             "street": "Main St",
                             "locality": "Springfield",
                             "postalcode": "12345",
+                            "name": "City Library",
+                            "gid": "whosonfirst:venue:123",
                         }
                     }
                 ]
@@ -115,8 +116,57 @@ async def test_search_geocode_merges_results(monkeypatch: MonkeyPatch):
                 "city": "Springfield",
                 "postcode": "12345",
             },
-        },
-        {"name": "Central Park, Springfield", "address": {"city": "Springfield"}},
+            "name": "City Library",
+            "type": "venue",
+        }
+    ]
+
+
+async def test_search_geocode_returns_airport(monkeypatch: MonkeyPatch):
+    class DummyResp:
+        status_code = 200
+
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict:
+            return {
+                "features": [
+                    {
+                        "properties": {
+                            "name": "Heathrow Airport",
+                            "locality": "London",
+                            "gid": "whosonfirst:airport:123",
+                        }
+                    }
+                ]
+            }
+
+    class DummyClient:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *exc_info):
+            return None
+
+        async def get(self, url, params=None, headers=None):  # type: ignore[override]
+            assert "search" in url
+            return DummyResp()
+
+    monkeypatch.setattr(
+        geocode_service, "httpx", type("X", (), {"AsyncClient": DummyClient})
+    )
+    monkeypatch.setattr(
+        geocode_service, "get_settings", lambda: type("S", (), {"ors_api_key": "KEY"})()
+    )
+
+    results = await geocode_service.search_geocode("LHR")
+    assert results == [
+        {
+            "address": {"city": "London"},
+            "name": "Heathrow Airport",
+            "type": "airport",
+        }
     ]
 
 
