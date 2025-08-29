@@ -2,7 +2,7 @@
 
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class GeocodeResponse(BaseModel):
@@ -11,24 +11,16 @@ class GeocodeResponse(BaseModel):
     address: str
 
 
-class AddressComponents(BaseModel):
-    """Breakdown of address parts returned by provider."""
-
-    house_number: Optional[str] = None
-    road: Optional[str] = None
-    suburb: Optional[str] = None
-    city: Optional[str] = None
-    postcode: Optional[str] = None
-    state: Optional[str] = None
-    country: Optional[str] = None
-
-
 class GeocodeSearchResult(BaseModel):
     """One item from a geocode search result list."""
 
-    address: AddressComponents
     name: Optional[str] = None
-    type: Optional[str] = None
+    address: str
+    lat: float
+    lng: float
+    place_id: str = Field(..., alias="placeId")
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class GeocodeSearchResponse(BaseModel):

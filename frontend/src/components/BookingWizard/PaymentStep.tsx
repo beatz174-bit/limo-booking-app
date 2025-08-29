@@ -76,9 +76,10 @@ function PaymentInner({ data, onBack }: Props) {
   useEffect(() => {
     let ignore = false;
     async function fetchPrice() {
+      if (!data.pickup || !data.dropoff) return;
       const metrics = await getMetrics(
-        data.pickup?.address || '',
-        data.dropoff?.address || ''
+        { lat: data.pickup.lat, lon: data.pickup.lng },
+        { lat: data.dropoff.lat, lon: data.dropoff.lng }
       );
       if (!ignore && metrics) {
         const estimate =

@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { Stack, TextField, Button } from '@mui/material';
 import { AddressField } from '@/components/AddressField';
-import { CONFIG } from '@/config';
 import { useAddressAutocomplete } from '@/hooks/useAddressAutocomplete';
-import * as logger from '@/lib/logger';
 
 interface Location {
   address: string;
@@ -22,48 +20,6 @@ interface Props {
   data: FormData;
   onNext: (data: FormData) => void;
   onBack: () => void;
-}
-
-async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
-  logger.debug('components/BookingWizard/TripDetailsStep', 'geocodeAddress input', address);
-  if (!address) return null;
-  try {
-    const backend = CONFIG.API_BASE_URL as string | undefined;
-    let url: string;
-    if (backend) {
-      const u = new URL('/geocode/search', backend || window.location.origin);
-      u.searchParams.set('q', address);
-      url = u.toString();
-    } else {
-      url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(
-        address,
-      )}`;
-    }
-    logger.debug('components/BookingWizard/TripDetailsStep', 'geocodeAddress url', url);
-    const res = await fetch(url);
-    if (!res.ok) {
-      logger.error(
-        'components/BookingWizard/TripDetailsStep',
-        'geocodeAddress non-200 response',
-        res.status,
-      );
-      return null;
-    }
-    const data = await res.json();
-    const first = Array.isArray(data) ? data[0] : data?.results?.[0];
-    if (!first) return null;
-    const lat = Number(first.lat || first.latitude);
-    const lng = Number(first.lon || first.longitude);
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
-    logger.debug('components/BookingWizard/TripDetailsStep', 'geocodeAddress coords', {
-      lat,
-      lng,
-    });
-    return { lat, lng };
-  } catch (err) {
-    logger.error('components/BookingWizard/TripDetailsStep', 'geocodeAddress error', err);
-    return null;
-  }
 }
 
 export default function TripDetailsStep({ data, onNext, onBack }: Props) {
@@ -86,13 +42,10 @@ export default function TripDetailsStep({ data, onNext, onBack }: Props) {
         label="Pickup address"
         value={pickup}
         onChange={setPickup}
-        onBlur={(v) => {
-          void geocodeAddress(v).then((coords) => {
-            if (coords) {
-              setPickupLat(coords.lat);
-              setPickupLng(coords.lng);
-            }
-          });
+        onSelect={(s) => {
+          setPickup(s.address);
+          setPickupLat(s.lat);
+          setPickupLng(s.lng);
         }}
         suggestions={pickupAuto.suggestions}
         loading={pickupAuto.loading}
@@ -102,13 +55,10 @@ export default function TripDetailsStep({ data, onNext, onBack }: Props) {
         label="Dropoff address"
         value={dropoff}
         onChange={setDropoff}
-        onBlur={(v) => {
-          void geocodeAddress(v).then((coords) => {
-            if (coords) {
-              setDropLat(coords.lat);
-              setDropLng(coords.lng);
-            }
-          });
+        onSelect={(s) => {
+          setDropoff(s.address);
+          setDropLat(s.lat);
+          setDropLng(s.lng);
         }}
         suggestions={dropoffAuto.suggestions}
         loading={dropoffAuto.loading}

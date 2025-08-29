@@ -11,6 +11,7 @@ export function AddressField(props: {
   value: string;
   onChange: (v: string) => void;
   onBlur?: (v: string) => void;
+  onSelect?: (s: AddressSuggestion) => void;
   onUseLocation?: () => void;
   locating?: boolean;
   errorText?: string;
@@ -65,6 +66,7 @@ export function AddressField(props: {
             props.onChange(val);
           } else {
             props.onChange(val.address);
+            props.onSelect?.(val);
           }
         }
       }}

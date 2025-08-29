@@ -1,7 +1,7 @@
 import { render, waitFor } from '@testing-library/react';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { MapRoute } from './MapRoute';
+import { MapRoute, type Location } from './MapRoute';
 import { MapProvider } from './MapProvider';
 
 vi.mock('@react-google-maps/api', () => ({
@@ -36,9 +36,11 @@ describe('MapRoute', () => {
     const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ km: 10, min: 15 }) }));
     vi.stubGlobal('fetch', fetchMock);
     const onMetrics = vi.fn();
+    const pickup: Location = { address: 'A', lat: 1, lng: 2 };
+    const dropoff: Location = { address: 'B', lat: 3, lng: 4 };
     render(
       <MapProvider>
-        <MapRoute pickup="A" dropoff="B" rideTime="2020-01-01T00:00" onMetrics={onMetrics} />
+        <MapRoute pickup={pickup} dropoff={dropoff} rideTime="2020-01-01T00:00" onMetrics={onMetrics} />
       </MapProvider>
     );
     await waitFor(() => expect(onMetrics).toHaveBeenCalledWith(10, 15));
@@ -49,9 +51,11 @@ describe('MapRoute', () => {
     const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ km: 10, min: 15 }) }));
     vi.stubGlobal('fetch', fetchMock);
     const onMetrics = vi.fn();
+    const pickup: Location = { address: 'A', lat: 1, lng: 2 };
+    const dropoff: Location = { address: 'B', lat: 3, lng: 4 };
     const { rerender } = render(
       <MapProvider>
-        <MapRoute pickup="A" dropoff="B" rideTime="2020-01-01T00:00" onMetrics={onMetrics} />
+        <MapRoute pickup={pickup} dropoff={dropoff} rideTime="2020-01-01T00:00" onMetrics={onMetrics} />
       </MapProvider>
     );
     await waitFor(() => expect(onMetrics).toHaveBeenCalledWith(10, 15));
@@ -60,7 +64,7 @@ describe('MapRoute', () => {
 
     rerender(
       <MapProvider>
-        <MapRoute pickup="A" dropoff="B" rideTime="2020-01-01T00:00" onMetrics={onMetrics} />
+        <MapRoute pickup={pickup} dropoff={dropoff} rideTime="2020-01-01T00:00" onMetrics={onMetrics} />
       </MapProvider>
     );
     await new Promise((r) => setTimeout(r, 20));
@@ -73,9 +77,11 @@ describe('MapRoute', () => {
     const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ km: 10, min: 15 }) }));
     vi.stubGlobal('fetch', fetchMock);
     const onMetrics = vi.fn();
+    const pickup: Location = { address: 'A', lat: 1, lng: 2 };
+    const dropoff: Location = { address: 'B', lat: 3, lng: 4 };
     const { rerender } = render(
       <MapProvider>
-        <MapRoute pickup="A" dropoff="B" rideTime="2020-01-01T00:00" onMetrics={onMetrics} />
+        <MapRoute pickup={pickup} dropoff={dropoff} rideTime="2020-01-01T00:00" onMetrics={onMetrics} />
       </MapProvider>
     );
     await waitFor(() => expect(onMetrics).toHaveBeenCalledWith(10, 15));
@@ -84,21 +90,21 @@ describe('MapRoute', () => {
 
     rerender(
       <MapProvider>
-        <MapRoute pickup="A" dropoff="B" rideTime="2020-01-01T01:00" onMetrics={onMetrics} />
+        <MapRoute pickup={pickup} dropoff={dropoff} rideTime="2020-01-01T01:00" onMetrics={onMetrics} />
       </MapProvider>
     );
     await waitFor(() => expect(onMetrics).toHaveBeenCalledWith(10, 15));
     expect(fetchMock).toHaveBeenCalled();
   });
 
-  test('does not call onMetrics when either address missing', async () => {
+  test('does not call onMetrics when either location missing', async () => {
     vi.mock('@/config', () => ({ CONFIG: { API_BASE_URL: 'http://api', GOOGLE_MAPS_API_KEY: 'KEY' } }));
     const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ km: 10, min: 15 }) }));
     vi.stubGlobal('fetch', fetchMock);
     const onMetrics = vi.fn();
     const { rerender } = render(
       <MapProvider>
-        <MapRoute pickup="" dropoff="B" rideTime="2020-01-01T00:00" onMetrics={onMetrics} />
+        <MapRoute pickup={undefined as unknown as Location} dropoff={{ address: 'B', lat: 3, lng: 4 }} rideTime="2020-01-01T00:00" onMetrics={onMetrics} />
       </MapProvider>
     );
     await new Promise((r) => setTimeout(r, 20));
@@ -106,7 +112,7 @@ describe('MapRoute', () => {
 
     rerender(
       <MapProvider>
-        <MapRoute pickup="A" dropoff="" rideTime="2020-01-01T00:00" onMetrics={onMetrics} />
+        <MapRoute pickup={{ address: 'A', lat: 1, lng: 2 }} dropoff={undefined as unknown as Location} rideTime="2020-01-01T00:00" onMetrics={onMetrics} />
       </MapProvider>
     );
     await new Promise((r) => setTimeout(r, 20));

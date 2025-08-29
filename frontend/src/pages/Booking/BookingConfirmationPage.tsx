@@ -37,8 +37,8 @@ function BookingConfirmationPage() {
     let alive = true;
     (async () => {
       const metrics = await getMetrics(
-        booking.pickup_address,
-        booking.dropoff_address,
+        { lat: booking.pickup_lat, lon: booking.pickup_lng },
+        { lat: booking.dropoff_lat, lon: booking.dropoff_lng },
         booking.pickup_when,
       );
       if (metrics && alive) {

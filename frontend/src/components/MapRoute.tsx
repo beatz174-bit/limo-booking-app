@@ -4,9 +4,15 @@ import { GoogleMap, DirectionsRenderer } from '@react-google-maps/api';
 import { useRoute } from '@/hooks/useRoute';
 import { useRouteMetrics } from '@/hooks/useRouteMetrics';
 
+export type Location = {
+  address: string;
+  lat: number;
+  lng: number;
+};
+
 export type Props = {
-  pickup: string;
-  dropoff: string;
+  pickup?: Location;
+  dropoff?: Location;
   rideTime?: string;
   onMetrics?: (km: number, minutes: number) => void;
 };
@@ -31,7 +37,7 @@ function Placeholder({ text = 'map unavailable' }: { text?: string }) {
 
 
 export function MapRoute({ pickup, dropoff, rideTime, onMetrics }: Props) {
-  const { valid, directions } = useRoute(pickup, dropoff);
+  const { valid, directions } = useRoute(pickup?.address || '', dropoff?.address || '');
   const getMetrics = useRouteMetrics();
 
   useEffect(() => {
@@ -39,7 +45,11 @@ export function MapRoute({ pickup, dropoff, rideTime, onMetrics }: Props) {
     async function compute() {
       if (!pickup || !dropoff || !onMetrics) return;
       const rideTimeIso = rideTime ? new Date(rideTime).toISOString() : undefined;
-      const res = await getMetrics(pickup, dropoff, rideTimeIso);
+      const res = await getMetrics(
+        { lat: pickup.lat, lon: pickup.lng },
+        { lat: dropoff.lat, lon: dropoff.lng },
+        rideTimeIso,
+      );
       if (!cancelled && res) onMetrics(res.km, res.min);
     }
     void compute();

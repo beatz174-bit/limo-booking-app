@@ -29,9 +29,11 @@ async def test_geocode_search_endpoint(monkeypatch: MonkeyPatch, client: AsyncCl
         assert limit == 5
         return [
             {
-                "address": {"road": "Main St"},
                 "name": "Main Street",
-                "type": "road",
+                "address": "123 Main St, Springfield",
+                "lat": 1.0,
+                "lng": 2.0,
+                "place_id": "abc",
             }
         ]
 
@@ -42,9 +44,11 @@ async def test_geocode_search_endpoint(monkeypatch: MonkeyPatch, client: AsyncCl
     assert res.json() == {
         "results": [
             {
-                "address": {"road": "Main St"},
                 "name": "Main Street",
-                "type": "road",
+                "address": "123 Main St, Springfield",
+                "lat": 1.0,
+                "lng": 2.0,
+                "placeId": "abc",
             }
         ]
     }

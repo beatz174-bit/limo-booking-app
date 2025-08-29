@@ -114,7 +114,18 @@ function RideDetailsPage() {
       </Stack>
 
       <MapProvider>
-        <MapRoute pickup={booking.pickup_address} dropoff={booking.dropoff_address} />
+        <MapRoute
+          pickup={{
+            address: booking.pickup_address,
+            lat: booking.pickup_lat,
+            lng: booking.pickup_lng,
+          }}
+          dropoff={{
+            address: booking.dropoff_address,
+            lat: booking.dropoff_lat,
+            lng: booking.dropoff_lng,
+          }}
+        />
       </MapProvider>
     </Box>
   );
