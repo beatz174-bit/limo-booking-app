@@ -27,10 +27,12 @@ async def test_geocode_search_endpoint(monkeypatch: MonkeyPatch, client: AsyncCl
     async def fake_search(q: str, limit: int = 5):  # type: ignore
         assert q == "Main St"
         assert limit == 5
-        return [{"address": {"road": "Main St"}}]
+        return [{"name": "Main St", "address": {"road": "Main St"}}]
 
     monkeypatch.setattr(geocode_router, "search_geocode", fake_search)
 
     res = await client.get("/geocode/search?q=Main%20St")
     assert res.status_code == 200
-    assert res.json() == {"results": [{"address": {"road": "Main St"}}]}
+    assert res.json() == {
+        "results": [{"name": "Main St", "address": {"road": "Main St"}}]
+    }
