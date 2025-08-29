@@ -9,6 +9,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 FROM python:3.11-slim
 WORKDIR /app
 RUN useradd -u 1000 -m appuser
+# Install curl for healthcheck
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 # Install gunicorn and uvicorn
 RUN pip install --no-cache-dir gunicorn uvicorn[standard]
 
@@ -27,6 +29,9 @@ USER appuser
 # RUN chown 1000:1000 /data
 # Expose API port
 EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
 
 COPY --chmod=755 docker-entrypoint.sh /entrypoint.sh
 # RUN chown -R 10001:10001 /entrypoint.sh
