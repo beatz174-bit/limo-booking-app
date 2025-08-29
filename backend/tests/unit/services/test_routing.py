@@ -1,7 +1,6 @@
 import httpx
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
-
 from app.services import routing
 
 pytestmark = pytest.mark.asyncio
@@ -39,6 +38,7 @@ async def test_estimate_route_retries_then_succeeds(monkeypatch: MonkeyPatch):
             return DummyResp(
                 200,
                 {
+                    "status": "OK",
                     "routes": [
                         {
                             "legs": [
@@ -48,7 +48,7 @@ async def test_estimate_route_retries_then_succeeds(monkeypatch: MonkeyPatch):
                                 }
                             ]
                         }
-                    ]
+                    ],
                 },
             )
 
