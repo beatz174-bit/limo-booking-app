@@ -34,6 +34,12 @@ vi.mock('@/hooks/useRouteMetrics', () => ({
 vi.mock('@/hooks/useAddressAutocomplete', () => ({
   useAddressAutocomplete: () => ({ suggestions: [], loading: false }),
 }));
+vi.mock('@/components/MapProvider', () => ({
+  MapProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+vi.mock('@/components/MapRoute', () => ({
+  MapRoute: () => <div data-testid="map-route" />,
+}));
 
 beforeAll(() => {
   server.use(

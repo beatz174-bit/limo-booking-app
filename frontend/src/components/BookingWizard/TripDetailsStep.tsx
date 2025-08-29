@@ -20,9 +20,10 @@ interface Props {
   data: FormData;
   onNext: (data: FormData) => void;
   onBack: () => void;
+  onChange: (data: Partial<FormData>) => void;
 }
 
-export default function TripDetailsStep({ data, onNext, onBack }: Props) {
+export default function TripDetailsStep({ data, onNext, onBack, onChange }: Props) {
   const [pickup, setPickup] = useState(data.pickup?.address || '');
   const [pickupLat, setPickupLat] = useState<number>(data.pickup?.lat ?? 0);
   const [pickupLng, setPickupLng] = useState<number>(data.pickup?.lng ?? 0);
@@ -41,11 +42,15 @@ export default function TripDetailsStep({ data, onNext, onBack }: Props) {
         id="pickup"
         label="Pickup address"
         value={pickup}
-        onChange={setPickup}
+        onChange={(val) => {
+          setPickup(val);
+          onChange({ pickup: { address: val, lat: pickupLat, lng: pickupLng } });
+        }}
         onSelect={(s) => {
           setPickup(s.address);
           setPickupLat(s.lat);
           setPickupLng(s.lng);
+          onChange({ pickup: { address: s.address, lat: s.lat, lng: s.lng } });
         }}
         suggestions={pickupAuto.suggestions}
         loading={pickupAuto.loading}
@@ -54,17 +59,37 @@ export default function TripDetailsStep({ data, onNext, onBack }: Props) {
         id="dropoff"
         label="Dropoff address"
         value={dropoff}
-        onChange={setDropoff}
+        onChange={(val) => {
+          setDropoff(val);
+          onChange({ dropoff: { address: val, lat: dropLat, lng: dropLng } });
+        }}
         onSelect={(s) => {
           setDropoff(s.address);
           setDropLat(s.lat);
           setDropLng(s.lng);
+          onChange({ dropoff: { address: s.address, lat: s.lat, lng: s.lng } });
         }}
         suggestions={dropoffAuto.suggestions}
         loading={dropoffAuto.loading}
       />
-      <TextField label="Passengers" type="number" value={passengers} onChange={(e) => setPassengers(Number(e.target.value))} />
-      <TextField label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
+      <TextField
+        label="Passengers"
+        type="number"
+        value={passengers}
+        onChange={(e) => {
+          const val = Number(e.target.value);
+          setPassengers(val);
+          onChange({ passengers: val });
+        }}
+      />
+      <TextField
+        label="Notes"
+        value={notes}
+        onChange={(e) => {
+          setNotes(e.target.value);
+          onChange({ notes: e.target.value });
+        }}
+      />
       <Stack direction="row" spacing={1}>
         <Button onClick={onBack}>Back</Button>
         <Button
