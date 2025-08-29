@@ -12,6 +12,7 @@ import { useStripeSetupIntent } from '@/hooks/useStripeSetupIntent';
 import { useSettings } from '@/hooks/useSettings';
 import { settingsApi } from '@/components/ApiConfig';
 import { useRouteMetrics } from '@/hooks/useRouteMetrics';
+import FareBreakdown from '@/components/FareBreakdown';
 
 const stripePromise = (async () => {
   try {
@@ -64,6 +65,8 @@ function PaymentInner({ data, onBack }: Props) {
   };
   const getMetrics = useRouteMetrics();
   const [price, setPrice] = useState<number | null>(null);
+  const [distanceKm, setDistanceKm] = useState<number>(0);
+  const [durationMin, setDurationMin] = useState<number>(0);
 
   useEffect(() => {
     let ignore = false;
@@ -78,6 +81,8 @@ function PaymentInner({ data, onBack }: Props) {
           metrics.km * tariff.perKm +
           metrics.min * tariff.perMin;
         setPrice(estimate);
+        setDistanceKm(metrics.km);
+        setDurationMin(metrics.min);
       }
     }
     fetchPrice();
@@ -136,6 +141,14 @@ function PaymentInner({ data, onBack }: Props) {
       {price != null && (
         <Typography>Estimated fare: ${price.toFixed(2)}</Typography>
       )}
+      <FareBreakdown
+        price={price}
+        flagfall={tariff.flagfall}
+        perKm={tariff.perKm}
+        perMin={tariff.perMin}
+        distanceKm={distanceKm}
+        durationMin={durationMin}
+      />
       <Typography variant="body2">
         50% deposit{price != null ? ` ($${(price * 0.5).toFixed(2)})` : ''} charged on
         confirmation
