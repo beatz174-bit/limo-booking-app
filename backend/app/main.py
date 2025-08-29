@@ -28,6 +28,7 @@ from app.api import users as users_router
 from app.api import ws as ws_router
 from app.api.v1 import availability as availability_v1_router
 from app.api.v1 import bookings as bookings_v1_router
+from app.api.v1 import customer_bookings as customer_bookings_v1_router
 from app.api.v1 import driver_bookings as driver_bookings_v1_router
 from app.api.v1 import track as track_v1_router
 from app.db.database import database
@@ -83,6 +84,7 @@ app.include_router(health_router.router)
 app.include_router(route_metrics_router.router)
 app.include_router(users_router.router)
 app.include_router(bookings_v1_router.router)
+app.include_router(customer_bookings_v1_router.router)
 app.include_router(driver_bookings_v1_router.router)
 app.include_router(track_v1_router.router)
 app.include_router(availability_v1_router.router)
