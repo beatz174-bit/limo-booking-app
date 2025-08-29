@@ -1,13 +1,11 @@
 """Endpoint exposing distance and duration calculations."""
 
 import logging
-
 from datetime import datetime
 from typing import Union
 
-from fastapi import APIRouter, HTTPException, Query
-
 from app.services.route_metrics_service import get_route_metrics
+from fastapi import APIRouter, HTTPException, Query
 
 logger = logging.getLogger(__name__)
 
@@ -24,10 +22,29 @@ async def api_route_metrics(
 ):
     """Return travel metrics between pickup and dropoff addresses."""
     try:
-        logger.info(
-            "route metrics pickup=%s dropoff=%s ride_time=%s", pickup, dropoff, ride_time
+        logger.debug(
+            "route metrics inputs pickup=%s dropoff=%s ride_time=%s",
+            pickup,
+            dropoff,
+            ride_time,
         )
-        return await get_route_metrics(pickup, dropoff, ride_time)
+        logger.info(
+            "route metrics pickup=%s dropoff=%s ride_time=%s",
+            pickup,
+            dropoff,
+            ride_time,
+        )
+        metrics = await get_route_metrics(pickup, dropoff, ride_time)
+        logger.debug("route metrics result %s", metrics)
+        return metrics
+    except ValueError as e:
+        logger.warning(
+            "route metrics invalid input pickup=%s dropoff=%s ride_time=%s",
+            pickup,
+            dropoff,
+            ride_time,
+        )
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(
             "route metrics error pickup=%s dropoff=%s ride_time=%s",
@@ -36,4 +53,3 @@ async def api_route_metrics(
             ride_time,
         )
         raise HTTPException(status_code=400, detail=str(e))
-
