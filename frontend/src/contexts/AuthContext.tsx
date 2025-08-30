@@ -2,12 +2,16 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { authApi } from "@/components/ApiConfig";
 import { CONFIG } from "@/config";
-import { setTokens, getRefreshToken } from "../services/tokenStore";
+import { setTokens, getRefreshToken, initTokensFromStorage } from "../services/tokenStore";
 import { beginLogin, completeLoginFromRedirect, refreshTokens, TokenResponse, OAuthConfig } from "../services/oauth";
 import { useLocation, useNavigate } from "react-router-dom";
 import { type AuthContextType } from "@/types/AuthContextType";
 import { subscribePush } from "@/services/push";
 import * as logger from "@/lib/logger";
+
+// Seed token store from localStorage before any React code runs so that
+// getAccessToken() returns a value on first render.
+initTokensFromStorage();
 
 type UserShape = { email?: string; full_name?: string; role?: string } | null;
 
