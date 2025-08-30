@@ -3,15 +3,18 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
+from httpx import AsyncClient
+
 from app.core.security import hash_password
 from app.models.booking import Booking, BookingStatus
 from app.models.user_v2 import User, UserRole
-from httpx import AsyncClient
 
 pytestmark = pytest.mark.asyncio
 
 
-async def test_create_and_get_availability(async_session, client: AsyncClient):
+async def test_create_and_get_availability(
+    async_session, client: AsyncClient, admin_headers
+):
     start = datetime.now(timezone.utc) + timedelta(days=3)
     end = start + timedelta(hours=2)
     res = await client.post(
@@ -21,10 +24,13 @@ async def test_create_and_get_availability(async_session, client: AsyncClient):
             "end_dt": end.isoformat(),
             "reason": "vac",
         },
+        headers=admin_headers,
     )
     assert res.status_code == 201
     month = start.strftime("%Y-%m")
-    res2 = await client.get(f"/api/v1/availability?month={month}")
+    res2 = await client.get(
+        f"/api/v1/availability?month={month}", headers=admin_headers
+    )
     assert res2.status_code == 200
     data = res2.json()
     assert any(s["reason"] == "vac" for s in data["slots"])
@@ -61,7 +67,7 @@ async def _create_booking(async_session, when: datetime) -> Booking:
 
 
 async def test_double_booking_blocked(
-    async_session, client: AsyncClient, monkeypatch: MonkeyPatch
+    async_session, client: AsyncClient, monkeypatch: MonkeyPatch, admin_headers
 ):
     when = datetime.now(timezone.utc) + timedelta(days=1)
     booking1 = await _create_booking(async_session, when)
@@ -79,7 +85,11 @@ async def test_double_booking_blocked(
 
     monkeypatch.setattr("app.services.routing.estimate_route", fake_route)
 
-    res1 = await client.post(f"/api/v1/driver/bookings/{booking1.id}/confirm")
+    res1 = await client.post(
+        f"/api/v1/driver/bookings/{booking1.id}/confirm", headers=admin_headers
+    )
     assert res1.status_code == 200
-    res2 = await client.post(f"/api/v1/driver/bookings/{booking2.id}/confirm")
+    res2 = await client.post(
+        f"/api/v1/driver/bookings/{booking2.id}/confirm", headers=admin_headers
+    )
     assert res2.status_code == 400

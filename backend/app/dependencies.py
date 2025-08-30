@@ -78,3 +78,14 @@ async def get_current_user(
 
 
 get_current_user_v2 = get_current_user
+
+
+async def require_admin(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    """Ensure the current user matches the configured admin user."""
+    from app.services.settings_service import ensure_admin
+
+    await ensure_admin(user, db)
+    return user

@@ -9,8 +9,7 @@ export type AuthContextType = {
   userName: string | null;
   userID: string | null;
   role: string | null;
-
-  role: string | null;
+  adminID: string | null;
 
   loginWithPassword: (email: string, password: string) => Promise<string | null>;
   registerWithPassword: (fullName: string, email: string, password: string) => Promise<void>;

@@ -3,10 +3,11 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
+from httpx import AsyncClient
+
 from app.core.security import hash_password
 from app.models.booking import Booking, BookingStatus
 from app.models.user_v2 import User, UserRole
-from httpx import AsyncClient
 
 pytestmark = pytest.mark.asyncio
 
@@ -42,7 +43,7 @@ async def _create_booking(async_session) -> Booking:
 
 
 async def test_driver_confirm_booking(
-    async_session, client: AsyncClient, monkeypatch: MonkeyPatch
+    async_session, client: AsyncClient, monkeypatch: MonkeyPatch, admin_headers
 ):
     booking = await _create_booking(async_session)
 
@@ -58,7 +59,9 @@ async def test_driver_confirm_booking(
 
     monkeypatch.setattr("app.services.routing.estimate_route", fake_route)
 
-    res = await client.post(f"/api/v1/driver/bookings/{booking.id}/confirm")
+    res = await client.post(
+        f"/api/v1/driver/bookings/{booking.id}/confirm", headers=admin_headers
+    )
     assert res.status_code == 200
     data = res.json()
     assert data["status"] == "DRIVER_CONFIRMED"
@@ -68,10 +71,14 @@ async def test_driver_confirm_booking(
     assert booking.deposit_payment_intent_id == "pi_test"
 
 
-async def test_driver_decline_booking(async_session, client: AsyncClient):
+async def test_driver_decline_booking(
+    async_session, client: AsyncClient, admin_headers
+):
     booking = await _create_booking(async_session)
 
-    res = await client.post(f"/api/v1/driver/bookings/{booking.id}/decline")
+    res = await client.post(
+        f"/api/v1/driver/bookings/{booking.id}/decline", headers=admin_headers
+    )
     assert res.status_code == 200
     data = res.json()
     assert data["status"] == "DECLINED"

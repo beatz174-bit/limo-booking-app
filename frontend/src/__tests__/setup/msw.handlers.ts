@@ -9,6 +9,7 @@ type SettingsBody = {
   flagfall: number;
   per_km_rate: number;
   per_minute_rate: number;
+  admin_user_id: string;
 };
 
 const BASE_URL = CONFIG.API_BASE_URL
@@ -20,6 +21,7 @@ let __settings: SettingsBody = {
   flagfall: 10.5,
   per_km_rate: 2.75,
   per_minute_rate: 1.1,
+  admin_user_id: CONFIG.ADMIN_USER_ID,
 };
 
 export const handlers = [
@@ -91,7 +93,7 @@ export const handlers = [
 
   http.put(apiUrl('/settings'), async ({ request }) => {
     const body = (await request.json()) as SettingsBody;
-    __settings = body; // naive in-memory update
+    __settings = { ...__settings, ...body };
     return HttpResponse.json({ ok: true });
   }),
 ];

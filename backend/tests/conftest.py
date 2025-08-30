@@ -22,6 +22,7 @@ from alembic import command
 # --- Resolve async DB URL from .env.test (pytest-dotenv loads it when you pass --envfile) ---
 from alembic.config import Config
 from app.core.config import get_settings
+from app.core.security import create_jwt_token, hash_password
 
 # try:
 from app.dependencies import get_db  # ← common place
@@ -31,6 +32,8 @@ from app.dependencies import get_db  # ← common place
 # - app.core.config (or wherever) to read DATABASE_URL if needed
 # - app.db.dependencies (or wherever) to import get_db dependency used by routes
 from app.main import app
+from app.models.settings import AdminConfig
+from app.models.user_v2 import User, UserRole
 
 # except ImportError:
 #     from app.api.dependencies import get_db  # ← fallback if you keep deps under api/
@@ -166,3 +169,31 @@ async def client():
     transport = httpx.ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
+
+
+@pytest_asyncio.fixture
+async def admin_headers(async_session: AsyncSession) -> dict[str, str]:
+    admin = User(
+        email=f"admin{uuid.uuid4()}@example.com",
+        full_name="Admin",
+        hashed_password=hash_password("admin"),
+        role=UserRole.CUSTOMER,
+    )
+    async_session.add(admin)
+    await async_session.flush()
+    await async_session.merge(
+        AdminConfig(
+            id=1,
+            account_mode=False,
+            flagfall=0,
+            per_km_rate=0,
+            per_minute_rate=0,
+            admin_user_id=admin.id,
+        )
+    )
+    await async_session.commit()
+    from app.services import settings_service
+
+    settings_service._cached_admin_user_id = None
+    token = create_jwt_token(admin.id)
+    return {"Authorization": f"Bearer {token}"}

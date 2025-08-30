@@ -2,7 +2,7 @@ from typing import Dict
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import create_jwt_token
@@ -29,7 +29,8 @@ async def test_settings_put_requires_auth(client: AsyncClient):
 async def test_get_settings_after_setup(
     client: AsyncClient, async_session: AsyncSession
 ):
-    # Complete initial setup so settings exist
+    await async_session.execute(text("DELETE FROM admin_config"))
+    await async_session.commit()
     payload: Dict[str, object] = {
         "admin_email": "admin@example.com",
         "full_name": "Admin User",
@@ -49,12 +50,11 @@ async def test_get_settings_after_setup(
     resp = await client.get("/settings")
     assert resp.status_code == 200
     data = resp.json()
-    assert data == {
-        "account_mode": True,
-        "flagfall": 10.5,
-        "per_km_rate": 2.75,
-        "per_minute_rate": 1.1,
-    }
+    assert data["account_mode"] is True
+    assert data["flagfall"] == 10.5
+    assert data["per_km_rate"] == 2.75
+    assert data["per_minute_rate"] == 1.1
+    assert data["admin_user_id"]
 
 
 @pytest.mark.asyncio
@@ -81,6 +81,9 @@ async def test_put_settings_updates_values(
         select(AdminConfig.admin_user_id).where(AdminConfig.id == 1)
     )
     admin_id = res.scalar_one()
+    from app.services import settings_service
+
+    settings_service._cached_admin_user_id = None
     token = create_jwt_token(admin_id)
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -96,9 +99,12 @@ async def test_put_settings_updates_values(
     )
     assert put_resp.status_code == 200
     data = put_resp.json()
-    assert data == new_values.model_dump()
+    for k, v in new_values.model_dump(exclude={"admin_user_id"}).items():
+        assert data[k] == v
 
     # Subsequent GET reflects new values without auth
     get_resp = await client.get("/settings")
     assert get_resp.status_code == 200
-    assert get_resp.json() == new_values.model_dump()
+    resp_data = get_resp.json()
+    for k, v in new_values.model_dump(exclude={"admin_user_id"}).items():
+        assert resp_data[k] == v

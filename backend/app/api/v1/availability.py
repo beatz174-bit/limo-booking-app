@@ -6,16 +6,23 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_async_session
+from app.dependencies import require_admin
 from app.models.availability_slot import AvailabilitySlot
 from app.models.booking import Booking, BookingStatus
-from app.schemas.availability_slot import AvailabilitySlotCreate, AvailabilitySlotRead
 from app.schemas.api_availability import AvailabilityResponse, BookingSlot
+from app.schemas.availability_slot import AvailabilitySlotCreate, AvailabilitySlotRead
 
-router = APIRouter(prefix="/api/v1/availability", tags=["availability"])
+router = APIRouter(
+    prefix="/api/v1/availability",
+    tags=["availability"],
+    dependencies=[Depends(require_admin)],
+)
 
 
 @router.get("", response_model=AvailabilityResponse)
-async def get_availability(month: str, db: AsyncSession = Depends(get_async_session)) -> AvailabilityResponse:
+async def get_availability(
+    month: str, db: AsyncSession = Depends(get_async_session)
+) -> AvailabilityResponse:
     """Return availability slots and confirmed bookings for a given month."""
     try:
         start = datetime.fromisoformat(f"{month}-01").replace(tzinfo=timezone.utc)
@@ -52,8 +59,12 @@ async def get_availability(month: str, db: AsyncSession = Depends(get_async_sess
     return AvailabilityResponse(slots=slots, bookings=bookings)
 
 
-@router.post("", response_model=AvailabilitySlotRead, status_code=status.HTTP_201_CREATED)
-async def create_slot(payload: AvailabilitySlotCreate, db: AsyncSession = Depends(get_async_session)) -> AvailabilitySlotRead:
+@router.post(
+    "", response_model=AvailabilitySlotRead, status_code=status.HTTP_201_CREATED
+)
+async def create_slot(
+    payload: AvailabilitySlotCreate, db: AsyncSession = Depends(get_async_session)
+) -> AvailabilitySlotRead:
     """Create a manual availability block."""
     overlap = await db.execute(
         select(AvailabilitySlot).where(
