@@ -101,11 +101,16 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     """Log handled HTTP errors."""
     logger = logging.getLogger("app.error")
     logger.warning(
-        "HTTPException",
+        "%s %s status=%s detail=%s",
+        request.method,
+        request.url.path,
+        exc.status_code,
+        exc.detail,
         extra={
             "status": exc.status_code,
             "detail": exc.detail,
             "path": request.url.path,
+            "method": request.method,
         },
     )
     return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
@@ -115,5 +120,8 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 async def unhandled_exception_handler(request: Request, exc: Exception):
     """Log unexpected errors and return a generic message."""
     logger = logging.getLogger("app.error")
-    logger.exception("Unhandled exception", extra={"path": request.url.path})
+    logger.exception(
+        "Unhandled exception",
+        extra={"method": request.method, "path": request.url.path},
+    )
     return JSONResponse(status_code=500, content={"detail": "Internal Server Error"})
