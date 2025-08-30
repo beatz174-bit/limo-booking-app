@@ -3,14 +3,15 @@
 import uuid
 from typing import AsyncGenerator, Union
 
-from app.core.config import get_settings
-from app.db.database import AsyncSessionLocal  # or reuse get_db()
-from app.models.user_v2 import User
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config import get_settings
+from app.db.database import AsyncSessionLocal  # or reuse get_db()
+from app.models.user_v2 import User
 
 settings = get_settings()
 # oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
@@ -48,7 +49,10 @@ async def get_current_user(
 
     try:
         payload = jwt.decode(
-            token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
+            token,
+            settings.jwt_secret_key,
+            algorithms=[settings.jwt_algorithm],
+            options={"verify_sub": False},
         )
         user_id = payload.get("sub")
         if user_id is None:
@@ -57,8 +61,11 @@ async def get_current_user(
         raise HTTPException(status_code=401, detail="Could not validate credentials")
 
     try:
-        user_uuid = uuid.UUID(str(user_id))
-    except ValueError:
+        if isinstance(user_id, int):
+            user_uuid = uuid.UUID(int=user_id)
+        else:
+            user_uuid = uuid.UUID(str(user_id))
+    except (ValueError, TypeError):
         raise HTTPException(status_code=401, detail="Invalid token: bad subject")
 
     stmt = select(User).filter(User.id == user_uuid)
