@@ -11,7 +11,7 @@ import RideDetailsPage from "@/pages/Booking/RideDetailsPage";
 import RegisterPage from "@/pages/Auth/RegisterPage";
 import ProfilePage from "@/pages/Profile/ProfilePage";
 import SetupPage from "@/pages/Setup/SetupPage";
-import { useAuth, RequireAuth, RequireRole } from "@/contexts/AuthContext";
+import { useAuth, RequireAuth, RequireAdmin } from "@/contexts/AuthContext";
 import NavBar from "@/components/NavBar";
 import PageNotFound from "@/pages/PageNotFound";
 import DevNotes from "@/components/DevNotes";
@@ -49,10 +49,10 @@ function App() {
       <Route path="/history/:id" element={<RequireAuth><RideDetailsPage /></RequireAuth>} />
       <Route path="/me" element={<RequireAuth><ProfilePage /></RequireAuth>} />
 
-      {/* Protected admin/driver route */}
-      <Route path="/admin" element={<RequireRole role="admin"><AdminDashboard /></RequireRole>} />
-      <Route path="/driver" element={<RequireRole role="driver"><DriverDashboard /></RequireRole>} />
-      <Route path="/driver/availability" element={<RequireRole role="driver"><AvailabilityPage /></RequireRole>} />
+      {/* Protected admin-only routes */}
+      <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
+      <Route path="/driver" element={<RequireAdmin><DriverDashboard /></RequireAdmin>} />
+      <Route path="/driver/availability" element={<RequireAdmin><AvailabilityPage /></RequireAdmin>} />
       <Route path="/t/:code" element={<TrackingPage />} />
 
       {devEnabled && <Route path="/devnotes" element={<DevNotes />} />}
