@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import create_jwt_token
-from app.models.user_v2 import User
+from app.models.settings import AdminConfig
 from app.schemas.setup import SettingsPayload
 
 
@@ -77,11 +77,11 @@ async def test_put_settings_updates_values(
     assert setup_resp.status_code in (200, 201, 400)  # allow idempotent reruns locally
 
     # Auth as admin created during setup
-    result = await async_session.execute(
-        select(User).where(User.email == "admin@example.com")
+    res = await async_session.execute(
+        select(AdminConfig.admin_user_id).where(AdminConfig.id == 1)
     )
-    admin = result.scalar_one()
-    token = create_jwt_token(admin.id)
+    admin_id = res.scalar_one()
+    token = create_jwt_token(admin_id)
     headers = {"Authorization": f"Bearer {token}"}
 
     # Update settings

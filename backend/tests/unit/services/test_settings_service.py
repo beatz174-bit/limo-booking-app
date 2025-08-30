@@ -1,12 +1,13 @@
 import uuid
 
 import pytest
-from app.schemas.setup import SettingsPayload
-from app.schemas.user import UserRead
-from app.services import settings_service
 from fastapi import HTTPException
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.schemas.setup import SettingsPayload
+from app.schemas.user import UserRead
+from app.services import settings_service
 
 pytestmark = pytest.mark.asyncio
 
@@ -22,10 +23,13 @@ async def test_get_settings_404_when_missing(async_session: AsyncSession):
 
 
 async def test_update_then_get_returns_values(async_session: AsyncSession):
+    admin_id = uuid.UUID(int=1)
+    settings_service._cached_admin_user_id = admin_id
+
     user: UserRead = UserRead(
         email="test@na.com",
         full_name="bloke",
-        id=uuid.UUID(int=1),
+        id=admin_id,
     )
 
     payload: SettingsPayload = SettingsPayload(
@@ -42,3 +46,5 @@ async def test_update_then_get_returns_values(async_session: AsyncSession):
     # Now get should return the same values
     got = await settings_service.get_settings(async_session)
     assert got == payload
+
+    settings_service._cached_admin_user_id = None

@@ -6,6 +6,10 @@ from fastapi import Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from fastapi import Depends, HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.dependencies import get_db
 from app.models.settings import AdminConfig
 from app.schemas.setup import SettingsPayload
@@ -14,9 +18,30 @@ from app.schemas.user import UserRead
 logger = logging.getLogger(__name__)
 
 
-def ensure_admin(user: UserRead):
-    """Placeholder admin check to be replaced in future."""
-    return
+_cached_admin_user_id: uuid.UUID | None = None
+
+
+async def get_admin_user_id(db: AsyncSession) -> uuid.UUID:
+    """Fetch and cache the designated admin user's ID."""
+    global _cached_admin_user_id
+    if _cached_admin_user_id is None:
+        result = await db.execute(
+            select(AdminConfig.admin_user_id).where(AdminConfig.id == 1)
+        )
+        value = result.scalar_one_or_none()
+        if isinstance(value, int):
+            value = uuid.UUID(int=value)
+        _cached_admin_user_id = value
+    if _cached_admin_user_id is None:
+        raise HTTPException(status_code=500, detail="Admin not configured")
+    return _cached_admin_user_id
+
+
+async def ensure_admin(user: UserRead, db: AsyncSession) -> None:
+    """Allow only the designated admin to modify settings."""
+    admin_id = await get_admin_user_id(db)
+    if getattr(user, "id", None) != admin_id:
+        raise HTTPException(status_code=403, detail="Admin only")
 
 
 async def get_settings(db: AsyncSession = Depends(get_db)) -> SettingsPayload:
@@ -37,7 +62,7 @@ async def get_settings(db: AsyncSession = Depends(get_db)) -> SettingsPayload:
 
 async def update_settings(data: SettingsPayload, db: AsyncSession, user: UserRead):
     """Persist updated pricing configuration."""
-    ensure_admin(user)
+    await ensure_admin(user, db)
     logger.info(
         "updating settings",
         extra={"user_id": getattr(user, "id", "unknown")},

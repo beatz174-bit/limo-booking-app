@@ -30,6 +30,7 @@ async def complete_initial_setup(db: AsyncSession, data: SetupPayload):
         hashed_password=hash_password(data.admin_password),
     )
     db.add(admin_user)
+    await db.flush()
 
     cfg = AdminConfig(
         account_mode=(data.settings.account_mode),
@@ -37,6 +38,7 @@ async def complete_initial_setup(db: AsyncSession, data: SetupPayload):
         per_km_rate=data.settings.per_km_rate,
         per_minute_rate=data.settings.per_minute_rate,
     )
+    cfg.admin_user_id = admin_user.id
     db.add(cfg)
 
     await db.commit()
