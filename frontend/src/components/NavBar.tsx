@@ -13,7 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useDevFeatures } from '@/contexts/DevFeaturesContext';
 
 const NavBar: React.FC = () => {
-  const { logout, userName, role } = useAuth();  // get logout (and maybe user info) from context
+  const { logout, userName, userID, adminID } = useAuth();
   const { enabled: devEnabled } = useDevFeatures();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -109,13 +109,11 @@ const NavBar: React.FC = () => {
           <MenuItem onClick={navBook}>Book</MenuItem>
           <MenuItem onClick={navHistory}>Ride History</MenuItem>
           <MenuItem onClick={navProfile}>Profile</MenuItem>
-          {role?.toLowerCase() === 'driver' && [
+          {userID === adminID && [
             <MenuItem key="driver-dashboard" onClick={navDriverDashboard}>Driver Dashboard</MenuItem>,
             <MenuItem key="driver-availability" onClick={navDriverAvailability}>Availability</MenuItem>,
+            <MenuItem key="admin-dashboard" onClick={navAdmin}>Admin Dashboard</MenuItem>,
           ]}
-          {role?.toLowerCase() === 'admin' && (
-            <MenuItem onClick={navAdmin}>Admin Dashboard</MenuItem>
-          )}
           {devEnabled && <MenuItem onClick={navDevNotes}>Dev Notes</MenuItem>}
         </Menu>
       </Toolbar>

@@ -14,6 +14,7 @@ function seedAuth({ id, name, role }: { id: string; name: string; role: string }
   localStorage.setItem('userName', name);
   localStorage.setItem('userRole', role);
   localStorage.setItem('role', role);
+  localStorage.setItem('adminID', CONFIG.ADMIN_USER_ID);
 }
 
 function renderWithAuth(initialPath = '/book', extraRoutes?: ReactNode) {
@@ -104,7 +105,7 @@ describe('NavBar', () => {
   });
 
   test('driver dashboard menu navigates to driver dashboard', async () => {
-    seedAuth({ id: '00000000-0000-0000-0000-000000000002', name: 'Driver User', role: 'DRIVER' });
+    seedAuth({ id: CONFIG.ADMIN_USER_ID, name: 'Admin User', role: 'ADMIN' });
     renderWithAuth('/book', <Route path="/driver" element={<h1>Driver</h1>} />);
 
     const accountBtn = await screen.findByLabelText(/account/i);
@@ -118,7 +119,7 @@ describe('NavBar', () => {
   });
 
   test('availability menu navigates to driver availability', async () => {
-    seedAuth({ id: '00000000-0000-0000-0000-000000000002', name: 'Driver User', role: 'DRIVER' });
+    seedAuth({ id: CONFIG.ADMIN_USER_ID, name: 'Admin User', role: 'ADMIN' });
     renderWithAuth(
       '/book',
       <Route path="/driver/availability" element={<h1>Availability</h1>} />,

@@ -2,12 +2,13 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 import pytest
+from httpx import AsyncClient
+from sqlalchemy import select
+
 from app.core.security import hash_password
 from app.models.booking import Booking, BookingStatus
 from app.models.notification import Notification, NotificationType
 from app.models.user_v2 import User, UserRole
-from httpx import AsyncClient
-from sqlalchemy import select
 
 pytestmark = pytest.mark.asyncio
 
@@ -42,10 +43,12 @@ async def _create_confirmed_booking(async_session) -> Booking:
     return booking
 
 
-async def test_driver_leave_booking(async_session, client: AsyncClient):
+async def test_driver_leave_booking(async_session, client: AsyncClient, admin_headers):
     booking = await _create_confirmed_booking(async_session)
 
-    res = await client.post(f"/api/v1/driver/bookings/{booking.id}/leave")
+    res = await client.post(
+        f"/api/v1/driver/bookings/{booking.id}/leave", headers=admin_headers
+    )
     assert res.status_code == 200
     data = res.json()
     assert data["status"] == "ON_THE_WAY"

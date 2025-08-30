@@ -41,10 +41,16 @@ async def test_update_then_get_returns_values(async_session: AsyncSession):
 
     # First call update to seed settings
     updated = await settings_service.update_settings(payload, async_session, user)
-    assert updated == payload
+    assert updated.account_mode == payload.account_mode
+    assert updated.flagfall == payload.flagfall
+    assert updated.per_km_rate == payload.per_km_rate
+    assert updated.per_minute_rate == payload.per_minute_rate
 
     # Now get should return the same values
     got = await settings_service.get_settings(async_session)
-    assert got == payload
+    assert got.account_mode == payload.account_mode
+    assert got.flagfall == payload.flagfall
+    assert got.per_km_rate == payload.per_km_rate
+    assert got.per_minute_rate == payload.per_minute_rate
 
     settings_service._cached_admin_user_id = None

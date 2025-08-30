@@ -4,10 +4,11 @@ from types import SimpleNamespace
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
+from httpx import AsyncClient
+
 from app.dependencies import get_current_user
 from app.main import app
 from app.schemas.setup import SettingsPayload
-from httpx import AsyncClient
 
 ADMIN_ID = uuid.UUID(int=1)
 
@@ -27,6 +28,7 @@ async def test_get_settings_router(monkeypatch: MonkeyPatch, client: AsyncClient
             flagfall=10.5,
             per_km_rate=2.75,
             per_minute_rate=1.1,
+            admin_user_id=ADMIN_ID,
         )
 
     monkeypatch.setattr(settings_router, "get_settings", fake_get_settings)  # type: ignore
@@ -41,6 +43,7 @@ async def test_get_settings_router(monkeypatch: MonkeyPatch, client: AsyncClient
             "flagfall": 10.5,
             "per_km_rate": 2.75,
             "per_minute_rate": 1.1,
+            "admin_user_id": str(ADMIN_ID),
         }
     finally:
         app.dependency_overrides.pop(get_current_user, None)
@@ -55,6 +58,7 @@ async def test_put_settings_router(monkeypatch: MonkeyPatch, client: AsyncClient
         flagfall=12.0,
         per_km_rate=3.0,
         per_minute_rate=1.25,
+        admin_user_id=ADMIN_ID,
     )
 
     async def fake_update_settings(*_args, **_kwargs):  # type: ignore
@@ -64,9 +68,9 @@ async def test_put_settings_router(monkeypatch: MonkeyPatch, client: AsyncClient
 
     app.dependency_overrides[get_current_user] = _admin_override
     try:
-        res = await client.put("/settings", json=body.model_dump())
+        res = await client.put("/settings", json=body.model_dump(mode="json"))
         assert res.status_code == 200
-        assert res.json() == body.model_dump()
+        assert res.json() == body.model_dump(mode="json")
     finally:
         app.dependency_overrides.pop(get_current_user, None)
 

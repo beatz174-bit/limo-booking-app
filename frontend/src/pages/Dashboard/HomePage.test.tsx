@@ -13,6 +13,7 @@ function seedAuth(id: string, role = 'CUSTOMER') {
   localStorage.setItem('userID', id);
   localStorage.setItem('userName', 'Test User');
   localStorage.setItem('role', role);
+  localStorage.setItem('adminID', CONFIG.ADMIN_USER_ID);
 }
 
 describe('HomePage', () => {

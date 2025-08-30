@@ -28,6 +28,7 @@ type AuthState = {
   userID: string| null;
   userName: string | null;
   role: string | null;
+  adminID: string | null;
 };
 // eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -58,7 +59,7 @@ async function maybeSubscribePush() {
 }
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, setState] = useState<AuthState>({ accessToken: null, user: null, loading: true, userID: null, userName: null, role: null });
+  const [state, setState] = useState<AuthState>({ accessToken: null, user: null, loading: true, userID: null, userName: null, role: null, adminID: null });
   // const [userName, setUserName] = useState<string>('');
   // const [userID, setUserID] = useState<string|null>(null);
 
@@ -68,6 +69,7 @@ useEffect(() => {
   const storeduserID = localStorage.getItem("userID");
   const storeduserName = localStorage.getItem("userName");
   const storedRole = localStorage.getItem("role");
+  const storedAdminID = localStorage.getItem("adminID");
   if (raw) {
     try {
       const { access_token, refresh_token, user, role } = JSON.parse(raw);
@@ -79,6 +81,7 @@ useEffect(() => {
         userID: storeduserID ?? null,
         userName: storeduserName ?? null,
         role: storedRole ?? user?.role ?? null,
+        adminID: storedAdminID ?? null,
       });
       if (role ?? storedRole) {
         localStorage.setItem("userRole", String(role ?? storedRole));
@@ -86,8 +89,28 @@ useEffect(() => {
       return;
     } catch { /* ignore parse errors */ }
   }
-  setState((s) => ({ ...s, loading: false }));
+setState((s) => ({ ...s, loading: false, adminID: storedAdminID ?? null }));
 }, []);
+
+const adminID = state.adminID;
+useEffect(() => {
+  if (adminID) return;
+  const fetchAdminID = async () => {
+    try {
+      const res = await fetch(`${CONFIG.API_BASE_URL}/settings`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.admin_user_id) {
+        const id = String(data.admin_user_id);
+        localStorage.setItem("adminID", id);
+        setState((s) => ({ ...s, adminID: id }));
+      }
+    } catch {
+      /* ignore */
+    }
+  };
+  fetchAdminID();
+}, [adminID]);
 
   useEffect(() => {
     if (!state.accessToken || state.role) return;
@@ -247,6 +270,7 @@ useEffect(() => {
     localStorage.removeItem("userID");
     localStorage.removeItem("userName");
     localStorage.removeItem("role");
+    localStorage.removeItem("adminID");
     setState((s) => ({
       ...s,
       accessToken: null,
@@ -254,6 +278,7 @@ useEffect(() => {
       userID: null,
       userName: null,
       role: null,
+      adminID: null,
     }));
   }, [persist, setState]);
 
@@ -314,26 +339,21 @@ export const RequireRole: React.FC<{ role: string; children: React.ReactNode }> 
   role,
   children,
 }) => {
-  const { accessToken, loading, role: userRole, userID } = useAuth();
+  const { accessToken, loading, role: userRole, userID, adminID } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
     if (!loading) {
       const from = encodeURIComponent(location.pathname + location.search);
-      const allowed =
-        accessToken && (userRole === role || userID === CONFIG.ADMIN_USER_ID);
+      const allowed = accessToken && (userRole === role || userID === adminID);
       if (!allowed) {
         navigate(`/login?from=${from}`, { replace: true });
       }
     }
-  }, [loading, accessToken, userRole, userID, role, location, navigate]);
+  }, [loading, accessToken, userRole, userID, adminID, role, location, navigate]);
 
-  if (
-    loading ||
-    !accessToken ||
-    (userRole !== role && userID !== CONFIG.ADMIN_USER_ID)
-  )
+  if (loading || !accessToken || (userRole !== role && userID !== adminID))
     return null;
   return <>{children}</>;
 };

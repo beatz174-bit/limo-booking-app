@@ -1,21 +1,29 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 import uuid
 
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.db.database import get_async_session
+from app.dependencies import require_admin
 from app.models.booking import Booking, BookingStatus
-from app.schemas.booking import BookingRead
-from app.schemas.api_booking import BookingStatusResponse
-from app.services import booking_service, scheduler, notifications
 from app.models.notification import NotificationType
 from app.models.user_v2 import UserRole
+from app.schemas.api_booking import BookingStatusResponse
+from app.schemas.booking import BookingRead
+from app.services import booking_service, notifications, scheduler
 
-router = APIRouter(prefix="/api/v1/driver/bookings", tags=["driver-bookings"])
+router = APIRouter(
+    prefix="/api/v1/driver/bookings",
+    tags=["driver-bookings"],
+    dependencies=[Depends(require_admin)],
+)
 
 
 @router.get("", response_model=list[BookingRead])
-async def list_bookings(status: BookingStatus | None = None, db: AsyncSession = Depends(get_async_session)):
+async def list_bookings(
+    status: BookingStatus | None = None, db: AsyncSession = Depends(get_async_session)
+):
     stmt = select(Booking)
     if status:
         stmt = stmt.where(Booking.status == status)
@@ -31,7 +39,9 @@ async def list_bookings(status: BookingStatus | None = None, db: AsyncSession = 
 
 
 @router.post("/{booking_id}/confirm", response_model=BookingStatusResponse)
-async def confirm_booking(booking_id: uuid.UUID, db: AsyncSession = Depends(get_async_session)):
+async def confirm_booking(
+    booking_id: uuid.UUID, db: AsyncSession = Depends(get_async_session)
+):
     try:
         booking = await booking_service.confirm_booking(db, booking_id)
     except ValueError as e:
@@ -41,7 +51,9 @@ async def confirm_booking(booking_id: uuid.UUID, db: AsyncSession = Depends(get_
 
 
 @router.post("/{booking_id}/decline", response_model=BookingStatusResponse)
-async def decline_booking(booking_id: uuid.UUID, db: AsyncSession = Depends(get_async_session)):
+async def decline_booking(
+    booking_id: uuid.UUID, db: AsyncSession = Depends(get_async_session)
+):
     try:
         booking = await booking_service.decline_booking(db, booking_id)
     except ValueError as e:
@@ -50,7 +62,9 @@ async def decline_booking(booking_id: uuid.UUID, db: AsyncSession = Depends(get_
 
 
 @router.post("/{booking_id}/leave", response_model=BookingStatusResponse)
-async def leave_booking(booking_id: uuid.UUID, db: AsyncSession = Depends(get_async_session)):
+async def leave_booking(
+    booking_id: uuid.UUID, db: AsyncSession = Depends(get_async_session)
+):
     try:
         booking = await booking_service.leave_booking(db, booking_id)
     except ValueError as e:
@@ -66,7 +80,9 @@ async def leave_booking(booking_id: uuid.UUID, db: AsyncSession = Depends(get_as
 
 
 @router.post("/{booking_id}/arrive-pickup", response_model=BookingStatusResponse)
-async def arrive_pickup(booking_id: uuid.UUID, db: AsyncSession = Depends(get_async_session)):
+async def arrive_pickup(
+    booking_id: uuid.UUID, db: AsyncSession = Depends(get_async_session)
+):
     try:
         booking = await booking_service.arrive_pickup(db, booking_id)
     except ValueError as e:
@@ -75,7 +91,9 @@ async def arrive_pickup(booking_id: uuid.UUID, db: AsyncSession = Depends(get_as
 
 
 @router.post("/{booking_id}/start-trip", response_model=BookingStatusResponse)
-async def start_trip(booking_id: uuid.UUID, db: AsyncSession = Depends(get_async_session)):
+async def start_trip(
+    booking_id: uuid.UUID, db: AsyncSession = Depends(get_async_session)
+):
     try:
         booking = await booking_service.start_trip(db, booking_id)
     except ValueError as e:
@@ -84,7 +102,9 @@ async def start_trip(booking_id: uuid.UUID, db: AsyncSession = Depends(get_async
 
 
 @router.post("/{booking_id}/arrive-dropoff", response_model=BookingStatusResponse)
-async def arrive_dropoff(booking_id: uuid.UUID, db: AsyncSession = Depends(get_async_session)):
+async def arrive_dropoff(
+    booking_id: uuid.UUID, db: AsyncSession = Depends(get_async_session)
+):
     try:
         booking = await booking_service.arrive_dropoff(db, booking_id)
     except ValueError as e:
@@ -93,9 +113,13 @@ async def arrive_dropoff(booking_id: uuid.UUID, db: AsyncSession = Depends(get_a
 
 
 @router.post("/{booking_id}/complete", response_model=BookingStatusResponse)
-async def complete_booking(booking_id: uuid.UUID, db: AsyncSession = Depends(get_async_session)):
+async def complete_booking(
+    booking_id: uuid.UUID, db: AsyncSession = Depends(get_async_session)
+):
     try:
         booking = await booking_service.complete_booking(db, booking_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    return BookingStatusResponse(status=booking.status, final_price_cents=booking.final_price_cents)
+    return BookingStatusResponse(
+        status=booking.status, final_price_cents=booking.final_price_cents
+    )

@@ -54,6 +54,7 @@ async def get_settings(db: AsyncSession = Depends(get_db)) -> SettingsPayload:
         flagfall=row.flagfall,
         per_km_rate=row.per_km_rate,
         per_minute_rate=row.per_minute_rate,
+        admin_user_id=row.admin_user_id,
     )
 
 

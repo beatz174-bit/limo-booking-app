@@ -57,4 +57,5 @@ async def is_setup_complete(db: AsyncSession) -> Union[SettingsPayload, None]:
         flagfall=cfg.flagfall,
         per_km_rate=cfg.per_km_rate,
         per_minute_rate=cfg.per_minute_rate,
+        admin_user_id=cfg.admin_user_id,
     )

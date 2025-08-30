@@ -2,12 +2,13 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 import pytest
+from httpx import AsyncClient
+
 from app.core.security import hash_password
 from app.models.booking import Booking, BookingStatus
 from app.models.route_point import RoutePoint
 from app.models.settings import AdminConfig
 from app.models.user_v2 import User, UserRole
-from httpx import AsyncClient
 
 pytestmark = pytest.mark.asyncio
 
@@ -42,12 +43,13 @@ async def _create_booking(async_session) -> Booking:
     return booking
 
 
-async def test_driver_complete_booking(async_session, client: AsyncClient, monkeypatch):
-    await async_session.merge(
-        AdminConfig(
-            id=1, account_mode=False, flagfall=0, per_km_rate=100, per_minute_rate=100
-        )
-    )
+async def test_driver_complete_booking(
+    async_session, client: AsyncClient, monkeypatch, admin_headers
+):
+    cfg = await async_session.get(AdminConfig, 1)
+    cfg.per_km_rate = 100
+    cfg.per_minute_rate = 100
+    await async_session.commit()
     booking = await _create_booking(async_session)
 
     class FakePI:
@@ -66,10 +68,18 @@ async def test_driver_complete_booking(async_session, client: AsyncClient, monke
 
     monkeypatch.setattr("app.services.routing.estimate_route", fake_route)
 
-    await client.post(f"/api/v1/driver/bookings/{booking.id}/confirm")
-    await client.post(f"/api/v1/driver/bookings/{booking.id}/leave")
-    await client.post(f"/api/v1/driver/bookings/{booking.id}/arrive-pickup")
-    await client.post(f"/api/v1/driver/bookings/{booking.id}/start-trip")
+    await client.post(
+        f"/api/v1/driver/bookings/{booking.id}/confirm", headers=admin_headers
+    )
+    await client.post(
+        f"/api/v1/driver/bookings/{booking.id}/leave", headers=admin_headers
+    )
+    await client.post(
+        f"/api/v1/driver/bookings/{booking.id}/arrive-pickup", headers=admin_headers
+    )
+    await client.post(
+        f"/api/v1/driver/bookings/{booking.id}/start-trip", headers=admin_headers
+    )
 
     start = datetime.now(timezone.utc)
     async_session.add_all(
@@ -82,8 +92,12 @@ async def test_driver_complete_booking(async_session, client: AsyncClient, monke
     )
     await async_session.commit()
 
-    await client.post(f"/api/v1/driver/bookings/{booking.id}/arrive-dropoff")
-    res = await client.post(f"/api/v1/driver/bookings/{booking.id}/complete")
+    await client.post(
+        f"/api/v1/driver/bookings/{booking.id}/arrive-dropoff", headers=admin_headers
+    )
+    res = await client.post(
+        f"/api/v1/driver/bookings/{booking.id}/complete", headers=admin_headers
+    )
     assert res.status_code == 200
     data = res.json()
     assert data["status"] == "COMPLETED"
