@@ -3,8 +3,7 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict
 
-from sqlalchemy import DateTime, Enum, ForeignKey, String, JSON
-from sqlalchemy.dialects.postgresql import UUID as PGUUID
+from sqlalchemy import JSON, UUID, DateTime, Enum, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
@@ -32,9 +31,19 @@ class Notification(Base):
 
     __tablename__ = "notifications"
 
-    id: Mapped[uuid.UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    booking_id: Mapped[uuid.UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("bookings_v2.id"), nullable=True)
-    type: Mapped[NotificationType] = mapped_column(Enum(NotificationType), nullable=False)
-    to_role: Mapped[NotificationRole] = mapped_column(Enum(NotificationRole), nullable=False)
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    booking_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("bookings_v2.id"), nullable=True
+    )
+    type: Mapped[NotificationType] = mapped_column(
+        Enum(NotificationType), nullable=False
+    )
+    to_role: Mapped[NotificationRole] = mapped_column(
+        Enum(NotificationRole), nullable=False
+    )
     payload: Mapped[Dict[str, Any]] = mapped_column(JSON, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
