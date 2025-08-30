@@ -1,50 +1,63 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { CONFIG } from '@/config';
 
 interface BackendReadyContextValue {
   ready: boolean;
   loading: boolean;
+  needsSetup: boolean;
+  refresh: () => Promise<void>;
 }
 
 const BackendReadyContext = createContext<BackendReadyContextValue | undefined>(undefined);
 
 export const BackendReadyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, setState] = useState<BackendReadyContextValue>({ ready: false, loading: true });
+  const [state, setState] = useState({ ready: false, loading: true, needsSetup: false });
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function check() {
-      try {
-        const res = await fetch(`${CONFIG.API_BASE_URL}/health`);
-        if (!cancelled && res.ok) {
-          setState({ ready: true, loading: false });
+  const check = useCallback(async () => {
+    try {
+      const res = await fetch(`${CONFIG.API_BASE_URL}/health`);
+      if (res.ok) {
+        try {
+          const setupRes = await fetch(`${CONFIG.API_BASE_URL}/setup`);
+          let needsSetup = true;
+          if (setupRes.ok) {
+            const data = await setupRes.json().catch(() => null);
+            needsSetup = !data;
+          }
+          setState({ ready: true, loading: false, needsSetup });
+          return;
+        } catch {
+          setState({ ready: true, loading: false, needsSetup: true });
           return;
         }
-      } catch {
-        // ignore network errors
       }
-      if (!cancelled) {
-        setState({ ready: false, loading: true });
-        setTimeout(check, 1000);
-      }
+    } catch {
+      // ignore
     }
-
-    check();
-    return () => {
-      cancelled = true;
-    };
+    setState({ ready: false, loading: true, needsSetup: false });
+    setTimeout(check, 1000);
   }, []);
 
+  useEffect(() => {
+    check();
+  }, [check]);
+
   return (
-    <BackendReadyContext.Provider value={state}>
+    <BackendReadyContext.Provider value={{ ...state, refresh: check }}>
       {children}
     </BackendReadyContext.Provider>
   );
 };
 
 export function useBackendReady() {
-  return useContext(BackendReadyContext) ?? { ready: true, loading: true };
+  return (
+    useContext(BackendReadyContext) ?? {
+      ready: true,
+      loading: true,
+      needsSetup: false,
+      refresh: async () => {},
+    }
+  );
 }
 

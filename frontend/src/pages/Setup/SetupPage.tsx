@@ -1,11 +1,13 @@
 import { useState, ChangeEvent, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useBackendReady } from "@/contexts/BackendReadyContext";
 import { Container, Box, Typography, TextField, Button, Alert, Switch, FormControlLabel } from "@mui/material";
 import { setupApi } from "@/components/ApiConfig";
 import { type SetupPayload } from "@/api-client";
 
 export default function SetupPage() {
   const navigate = useNavigate();
+  const { refresh } = useBackendReady();
   const [fullName, setFullName] = useState("");
   const [adminEmail, setAdminEmail] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
@@ -48,6 +50,7 @@ export default function SetupPage() {
         },
       };
       const resp: unknown = await setupApi.setupSetupPost(payload);
+      await refresh();
       const redirect = (resp as { redirectTo?: string })?.redirectTo;
       navigate(redirect === "admin" ? "/admin" : "/login", { replace: true });
     } catch (err: unknown) {

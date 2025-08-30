@@ -1,14 +1,13 @@
-import uuid
 from typing import Dict
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import create_jwt_token
+from app.models.user_v2 import User
 from app.schemas.setup import SettingsPayload
-
-ADMIN_ID = uuid.UUID(int=1)
 
 
 @pytest.mark.asyncio
@@ -78,7 +77,11 @@ async def test_put_settings_updates_values(
     assert setup_resp.status_code in (200, 201, 400)  # allow idempotent reruns locally
 
     # Auth as admin created during setup
-    token = create_jwt_token(ADMIN_ID)
+    result = await async_session.execute(
+        select(User).where(User.email == "admin@example.com")
+    )
+    admin = result.scalar_one()
+    token = create_jwt_token(admin.id)
     headers = {"Authorization": f"Bearer {token}"}
 
     # Update settings
