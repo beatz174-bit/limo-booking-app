@@ -1,17 +1,7 @@
 import { test, expect } from '@playwright/test';
-import { BookingPage } from '../../pages/booking/BookingPage';
 
-interface Booking {
-  id: string;
-  pickup_address: string;
-  dropoff_address: string;
-  pickup_when: string;
-  status: string;
-  public_code: string;
-}
-
-test('user logs in, creates booking via UI, views history', async ({ page }) => {
-  // Mock Stripe
+test('customer completes booking wizard via UI', async ({ page }) => {
+  // Mock Stripe script
   await page.route('https://js.stripe.com/v3', route => {
     route.fulfill({
       status: 200,
@@ -23,7 +13,7 @@ test('user logs in, creates booking via UI, views history', async ({ page }) => 
     });
   });
 
-  // Auth
+  // Mock auth token
   await page.route('**/auth/token', async route => {
     await route.fulfill({
       status: 200,
@@ -73,36 +63,23 @@ test('user logs in, creates booking via UI, views history', async ({ page }) => 
     });
   });
 
-  let created: Booking | null = null;
+  // Booking creation
   await page.route('**/api/v1/bookings', async route => {
     if (route.request().method() === 'POST') {
-      created = {
-        id: '1',
-        pickup_address: 'A St',
-        dropoff_address: 'B St',
-        pickup_when: new Date().toISOString(),
-        status: 'PENDING',
-        public_code: 'abc'
-      };
       await route.fulfill({
         status: 201,
         contentType: 'application/json',
-        body: JSON.stringify({ booking: created, stripe: { setup_intent_client_secret: 'secret' } })
+        body: JSON.stringify({
+          booking: { id: '1', public_code: 'abc', status: 'PENDING' },
+          stripe: { setup_intent_client_secret: 'secret' }
+        })
       });
-      return;
+    } else {
+      await route.continue();
     }
-    await route.continue();
   });
 
-  await page.route('**/api/v1/customers/me/bookings', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(created ? [created] : [])
-    });
-  });
-
-  // Login and navigate to booking wizard
+  // Login
   await page.goto('/login');
   await page.getByLabel(/email/i).fill('user@example.com');
   await page.getByLabel(/password/i).fill('pw');
@@ -110,15 +87,13 @@ test('user logs in, creates booking via UI, views history', async ({ page }) => 
     page.waitForURL('**/book'),
     page.getByRole('button', { name: /log.?in|sign.?in/i }).click(),
   ]);
-  const bookPage = new BookingPage(page);
-  await bookPage.goto();
 
-  // Step 1
+  // Step 1: time
   const pickupTime = new Date(Date.now() + 3600_000).toISOString().slice(0,16);
   await page.getByLabel(/pickup time/i).fill(pickupTime);
   await page.getByRole('button', { name: /next/i }).click();
 
-  // Step 2
+  // Step 2: trip details
   await page.getByLabel(/pickup address/i).fill('A');
   await page.waitForSelector('li:has-text("A St")');
   await page.getByText('A St').click();
@@ -128,15 +103,12 @@ test('user logs in, creates booking via UI, views history', async ({ page }) => 
   await page.getByLabel(/passengers/i).fill('2');
   await page.getByRole('button', { name: /next/i }).click();
 
-  // Step 3
+  // Step 3: payment
   await page.getByLabel(/name/i).fill('Jane');
-  await page.getByLabel(/^email$/i).fill('jane@example.com');
+  await page.getByLabel(/email/i).fill('jane@example.com');
   await page.getByLabel(/phone/i).fill('000');
   await page.getByRole('button', { name: /submit/i }).click();
 
-  // View history
-  await page.goto('/history');
-  await expect(page.getByRole('heading', { name: /ride history/i })).toBeVisible();
-  await expect(page.getByText('A St')).toBeVisible();
-  await expect(page.getByText('B St')).toBeVisible();
+  await expect(page.getByText(/booking created/i)).toBeVisible();
+  await expect(page.getByRole('link', { name: /track this ride/i })).toHaveAttribute('href', '/t/abc');
 });
