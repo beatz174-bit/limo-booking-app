@@ -1,5 +1,5 @@
 // Main application component setting up routes.
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import LoginPage from "@/pages/Auth/LoginPage";
 import BookingWizardPage from "@/pages/Booking/BookingWizardPage";
 import AdminDashboard from "@/pages/Admin/AdminDashboard";
@@ -23,10 +23,15 @@ import LoadingScreen from "@/components/LoadingScreen";
 function App() {
   const { accessToken, loading } = useAuth(); // custom hook to get AuthContext
   const { enabled: devEnabled } = useDevFeatures();
-  const { ready } = useBackendReady();
+  const { ready, needsSetup } = useBackendReady();
+  const location = useLocation();
 
   if (loading || !ready) {
     return <LoadingScreen />;
+  }
+
+  if (needsSetup && location.pathname !== "/setup") {
+    return <Navigate to="/setup" replace />;
   }
 
   return (

@@ -3,13 +3,14 @@
 import logging
 from typing import Union
 
+from fastapi import HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql import select
+
 from app.core.security import hash_password
 from app.models.settings import AdminConfig
 from app.models.user_v2 import User
 from app.schemas.setup import SettingsPayload, SetupPayload
-from fastapi import HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.sql import select
 
 logger = logging.getLogger(__name__)
 

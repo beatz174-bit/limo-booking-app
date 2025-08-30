@@ -1,14 +1,15 @@
 import pytest
-from app.core.security import create_jwt_token, hash_password
-from app.models.user_v2 import User
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.security import create_jwt_token, hash_password
+from app.models.user_v2 import User
 
 
 @pytest.mark.asyncio
 async def test_get_and_update_me(client: AsyncClient, async_session: AsyncSession):
     user = User(
-        email="me@example.com",
+        email="me2@example.com",
         full_name="Me",
         hashed_password=hash_password("pass"),
     )
@@ -23,7 +24,7 @@ async def test_get_and_update_me(client: AsyncClient, async_session: AsyncSessio
     res = await client.get("/users/me", headers=headers)
     assert res.status_code == 200
     data = res.json()
-    assert data["email"] == "me@example.com"
+    assert data["email"] == "me2@example.com"
 
     # PATCH /users/me
     payload = {"full_name": "New Name"}
