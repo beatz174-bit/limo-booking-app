@@ -9,7 +9,6 @@ from typing import Awaitable, Dict, Protocol, Union
 from alembic import command
 from alembic.config import Config
 from app.core.config import get_settings
-from app.core.security import hash_password
 from sqlalchemy.engine.url import URL, make_url
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -101,27 +100,6 @@ async def connect() -> None:
     from app.models import settings, user  # noqa: F401  # type: ignore
 
     command.upgrade(Config("alembic.ini"), "head")
-
-    # Ensure a single driver user exists for the new domain models
-    from app.models.user_v2 import User, UserRole
-
-    async with AsyncSessionLocal() as session:
-        from sqlalchemy import select
-
-        from app.core.security import hash_password
-
-        result = await session.execute(select(User).where(User.role == UserRole.DRIVER))
-        driver = result.scalar_one_or_none()
-        if driver is None:
-            session.add(
-                User(
-                    email="driver@example.com",
-                    full_name="Driver",
-                    hashed_password=hash_password("driver"),
-                    role=UserRole.DRIVER,
-                )
-            )
-            await session.commit()
 
 
 async def disconnect() -> None:
