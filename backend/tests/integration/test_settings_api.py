@@ -2,30 +2,13 @@ import uuid
 from typing import Dict
 
 import pytest
-from app.core.security import create_jwt_token
-from app.models.user_v2 import User
-from app.schemas.setup import SettingsPayload
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import create_jwt_token
+from app.schemas.setup import SettingsPayload
+
 ADMIN_ID = uuid.UUID(int=1)
-
-
-async def _ensure_admin_id1(async_session: AsyncSession) -> User:
-    """Make sure a user with id=1 exists (service checks admin via id==1)."""
-    u1 = await async_session.get(User, ADMIN_ID)
-    if u1 is None:
-        # Create a minimal active user record with id=1
-        u1 = User(
-            id=ADMIN_ID,
-            email="settings-admin-override@example.com",
-            full_name="Settings Admin Override",
-            hashed_password="x",
-        )
-        async_session.add(u1)
-        await async_session.commit()
-        await async_session.refresh(u1)
-    return u1
 
 
 @pytest.mark.asyncio
@@ -94,9 +77,8 @@ async def test_put_settings_updates_values(
     setup_resp = await client.post("/setup", json=payload)
     assert setup_resp.status_code in (200, 201, 400)  # allow idempotent reruns locally
 
-    # Auth as id=1
-    u1 = await _ensure_admin_id1(async_session)
-    token = create_jwt_token(u1.id)
+    # Auth as admin created during setup
+    token = create_jwt_token(ADMIN_ID)
     headers = {"Authorization": f"Bearer {token}"}
 
     # Update settings
