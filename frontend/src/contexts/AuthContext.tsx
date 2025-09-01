@@ -3,6 +3,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import { authApi } from "@/components/ApiConfig";
 import { CONFIG } from "@/config";
 import { setTokens, getRefreshToken, initTokensFromStorage } from "../services/tokenStore";
+import { apiFetch } from "@/services/apiFetch";
 import { beginLogin, completeLoginFromRedirect, refreshTokens, TokenResponse, OAuthConfig } from "../services/oauth";
 import { useLocation, useNavigate } from "react-router-dom";
 import { type AuthContextType } from "@/types/AuthContextType";
@@ -101,7 +102,7 @@ useEffect(() => {
   if (adminID) return;
   const fetchAdminID = async () => {
     try {
-      const res = await fetch(`${CONFIG.API_BASE_URL}/settings`);
+      const res = await apiFetch(`${CONFIG.API_BASE_URL}/settings`);
       if (!res.ok) return;
       const data = await res.json();
       if (data.admin_user_id) {
@@ -120,9 +121,7 @@ useEffect(() => {
     if (!state.accessToken || state.role) return;
     const fetchMe = async () => {
       try {
-        const res = await fetch(`${CONFIG.API_BASE_URL}/users/me`, {
-          headers: { Authorization: `Bearer ${state.accessToken}` },
-        });
+        const res = await apiFetch(`${CONFIG.API_BASE_URL}/users/me`);
         if (!res.ok) return;
         const data = await res.json();
         if (data.role) {

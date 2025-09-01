@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { GoogleMap, Marker } from '@react-google-maps/api';
 import { CONFIG } from '@/config';
+import { apiFetch } from '@/services/apiFetch';
 import { useBookingChannel } from '@/hooks/useBookingChannel';
 import StatusTimeline, { type StatusStep } from '@/components/StatusTimeline';
 
@@ -51,7 +52,7 @@ export default function TrackingPage() {
 
   useEffect(() => {
     (async () => {
-      const res = await fetch(
+      const res = await apiFetch(
         `${CONFIG.API_BASE_URL}/api/v1/track/${code}`
       );
       if (res.ok) {

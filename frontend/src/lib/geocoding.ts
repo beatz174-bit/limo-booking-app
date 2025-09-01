@@ -2,6 +2,7 @@
 import { CONFIG } from "@/config";
 import { formatAddress } from "@/lib/formatAddress";
 import * as logger from "@/lib/logger";
+import { apiFetch } from "@/services/apiFetch";
 
 export async function reverseGeocode(lat: number, lon: number): Promise<string> {
   const backend = CONFIG.API_BASE_URL as string | undefined;
@@ -13,7 +14,7 @@ export async function reverseGeocode(lat: number, lon: number): Promise<string> 
 
   try {
     if (backend) {
-      const res = await fetch(`${backend}/geocode/reverse?lat=${lat}&lon=${lon}`);
+      const res = await apiFetch(`${backend}/geocode/reverse?lat=${lat}&lon=${lon}`);
       if (!res.ok) throw new Error(`Backend reverse geocode failed: ${res.status}`);
       const data = await res.json();
       const address = data?.address ?? `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
@@ -30,7 +31,7 @@ export async function reverseGeocode(lat: number, lon: number): Promise<string> 
   }
 
   // Dev-only fallback (rate limited; do not ship to prod without a proxy)
-  const res = await fetch(
+  const res = await apiFetch(
     `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1`,
     { headers: { "Accept": "application/json" } }
   );

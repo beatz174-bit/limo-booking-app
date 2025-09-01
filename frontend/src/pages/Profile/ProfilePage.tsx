@@ -4,6 +4,7 @@ import { AddressField } from '@/components/AddressField';
 import { useAuth } from '@/contexts/AuthContext';
 import PushToggle from '@/components/PushToggle';
 import { CONFIG } from '@/config';
+import { apiFetch } from '@/services/apiFetch';
 import { useAddressAutocomplete } from '@/hooks/useAddressAutocomplete';
 
 const ProfilePage = () => {
@@ -23,9 +24,7 @@ const ProfilePage = () => {
       const token = await ensureFreshToken();
       if (!token) return;
       const base = CONFIG.API_BASE_URL ?? '';
-      const res = await fetch(`${base}/users/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiFetch(`${base}/users/me`);
       if (res.ok) {
         const data = await res.json();
         setFullName(data.full_name || '');
@@ -46,7 +45,7 @@ const ProfilePage = () => {
     if (!oldPassword) return;
     try {
       const base = CONFIG.API_BASE_URL ?? '';
-      const res = await fetch(`${base}/auth/token`, {
+      const res = await apiFetch(`${base}/auth/token`, {
         method: 'POST',
         headers: {
           Authorization: `Basic ${btoa(`${email}:${oldPassword}`)}`,
@@ -71,10 +70,9 @@ const ProfilePage = () => {
     }
     try {
       const base = CONFIG.API_BASE_URL ?? '';
-      const res = await fetch(`${base}/users/me`, {
+      const res = await apiFetch(`${base}/users/me`, {
         method: 'PATCH',
         headers: {
-          Authorization: `Bearer ${await ensureFreshToken()}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(body),
