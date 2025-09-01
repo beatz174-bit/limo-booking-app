@@ -48,7 +48,13 @@ export default function DriverDashboard() {
   useEffect(() => {
     (async () => {
       try {
-        const { data } = await bookingsApi.listBookingsApiV1DriverBookingsGet();
+        const token = getAccessToken();
+        const { data } = await bookingsApi.listBookingsApiV1DriverBookingsGet(
+          undefined,
+          token
+            ? { headers: { Authorization: `Bearer ${token}` } }
+            : undefined,
+        );
         setBookings(data as unknown as Booking[]);
       } catch {
         /* ignore */
