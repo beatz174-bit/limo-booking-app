@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import ProfilePage from './ProfilePage';
+import { setTokens } from '@/services/tokenStore';
 
 // Mock auth context to supply token without hitting real auth logic
 const ensureFreshToken = vi.fn().mockResolvedValue('test-token');
@@ -52,6 +53,7 @@ describe('ProfilePage', () => {
         Promise.resolve({ ok: true, json: async () => ({}) } as Response),
     });
     vi.stubGlobal('fetch', fetch);
+    setTokens('test-token');
     const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
 
     render(<ProfilePage />);
@@ -81,7 +83,8 @@ describe('ProfilePage', () => {
     );
     expect(patchCall).toBeTruthy();
     const [, options] = patchCall as [string, RequestInit];
-    expect(options.headers).toMatchObject({ Authorization: 'Bearer test-token' });
+    const headers = new Headers(options.headers);
+    expect(headers.get('Authorization')).toBe('Bearer test-token');
     expect(JSON.parse(options.body as string)).toEqual({
       full_name: 'Jane Doe',
       email: 'jane@example.com',

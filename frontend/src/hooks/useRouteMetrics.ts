@@ -2,6 +2,7 @@
 import { CONFIG } from "@/config";
 import { useCallback } from "react";
 import * as logger from "@/lib/logger";
+import { apiFetch } from "@/services/apiFetch";
 
 export function useRouteMetrics() {
   return useCallback(
@@ -21,7 +22,7 @@ export function useRouteMetrics() {
         });
         if (rideTime) params.set('ride_time', rideTime);
         url.search = params.toString();
-        const res = await fetch(url.toString());
+        const res = await apiFetch(url.toString());
         if (!res.ok) {
           logger.error(
             'hooks/useRouteMetrics',

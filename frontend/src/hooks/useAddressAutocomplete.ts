@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { CONFIG } from "@/config";
 import * as logger from "@/lib/logger";
+import { apiFetch } from "@/services/apiFetch";
 
 export interface AddressSuggestion {
   name: string;
@@ -52,7 +53,7 @@ export function useAddressAutocomplete(
           "request URL",
           url
         );
-        const res = await fetch(url, { signal: controller.signal });
+        const res = await apiFetch(url, { signal: controller.signal });
         if (!res.ok) throw new Error("Geocode search failed");
         const data = (await res.json()) as GeocodeSearchResponse;
         const mapped: AddressSuggestion[] = (data?.results || []).map((r) => ({

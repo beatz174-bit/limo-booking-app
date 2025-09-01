@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Stack, TextField, Button, List, ListItem, ListItemText, Typography } from '@mui/material';
 import useAvailability from '@/hooks/useAvailability';
 import { CONFIG } from '@/config';
+import { apiFetch } from '@/services/apiFetch';
 
 export default function AvailabilityPage() {
   const month = new Date().toISOString().slice(0, 7);
@@ -10,7 +11,7 @@ export default function AvailabilityPage() {
   const [end, setEnd] = useState('');
 
   async function create() {
-    await fetch(`${CONFIG.API_BASE_URL}/api/v1/availability`, {
+    await apiFetch(`${CONFIG.API_BASE_URL}/api/v1/availability`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ start_dt: start, end_dt: end }),

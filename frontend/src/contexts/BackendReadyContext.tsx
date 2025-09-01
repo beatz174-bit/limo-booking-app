@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { CONFIG } from '@/config';
+import { apiFetch } from '@/services/apiFetch';
 
 interface BackendReadyContextValue {
   ready: boolean;
@@ -16,10 +17,10 @@ export const BackendReadyProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const check = useCallback(async () => {
     try {
-      const res = await fetch(`${CONFIG.API_BASE_URL}/health`);
+      const res = await apiFetch(`${CONFIG.API_BASE_URL}/health`);
       if (res.ok) {
         try {
-          const setupRes = await fetch(`${CONFIG.API_BASE_URL}/setup`);
+          const setupRes = await apiFetch(`${CONFIG.API_BASE_URL}/setup`);
           let needsSetup = true;
           if (setupRes.ok) {
             const data = await setupRes.json().catch(() => null);

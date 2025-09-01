@@ -16,7 +16,7 @@ import { driverBookingsApi as bookingsApi } from '@/components/ApiConfig';
 import { bookingStatusLabels, type BookingStatus } from '@/types/BookingStatus';
 import StatusChip from '@/components/StatusChip';
 import { CONFIG } from '@/config';
-import { getAccessToken } from '@/services/tokenStore';
+import { apiFetch } from '@/services/apiFetch';
 
 const statuses: BookingStatus[] = [
   'PENDING',
@@ -67,12 +67,10 @@ export default function DriverDashboard() {
       | 'arrive-dropoff'
       | 'complete',
   ) {
-    const token = getAccessToken();
-    const res = await fetch(
+    const res = await apiFetch(
       `${CONFIG.API_BASE_URL}/api/v1/driver/bookings/${id}/${action}`,
       {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
       }
     );
     const data = await res.json().catch(() => ({}));

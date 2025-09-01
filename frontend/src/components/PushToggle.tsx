@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { FormControlLabel, Switch } from '@mui/material';
 import { subscribePush, unsubscribePush } from '@/services/push';
 import { CONFIG } from '@/config';
+import { apiFetch } from '@/services/apiFetch';
 
 interface Props {
   ensureFreshToken: () => Promise<string | null>;
@@ -15,9 +16,7 @@ const PushToggle = ({ ensureFreshToken }: Props) => {
       const auth = await ensureFreshToken();
       if (!auth) return;
       const base = CONFIG.API_BASE_URL ?? '';
-      const res = await fetch(`${base}/users/me`, {
-        headers: { Authorization: `Bearer ${auth}` },
-      });
+      const res = await apiFetch(`${base}/users/me`);
       if (res.ok) {
         const data = await res.json();
         setEnabled(!!data.fcm_token);
@@ -36,22 +35,20 @@ const PushToggle = ({ ensureFreshToken }: Props) => {
       const token = await subscribePush();
       if (!token) return;
       const base = CONFIG.API_BASE_URL ?? '';
-      await fetch(`${base}/users/me`, {
+      await apiFetch(`${base}/users/me`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${auth}`,
         },
         body: JSON.stringify({ fcm_token: token }),
       });
     } else {
       await unsubscribePush();
       const base = CONFIG.API_BASE_URL ?? '';
-      await fetch(`${base}/users/me`, {
+      await apiFetch(`${base}/users/me`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${auth}`,
         },
         body: JSON.stringify({ fcm_token: null }),
       });

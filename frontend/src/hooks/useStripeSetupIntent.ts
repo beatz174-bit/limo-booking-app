@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { CONFIG } from '@/config';
+import { apiFetch } from '@/services/apiFetch';
 
 interface CreateBookingData {
   pickup_when: string;
@@ -15,7 +17,7 @@ export function useStripeSetupIntent() {
   async function createBooking(data: CreateBookingData) {
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/bookings`, {
+      const res = await apiFetch(`${CONFIG.API_BASE_URL}/api/v1/bookings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
