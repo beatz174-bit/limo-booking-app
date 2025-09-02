@@ -22,6 +22,8 @@ from typing import Iterable, Tuple
 
 import httpx
 import websockets
+from websockets.exceptions import WebSocketException
+
 from app.db.database import AsyncSessionLocal
 from app.models.booking import Booking, BookingStatus
 from sqlalchemy import select
@@ -41,6 +43,7 @@ async def fetch_driver_confirmed_bookings():
             ).where(Booking.status == BookingStatus.DRIVER_CONFIRMED)
         )
         return result.all()
+
 
 
 
@@ -125,13 +128,14 @@ async def route_metrics(
 
 
 # --- main simulation ---------------------------------------------------------
-async def simulate():
-    api_base = API_BASE
+async def simulate(
+    api_base: str, booking_code: str, distance_km: float, points: int
+) -> None:
     transport = httpx.AsyncHTTPTransport(retries=3)
     try:
         async with httpx.AsyncClient(transport=transport) as client:
             # 1. Get booking + ws_url
-            r = await client.get(f"{api_base}/api/v1/track/{BOOKING_CODE}")
+            r = await client.get(f"{api_base}/api/v1/track/{booking_code}")
             r.raise_for_status()
             data = r.json()
             booking = data["booking"]
@@ -189,15 +193,12 @@ async def simulate():
         logger.exception("WebSocket error; aborting simulation")
         return
 
-        logger.info("Simulation completed")
+    logger.info("Simulation completed")
 
 
-async def main():
-    parser = argparse.ArgumentParser(description="Simulate driver movement")
-    parser.add_argument("--booking-code", help="Public booking code to use")
-    args = parser.parse_args()
-
-    booking_code = args.booking_code
+async def main(
+    api_base: str, booking_code: str, distance_km: float, points: int
+) -> None:
     if not booking_code:
         bookings = await fetch_driver_confirmed_bookings()
         if not bookings:
@@ -212,9 +213,16 @@ async def main():
                 break
             print("Invalid selection.")
 
-    await simulate(booking_code)
+    await simulate(api_base, booking_code, distance_km, points)
 
 
 if __name__ == "__main__":
     args = parse_args()
-    asyncio.run(simulate())
+    asyncio.run(
+        main(
+            api_base=args.api_base,
+            booking_code=args.booking,
+            distance_km=args.distance_km,
+            points=args.points,
+        )
+    )
