@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Union
 
 from app.services.route_metrics_service import get_route_metrics
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -24,10 +24,37 @@ class RouteMetricsRequest(BaseModel):
 
 
 async def get_request(
+    request: Request,
     query: RouteMetricsRequest = Depends(),
     body: RouteMetricsRequest | None = Body(None),
 ) -> RouteMetricsRequest:
-    return body or query
+    if body:
+        return body
+    if all(
+        getattr(query, field) is not None
+        for field in ["pickup_lat", "pickup_lon", "dropoff_lat", "dropoff_lon"]
+    ):
+        return query
+    pickup = request.query_params.get("pickup")
+    dropoff = request.query_params.get("dropoff")
+    if pickup and dropoff:
+        try:
+            pickup_lat, pickup_lon = map(float, pickup.split(","))
+            dropoff_lat, dropoff_lon = map(float, dropoff.split(","))
+            return RouteMetricsRequest(
+                pickup_lat=pickup_lat,
+                pickup_lon=pickup_lon,
+                dropoff_lat=dropoff_lat,
+                dropoff_lon=dropoff_lon,
+            )
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=400, detail="Invalid pickup or dropoff"
+            ) from exc
+    raise HTTPException(
+        status_code=400,
+        detail="pickupLat/pickupLon and dropoffLat/dropoffLon are required",
+    )
 
 
 @router.api_route(

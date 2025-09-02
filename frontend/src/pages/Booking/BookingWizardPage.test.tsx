@@ -79,8 +79,8 @@ test('advances through steps and aggregates form data', async () => {
 
   expect(createBooking).toHaveBeenCalledWith({
     pickup_when: new Date('2025-01-01T10:00').toISOString(),
-    pickup: undefined,
-    dropoff: undefined,
+    pickup: { address: '123 A St', lat: 0, lng: 0 },
+    dropoff: { address: '456 B St', lat: 0, lng: 0 },
     passengers: 2,
     notes: 'Be quick',
     pickupValid: true,

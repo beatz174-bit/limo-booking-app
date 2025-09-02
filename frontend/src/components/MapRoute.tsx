@@ -50,8 +50,10 @@ export function MapRoute({ pickup, dropoff, rideTime, onMetrics }: Props) {
       if (!pickup || !dropoff || !onMetrics) return;
       const rideTimeIso = rideTime ? new Date(rideTime).toISOString() : undefined;
       const res = await getMetrics(
-        { lat: pickup.lat, lon: pickup.lng },
-        { lat: dropoff.lat, lon: dropoff.lng },
+        pickup.lat,
+        pickup.lng,
+        dropoff.lat,
+        dropoff.lng,
         rideTimeIso,
       );
       if (!cancelled && res) onMetrics(res.km, res.min);
