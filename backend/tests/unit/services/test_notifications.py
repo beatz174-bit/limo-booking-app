@@ -53,10 +53,25 @@ async def test_send_fcm_uses_async_client(monkeypatch: MonkeyPatch):
     dummy_client = DummyClient()
     monkeypatch.setattr(httpx, "AsyncClient", lambda *args, **kwargs: dummy_client)
 
-    await _send_fcm(UserRole.DRIVER, NotificationType.ON_THE_WAY, {"foo": "bar"})
+    class DummyResult:
+        def scalars(self):
+            class _Scalar:
+                def all(self):
+                    return ["tok"]
+
+            return _Scalar()
+
+    class DummyDB:
+        async def execute(self, *args, **kwargs):
+            return DummyResult()
+
+    await _send_fcm(
+        DummyDB(), UserRole.DRIVER, NotificationType.ON_THE_WAY, {"foo": "bar"}
+    )
 
     assert len(dummy_client.calls) == 2
     token_call = dummy_client.calls[0]
     msg_call = dummy_client.calls[1]
     assert "oauth2.googleapis.com/token" in token_call[0]
     assert msg_call[1]["headers"]["Authorization"] == "Bearer abc"
+    assert msg_call[1]["json"]["message"]["token"] == "tok"
