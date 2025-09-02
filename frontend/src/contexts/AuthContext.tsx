@@ -94,7 +94,7 @@ useEffect(() => {
       return;
     } catch { /* ignore parse errors */ }
   }
-setState((s) => ({ ...s, loading: false, adminID: storedAdminID ?? null }));
+  setState((s): AuthState => ({ ...s, loading: false, adminID: storedAdminID ?? null }));
 }, []);
 
 const adminID = state.adminID;
@@ -108,7 +108,7 @@ useEffect(() => {
       if (data.admin_user_id) {
         const id = String(data.admin_user_id);
         localStorage.setItem("adminID", id);
-        setState((s) => ({ ...s, adminID: id }));
+        setState((s): AuthState => ({ ...s, adminID: id }));
       }
     } catch {
       /* ignore */
@@ -125,15 +125,21 @@ useEffect(() => {
         if (!res.ok) return;
         const data = await res.json();
         if (data.role) {
-          localStorage.setItem("userRole", data.role);
+          localStorage.setItem("userRole", data.role ?? "");
+        } else {
+          localStorage.removeItem("userRole");
         }
         if (data.full_name) {
-          localStorage.setItem("userName", data.full_name);
+          localStorage.setItem("userName", data.full_name ?? "");
+        } else {
+          localStorage.removeItem("userName");
         }
         if (data.id) {
           localStorage.setItem("userID", String(data.id));
+        } else {
+          localStorage.removeItem("userID");
         }
-        setState((s) => ({
+        setState((s): AuthState => ({
           ...s,
           role: data.role ?? s.role,
           userName: data.full_name ?? s.userName,
@@ -152,7 +158,7 @@ useEffect(() => {
     if (access_token || refresh_token || user) {
       localStorage.setItem("auth_tokens", JSON.stringify({ access_token, refresh_token, user }));
       if (user?.role) {
-        localStorage.setItem("role", user.role);
+        localStorage.setItem("role", user.role ?? "");
       }
     } else {
       localStorage.removeItem("auth_tokens");
@@ -160,13 +166,13 @@ useEffect(() => {
     }
     if (role !== undefined) {
       if (role) {
-        localStorage.setItem("userRole", role);
+        localStorage.setItem("userRole", role ?? "");
       } else {
         localStorage.removeItem("userRole");
       }
     }
     setTokens(access_token, refresh_token);
-    setState((s) => ({
+    setState((s): AuthState => ({
       ...s,
       accessToken: access_token,
       user: user ?? s.user,
@@ -175,7 +181,7 @@ useEffect(() => {
     if (access_token) {
       maybeSubscribePush();
     }
-  }, []);
+  }, [setState]);
 
   const loginWithPassword = useCallback(async (email: string, password: string): Promise<string | null> => {
     try {
@@ -192,22 +198,33 @@ useEffect(() => {
         })
       );
       if (role) {
-        localStorage.setItem("role", role);
+        localStorage.setItem("role", role ?? "");
       } else {
         localStorage.removeItem("role");
       }
 
-      localStorage.setItem("userName", body.full_name);
-      localStorage.setItem("userID", String(body.id));
+      if (body.full_name) {
+        localStorage.setItem("userName", body.full_name ?? "");
+      } else {
+        localStorage.removeItem("userName");
+      }
+      if (body.id != null) {
+        localStorage.setItem("userID", String(body.id));
+      } else {
+        localStorage.removeItem("userID");
+      }
 
-      setState((s) => ({
+      setState((s): AuthState => ({
         ...s,
         accessToken: token,
         user: body.user ?? s.user,
-        userID: String(body.id),
-        userName: body.full_name,
+        userID: body.id != null ? String(body.id) : null,
+        userName: body.full_name ?? null,
         role,
       }));
+      if (token) {
+        maybeSubscribePush();
+      }
       return role;
     } catch (e: unknown) {
       const err = e as { response?: { status?: number; data?: { detail?: string } } };
@@ -218,40 +235,7 @@ useEffect(() => {
       }
       throw new Error("Login failed");
     }
-
-    const body = await res.json();
-    const token = body.access_token ?? body.token ?? null;
-    const role: string | null = body.role ?? body.user?.role ?? null;
-    localStorage.setItem(
-      "auth_tokens",
-      JSON.stringify({
-        access_token: token,
-        refresh_token: body.refresh_token ?? null,
-        user: body.user ?? null,
-      })
-    );
-    if (role) {
-      localStorage.setItem("role", role);
-    } else {
-      localStorage.removeItem("role");
-    }
-
-    localStorage.setItem("userName", body.full_name);
-    localStorage.setItem("userID", String(body.id));
-
-    setState((s) => ({
-      ...s,
-      accessToken: token,
-      user: body.user ?? s.user,
-      userID: String(body.id),
-      userName: body.full_name,
-      role,
-    }));
-    if (token) {
-      maybeSubscribePush();
-    }
-    return role;
-  }, [setState]);
+  }, []);
 
     const registerWithPassword = useCallback(async (fullName: string, email: string, password: string) => {
       await authApi.endpointRegisterAuthRegisterPost({ full_name: fullName, email, password });
@@ -274,7 +258,7 @@ useEffect(() => {
     localStorage.removeItem("userName");
     localStorage.removeItem("role");
     localStorage.removeItem("adminID");
-    setState((s) => ({
+    setState((s): AuthState => ({
       ...s,
       accessToken: null,
       user: null,
