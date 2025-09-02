@@ -24,6 +24,7 @@ const statuses: BookingStatus[] = [
   'PENDING',
   'DEPOSIT_FAILED',
   'DRIVER_CONFIRMED',
+  'DEPOSIT_FAILED',
   'ON_THE_WAY',
   'ARRIVED_PICKUP',
   'IN_PROGRESS',
@@ -74,7 +75,8 @@ export default function DriverDashboard() {
       | 'arrive-pickup'
       | 'start-trip'
       | 'arrive-dropoff'
-      | 'complete',
+      | 'complete'
+      | 'retry-deposit',
   ) {
     const res = await apiFetch(
       `${CONFIG.API_BASE_URL}/api/v1/driver/bookings/${id}/${action}`,
@@ -162,6 +164,15 @@ export default function DriverDashboard() {
                     disabled={b.leave_at ? new Date(b.leave_at).getTime() > now : true}
                   >
                     Leave now
+                  </Button>
+                )}
+                {b.status === 'DEPOSIT_FAILED' && (
+                  <Button
+                    variant="contained"
+                    color="warning"
+                    onClick={() => update(b.id, 'retry-deposit')}
+                  >
+                    Retry deposit
                   </Button>
                 )}
                 {b.status === 'ON_THE_WAY' && (

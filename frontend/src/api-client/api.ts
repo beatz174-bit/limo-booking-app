@@ -363,6 +363,7 @@ export const BookingStatus = {
     Pending: 'PENDING',
     DriverConfirmed: 'DRIVER_CONFIRMED',
     Declined: 'DECLINED',
+    DepositFailed: 'DEPOSIT_FAILED',
     OnTheWay: 'ON_THE_WAY',
     ArrivedPickup: 'ARRIVED_PICKUP',
     InProgress: 'IN_PROGRESS',

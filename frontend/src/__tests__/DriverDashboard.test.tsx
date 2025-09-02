@@ -11,6 +11,7 @@ vi.mock('@/components/ApiConfig', () => ({
 
 import DriverDashboard from '@/pages/Driver/DriverDashboard';
 import { driverBookingsApi } from '@/components/ApiConfig';
+import { CONFIG } from '@/config';
 
 describe('DriverDashboard', () => {
   it.skip('loads and confirms booking', async () => {
@@ -67,6 +68,43 @@ describe('DriverDashboard', () => {
     fireEvent.click(screen.getByText('Confirm'));
     await waitFor(() =>
       expect(screen.getByText(/500 fail/i)).toBeInTheDocument(),
+    );
+  });
+
+  it('retries deposit when booking deposit failed', async () => {
+    const bookings = [
+      {
+        id: '1',
+        pickup_address: 'A',
+        dropoff_address: 'B',
+        pickup_when: new Date().toISOString(),
+        status: 'DEPOSIT_FAILED',
+      },
+    ];
+    (driverBookingsApi.listBookingsApiV1DriverBookingsGet as Mock).mockResolvedValue({
+      data: bookings,
+    });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({
+        ok: true,
+        json: async () => ({ status: 'DRIVER_CONFIRMED' }),
+      } as unknown as Response);
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(
+      <MemoryRouter>
+        <DriverDashboard />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText('A → B')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Retry deposit'));
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${CONFIG.API_BASE_URL}/api/v1/driver/bookings/1/retry-deposit`,
+        expect.objectContaining({ method: 'POST' }),
+      ),
     );
   });
 });

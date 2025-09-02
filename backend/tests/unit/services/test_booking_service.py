@@ -118,5 +118,5 @@ async def test_confirm_booking_handles_card_error(async_session: AsyncSession, m
     assert excinfo.value.status_code == 402
     assert excinfo.value.detail == "Card declined"
     await async_session.refresh(booking)
-    assert booking.status is BookingStatus.PENDING
+    assert booking.status is BookingStatus.DEPOSIT_FAILED
     assert booking.deposit_payment_intent_id is None
