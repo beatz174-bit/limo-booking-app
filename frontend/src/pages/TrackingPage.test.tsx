@@ -11,6 +11,7 @@ vi.mock('@react-google-maps/api', () => ({
   Marker: ({ position }: { position: { lat: number; lng: number } }) => (
     <div data-testid="marker">{position.lat},{position.lng}</div>
   ),
+  DirectionsRenderer: () => <div data-testid="route">route</div>,
 }));
 
 let currentUpdate: LocationUpdate | null = null;
@@ -68,7 +69,7 @@ describe('TrackingPage', () => {
     vi.unstubAllGlobals();
   });
 
-  it('updates marker and timeline', async () => {
+  it('updates marker, timeline and route', async () => {
     const wrapper = (
       <MemoryRouter initialEntries={['/t/abc']}>
         <Routes>
