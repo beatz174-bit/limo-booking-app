@@ -63,7 +63,7 @@ export function useAddressAutocomplete(
           lng: r.lng,
           placeId: r.placeId,
         }));
-        logger.debug(
+        logger.info(
           "hooks/useAddressAutocomplete",
           "suggestion count",
           mapped.length
@@ -71,7 +71,6 @@ export function useAddressAutocomplete(
         setSuggestions(mapped);
       } catch (e) {
         if (!controller.signal.aborted) {
-          logger.error("hooks/useAddressAutocomplete", e);
           logger.warn("hooks/useAddressAutocomplete", e);
           setSuggestions([]);
         }
