@@ -4,14 +4,14 @@ import logging
 import uuid
 from datetime import datetime, timezone
 
-from broadcaster import Broadcast
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-
 from app.core.security import decode_token
 from app.db.database import AsyncSessionLocal
 from app.models.booking import Booking, BookingStatus
 from app.models.route_point import RoutePoint
 from app.models.user_v2 import User, UserRole
+from app.services.settings_service import get_admin_user_id
+from broadcaster import Broadcast
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -35,7 +35,13 @@ async def booking_ws(websocket: WebSocket, booking_id: uuid.UUID):
     async with AsyncSessionLocal() as db:
         user = await db.get(User, user_id)
         booking = await db.get(Booking, booking_id)
-        if user is None or booking is None or user.role is not UserRole.DRIVER:
+        admin_id = await get_admin_user_id(db)
+        # admin_user_id may connect even without DRIVER role
+        if (
+            user is None
+            or booking is None
+            or (user.role is not UserRole.DRIVER and user.id != admin_id)
+        ):
             await websocket.close(code=1008)
             return
 
