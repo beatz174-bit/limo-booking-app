@@ -12,7 +12,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.models.notification import Notification, NotificationType
-from app.models.user import User as LegacyUser
 from app.models.user_v2 import User as UserV2
 from app.models.user_v2 import UserRole
 
@@ -92,9 +91,9 @@ async def _send_fcm(
                 data[k] = json.dumps(v) if not isinstance(v, str) else v
 
             result = await db.execute(
-                select(LegacyUser.fcm_token)
-                .join(UserV2, LegacyUser.email == UserV2.email)
-                .where(UserV2.role == to_role, LegacyUser.fcm_token.is_not(None))
+                select(UserV2.fcm_token).where(
+                    UserV2.role == to_role, UserV2.fcm_token.is_not(None)
+                )
             )
             tokens = result.scalars().all()
 

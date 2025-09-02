@@ -1,6 +1,7 @@
 import enum
 import uuid
 from datetime import datetime
+from typing import Optional
 
 from sqlalchemy import UUID, DateTime, Enum, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
@@ -28,6 +29,7 @@ class User(Base):
     full_name: Mapped[str] = mapped_column(String)
     hashed_password: Mapped[str] = mapped_column(Text, name="password_hash")
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.CUSTOMER)
+    fcm_token: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
