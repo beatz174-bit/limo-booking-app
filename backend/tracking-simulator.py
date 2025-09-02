@@ -14,6 +14,7 @@ Example:
 import argparse
 import asyncio
 import json
+import logging
 import math
 import random
 import time
@@ -21,6 +22,29 @@ from typing import Iterable, Tuple
 
 import httpx
 import websockets
+from sqlalchemy import select
+
+from app.db.database import AsyncSessionLocal
+from app.models.booking import Booking, BookingStatus
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+API_BASE = "http://localhost:8000"  # backend base URL
+POINTS = 120  # samples per leg
+
+
+async def fetch_driver_confirmed_bookings():
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(
+                Booking.id,
+                Booking.public_code,
+                Booking.pickup_address,
+                Booking.dropoff_address,
+            ).where(Booking.status == BookingStatus.DRIVER_CONFIRMED)
+        )
+        return result.all()
 
 DEFAULT_API_BASE = "http://localhost:8000"
 DEFAULT_BOOKING_CODE = "ABC123"
@@ -90,6 +114,7 @@ async def route_metrics(
     a: Tuple[float, float],
     b: Tuple[float, float],
 ) -> dict:
+    logger.info("Fetching route metrics from %s to %s", a, b)
     params = {
         "pickupLat": a[0],
         "pickupLon": a[1],
@@ -98,63 +123,107 @@ async def route_metrics(
     }
     r = await client.get(f"{api_base}/route-metrics", params=params)
     r.raise_for_status()
-    return r.json()
+    metrics = r.json()
+    logger.info("Route metrics: %s", metrics)
+    return metrics
+
+
+
+
 
 
 # --- main simulation ---------------------------------------------------------
-async def simulate(api_base: str, booking_code: str, distance_km: float, points: int):
-    async with httpx.AsyncClient() as client:
-        # 1. Get booking + ws_url
-        r = await client.get(f"{api_base}/api/v1/track/{booking_code}")
-        r.raise_for_status()
-        data = r.json()
-        booking = data["booking"]
-        ws_url = data["ws_url"]
+async def simulate():
+    transport = httpx.AsyncHTTPTransport(retries=3)
+    try:
+        async with httpx.AsyncClient(transport=transport) as client:
+            # 1. Get booking + ws_url
+            r = await client.get(f"{API_BASE}/api/v1/track/{BOOKING_CODE}")
+            r.raise_for_status()
+            data = r.json()
+            booking = data["booking"]
+            ws_url = data["ws_url"]
 
-        pickup = (booking["pickup_lat"], booking["pickup_lng"])
-        dropoff = (booking["dropoff_lat"], booking["dropoff_lng"])
-        start = random_point_near(*pickup, distance_km=distance_km)
+            pickup = (booking["pickup_lat"], booking["pickup_lng"])
+            dropoff = (booking["dropoff_lat"], booking["dropoff_lng"])
+            start = random_point_near(*pickup, distance_km=5.0)
 
-        # Metrics for both legs
-        leg1 = await route_metrics(client, api_base, start, pickup)
-        leg2 = await route_metrics(client, api_base, pickup, dropoff)
+            # Metrics for both legs
+            leg1 = await route_metrics(client, start, pickup)
+            leg2 = await route_metrics(client, pickup, dropoff)
+    except httpx.HTTPError:
+        logger.exception("HTTP request failed; aborting simulation")
+        return
 
-    async with websockets.connect(ws_url) as ws:
-        # --- leg 1: home -> pickup
-        duration1 = leg1["min"] * 60
-        interval1 = duration1 / points
-        speed1 = leg1["km"] / (leg1["min"] / 60)
+    try:
+        async with websockets.connect(ws_url) as ws:
+            # --- leg 1: home -> pickup
+            duration1 = leg1["min"] * 60
+            interval1 = duration1 / POINTS
+            speed1 = leg1["km"] / (leg1["min"] / 60)
 
-        for lat, lng in interpolate(start, pickup, points):
-            await ws.send(
-                json.dumps(
-                    {
-                        "lat": lat,
-                        "lng": lng,
-                        "ts": int(time.time()),
-                        "speed": speed1,
-                    }
+            for lat, lng in interpolate(start, pickup, POINTS):
+                await ws.send(
+                    json.dumps(
+                        {
+                            "lat": lat,
+                            "lng": lng,
+                            "ts": int(time.time()),
+                            "speed": speed1,
+                        }
+                    )
                 )
-            )
-            await asyncio.sleep(interval1)
+                await asyncio.sleep(interval1)
 
-        # --- leg 2: pickup -> dropoff
-        duration2 = leg2["min"] * 60
-        interval2 = duration2 / points
-        speed2 = leg2["km"] / (leg2["min"] / 60)
+            # --- leg 2: pickup -> dropoff
+            duration2 = leg2["min"] * 60
+            interval2 = duration2 / POINTS
+            speed2 = leg2["km"] / (leg2["min"] / 60)
 
-        for lat, lng in interpolate(pickup, dropoff, points):
-            await ws.send(
-                json.dumps(
-                    {
-                        "lat": lat,
-                        "lng": lng,
-                        "ts": int(time.time()),
-                        "speed": speed2,
-                    }
+            for lat, lng in interpolate(pickup, dropoff, POINTS):
+                await ws.send(
+                    json.dumps(
+                        {
+                            "lat": lat,
+                            "lng": lng,
+                            "ts": int(time.time()),
+                            "speed": speed2,
+                        }
+                    )
                 )
-            )
-            await asyncio.sleep(interval2)
+                await asyncio.sleep(interval2)
+    except WebSocketException:
+        logger.exception("WebSocket error; aborting simulation")
+        return
+
+
+
+        logger.info("Simulation completed")
+
+
+
+async def main():
+    parser = argparse.ArgumentParser(description="Simulate driver movement")
+    parser.add_argument("--booking-code", help="Public booking code to use")
+    args = parser.parse_args()
+
+    booking_code = args.booking_code
+    if not booking_code:
+        bookings = await fetch_driver_confirmed_bookings()
+        if not bookings:
+            print("No driver confirmed bookings found.")
+            return
+        for idx, (_, code, pickup, dropoff) in enumerate(bookings, start=1):
+            print(f"{idx}. {pickup} -> {dropoff} ({code})")
+        while True:
+            choice = input("Select booking: ")
+            if choice.isdigit() and 1 <= int(choice) <= len(bookings):
+                booking_code = bookings[int(choice) - 1][1]
+                break
+            print("Invalid selection.")
+
+    await simulate(booking_code)
+
 
 
 if __name__ == "__main__":
