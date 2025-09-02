@@ -22,16 +22,12 @@ from typing import Iterable, Tuple
 
 import httpx
 import websockets
-from sqlalchemy import select
-
 from app.db.database import AsyncSessionLocal
 from app.models.booking import Booking, BookingStatus
+from sqlalchemy import select
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-API_BASE = "http://localhost:8000"  # backend base URL
-POINTS = 120  # samples per leg
 
 
 async def fetch_driver_confirmed_bookings():
@@ -47,8 +43,8 @@ async def fetch_driver_confirmed_bookings():
         return result.all()
 
 
+
 DEFAULT_API_BASE = "http://localhost:8000"
-DEFAULT_BOOKING_CODE = "ABC123"
 DEFAULT_DISTANCE_KM = 5.0
 DEFAULT_POINTS = 120
 
@@ -62,40 +58,6 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--booking",
-        default=DEFAULT_BOOKING_CODE,
-        help="public booking code from the customer link",
-    )
-    parser.add_argument(
-        "--distance-km",
-        type=float,
-        default=DEFAULT_DISTANCE_KM,
-        help="starting distance from pickup in km",
-    )
-    parser.add_argument(
-        "--points",
-        type=int,
-        default=DEFAULT_POINTS,
-        help="samples per leg",
-    )
-    return parser.parse_args()
-
-
-DEFAULT_API_BASE = "http://localhost:8000"
-DEFAULT_BOOKING_CODE = "ABC123"
-DEFAULT_DISTANCE_KM = 5.0
-DEFAULT_POINTS = 120
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--api-base",
-        default=DEFAULT_API_BASE,
-        help="backend base URL",
-    )
-    parser.add_argument(
-        "--booking",
-        default=DEFAULT_BOOKING_CODE,
         help="public booking code from the customer link",
     )
     parser.add_argument(
@@ -177,7 +139,7 @@ async def simulate():
 
             pickup = (booking["pickup_lat"], booking["pickup_lng"])
             dropoff = (booking["dropoff_lat"], booking["dropoff_lng"])
-            start = random_point_near(*pickup, distance_km=5.0)
+            start = random_point_near(*pickup, distance_km=distance_km)
 
             # Metrics for both legs
             leg1 = await route_metrics(client, api_base, start, pickup)
@@ -190,10 +152,10 @@ async def simulate():
         async with websockets.connect(ws_url) as ws:
             # --- leg 1: home -> pickup
             duration1 = leg1["min"] * 60
-            interval1 = duration1 / POINTS
+            interval1 = duration1 / points
             speed1 = leg1["km"] / (leg1["min"] / 60)
 
-            for lat, lng in interpolate(start, pickup, POINTS):
+            for lat, lng in interpolate(start, pickup, points):
                 await ws.send(
                     json.dumps(
                         {
@@ -208,10 +170,10 @@ async def simulate():
 
             # --- leg 2: pickup -> dropoff
             duration2 = leg2["min"] * 60
-            interval2 = duration2 / POINTS
+            interval2 = duration2 / points
             speed2 = leg2["km"] / (leg2["min"] / 60)
 
-            for lat, lng in interpolate(pickup, dropoff, POINTS):
+            for lat, lng in interpolate(pickup, dropoff, points):
                 await ws.send(
                     json.dumps(
                         {
@@ -223,7 +185,7 @@ async def simulate():
                     )
                 )
                 await asyncio.sleep(interval2)
-    except WebSocketException:
+    except websockets.WebSocketException:
         logger.exception("WebSocket error; aborting simulation")
         return
 
