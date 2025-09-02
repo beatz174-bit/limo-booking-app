@@ -71,6 +71,7 @@ export default function TripDetailsStep({ data, onNext, onBack, onChange }: Prop
           setDropoff(s.address);
           setDropLat(s.lat);
           setDropLng(s.lng);
+          setDropSelected(true);
           onChange({ dropoff: { address: s.address, lat: s.lat, lng: s.lng } });
         }}
         suggestions={dropoffAuto.suggestions}
