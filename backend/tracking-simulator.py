@@ -4,6 +4,11 @@ Simulate driver movement with a random start ~5 km from the pickup.
 
 Requirements:
   pip install httpx websockets
+
+Example:
+  python tracking-simulator.py --booking ABC123
+  python tracking-simulator.py --api-base http://localhost:8000 \
+    --booking ABC123 --distance-km 10 --points 200
 """
 
 import argparse
@@ -41,6 +46,38 @@ async def fetch_driver_confirmed_bookings():
         )
         return result.all()
 
+DEFAULT_API_BASE = "http://localhost:8000"
+DEFAULT_BOOKING_CODE = "ABC123"
+DEFAULT_DISTANCE_KM = 5.0
+DEFAULT_POINTS = 120
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--api-base",
+        default=DEFAULT_API_BASE,
+        help="backend base URL",
+    )
+    parser.add_argument(
+        "--booking",
+        default=DEFAULT_BOOKING_CODE,
+        help="public booking code from the customer link",
+    )
+    parser.add_argument(
+        "--distance-km",
+        type=float,
+        default=DEFAULT_DISTANCE_KM,
+        help="starting distance from pickup in km",
+    )
+    parser.add_argument(
+        "--points",
+        type=int,
+        default=DEFAULT_POINTS,
+        help="samples per leg",
+    )
+    return parser.parse_args()
+
 
 # --- helpers -----------------------------------------------------------------
 def interpolate(
@@ -72,8 +109,11 @@ def random_point_near(
 
 
 async def route_metrics(
-    client: httpx.AsyncClient, a: Tuple[float, float], b: Tuple[float, float]
-):
+    client: httpx.AsyncClient,
+    api_base: str,
+    a: Tuple[float, float],
+    b: Tuple[float, float],
+) -> dict:
     logger.info("Fetching route metrics from %s to %s", a, b)
     params = {
         "pickupLat": a[0],
@@ -81,11 +121,12 @@ async def route_metrics(
         "dropoffLat": b[0],
         "dropoffLon": b[1],
     }
-    r = await client.get(f"{API_BASE}/route-metrics", params=params)
+    r = await client.get(f"{api_base}/route-metrics", params=params)
     r.raise_for_status()
     metrics = r.json()
     logger.info("Route metrics: %s", metrics)
     return metrics
+
 
 
 
@@ -184,5 +225,14 @@ async def main():
     await simulate(booking_code)
 
 
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    args = parse_args()
+    asyncio.run(
+        simulate(
+            api_base=args.api_base,
+            booking_code=args.booking,
+            distance_km=args.distance_km,
+            points=args.points,
+        )
+    )
