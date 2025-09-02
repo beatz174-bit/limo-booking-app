@@ -41,7 +41,7 @@ export function AddressField(props: {
   ) : undefined;
 
   return (
-    <Autocomplete<AddressSuggestion>
+    <Autocomplete<AddressSuggestion, false, false, true>
       freeSolo
       options={props.suggestions}
       getOptionLabel={(option) => option.address}
