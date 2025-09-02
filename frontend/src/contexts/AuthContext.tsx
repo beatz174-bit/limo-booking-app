@@ -13,6 +13,7 @@ import * as logger from "@/lib/logger";
 // Seed token store from localStorage before any React code runs so that
 // getAccessToken() returns a value on first render.
 initTokensFromStorage();
+logger.debug("contexts/AuthContext", "tokens initialized from storage");
 
 type UserShape = { email?: string; full_name?: string; role?: string } | null;
 
@@ -69,33 +70,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // const [userID, setUserID] = useState<string|null>(null);
 
   // Load from localStorage on boot
-useEffect(() => {
-  const raw = localStorage.getItem("auth_tokens");
-  const storeduserID = localStorage.getItem("userID");
-  const storeduserName = localStorage.getItem("userName");
-  const storedRole = localStorage.getItem("role");
-  const storedAdminID = localStorage.getItem("adminID");
-  if (raw) {
-    try {
-      const { access_token, refresh_token, user, role } = JSON.parse(raw);
-      setTokens(access_token, refresh_token);
-      setState({
-        accessToken: access_token ?? null,
-        user: user ?? null,
-        loading: false,
-        userID: storeduserID ?? null,
-        userName: storeduserName ?? null,
-        role: storedRole ?? user?.role ?? null,
-        adminID: storedAdminID ?? null,
-      });
-      if (role ?? storedRole) {
-        localStorage.setItem("userRole", String(role ?? storedRole));
+  useEffect(() => {
+    logger.debug("contexts/AuthContext", "loading tokens from storage");
+    const raw = localStorage.getItem("auth_tokens");
+    const storeduserID = localStorage.getItem("userID");
+    const storeduserName = localStorage.getItem("userName");
+    const storedRole = localStorage.getItem("role");
+    const storedAdminID = localStorage.getItem("adminID");
+    if (raw) {
+      try {
+        const { access_token, refresh_token, user, role } = JSON.parse(raw);
+        setTokens(access_token, refresh_token);
+        setState({
+          accessToken: access_token ?? null,
+          user: user ?? null,
+          loading: false,
+          userID: storeduserID ?? null,
+          userName: storeduserName ?? null,
+          role: storedRole ?? user?.role ?? null,
+          adminID: storedAdminID ?? null,
+        });
+        logger.debug("contexts/AuthContext", "tokens loaded from storage");
+        if (role ?? storedRole) {
+          localStorage.setItem("userRole", String(role ?? storedRole));
+        }
+        return;
+      } catch {
+        /* ignore parse errors */
       }
-      return;
-    } catch { /* ignore parse errors */ }
-  }
-  setState((s): AuthState => ({ ...s, loading: false, adminID: storedAdminID ?? null }));
-}, []);
+    }
+    setState((s): AuthState => ({
+      ...s,
+      loading: false,
+      adminID: storedAdminID ?? null,
+    }));
+  }, []);
 
 const adminID = state.adminID;
 useEffect(() => {
@@ -110,8 +119,12 @@ useEffect(() => {
         localStorage.setItem("adminID", id);
         setState((s): AuthState => ({ ...s, adminID: id }));
       }
-    } catch {
-      /* ignore */
+    } catch (err) {
+      logger.error(
+        "contexts/AuthContext",
+        "failed to fetch admin ID",
+        err,
+      );
     }
   };
   fetchAdminID();
@@ -139,14 +152,18 @@ useEffect(() => {
         } else {
           localStorage.removeItem("userID");
         }
-        setState((s): AuthState => ({
-          ...s,
-          role: data.role ?? s.role,
-          userName: data.full_name ?? s.userName,
-          userID: data.id ? String(data.id) : s.userID,
-        }));
-      } catch {
-        /* ignore */
+      setState((s): AuthState => ({
+        ...s,
+        role: data.role ?? s.role,
+        userName: data.full_name ?? s.userName,
+        userID: data.id ? String(data.id) : s.userID,
+      }));
+      } catch (err) {
+        logger.error(
+          "contexts/AuthContext",
+          "failed to fetch user profile",
+          err,
+        );
       }
     };
     fetchMe();
@@ -156,11 +173,20 @@ useEffect(() => {
     const access_token = t?.access_token ?? null;
     const refresh_token = t?.refresh_token ?? null;
     if (access_token || refresh_token || user) {
-      localStorage.setItem("auth_tokens", JSON.stringify({ access_token, refresh_token, user }));
+      logger.debug(
+        "contexts/AuthContext",
+        "persisting tokens",
+        { hasAccess: !!access_token, hasRefresh: !!refresh_token },
+      );
+      localStorage.setItem(
+        "auth_tokens",
+        JSON.stringify({ access_token, refresh_token, user }),
+      );
       if (user?.role) {
         localStorage.setItem("role", user.role ?? "");
       }
     } else {
+      logger.debug("contexts/AuthContext", "clearing stored tokens");
       localStorage.removeItem("auth_tokens");
       localStorage.removeItem("role");
     }
@@ -184,18 +210,24 @@ useEffect(() => {
   }, [setState]);
 
   const loginWithPassword = useCallback(async (email: string, password: string): Promise<string | null> => {
+    logger.info(
+      "contexts/AuthContext",
+      "attempting login with password",
+      { email },
+    );
     try {
       const res = await authApi.loginAuthLoginPost({ email, password });
       const body = res.data as LoginResponse;
       const token = body.access_token ?? body.token ?? null;
       const role: string | null = body.role ?? body.user?.role ?? null;
+      logger.debug("contexts/AuthContext", "storing login tokens");
       localStorage.setItem(
         "auth_tokens",
         JSON.stringify({
           access_token: token,
           refresh_token: body.refresh_token ?? null,
           user: body.user ?? null,
-        })
+        }),
       );
       if (role) {
         localStorage.setItem("role", role ?? "");
@@ -225,9 +257,13 @@ useEffect(() => {
       if (token) {
         maybeSubscribePush();
       }
+      logger.info("contexts/AuthContext", "login successful");
       return role;
     } catch (e: unknown) {
-      const err = e as { response?: { status?: number; data?: { detail?: string } } };
+      logger.error("contexts/AuthContext", "login request failed", e);
+      const err = e as {
+        response?: { status?: number; data?: { detail?: string } };
+      };
       const status = err.response?.status;
       const text = err.response?.data?.detail || "";
       if (status === 401 || /invalid/i.test(String(text))) {
@@ -237,22 +273,47 @@ useEffect(() => {
     }
   }, []);
 
-    const registerWithPassword = useCallback(async (fullName: string, email: string, password: string) => {
-      await authApi.endpointRegisterAuthRegisterPost({ full_name: fullName, email, password });
-      // auto-login
-      await loginWithPassword(email, password);
-    }, [loginWithPassword]);
+  const registerWithPassword = useCallback(
+    async (fullName: string, email: string, password: string) => {
+      try {
+        await authApi.endpointRegisterAuthRegisterPost({
+          full_name: fullName,
+          email,
+          password,
+        });
+        // auto-login
+        await loginWithPassword(email, password);
+      } catch (err) {
+        logger.error(
+          "contexts/AuthContext",
+          "registration failed",
+          err,
+        );
+        throw err;
+      }
+    },
+    [loginWithPassword],
+  );
 
-  const loginWithOAuth = useCallback(() => beginLogin(oauthCfg), []);
+  const loginWithOAuth = useCallback(() => {
+    logger.info("contexts/AuthContext", "starting OAuth login");
+    return beginLogin(oauthCfg);
+  }, []);
 
   const finishOAuthIfCallback = useCallback(async () => {
     if (!/\bcode=/.test(window.location.search)) return;
-    const tokens = await completeLoginFromRedirect(oauthCfg);
-    // Optional: fetch profile here via authApi if you have /auth/me
-    persist(tokens, null);
+    try {
+      const tokens = await completeLoginFromRedirect(oauthCfg);
+      // Optional: fetch profile here via authApi if you have /auth/me
+      persist(tokens, null);
+      logger.info("contexts/AuthContext", "OAuth login completed");
+    } catch (err) {
+      logger.error("contexts/AuthContext", "OAuth login failed", err);
+    }
   }, [persist]);
 
   const logout = useCallback(() => {
+    logger.info("contexts/AuthContext", "logging out");
     persist(null, null, null);
     localStorage.removeItem("userID");
     localStorage.removeItem("userName");
@@ -274,10 +335,13 @@ useEffect(() => {
     const r = getRefreshToken();
     if (!r) return null;
     try {
+      logger.info("contexts/AuthContext", "refreshing access token");
       const t = await refreshTokens(oauthCfg, r);
       persist(t, null);
+      logger.info("contexts/AuthContext", "token refresh successful");
       return t.access_token;
-    } catch {
+    } catch (err) {
+      logger.error("contexts/AuthContext", "token refresh failed", err);
       logout();
       return null;
     }

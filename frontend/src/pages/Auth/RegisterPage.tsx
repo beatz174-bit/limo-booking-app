@@ -36,7 +36,9 @@ function RegisterPage() {
 
         try {
             // Register the user
+            logger.debug("pages/Auth/RegisterPage", "Submitting registration for email:", email);
             await authApi.endpointRegisterAuthRegisterPost(registerRequest);
+            logger.info("pages/Auth/RegisterPage", "Registration succeeded for email:", email);
 
              // Optionally use context login to update global state
             await loginWithPassword(email, password);

@@ -1,3 +1,11 @@
+/**
+ * Lightweight logger with optional Graylog forwarding.
+ *
+ * The log level can be restricted via the `VITE_LOG_LEVEL` environment
+ * variable. Messages below the configured threshold are ignored. Supported
+ * levels in ascending order are `debug`, `info`, `warn` and `error`. If the
+ * variable is unset or invalid the logger defaults to `info`.
+ */
 export type LogLevel = "info" | "warn" | "error" | "debug";
 
 export interface LogPayload {
@@ -12,6 +20,16 @@ export interface LogPayload {
 
 const env = (import.meta.env.ENV as string) || import.meta.env.MODE || "development";
 const source = "limo-booking-app";
+
+const levels: LogLevel[] = ["debug", "info", "warn", "error"];
+const levelName = ((import.meta.env.VITE_LOG_LEVEL as string) || "info").toLowerCase();
+const threshold: LogLevel = levels.includes(levelName as LogLevel)
+  ? (levelName as LogLevel)
+  : "info";
+
+function shouldLog(level: LogLevel): boolean {
+  return levels.indexOf(level) >= levels.indexOf(threshold);
+}
 
 function createPayload(level: LogLevel, facility: string, args: unknown[]): LogPayload {
   const message = args
@@ -42,6 +60,7 @@ async function forward(payload: LogPayload): Promise<void> {
 }
 
 function log(level: LogLevel, facility: string, ...args: unknown[]): void {
+  if (!shouldLog(level)) return;
   const payload = createPayload(level, facility, args);
   console[level](payload);
   void forward(payload);

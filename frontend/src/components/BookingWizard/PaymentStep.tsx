@@ -63,14 +63,40 @@ function PaymentInner({ data, onBack }: Props) {
     async function fetchPrice() {
       if (!data.pickup || !data.dropoff) return;
       const metrics = await getMetrics(
-        { lat: data.pickup.lat, lon: data.pickup.lng },
-        { lat: data.dropoff.lat, lon: data.dropoff.lng }
+        data.pickup.lat,
+        data.pickup.lng,
+        data.dropoff.lat,
+        data.dropoff.lng
       );
       if (!ignore && metrics) {
+        logger.debug(
+          'components/BookingWizard/PaymentStep',
+          'Route distance km',
+          metrics.km
+        );
+        logger.debug(
+          'components/BookingWizard/PaymentStep',
+          'Route duration min',
+          metrics.min
+        );
+        logger.debug(
+          'components/BookingWizard/PaymentStep',
+          'Tariff',
+          {
+            flagfall: tariff.flagfall,
+            perKm: tariff.perKm,
+            perMin: tariff.perMin,
+          }
+        );
         const estimate =
           tariff.flagfall +
           metrics.km * tariff.perKm +
           metrics.min * tariff.perMin;
+        logger.info(
+          'components/BookingWizard/PaymentStep',
+          'Price estimate',
+          estimate
+        );
         setPrice(estimate);
         setDistanceKm(metrics.km);
         setDurationMin(metrics.min);
