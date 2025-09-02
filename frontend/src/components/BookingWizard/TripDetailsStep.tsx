@@ -2,27 +2,13 @@ import { useState } from 'react';
 import { Stack, TextField, Button } from '@mui/material';
 import { AddressField } from '@/components/AddressField';
 import { useAddressAutocomplete } from '@/hooks/useAddressAutocomplete';
-
-interface Location {
-  address: string;
-  lat: number;
-  lng: number;
-}
-
-interface FormData {
-  pickup?: Location;
-  dropoff?: Location;
-  passengers?: number;
-  notes?: string;
-  pickupValid?: boolean;
-  dropoffValid?: boolean;
-}
+import { BookingFormData } from '@/types/BookingFormData';
 
 interface Props {
-  data: FormData;
-  onNext: (data: FormData) => void;
+  data: BookingFormData;
+  onNext: (data: Partial<BookingFormData>) => void;
   onBack: () => void;
-  onChange: (data: Partial<FormData>) => void;
+  onChange: (data: Partial<BookingFormData>) => void;
 }
 
 export default function TripDetailsStep({ data, onNext, onBack, onChange }: Props) {

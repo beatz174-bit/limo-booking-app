@@ -9,7 +9,7 @@ vi.mock('@/hooks/useAvailability', () => ({
 
 test('passes ISO string to onNext', async () => {
   const onNext = vi.fn();
-  render(<SelectTimeStep data={{}} onNext={onNext} />);
+  render(<SelectTimeStep data={{ passengers: 1 }} onNext={onNext} />);
   const input = screen.getByLabelText(/pickup time/i);
   const value = '2025-01-01T10:00';
   await userEvent.clear(input);

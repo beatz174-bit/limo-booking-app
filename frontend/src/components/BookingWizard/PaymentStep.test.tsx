@@ -41,7 +41,10 @@ test('shows tracking link after booking', async () => {
             pickup: { address: 'A', lat: 0, lng: 0 },
             dropoff: { address: 'B', lat: 1, lng: 1 },
             passengers: 1,
-            customer: { name: '', email: '' },
+            notes: '',
+            customer: { name: '', email: '', phone: '' },
+            pickupValid: true,
+            dropoffValid: true,
           }}
           onBack={() => {}}
         />
@@ -67,7 +70,10 @@ test('renders fare breakdown when dev features enabled', () => {
             pickup: { address: 'A', lat: 0, lng: 0 },
             dropoff: { address: 'B', lat: 1, lng: 1 },
             passengers: 1,
-            customer: { name: '', email: '' },
+            notes: '',
+            customer: { name: '', email: '', phone: '' },
+            pickupValid: true,
+            dropoffValid: true,
           }}
           onBack={() => {}}
         />
@@ -90,7 +96,10 @@ test('hides fare breakdown when dev features disabled', () => {
             pickup: { address: 'A', lat: 0, lng: 0 },
             dropoff: { address: 'B', lat: 1, lng: 1 },
             passengers: 1,
-            customer: { name: '', email: '' },
+            notes: '',
+            customer: { name: '', email: '', phone: '' },
+            pickupValid: true,
+            dropoffValid: true,
           }}
           onBack={() => {}}
         />

@@ -5,33 +5,23 @@ import TripDetailsStep from './TripDetailsStep';
 import PaymentStep from './PaymentStep';
 import { MapProvider } from '@/components/MapProvider';
 import { MapRoute } from '@/components/MapRoute';
-
-interface Location {
-  address: string;
-  lat: number;
-  lng: number;
-}
-
-interface FormData {
-  pickup_when?: string;
-  pickup?: Location;
-  dropoff?: Location;
-  passengers?: number;
-  notes?: string;
-  customer?: { name?: string; email?: string; phone?: string };
-  pickupValid?: boolean;
-  dropoffValid?: boolean;
-}
+import { BookingFormData } from '@/types/BookingFormData';
 
 const steps = ['Select time', 'Trip details', 'Payment'];
 
 export default function BookingWizard() {
   const [active, setActive] = useState(0);
-  const [form, setForm] = useState<FormData>({ passengers: 1 });
-  const update = (data: Partial<FormData>) => {
+  const [form, setForm] = useState<BookingFormData>({
+    passengers: 1,
+    notes: '',
+    customer: {},
+    pickupValid: false,
+    dropoffValid: false,
+  });
+  const update = (data: Partial<BookingFormData>) => {
     setForm((f) => ({ ...f, ...data }));
   };
-  const next = (data: Partial<FormData>) => {
+  const next = (data: Partial<BookingFormData>) => {
     update(data);
     setActive((s) => s + 1);
   };
@@ -50,7 +40,9 @@ export default function BookingWizard() {
       {active === 1 && (
         <TripDetailsStep data={form} onChange={update} onNext={next} onBack={back} />
       )}
-      {active === 2 && <PaymentStep data={form} onBack={back} />}
+      {active === 2 && (
+        <PaymentStep data={form as Required<BookingFormData>} onBack={back} />
+      )}
       {active > 0 && form.pickupValid && form.dropoffValid && (
         <Box mt={2}>
           <MapProvider>
