@@ -13,7 +13,8 @@ export function useBookingChannel(bookingId: string | null) {
 
   useEffect(() => {
     if (!bookingId) return;
-    const wsUrl = `${import.meta.env.VITE_BACKEND_URL.replace('http', 'ws')}/ws/bookings/${bookingId}`;
+    const token = localStorage.getItem('token');
+    const wsUrl = `${import.meta.env.VITE_BACKEND_URL.replace('http', 'ws')}/ws/bookings/${bookingId}/watch?token=${token}`;
     const ws = new WebSocket(wsUrl);
     ws.onmessage = (e) => {
       try {

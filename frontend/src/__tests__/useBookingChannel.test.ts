@@ -16,6 +16,7 @@ describe('useBookingChannel', () => {
   beforeAll(() => {
     vi.stubGlobal('WebSocket', WSStub as unknown as typeof WebSocket);
     vi.stubEnv('VITE_BACKEND_URL', 'http://api');
+    vi.stubGlobal('localStorage', { getItem: () => 'test-token' });
   });
   afterAll(() => {
     vi.unstubAllGlobals();
@@ -25,6 +26,7 @@ describe('useBookingChannel', () => {
   it('updates state on message', () => {
     const { result } = renderHook(() => useBookingChannel('42'));
     const ws = WSStub.instances[0];
+    expect(ws.url).toBe('ws://api/ws/bookings/42/watch?token=test-token');
     act(() => {
       if (ws.onmessage) {
         ws.onmessage({ data: JSON.stringify({ lat: 1, lng: 2, ts: 0 }) });
