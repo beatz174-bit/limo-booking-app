@@ -22,10 +22,9 @@ from typing import Iterable, Tuple
 
 import httpx
 import websockets
-from sqlalchemy import select
-
 from app.db.database import AsyncSessionLocal
 from app.models.booking import Booking, BookingStatus
+from sqlalchemy import select
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
