@@ -24,10 +24,13 @@ These instructions apply to the entire repository.
 
 Run the following before committing:
 
+To prevent excessive console output from hanging sessions, redirect test
+and lint output to log files and view the tail for context.
+
 ```bash
-npm run lint           # frontend lint
-cd backend && pytest   # backend tests
-cd ../frontend && npm test  # frontend unit tests
+npm run lint 2>&1 | tee /tmp/lint.log | tail -n 200
+cd backend && pytest >/tmp/backend.log 2>&1; tail -n 200 /tmp/backend.log
+cd ../frontend && npm test >/tmp/frontend.log 2>&1; tail -n 200 /tmp/frontend.log
 ```
 
 ## Commit Messages
