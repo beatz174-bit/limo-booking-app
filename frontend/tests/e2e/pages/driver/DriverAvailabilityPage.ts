@@ -20,13 +20,20 @@ export class DriverAvailabilityPage {
     return this.page.getByLabel(/end/i);
   }
 
+  reasonField() {
+    return this.page.getByLabel(/reason/i);
+  }
+
   addButton() {
     return this.page.getByRole('button', { name: /add/i });
   }
 
-  async addSlot(start: string, end: string) {
+  async addSlot(start: string, end: string, reason?: string) {
     await this.startField().fill(start);
     await this.endField().fill(end);
+    if (reason) {
+      await this.reasonField().fill(reason);
+    }
     await this.addButton().click();
   }
 }
