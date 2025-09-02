@@ -3,13 +3,14 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 import stripe
+from fastapi import HTTPException
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.security import hash_password
 from app.models.booking import Booking, BookingStatus
 from app.models.user_v2 import User, UserRole
 from app.services import booking_service
-from fastapi import HTTPException
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
 
 pytestmark = pytest.mark.asyncio
 
@@ -58,5 +59,5 @@ async def test_confirm_booking_handles_stripe_error(
 
     assert excinfo.value.status_code == 400
     await async_session.refresh(booking)
-    assert booking.status is BookingStatus.PENDING
+    assert booking.status is BookingStatus.DEPOSIT_FAILED
     assert booking.deposit_payment_intent_id is None
