@@ -4,6 +4,7 @@ import { DriverAvailabilityPage } from '../../pages/driver/DriverAvailabilityPag
 interface Slot {
   start_dt?: string;
   end_dt?: string;
+  reason?: string;
 }
 
 const token = 'driver-token';
@@ -48,9 +49,11 @@ test('driver manages availability slots', async ({ page }) => {
 
   const start = '2024-01-01T10:00';
   const end = '2024-01-01T11:00';
-  await availability.addSlot(start, end);
+  const reason = 'Busy';
+  await availability.addSlot(start, end, reason);
 
   expect(captured.start_dt).toBe(start);
   expect(captured.end_dt).toBe(end);
+  expect(captured.reason).toBe(reason);
 });
 

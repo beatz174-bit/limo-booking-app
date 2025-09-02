@@ -12,6 +12,14 @@ import DriverDashboard from '@/pages/Driver/DriverDashboard';
 import { driverBookingsApi } from '@/components/ApiConfig';
 
 describe('DriverDashboard', () => {
+  beforeEach(() => {
+    vi.stubGlobal('getAccessToken', vi.fn());
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it('loads and confirms booking', async () => {
     const bookings = [
       {
@@ -34,7 +42,6 @@ describe('DriverDashboard', () => {
     fireEvent.click(screen.getByText('Confirm'));
     fireEvent.click(screen.getByRole('tab', { name: /driver confirmed/i }));
     await waitFor(() => expect(screen.getByText('Leave now')).toBeInTheDocument());
-    vi.unstubAllGlobals();
   });
 
   it('shows error message when confirm fails', async () => {
@@ -68,7 +75,6 @@ describe('DriverDashboard', () => {
     await waitFor(() =>
       expect(screen.getByText(/500 fail/i)).toBeInTheDocument(),
     );
-    vi.unstubAllGlobals();
   });
 });
 
