@@ -1,14 +1,11 @@
 import { useState } from 'react';
 import { Stack, TextField, Button, Typography } from '@mui/material';
 import useAvailability from '@/hooks/useAvailability';
-
-interface FormData {
-  pickup_when?: string;
-}
+import { BookingFormData } from '@/types/BookingFormData';
 
 interface Props {
-  data: FormData;
-  onNext: (data: FormData) => void;
+  data: BookingFormData;
+  onNext: (data: Partial<BookingFormData>) => void;
 }
 
 export default function SelectTimeStep({ data, onNext }: Props) {

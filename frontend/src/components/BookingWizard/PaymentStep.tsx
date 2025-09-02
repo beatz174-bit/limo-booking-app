@@ -13,6 +13,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { useRouteMetrics } from '@/hooks/useRouteMetrics';
 import FareBreakdown from '@/components/FareBreakdown';
 import * as logger from '@/lib/logger';
+import { BookingFormData } from '@/types/BookingFormData';
 
 const stripePromise = (async () => {
   try {
@@ -29,23 +30,8 @@ const stripePromise = (async () => {
   }
 })();
 
-interface Location {
-  address: string;
-  lat: number;
-  lng: number;
-}
-
-interface BookingData {
-  pickup_when: string;
-  pickup: Location;
-  dropoff: Location;
-  passengers: number;
-  notes?: string;
-  customer?: { name?: string; email?: string; phone?: string };
-}
-
 interface Props {
-  data: BookingData;
+  data: Required<BookingFormData>;
   onBack: () => void;
 }
 
@@ -117,7 +103,11 @@ function PaymentInner({ data, onBack }: Props) {
     }
     const card = elements.getElement(CardElement);
     const payload = {
-      ...data,
+      pickup_when: data.pickup_when,
+      pickup: data.pickup,
+      dropoff: data.dropoff,
+      passengers: data.passengers,
+      notes: data.notes,
       customer: { name, email, phone },
     };
     logger.info(
