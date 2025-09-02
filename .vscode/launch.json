@@ -101,6 +101,15 @@
       "console": "integratedTerminal",
       "preLaunchTask": "npm: dev",
       "envFile": "${workspaceFolder}/frontend/.env.e2e"
+    },
+    {
+      "name": "Tracking Simulator",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/tracking-simulator.py",
+      "cwd": "${workspaceFolder}/backend",
+      "console": "integratedTerminal",
+      "justMyCode": true
     }
   ],
   
