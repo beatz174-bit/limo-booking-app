@@ -5,11 +5,11 @@ import PriceSummary from '@/components/PriceSummary';
 import FareBreakdown from '@/components/FareBreakdown';
 import { useSettings } from '@/hooks/useSettings';
 import { useRouteMetrics } from '@/hooks/useRouteMetrics';
-import type { AppSchemasBookingV2BookingRead } from '@/api-client';
+import type { BookingRead } from '@/api-client';
 
 function BookingConfirmationPage() {
   const location = useLocation();
-  const booking = location.state as AppSchemasBookingV2BookingRead | undefined;
+  const booking = location.state as BookingRead | undefined;
 
   const { data: settings } = useSettings();
   interface SettingsAliases {
