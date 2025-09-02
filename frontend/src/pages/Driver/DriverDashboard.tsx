@@ -22,6 +22,7 @@ import { getAccessToken } from '@/services/tokenStore';
 
 const statuses: BookingStatus[] = [
   'PENDING',
+  'DEPOSIT_FAILED',
   'DRIVER_CONFIRMED',
   'ON_THE_WAY',
   'ARRIVED_PICKUP',

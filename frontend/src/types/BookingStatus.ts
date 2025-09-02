@@ -2,6 +2,7 @@ import { type ChipProps } from '@mui/material';
 
 export type BookingStatus =
   | 'PENDING'
+  | 'DEPOSIT_FAILED'
   | 'DRIVER_CONFIRMED'
   | 'DECLINED'
   | 'ON_THE_WAY'
@@ -13,6 +14,7 @@ export type BookingStatus =
 
 export const bookingStatusLabels: Record<BookingStatus, string> = {
   PENDING: 'Pending',
+  DEPOSIT_FAILED: 'Deposit failed',
   DRIVER_CONFIRMED: 'Driver confirmed',
   DECLINED: 'Declined',
   ON_THE_WAY: 'On the way',
@@ -25,6 +27,7 @@ export const bookingStatusLabels: Record<BookingStatus, string> = {
 
 export const bookingStatusColors: Record<BookingStatus, ChipProps['color']> = {
   PENDING: 'warning',
+  DEPOSIT_FAILED: 'error',
   DRIVER_CONFIRMED: 'info',
   DECLINED: 'error',
   ON_THE_WAY: 'info',

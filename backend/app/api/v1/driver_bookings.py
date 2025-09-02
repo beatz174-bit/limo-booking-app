@@ -47,6 +47,13 @@ async def confirm_booking(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     leave_at = await scheduler.schedule_leave_now(booking)
+    await notifications.create_notification(
+        db,
+        booking.id,
+        NotificationType.CONFIRMATION,
+        UserRole.CUSTOMER,
+        {"deposit_required_cents": booking.deposit_required_cents},
+    )
     return BookingStatusResponse(status=booking.status, leave_at=leave_at)
 
 
