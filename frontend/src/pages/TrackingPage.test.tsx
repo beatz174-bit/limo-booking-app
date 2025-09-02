@@ -61,9 +61,9 @@ describe('TrackingPage', () => {
 
   it('updates marker and timeline', async () => {
     const wrapper = (
-      <MemoryRouter initialEntries={['/track/abc']}>
+      <MemoryRouter initialEntries={['/t/abc']}>
         <Routes>
-          <Route path="/track/:code" element={<TrackingPage />} />
+          <Route path="/t/:code" element={<TrackingPage />} />
         </Routes>
       </MemoryRouter>
     );
