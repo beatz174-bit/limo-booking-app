@@ -4,7 +4,6 @@ import { Box, Button, Stack, Typography } from '@mui/material';
 import PriceSummary from '@/components/PriceSummary';
 import FareBreakdown from '@/components/FareBreakdown';
 import { useSettings } from '@/hooks/useSettings';
-import { settingsApi } from '@/components/ApiConfig';
 import { useRouteMetrics } from '@/hooks/useRouteMetrics';
 import type { AppSchemasBookingV2BookingRead } from '@/api-client';
 
@@ -12,7 +11,7 @@ function BookingConfirmationPage() {
   const location = useLocation();
   const booking = location.state as AppSchemasBookingV2BookingRead | undefined;
 
-  const { data: settings } = useSettings(settingsApi);
+  const { data: settings } = useSettings();
   interface SettingsAliases {
     flagfall?: number;
     per_km_rate?: number;

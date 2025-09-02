@@ -1,9 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { AxiosError } from "axios";
-// Use the SAME shared API client that RegisterPage uses so we hit the correct backend/db
-// Update the path below to exactly match RegisterPage's import if different
-// import { SettingsApi } from "../../api-client/api";
-import { configuration, SettingsApi } from "@/components/ApiConfig";
+import React, { useEffect, useState } from "react";
+import { CONFIG } from '@/config';
+import { apiFetch } from '@/services/apiFetch';
 import type { SettingsPayload } from "@/api-client";
 import { useDevFeatures } from '@/contexts/DevFeaturesContext';
 import {
@@ -31,15 +28,6 @@ import {
 
 
 export default function AdminDashboard() {
-  // Instantiate the generated API with the SAME Configuration style used in RegisterPage
-  // const basePath = import.meta.env.VITE_API_BASE_URL as string | undefined;
-  // const config = new Configuration({
-  //   basePath,
-  //   // If RegisterPage uses accessToken in Configuration, mirror that here.
-  //   // Replace with your actual token plumbed from context if needed.
-  //   accessToken: () => localStorage.getItem("access_token") || "",
-  // });
-  const settingsApi = useMemo(() => new SettingsApi(configuration), []);
   const { enabled: devEnabled, setEnabled: setDevEnabled, isProd } = useDevFeatures();
 
   // Local UI state
@@ -54,28 +42,27 @@ export default function AdminDashboard() {
   const [perKm, setPerKm] = useState<string>("0");
   const [perMinute, setPerMinute] = useState<string>("0");
 
-  // Load settings using the generated client
+  // Load settings
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
-        // Method names depend on your generator's operationIds. Adjust if needed.
-        // const res = await (settingsApi as any).getSettings?.() ?? await (settingsApi as any).settingsGet?.();
-        const res = await settingsApi.apiGetSettingsSettingsGet()
-        const data: SettingsPayload = (res?.data ?? res) as SettingsPayload;
+        const res = await apiFetch(`${CONFIG.API_BASE_URL}/settings`);
+        if (!res.ok) {
+          if (res.status !== 404) {
+            throw new Error(`Failed to load settings (${res.status})`);
+          }
+          return;
+        }
         if (!mounted) return;
-        setAccountMode(!!data.account_mode);
-        setFlagfall(String(data.flagfall ?? 0));
-        setPerKm(String(data.per_km_rate ?? 0));
-        setPerMinute(String(data.per_minute_rate ?? 0));
+        const payload = (await res.json()) as SettingsPayload;
+        setAccountMode(!!payload.account_mode);
+        setFlagfall(String(payload.flagfall ?? 0));
+        setPerKm(String(payload.per_km_rate ?? 0));
+        setPerMinute(String(payload.per_minute_rate ?? 0));
       } catch (err) {
-        const axiosErr = err as AxiosError;
-        if (axiosErr.response?.status !== 404 && axiosErr.code !== "ERR_CANCELED") {
-          setError(
-            axiosErr.response?.data
-              ? `Failed to load settings (${axiosErr.response.status})`
-              : axiosErr.message
-          );
+        if (mounted) {
+          setError(err instanceof Error ? err.message : String(err));
         }
       } finally {
         if (mounted) setInitialLoading(false);
@@ -84,7 +71,7 @@ export default function AdminDashboard() {
     return () => {
       mounted = false;
     };
-  }, [settingsApi]);
+  }, []);
 
   // Validation helpers
   function validateNumeric(value: string): string | null {
@@ -111,17 +98,17 @@ export default function AdminDashboard() {
         per_km_rate: Number(perKm),
         per_minute_rate: Number(perMinute),
       };
-      // Use generated client (adjust method to your generated operationId)
-      // await ((settingsApi as any).updateSettings?.(payload) ?? (settingsApi as any).settingsPut?.(payload));
-      await settingsApi.apiUpdateSettingsSettingsPut(payload)
+      const res = await apiFetch(`${CONFIG.API_BASE_URL}/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        throw new Error(`Save failed (${res.status})`);
+      }
       setSuccess("Settings saved");
     } catch (err) {
-      const axiosErr = err as AxiosError;
-      setError(
-        axiosErr.response?.data
-          ? `Save failed (${axiosErr.response.status})`
-          : axiosErr.message
-      );
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setSaving(false);
     }

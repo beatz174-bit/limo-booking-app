@@ -10,7 +10,6 @@ import { useState, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useStripeSetupIntent } from '@/hooks/useStripeSetupIntent';
 import { useSettings } from '@/hooks/useSettings';
-import { settingsApi } from '@/components/ApiConfig';
 import { useRouteMetrics } from '@/hooks/useRouteMetrics';
 import FareBreakdown from '@/components/FareBreakdown';
 import * as logger from '@/lib/logger';
@@ -54,7 +53,7 @@ function PaymentInner({ data, onBack }: Props) {
   const stripe = useStripe();
   const elements = useElements();
   const { createBooking } = useStripeSetupIntent();
-  const { data: settings } = useSettings(settingsApi);
+  const { data: settings } = useSettings();
   interface SettingsAliases {
     flagfall?: number;
     per_km_rate?: number;
