@@ -17,16 +17,86 @@ branch_labels = None
 depends_on = None
 
 
-def upgrade():
-    op.execute("ALTER TYPE bookingstatus ADD VALUE IF NOT EXISTS 'DEPOSIT_FAILED'")
+def upgrade() -> None:
+    dialect = op.get_bind().dialect.name
+    if dialect == "postgresql":
+        op.execute("ALTER TYPE bookingstatus ADD VALUE IF NOT EXISTS 'DEPOSIT_FAILED'")
+    elif dialect == "sqlite":
+        with op.batch_alter_table("bookings_v2") as batch_op:
+            batch_op.alter_column(
+                "status",
+                existing_type=sa.Enum(
+                    "PENDING",
+                    "DRIVER_CONFIRMED",
+                    "DECLINED",
+                    "ON_THE_WAY",
+                    "ARRIVED_PICKUP",
+                    "IN_PROGRESS",
+                    "ARRIVED_DROPOFF",
+                    "COMPLETED",
+                    "CANCELLED",
+                    name="bookingstatus",
+                ),
+                type_=sa.Enum(
+                    "PENDING",
+                    "DRIVER_CONFIRMED",
+                    "DECLINED",
+                    "ON_THE_WAY",
+                    "ARRIVED_PICKUP",
+                    "IN_PROGRESS",
+                    "ARRIVED_DROPOFF",
+                    "COMPLETED",
+                    "CANCELLED",
+                    "DEPOSIT_FAILED",
+                    name="bookingstatus",
+                ),
+                existing_nullable=False,
+            )
+    else:
+        raise NotImplementedError(f"Unsupported dialect: {dialect}")
 
 
-def downgrade():
-    op.execute("ALTER TYPE bookingstatus RENAME TO bookingstatus_old")
-    op.execute(
-        "CREATE TYPE bookingstatus AS ENUM('PENDING','DRIVER_CONFIRMED','DECLINED','ON_THE_WAY','ARRIVED_PICKUP','IN_PROGRESS','ARRIVED_DROPOFF','COMPLETED','CANCELLED')"
-    )
-    op.execute(
-        "ALTER TABLE bookings_v2 ALTER COLUMN status TYPE bookingstatus USING status::text::bookingstatus"
-    )
-    op.execute("DROP TYPE bookingstatus_old")
+def downgrade() -> None:
+    dialect = op.get_bind().dialect.name
+    if dialect == "postgresql":
+        op.execute("ALTER TYPE bookingstatus RENAME TO bookingstatus_old")
+        op.execute(
+            "CREATE TYPE bookingstatus AS ENUM('PENDING','DRIVER_CONFIRMED','DECLINED','ON_THE_WAY','ARRIVED_PICKUP','IN_PROGRESS','ARRIVED_DROPOFF','COMPLETED','CANCELLED')"
+        )
+        op.execute(
+            "ALTER TABLE bookings_v2 ALTER COLUMN status TYPE bookingstatus USING status::text::bookingstatus"
+        )
+        op.execute("DROP TYPE bookingstatus_old")
+    elif dialect == "sqlite":
+        with op.batch_alter_table("bookings_v2") as batch_op:
+            batch_op.alter_column(
+                "status",
+                existing_type=sa.Enum(
+                    "PENDING",
+                    "DRIVER_CONFIRMED",
+                    "DECLINED",
+                    "ON_THE_WAY",
+                    "ARRIVED_PICKUP",
+                    "IN_PROGRESS",
+                    "ARRIVED_DROPOFF",
+                    "COMPLETED",
+                    "CANCELLED",
+                    "DEPOSIT_FAILED",
+                    name="bookingstatus",
+                ),
+                type_=sa.Enum(
+                    "PENDING",
+                    "DRIVER_CONFIRMED",
+                    "DECLINED",
+                    "ON_THE_WAY",
+                    "ARRIVED_PICKUP",
+                    "IN_PROGRESS",
+                    "ARRIVED_DROPOFF",
+                    "COMPLETED",
+                    "CANCELLED",
+                    name="bookingstatus",
+                ),
+                existing_nullable=False,
+            )
+    else:
+        raise NotImplementedError(f"Unsupported dialect: {dialect}")
