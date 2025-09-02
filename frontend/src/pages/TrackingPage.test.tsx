@@ -11,6 +11,7 @@ vi.mock('@react-google-maps/api', () => ({
   Marker: ({ position }: { position: { lat: number; lng: number } }) => (
     <div data-testid="marker">{position.lat},{position.lng}</div>
   ),
+  DirectionsRenderer: () => <div data-testid="route">route</div>,
 }));
 
 let currentUpdate: LocationUpdate | null = null;
@@ -59,7 +60,7 @@ describe('TrackingPage', () => {
     vi.unstubAllGlobals();
   });
 
-  it('updates marker and timeline', async () => {
+  it('updates marker, timeline and route', async () => {
     const wrapper = (
       <MemoryRouter initialEntries={['/t/abc']}>
         <Routes>
@@ -72,6 +73,7 @@ describe('TrackingPage', () => {
     rerender(wrapper);
     const marker = await findByTestId('marker');
     expect(marker.textContent).toBe('1,2');
+    await findByTestId('route');
     await waitFor(() =>
       expect(
         screen.getByText('En route to pickup').getAttribute('data-active'),
