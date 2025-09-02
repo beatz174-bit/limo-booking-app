@@ -1,4 +1,5 @@
-import { Grid, Button, Typography } from '@mui/material';
+import Grid from '@mui/material/Grid';
+import { Button, Typography } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -25,7 +26,7 @@ export default function HomePage() {
   return (
     <Grid container spacing={2} sx={{ p: 2 }}>
       {tiles.map((tile) => (
-        <Grid item xs={12} sm={6} md={4} key={tile.path}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }} key={tile.path}>
           <Button
             component={Link}
             to={tile.path}
