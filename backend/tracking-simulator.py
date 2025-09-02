@@ -62,6 +62,11 @@ def parse_args() -> argparse.Namespace:
         help="public booking code from the customer link",
     )
     parser.add_argument(
+        "--token",
+        required=True,
+        help="driver JWT for authentication",
+    )
+    parser.add_argument(
         "--distance-km",
         type=float,
         default=DEFAULT_DISTANCE_KM,
@@ -130,7 +135,7 @@ async def route_metrics(
 
 # --- main simulation ---------------------------------------------------------
 async def simulate(
-    api_base: str, booking_code: str, distance_km: float, points: int
+    api_base: str, booking_code: str, token: str, distance_km: float, points: int
 ) -> None:
     transport = httpx.AsyncHTTPTransport(retries=3)
     try:
@@ -140,7 +145,9 @@ async def simulate(
             r.raise_for_status()
             data = r.json()
             booking = data["booking"]
-            ws_url = data["ws_url"]
+            booking_id = booking["id"]
+            base_ws_url = data["ws_url"].split("/ws/")[0]
+            ws_url = f"{base_ws_url}/ws/bookings/{booking_id}?token={token}"
 
             pickup = (booking["pickup_lat"], booking["pickup_lng"])
             dropoff = (booking["dropoff_lat"], booking["dropoff_lng"])
@@ -218,6 +225,7 @@ def main() -> None:
         simulate(
             api_base=args.api_base,
             booking_code=booking_code,
+            token=args.token,
             distance_km=args.distance_km,
             points=args.points,
         )
