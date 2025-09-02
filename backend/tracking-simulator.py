@@ -19,6 +19,9 @@ import httpx
 import websockets
 from websockets.exceptions import WebSocketException
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 API_BASE = "http://localhost:8000"  # backend base URL
 BOOKING_CODE = "ABC123"  # public booking code from the customer link
 POINTS = 120  # samples per leg
@@ -57,6 +60,7 @@ def random_point_near(
 async def route_metrics(
     client: httpx.AsyncClient, a: Tuple[float, float], b: Tuple[float, float]
 ):
+    logger.info("Fetching route metrics from %s to %s", a, b)
     params = {
         "pickupLat": a[0],
         "pickupLon": a[1],
@@ -65,7 +69,10 @@ async def route_metrics(
     }
     r = await client.get(f"{API_BASE}/route-metrics", params=params)
     r.raise_for_status()
-    return r.json()
+    metrics = r.json()
+    logger.info("Route metrics: %s", metrics)
+    return metrics
+
 
 
 # --- main simulation ---------------------------------------------------------
@@ -132,6 +139,9 @@ async def simulate():
         logger.exception("WebSocket error; aborting simulation")
         return
 
+
+
+        logger.info("Simulation completed")
 
 
 if __name__ == "__main__":
