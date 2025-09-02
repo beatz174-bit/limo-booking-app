@@ -6,6 +6,7 @@ Requirements:
   pip install httpx websockets
 """
 
+import argparse
 import asyncio
 import json
 import math
@@ -15,18 +16,40 @@ from typing import Iterable, Tuple
 
 import httpx
 import websockets
+from sqlalchemy import select
 
-API_BASE = "http://localhost:8000"   # backend base URL
-BOOKING_CODE = "ABC123"              # public booking code from the customer link
-POINTS = 120                         # samples per leg
+from app.db.database import AsyncSessionLocal
+from app.models.booking import Booking, BookingStatus
+
+API_BASE = "http://localhost:8000"  # backend base URL
+POINTS = 120  # samples per leg
+
+
+async def fetch_driver_confirmed_bookings():
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(
+                Booking.id,
+                Booking.public_code,
+                Booking.pickup_address,
+                Booking.dropoff_address,
+            ).where(Booking.status == BookingStatus.DRIVER_CONFIRMED)
+        )
+        return result.all()
+
 
 # --- helpers -----------------------------------------------------------------
-def interpolate(a: Tuple[float, float], b: Tuple[float, float], n: int) -> Iterable[Tuple[float, float]]:
+def interpolate(
+    a: Tuple[float, float], b: Tuple[float, float], n: int
+) -> Iterable[Tuple[float, float]]:
     for i in range(n):
         t = i / (n - 1)
         yield (a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1]))
 
-def random_point_near(lat: float, lng: float, distance_km: float = 5.0) -> Tuple[float, float]:
+
+def random_point_near(
+    lat: float, lng: float, distance_km: float = 5.0
+) -> Tuple[float, float]:
     """Return a point `distance_km` away from (lat,lng) in a random direction."""
     R = 6371.0
     bearing = math.radians(random.uniform(0, 360))
@@ -34,22 +57,34 @@ def random_point_near(lat: float, lng: float, distance_km: float = 5.0) -> Tuple
     lat1 = math.radians(lat)
     lng1 = math.radians(lng)
 
-    lat2 = math.asin(math.sin(lat1)*math.cos(d) + math.cos(lat1)*math.sin(d)*math.cos(bearing))
-    lng2 = lng1 + math.atan2(math.sin(bearing)*math.sin(d)*math.cos(lat1),
-                             math.cos(d) - math.sin(lat1)*math.sin(lat2))
+    lat2 = math.asin(
+        math.sin(lat1) * math.cos(d) + math.cos(lat1) * math.sin(d) * math.cos(bearing)
+    )
+    lng2 = lng1 + math.atan2(
+        math.sin(bearing) * math.sin(d) * math.cos(lat1),
+        math.cos(d) - math.sin(lat1) * math.sin(lat2),
+    )
     return (math.degrees(lat2), math.degrees(lng2))
 
-async def route_metrics(client: httpx.AsyncClient, a: Tuple[float, float], b: Tuple[float, float]):
-    params = {"pickupLat": a[0], "pickupLon": a[1], "dropoffLat": b[0], "dropoffLon": b[1]}
+
+async def route_metrics(
+    client: httpx.AsyncClient, a: Tuple[float, float], b: Tuple[float, float]
+):
+    params = {
+        "pickupLat": a[0],
+        "pickupLon": a[1],
+        "dropoffLat": b[0],
+        "dropoffLon": b[1],
+    }
     r = await client.get(f"{API_BASE}/route-metrics", params=params)
     r.raise_for_status()
     return r.json()
 
+
 # --- main simulation ---------------------------------------------------------
-async def simulate():
+async def simulate(booking_code: str):
     async with httpx.AsyncClient() as client:
-        # 1. Get booking + ws_url
-        r = await client.get(f"{API_BASE}/api/v1/track/{BOOKING_CODE}")
+        r = await client.get(f"{API_BASE}/api/v1/track/{booking_code}")
         r.raise_for_status()
         data = r.json()
         booking = data["booking"]
@@ -70,7 +105,11 @@ async def simulate():
         speed1 = leg1["km"] / (leg1["min"] / 60)
 
         for lat, lng in interpolate(start, pickup, POINTS):
-            await ws.send(json.dumps({"lat": lat, "lng": lng, "ts": int(time.time()), "speed": speed1}))
+            await ws.send(
+                json.dumps(
+                    {"lat": lat, "lng": lng, "ts": int(time.time()), "speed": speed1}
+                )
+            )
             await asyncio.sleep(interval1)
 
         # --- leg 2: pickup -> dropoff
@@ -79,8 +118,41 @@ async def simulate():
         speed2 = leg2["km"] / (leg2["min"] / 60)
 
         for lat, lng in interpolate(pickup, dropoff, POINTS):
-            await ws.send(json.dumps({"lat": lat, "lng": lng, "ts": int(time.time()), "speed": speed2}))
+            await ws.send(
+                json.dumps(
+                    {
+                        "lat": lat,
+                        "lng": lng,
+                        "ts": int(time.time()),
+                        "speed": speed2,
+                    }
+                )
+            )
             await asyncio.sleep(interval2)
 
+
+async def main():
+    parser = argparse.ArgumentParser(description="Simulate driver movement")
+    parser.add_argument("--booking-code", help="Public booking code to use")
+    args = parser.parse_args()
+
+    booking_code = args.booking_code
+    if not booking_code:
+        bookings = await fetch_driver_confirmed_bookings()
+        if not bookings:
+            print("No driver confirmed bookings found.")
+            return
+        for idx, (_, code, pickup, dropoff) in enumerate(bookings, start=1):
+            print(f"{idx}. {pickup} -> {dropoff} ({code})")
+        while True:
+            choice = input("Select booking: ")
+            if choice.isdigit() and 1 <= int(choice) <= len(bookings):
+                booking_code = bookings[int(choice) - 1][1]
+                break
+            print("Invalid selection.")
+
+    await simulate(booking_code)
+
+
 if __name__ == "__main__":
-    asyncio.run(simulate())
+    asyncio.run(main())
