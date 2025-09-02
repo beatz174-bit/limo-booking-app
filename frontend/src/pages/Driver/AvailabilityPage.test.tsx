@@ -35,6 +35,7 @@ describe('AvailabilityPage', () => {
 
     await userEvent.type(screen.getByLabelText(/start/i), '2024-01-01T10:00');
     await userEvent.type(screen.getByLabelText(/end/i), '2024-01-01T11:00');
+    await userEvent.type(screen.getByLabelText(/reason/i), 'Busy');
     await userEvent.click(screen.getByRole('button', { name: /add/i }));
 
     expect(fetch).toHaveBeenCalledWith(
@@ -44,6 +45,7 @@ describe('AvailabilityPage', () => {
         body: JSON.stringify({
           start_dt: '2024-01-01T10:00',
           end_dt: '2024-01-01T11:00',
+          reason: 'Busy',
         }),
       }),
     );

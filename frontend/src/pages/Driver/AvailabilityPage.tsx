@@ -9,15 +9,17 @@ export default function AvailabilityPage() {
   const { data, refresh } = useAvailability(month);
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
+  const [reason, setReason] = useState('');
 
   async function create() {
     await apiFetch(`${CONFIG.API_BASE_URL}/api/v1/availability`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ start_dt: start, end_dt: end }),
+      body: JSON.stringify({ start_dt: start, end_dt: end, reason }),
     });
     setStart('');
     setEnd('');
+    setReason('');
     await refresh();
   }
 
@@ -38,6 +40,11 @@ export default function AvailabilityPage() {
           value={end}
           onChange={e => setEnd(e.target.value)}
           InputLabelProps={{ shrink: true }}
+        />
+        <TextField
+          label="Reason"
+          value={reason}
+          onChange={e => setReason(e.target.value)}
         />
         <Button variant="contained" onClick={create} disabled={!start || !end}>
           Add

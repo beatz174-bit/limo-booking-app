@@ -14,12 +14,12 @@ export function useRoute(pickup: string, dropoff: string, enabled = true) {
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
-    setDirections(null);
     if (!enabled) {
       setValid(false);
       return;
     }
+    let cancelled = false;
+    setDirections(null);
     const g = (window as { google?: GMaps }).google;
     if (!pickup || !dropoff || !g?.maps) {
       setValid(false);

@@ -35,7 +35,6 @@ describe('DriverDashboard', () => {
     fireEvent.click(screen.getByText('Confirm'));
     fireEvent.click(screen.getByRole('tab', { name: /driver confirmed/i }));
     await waitFor(() => expect(screen.getByText('Leave now')).toBeInTheDocument());
-    vi.unstubAllGlobals();
   });
 
   it.skip('shows error message when confirm fails', async () => {
@@ -69,7 +68,6 @@ describe('DriverDashboard', () => {
     await waitFor(() =>
       expect(screen.getByText(/500 fail/i)).toBeInTheDocument(),
     );
-    vi.unstubAllGlobals();
   });
 });
 

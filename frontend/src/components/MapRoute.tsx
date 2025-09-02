@@ -37,7 +37,11 @@ function Placeholder({ text = 'map unavailable' }: { text?: string }) {
 
 
 export function MapRoute({ pickup, dropoff, rideTime, onMetrics }: Props) {
-  const { valid, directions } = useRoute(pickup?.address || '', dropoff?.address || '');
+  const { valid, directions } = useRoute(
+    pickup?.address || '',
+    dropoff?.address || '',
+    Boolean(pickup?.lat && dropoff?.lat),
+  );
   const getMetrics = useRouteMetrics();
 
   useEffect(() => {

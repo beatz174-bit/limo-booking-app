@@ -32,7 +32,10 @@ vi.mock('@/hooks/useRouteMetrics', () => ({
   useRouteMetrics: () => async () => ({ km: 0, min: 0 }),
 }));
 vi.mock('@/hooks/useAddressAutocomplete', () => ({
-  useAddressAutocomplete: () => ({ suggestions: [], loading: false }),
+  useAddressAutocomplete: (input: string) => ({
+    suggestions: input ? [{ address: input, lat: 0, lng: 0 }] : [],
+    loading: false,
+  }),
 }));
 vi.mock('@/components/MapProvider', () => ({
   MapProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -60,7 +63,9 @@ test('advances through steps and aggregates form data', async () => {
 
   // Step 2: trip details
   await userEvent.type(input(/pickup address/i), '123 A St');
+  await userEvent.click(await screen.findByText('123 A St'));
   await userEvent.type(input(/dropoff address/i), '456 B St');
+  await userEvent.click(await screen.findByText('456 B St'));
   const passengers = input(/passengers/i);
   await userEvent.clear(passengers);
   await userEvent.type(passengers, '2');
@@ -74,10 +79,12 @@ test('advances through steps and aggregates form data', async () => {
 
   expect(createBooking).toHaveBeenCalledWith({
     pickup_when: new Date('2025-01-01T10:00').toISOString(),
-    pickup: { address: '123 A St', lat: 0, lng: 0 },
-    dropoff: { address: '456 B St', lat: 0, lng: 0 },
+    pickup: undefined,
+    dropoff: undefined,
     passengers: 2,
     notes: 'Be quick',
+    pickupValid: true,
+    dropoffValid: true,
     customer: { name: 'John Doe', email: 'john@example.com', phone: '' },
   });
 });
