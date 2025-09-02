@@ -31,6 +31,7 @@ describe('DriverDashboard', () => {
       }
     ];
     (driverBookingsApi.listBookingsApiV1DriverBookingsGet as Mock).mockResolvedValueOnce({ data: bookings });
+    vi.stubGlobal('getAccessToken', () => undefined);
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: 'DRIVER_CONFIRMED' }) }) as unknown as Response);
 
     render(
@@ -55,6 +56,7 @@ describe('DriverDashboard', () => {
       },
     ];
     (driverBookingsApi.listBookingsApiV1DriverBookingsGet as Mock).mockResolvedValueOnce({ data: bookings });
+    vi.stubGlobal('getAccessToken', () => undefined);
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({

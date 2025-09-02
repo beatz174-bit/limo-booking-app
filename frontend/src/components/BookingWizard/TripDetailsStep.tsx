@@ -14,6 +14,8 @@ interface FormData {
   dropoff?: Location;
   passengers?: number;
   notes?: string;
+  pickupValid?: boolean;
+  dropoffValid?: boolean;
 }
 
 interface Props {
@@ -25,11 +27,15 @@ interface Props {
 
 export default function TripDetailsStep({ data, onNext, onBack, onChange }: Props) {
   const [pickup, setPickup] = useState(data.pickup?.address || '');
-  const [pickupLat, setPickupLat] = useState<number | undefined>(data.pickup?.lat);
-  const [pickupLng, setPickupLng] = useState<number | undefined>(data.pickup?.lng);
+  const [pickupLat, setPickupLat] = useState<number>(data.pickup?.lat ?? 0);
+  const [pickupLng, setPickupLng] = useState<number>(data.pickup?.lng ?? 0);
+  const [pickupValid, setPickupValid] = useState<boolean>(data.pickupValid ?? false);
+  const [pickupTouched, setPickupTouched] = useState(false);
   const [dropoff, setDropoff] = useState(data.dropoff?.address || '');
-  const [dropLat, setDropLat] = useState<number | undefined>(data.dropoff?.lat);
-  const [dropLng, setDropLng] = useState<number | undefined>(data.dropoff?.lng);
+  const [dropLat, setDropLat] = useState<number>(data.dropoff?.lat ?? 0);
+  const [dropLng, setDropLng] = useState<number>(data.dropoff?.lng ?? 0);
+  const [dropoffValid, setDropoffValid] = useState<boolean>(data.dropoffValid ?? false);
+  const [dropoffTouched, setDropoffTouched] = useState(false);
   const [passengers, setPassengers] = useState<number>(data.passengers ?? 1);
   const [notes, setNotes] = useState(data.notes || '');
 
@@ -44,16 +50,26 @@ export default function TripDetailsStep({ data, onNext, onBack, onChange }: Prop
         value={pickup}
         onChange={(val) => {
           setPickup(val);
-          setPickupLat(undefined);
-          setPickupLng(undefined);
-          onChange({ pickup: undefined });
+          setPickupLat(0);
+          setPickupLng(0);
+          setPickupValid(false);
+          onChange({
+            pickup: { address: val, lat: 0, lng: 0 },
+            pickupValid: false,
+          });
         }}
         onSelect={(s) => {
           setPickup(s.address);
           setPickupLat(s.lat);
           setPickupLng(s.lng);
-          onChange({ pickup: { address: s.address, lat: s.lat, lng: s.lng } });
+          setPickupValid(true);
+          onChange({
+            pickup: { address: s.address, lat: s.lat, lng: s.lng },
+            pickupValid: true,
+          });
         }}
+        onBlur={() => setPickupTouched(true)}
+        errorText={!pickupValid && pickupTouched ? 'Select a pickup address' : undefined}
         suggestions={pickupAuto.suggestions}
         loading={pickupAuto.loading}
       />
@@ -63,17 +79,26 @@ export default function TripDetailsStep({ data, onNext, onBack, onChange }: Prop
         value={dropoff}
         onChange={(val) => {
           setDropoff(val);
-          setDropLat(undefined);
-          setDropLng(undefined);
-          onChange({ dropoff: undefined });
+          setDropLat(0);
+          setDropLng(0);
+          setDropoffValid(false);
+          onChange({
+            dropoff: { address: val, lat: 0, lng: 0 },
+            dropoffValid: false,
+          });
         }}
         onSelect={(s) => {
           setDropoff(s.address);
           setDropLat(s.lat);
           setDropLng(s.lng);
-          setDropSelected(true);
-          onChange({ dropoff: { address: s.address, lat: s.lat, lng: s.lng } });
+          setDropoffValid(true);
+          onChange({
+            dropoff: { address: s.address, lat: s.lat, lng: s.lng },
+            dropoffValid: true,
+          });
         }}
+        onBlur={() => setDropoffTouched(true)}
+        errorText={!dropoffValid && dropoffTouched ? 'Select a dropoff address' : undefined}
         suggestions={dropoffAuto.suggestions}
         loading={dropoffAuto.loading}
       />
@@ -99,6 +124,7 @@ export default function TripDetailsStep({ data, onNext, onBack, onChange }: Prop
         <Button onClick={onBack}>Back</Button>
         <Button
           variant="contained"
+          disabled={!pickupValid || !dropoffValid}
           onClick={() =>
             onNext({
               pickup:
@@ -111,6 +137,8 @@ export default function TripDetailsStep({ data, onNext, onBack, onChange }: Prop
                   : undefined,
               passengers,
               notes,
+              pickupValid,
+              dropoffValid,
             })
           }
         >

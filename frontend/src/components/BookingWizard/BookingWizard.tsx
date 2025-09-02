@@ -19,6 +19,8 @@ interface FormData {
   passengers?: number;
   notes?: string;
   customer?: { name?: string; email?: string; phone?: string };
+  pickupValid?: boolean;
+  dropoffValid?: boolean;
 }
 
 const steps = ['Select time', 'Trip details', 'Payment'];
@@ -49,7 +51,7 @@ export default function BookingWizard() {
         <TripDetailsStep data={form} onChange={update} onNext={next} onBack={back} />
       )}
       {active === 2 && <PaymentStep data={form} onBack={back} />}
-      {active > 0 && form.pickup?.address && form.dropoff?.address && (
+      {active > 0 && form.pickupValid && form.dropoffValid && (
         <Box mt={2}>
           <MapProvider>
             <MapRoute
