@@ -6,13 +6,15 @@ Requirements:
   pip install httpx websockets
 
 Example:
-  python tracking-simulator.py --booking ABC123
+  python tracking-simulator.py --booking ABC123 --token <JWT>
+  python tracking-simulator.py --booking ABC123 --email user@example.com
   python tracking-simulator.py --api-base http://localhost:8000 \
     --booking ABC123 --distance-km 10 --points 200
 """
 
 import argparse
 import asyncio
+import getpass
 import json
 import logging
 import math
@@ -63,9 +65,10 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--token",
-        required=True,
         help="driver JWT for authentication",
     )
+    parser.add_argument("--email", help="driver email for authentication")
+    parser.add_argument("--password", help="driver password for authentication")
     parser.add_argument(
         "--distance-km",
         type=float,
@@ -82,6 +85,17 @@ def parse_args() -> argparse.Namespace:
     if args.points < 2:
         parser.error("--points must be at least 2")
     return args
+
+
+async def login(api_base: str, email: str, password: str) -> str:
+    async with httpx.AsyncClient() as client:
+        r = await client.post(
+            f"{api_base}/auth/login", json={"email": email, "password": password}
+        )
+        if r.status_code == 200:
+            return r.json()["token"]
+        logger.error("Authentication failed with status %s: %s", r.status_code, r.text)
+        raise SystemExit(1)
 
 
 # --- helpers -----------------------------------------------------------------
@@ -221,11 +235,16 @@ def select_booking_interactively() -> str:
 def main() -> None:
     args = parse_args()
     booking_code = args.booking or select_booking_interactively()
+    token = args.token
+    if not token:
+        email = args.email or input("Email: ")
+        password = args.password or getpass.getpass("Password: ")
+        token = asyncio.run(login(args.api_base, email, password))
     asyncio.run(
         simulate(
             api_base=args.api_base,
             booking_code=booking_code,
-            token=args.token,
+            token=token,
             distance_km=args.distance_km,
             points=args.points,
         )
