@@ -43,6 +43,7 @@ async def fetch_driver_confirmed_bookings():
         return result.all()
 
 
+
 DEFAULT_API_BASE = "http://localhost:8000"
 DEFAULT_DISTANCE_KM = 5.0
 DEFAULT_POINTS = 120
@@ -124,14 +125,13 @@ async def route_metrics(
 
 
 # --- main simulation ---------------------------------------------------------
-async def simulate(
-    api_base: str, booking_code: str, distance_km: float, points: int
-) -> None:
+async def simulate():
+    api_base = API_BASE
     transport = httpx.AsyncHTTPTransport(retries=3)
     try:
         async with httpx.AsyncClient(transport=transport) as client:
             # 1. Get booking + ws_url
-            r = await client.get(f"{api_base}/api/v1/track/{booking_code}")
+            r = await client.get(f"{api_base}/api/v1/track/{BOOKING_CODE}")
             r.raise_for_status()
             data = r.json()
             booking = data["booking"]
@@ -189,32 +189,32 @@ async def simulate(
         logger.exception("WebSocket error; aborting simulation")
         return
 
-    logger.info("Simulation completed")
+        logger.info("Simulation completed")
+
+
+async def main():
+    parser = argparse.ArgumentParser(description="Simulate driver movement")
+    parser.add_argument("--booking-code", help="Public booking code to use")
+    args = parser.parse_args()
+
+    booking_code = args.booking_code
+    if not booking_code:
+        bookings = await fetch_driver_confirmed_bookings()
+        if not bookings:
+            print("No driver confirmed bookings found.")
+            return
+        for idx, (_, code, pickup, dropoff) in enumerate(bookings, start=1):
+            print(f"{idx}. {pickup} -> {dropoff} ({code})")
+        while True:
+            choice = input("Select booking: ")
+            if choice.isdigit() and 1 <= int(choice) <= len(bookings):
+                booking_code = bookings[int(choice) - 1][1]
+                break
+            print("Invalid selection.")
+
+    await simulate(booking_code)
 
 
 if __name__ == "__main__":
     args = parse_args()
-
-    async def run() -> None:
-        booking_code = args.booking
-        if not booking_code:
-            bookings = await fetch_driver_confirmed_bookings()
-            if not bookings:
-                print("No driver confirmed bookings found.")
-                return
-            for idx, (_, code, pickup, dropoff) in enumerate(bookings, start=1):
-                print(f"{idx}. {pickup} -> {dropoff} ({code})")
-            while True:
-                choice = input("Select booking: ")
-                if choice.isdigit() and 1 <= int(choice) <= len(bookings):
-                    booking_code = bookings[int(choice) - 1][1]
-                    break
-                print("Invalid selection.")
-        await simulate(
-            api_base=args.api_base,
-            booking_code=booking_code,
-            distance_km=args.distance_km,
-            points=args.points,
-        )
-
-    asyncio.run(run())
+    asyncio.run(simulate())
