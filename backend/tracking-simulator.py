@@ -22,10 +22,10 @@ from typing import Iterable, Tuple
 
 import httpx
 import websockets
-from sqlalchemy import select
-
 from app.db.database import AsyncSessionLocal
 from app.models.booking import Booking, BookingStatus
+from sqlalchemy import select
+from websockets.exceptions import WebSocketException
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -45,6 +45,7 @@ async def fetch_driver_confirmed_bookings():
             ).where(Booking.status == BookingStatus.DRIVER_CONFIRMED)
         )
         return result.all()
+
 
 DEFAULT_API_BASE = "http://localhost:8000"
 DEFAULT_BOOKING_CODE = "ABC123"
@@ -77,6 +78,7 @@ def parse_args() -> argparse.Namespace:
         help="samples per leg",
     )
     return parser.parse_args()
+
 
 DEFAULT_API_BASE = "http://localhost:8000"
 DEFAULT_BOOKING_CODE = "ABC123"
@@ -160,11 +162,6 @@ async def route_metrics(
     return metrics
 
 
-
-
-
-
-
 # --- main simulation ---------------------------------------------------------
 async def simulate():
     transport = httpx.AsyncHTTPTransport(retries=3)
@@ -229,10 +226,7 @@ async def simulate():
         logger.exception("WebSocket error; aborting simulation")
         return
 
-
-
         logger.info("Simulation completed")
-
 
 
 async def main():
@@ -256,8 +250,6 @@ async def main():
             print("Invalid selection.")
 
     await simulate(booking_code)
-
-
 
 
 if __name__ == "__main__":
