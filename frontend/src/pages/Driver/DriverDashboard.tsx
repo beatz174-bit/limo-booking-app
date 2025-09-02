@@ -24,7 +24,6 @@ const statuses: BookingStatus[] = [
   'PENDING',
   'DEPOSIT_FAILED',
   'DRIVER_CONFIRMED',
-  'DEPOSIT_FAILED',
   'ON_THE_WAY',
   'ARRIVED_PICKUP',
   'IN_PROGRESS',
