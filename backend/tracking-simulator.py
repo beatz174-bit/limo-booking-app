@@ -17,15 +17,30 @@ from typing import Iterable, Tuple
 
 import httpx
 import websockets
-from websockets.exceptions import WebSocketException
+from sqlalchemy import select
 
-API_BASE = "http://localhost:8000"  # backend base URL
-BOOKING_CODE = "ABC123"  # public booking code from the customer link
-DRIVER_TOKEN = "REPLACE_ME"  # JWT for the driver user
-POINTS = 120  # samples per leg
+from app.db.database import AsyncSessionLocal
+from app.models.booking import Booking, BookingStatus
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+API_BASE = "http://localhost:8000"  # backend base URL
+POINTS = 120  # samples per leg
+
+
+async def fetch_driver_confirmed_bookings():
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(
+                Booking.id,
+                Booking.public_code,
+                Booking.pickup_address,
+                Booking.dropoff_address,
+            ).where(Booking.status == BookingStatus.DRIVER_CONFIRMED)
+        )
+        return result.all()
+
 
 # --- helpers -----------------------------------------------------------------
 def interpolate(
@@ -71,6 +86,7 @@ async def route_metrics(
     metrics = r.json()
     logger.info("Route metrics: %s", metrics)
     return metrics
+
 
 
 
@@ -144,14 +160,29 @@ async def simulate():
         logger.info("Simulation completed")
 
 
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--radius-km",
-        type=float,
-        default=5.0,
-        help="radius in kilometers for the initial random point",
-    )
+
+async def main():
+    parser = argparse.ArgumentParser(description="Simulate driver movement")
+    parser.add_argument("--booking-code", help="Public booking code to use")
     args = parser.parse_args()
-    asyncio.run(simulate(args.radius_km))
+
+    booking_code = args.booking_code
+    if not booking_code:
+        bookings = await fetch_driver_confirmed_bookings()
+        if not bookings:
+            print("No driver confirmed bookings found.")
+            return
+        for idx, (_, code, pickup, dropoff) in enumerate(bookings, start=1):
+            print(f"{idx}. {pickup} -> {dropoff} ({code})")
+        while True:
+            choice = input("Select booking: ")
+            if choice.isdigit() and 1 <= int(choice) <= len(bookings):
+                booking_code = bookings[int(choice) - 1][1]
+                break
+            print("Invalid selection.")
+
+    await simulate(booking_code)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
