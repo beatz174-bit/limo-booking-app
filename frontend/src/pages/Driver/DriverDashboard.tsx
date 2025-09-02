@@ -96,7 +96,7 @@ export default function DriverDashboard() {
         ),
       );
     } else {
-      setError(`${res.status} ${data.message ?? res.statusText}`);
+      setError(`${res.status} ${data.message ?? data.detail ?? res.statusText}`);
     }
   }
 
