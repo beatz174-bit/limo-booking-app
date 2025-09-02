@@ -1,6 +1,7 @@
-import { renderHook, act } from '@testing-library/react';
-import { useBookingChannel } from '@/hooks/useBookingChannel';
-import { vi } from 'vitest';
+import { renderHook, act } from "@testing-library/react";
+import { useBookingChannel } from "@/hooks/useBookingChannel";
+import { vi } from "vitest";
+import { setTokens } from "@/services/tokenStore";
 
 class WSStub {
   static instances: WSStub[] = [];
@@ -14,13 +15,14 @@ class WSStub {
 
 describe('useBookingChannel', () => {
   beforeAll(() => {
-    vi.stubGlobal('WebSocket', WSStub as unknown as typeof WebSocket);
-    vi.stubEnv('VITE_BACKEND_URL', 'http://api');
-    vi.stubGlobal('localStorage', { getItem: () => 'test-token' });
+    vi.stubGlobal("WebSocket", WSStub as unknown as typeof WebSocket);
+    vi.stubEnv("VITE_BACKEND_URL", "http://api");
+    setTokens("test-token");
   });
   afterAll(() => {
     vi.unstubAllGlobals();
     vi.unstubAllEnvs();
+    setTokens(null);
   });
 
   it('updates state on message', () => {
