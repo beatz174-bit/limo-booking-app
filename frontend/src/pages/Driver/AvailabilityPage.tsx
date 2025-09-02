@@ -1,5 +1,15 @@
 import { useState } from 'react';
-import { Stack, TextField, Button, List, ListItem, ListItemText, Typography } from '@mui/material';
+import {
+  Stack,
+  TextField,
+  Button,
+  List,
+  ListItem,
+  ListItemText,
+  Typography,
+  Snackbar,
+  Alert,
+} from '@mui/material';
 import useAvailability from '@/hooks/useAvailability';
 import { CONFIG } from '@/config';
 import { apiFetch } from '@/services/apiFetch';
@@ -10,17 +20,27 @@ export default function AvailabilityPage() {
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
   const [reason, setReason] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   async function create() {
-    await apiFetch(`${CONFIG.API_BASE_URL}/api/v1/availability`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ start_dt: start, end_dt: end, reason }),
-    });
-    setStart('');
-    setEnd('');
-    setReason('');
-    await refresh();
+    try {
+      const res = await apiFetch(`${CONFIG.API_BASE_URL}/api/v1/availability`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ start_dt: start, end_dt: end, reason }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as { detail?: string } | null;
+        setError(data?.detail ?? 'Failed to save availability');
+        return;
+      }
+      setStart('');
+      setEnd('');
+      setReason('');
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
   }
 
   return (
@@ -61,6 +81,16 @@ export default function AvailabilityPage() {
         ))}
         {data && data.slots.length === 0 && <Typography>No blocks</Typography>}
       </List>
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="error" onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      </Snackbar>
     </Stack>
   );
 }

@@ -55,5 +55,26 @@ describe('AvailabilityPage', () => {
     rerender(<AvailabilityPage />);
     expect(screen.getByText('Busy')).toBeInTheDocument();
   });
+
+  it('shows an error when slot overlaps existing', async () => {
+    (fetch as unknown as vi.Mock).mockImplementation((input: RequestInfo) => {
+      if (input.toString().includes('/api/v1/availability')) {
+        return Promise.resolve({
+          ok: false,
+          json: () => Promise.resolve({ detail: 'overlaps existing slot' }),
+        } as unknown as Response);
+      }
+      return Promise.resolve({ ok: true } as Response);
+    });
+
+    renderWithProviders(<AvailabilityPage />);
+
+    await userEvent.type(screen.getByLabelText(/start/i), '2024-01-01T10:00');
+    await userEvent.type(screen.getByLabelText(/end/i), '2024-01-01T11:00');
+    await userEvent.click(screen.getByRole('button', { name: /add/i }));
+
+    expect(await screen.findByText(/overlaps existing slot/i)).toBeInTheDocument();
+    expect(refreshMock).not.toHaveBeenCalled();
+  });
 });
 
