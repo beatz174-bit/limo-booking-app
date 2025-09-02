@@ -46,6 +46,7 @@ async def fetch_driver_confirmed_bookings():
         return result.all()
 
 
+
 DEFAULT_API_BASE = "http://localhost:8000"
 DEFAULT_BOOKING_CODE = "ABC123"
 DEFAULT_DISTANCE_KM = 5.0
