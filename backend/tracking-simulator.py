@@ -46,6 +46,7 @@ async def fetch_driver_confirmed_bookings():
         )
         return result.all()
 
+
 DEFAULT_API_BASE = "http://localhost:8000"
 DEFAULT_BOOKING_CODE = "ABC123"
 DEFAULT_DISTANCE_KM = 5.0
@@ -77,6 +78,7 @@ def parse_args() -> argparse.Namespace:
         help="samples per leg",
     )
     return parser.parse_args()
+
 
 DEFAULT_API_BASE = "http://localhost:8000"
 DEFAULT_BOOKING_CODE = "ABC123"
@@ -160,18 +162,14 @@ async def route_metrics(
     return metrics
 
 
-
-
-
-
-
 # --- main simulation ---------------------------------------------------------
 async def simulate():
+    api_base = API_BASE
     transport = httpx.AsyncHTTPTransport(retries=3)
     try:
         async with httpx.AsyncClient(transport=transport) as client:
             # 1. Get booking + ws_url
-            r = await client.get(f"{API_BASE}/api/v1/track/{BOOKING_CODE}")
+            r = await client.get(f"{api_base}/api/v1/track/{BOOKING_CODE}")
             r.raise_for_status()
             data = r.json()
             booking = data["booking"]
@@ -182,8 +180,8 @@ async def simulate():
             start = random_point_near(*pickup, distance_km=5.0)
 
             # Metrics for both legs
-            leg1 = await route_metrics(client, start, pickup)
-            leg2 = await route_metrics(client, pickup, dropoff)
+            leg1 = await route_metrics(client, api_base, start, pickup)
+            leg2 = await route_metrics(client, api_base, pickup, dropoff)
     except httpx.HTTPError:
         logger.exception("HTTP request failed; aborting simulation")
         return
@@ -229,10 +227,7 @@ async def simulate():
         logger.exception("WebSocket error; aborting simulation")
         return
 
-
-
         logger.info("Simulation completed")
-
 
 
 async def main():
@@ -258,15 +253,6 @@ async def main():
     await simulate(booking_code)
 
 
-
-
 if __name__ == "__main__":
     args = parse_args()
-    asyncio.run(
-        simulate(
-            api_base=args.api_base,
-            booking_code=args.booking,
-            distance_km=args.distance_km,
-            points=args.points,
-        )
-    )
+    asyncio.run(simulate())
