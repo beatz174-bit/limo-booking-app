@@ -1,8 +1,7 @@
 // Hook to fetch admin pricing settings from the API.
 import { useEffect, useState } from "react";
-
-// Adapt these imports to your generated client / ApiConfig
-import type { SettingsApi } from "@/components/ApiConfig"; // or from your generated API package
+import { CONFIG } from '@/config';
+import { apiFetch } from '@/services/apiFetch';
 
 export type AppSettings = {
   flagfall: number;
@@ -12,7 +11,7 @@ export type AppSettings = {
   google_maps_api_key?: string;
 };
 
-export function useSettings(api: SettingsApi) {
+export function useSettings() {
   const [data, setData] = useState<AppSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,8 +20,12 @@ export function useSettings(api: SettingsApi) {
     let alive = true;
     (async () => {
       try {
-        const res = await api.apiGetSettingsSettingsGet();
-        if (alive) setData(res.data as unknown as AppSettings);
+        const res = await apiFetch(`${CONFIG.API_BASE_URL}/settings`);
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(json.detail || `Failed to load settings (${res.status})`);
+        }
+        if (alive) setData(json as AppSettings);
       } catch (e: unknown) {
         if (alive) setError(e instanceof Error ? e.message : "Failed to load settings");
       } finally {
@@ -32,7 +35,7 @@ export function useSettings(api: SettingsApi) {
     return () => {
       alive = false;
     };
-  }, [api]);
+  }, []);
 
   return { data, loading, error } as const;
 }
