@@ -43,7 +43,16 @@ describe('TrackingPage', () => {
       DirectionsService: class {
         route() {
           return Promise.resolve({
-            routes: [{ legs: [{ duration: { value: 600 } }] }],
+            routes: [
+              {
+                legs: [
+                  {
+                    duration: { value: 600 },
+                    end_location: { toJSON: () => ({ lat: 3, lng: 4 }) },
+                  },
+                ],
+              },
+            ],
           });
         }
       },
@@ -67,11 +76,13 @@ describe('TrackingPage', () => {
         </Routes>
       </MemoryRouter>
     );
-    const { rerender, findByTestId } = render(wrapper);
+    const { rerender } = render(wrapper);
     currentUpdate = { lat: 1, lng: 2, status: 'leave', ts: 0 };
     rerender(wrapper);
-    const marker = await findByTestId('marker');
-    expect(marker.textContent).toBe('1,2');
+    await waitFor(() => expect(screen.getAllByTestId('marker')).toHaveLength(2));
+    const markers = screen.getAllByTestId('marker');
+    expect(markers[0].textContent).toBe('1,2');
+    expect(markers[1].textContent).toBe('3,4');
     await waitFor(() =>
       expect(
         screen.getByText('En route to pickup').getAttribute('data-active'),
