@@ -13,6 +13,7 @@ from app.models.user_v2 import User
 
 class BookingStatus(str, enum.Enum):
     PENDING = "PENDING"
+    DEPOSIT_FAILED = "DEPOSIT_FAILED"
     DRIVER_CONFIRMED = "DRIVER_CONFIRMED"
     DECLINED = "DECLINED"
     ON_THE_WAY = "ON_THE_WAY"
