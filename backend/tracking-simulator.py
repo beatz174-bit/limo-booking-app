@@ -22,10 +22,9 @@ from typing import Iterable, Tuple
 
 import httpx
 import websockets
-from sqlalchemy import select
-
 from app.db.database import AsyncSessionLocal
 from app.models.booking import Booking, BookingStatus
+from sqlalchemy import select
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -46,37 +45,6 @@ async def fetch_driver_confirmed_bookings():
         )
         return result.all()
 
-DEFAULT_API_BASE = "http://localhost:8000"
-DEFAULT_BOOKING_CODE = "ABC123"
-DEFAULT_DISTANCE_KM = 5.0
-DEFAULT_POINTS = 120
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--api-base",
-        default=DEFAULT_API_BASE,
-        help="backend base URL",
-    )
-    parser.add_argument(
-        "--booking",
-        default=DEFAULT_BOOKING_CODE,
-        help="public booking code from the customer link",
-    )
-    parser.add_argument(
-        "--distance-km",
-        type=float,
-        default=DEFAULT_DISTANCE_KM,
-        help="starting distance from pickup in km",
-    )
-    parser.add_argument(
-        "--points",
-        type=int,
-        default=DEFAULT_POINTS,
-        help="samples per leg",
-    )
-    return parser.parse_args()
 
 DEFAULT_API_BASE = "http://localhost:8000"
 DEFAULT_BOOKING_CODE = "ABC123"
@@ -160,11 +128,6 @@ async def route_metrics(
     return metrics
 
 
-
-
-
-
-
 # --- main simulation ---------------------------------------------------------
 async def simulate():
     transport = httpx.AsyncHTTPTransport(retries=3)
@@ -229,10 +192,7 @@ async def simulate():
         logger.exception("WebSocket error; aborting simulation")
         return
 
-
-
         logger.info("Simulation completed")
-
 
 
 async def main():
@@ -256,8 +216,6 @@ async def main():
             print("Invalid selection.")
 
     await simulate(booking_code)
-
-
 
 
 if __name__ == "__main__":
