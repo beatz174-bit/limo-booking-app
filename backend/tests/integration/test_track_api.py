@@ -2,10 +2,11 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 import pytest
+from httpx import AsyncClient
+
 from app.core.security import hash_password
 from app.models.booking import Booking, BookingStatus
 from app.models.user_v2 import User, UserRole
-from httpx import AsyncClient
 
 pytestmark = pytest.mark.asyncio
 
@@ -47,3 +48,5 @@ async def test_track_endpoint(async_session, client: AsyncClient):
     data = res.json()
     assert data["booking"]["id"] == str(booking.id)
     assert "ws_url" in data
+    ws_url = data["ws_url"]
+    assert ws_url.startswith(("ws://", "wss://"))

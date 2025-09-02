@@ -1,3 +1,5 @@
+from urllib.parse import urlparse, urlunparse
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,5 +20,11 @@ async def track_booking(code: str, db: AsyncSession = Depends(get_async_session)
     booking = result.scalar_one_or_none()
     if not booking:
         raise HTTPException(status_code=404, detail="booking not found")
-    ws_url = f"{settings.app_base_url}/ws/bookings/{booking.id}/watch"
+
+    parsed_url = urlparse(settings.app_base_url)
+    scheme = "wss" if parsed_url.scheme == "https" else "ws"
+    base_url = urlunparse(
+        parsed_url._replace(scheme=scheme, path="", params="", query="", fragment="")
+    )
+    ws_url = f"{base_url}/ws/bookings/{booking.id}/watch"
     return TrackResponse(booking=BookingRead.model_validate(booking), ws_url=ws_url)
