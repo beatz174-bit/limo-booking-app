@@ -6,8 +6,10 @@ Requirements:
   pip install httpx websockets
 """
 
+import argparse
 import asyncio
 import json
+import logging
 import math
 import random
 import time
@@ -15,12 +17,15 @@ from typing import Iterable, Tuple
 
 import httpx
 import websockets
+from websockets.exceptions import WebSocketException
 
 API_BASE = "http://localhost:8000"  # backend base URL
 BOOKING_CODE = "ABC123"  # public booking code from the customer link
 DRIVER_TOKEN = "REPLACE_ME"  # JWT for the driver user
 POINTS = 120  # samples per leg
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # --- helpers -----------------------------------------------------------------
 def interpolate(
@@ -54,6 +59,7 @@ def random_point_near(
 async def route_metrics(
     client: httpx.AsyncClient, a: Tuple[float, float], b: Tuple[float, float]
 ):
+    logger.info("Fetching route metrics from %s to %s", a, b)
     params = {
         "pickupLat": a[0],
         "pickupLon": a[1],
@@ -62,54 +68,90 @@ async def route_metrics(
     }
     r = await client.get(f"{API_BASE}/route-metrics", params=params)
     r.raise_for_status()
-    return r.json()
+    metrics = r.json()
+    logger.info("Route metrics: %s", metrics)
+    return metrics
+
+
 
 
 # --- main simulation ---------------------------------------------------------
 async def simulate():
-    async with httpx.AsyncClient() as client:
-        # 1. Get booking + ws_url
-        r = await client.get(f"{API_BASE}/api/v1/track/{BOOKING_CODE}")
-        r.raise_for_status()
-        data = r.json()
-        booking = data["booking"]
+    transport = httpx.AsyncHTTPTransport(retries=3)
+    try:
+        async with httpx.AsyncClient(transport=transport) as client:
+            # 1. Get booking + ws_url
+            r = await client.get(f"{API_BASE}/api/v1/track/{BOOKING_CODE}")
+            r.raise_for_status()
+            data = r.json()
+            booking = data["booking"]
+            ws_url = data["ws_url"]
 
-        pickup = (booking["pickup_lat"], booking["pickup_lng"])
-        dropoff = (booking["dropoff_lat"], booking["dropoff_lng"])
-        start = random_point_near(*pickup, distance_km=5.0)
+            pickup = (booking["pickup_lat"], booking["pickup_lng"])
+            dropoff = (booking["dropoff_lat"], booking["dropoff_lng"])
+            start = random_point_near(*pickup, distance_km=5.0)
 
-        # Metrics for both legs
-        leg1 = await route_metrics(client, start, pickup)
-        leg2 = await route_metrics(client, pickup, dropoff)
+            # Metrics for both legs
+            leg1 = await route_metrics(client, start, pickup)
+            leg2 = await route_metrics(client, pickup, dropoff)
+    except httpx.HTTPError:
+        logger.exception("HTTP request failed; aborting simulation")
+        return
 
-    send_url = f"{API_BASE.replace('http', 'ws')}/ws/bookings/{booking['id']}?token={DRIVER_TOKEN}"
-    async with websockets.connect(send_url) as ws:
-        # --- leg 1: home -> pickup
-        duration1 = leg1["min"] * 60
-        interval1 = duration1 / POINTS
-        speed1 = leg1["km"] / (leg1["min"] / 60)
+    try:
+        async with websockets.connect(ws_url) as ws:
+            # --- leg 1: home -> pickup
+            duration1 = leg1["min"] * 60
+            interval1 = duration1 / POINTS
+            speed1 = leg1["km"] / (leg1["min"] / 60)
 
-        for lat, lng in interpolate(start, pickup, POINTS):
-            await ws.send(
-                json.dumps(
-                    {"lat": lat, "lng": lng, "ts": int(time.time()), "speed": speed1}
+            for lat, lng in interpolate(start, pickup, POINTS):
+                await ws.send(
+                    json.dumps(
+                        {
+                            "lat": lat,
+                            "lng": lng,
+                            "ts": int(time.time()),
+                            "speed": speed1,
+                        }
+                    )
                 )
-            )
-            await asyncio.sleep(interval1)
+                await asyncio.sleep(interval1)
 
-        # --- leg 2: pickup -> dropoff
-        duration2 = leg2["min"] * 60
-        interval2 = duration2 / POINTS
-        speed2 = leg2["km"] / (leg2["min"] / 60)
+            # --- leg 2: pickup -> dropoff
+            duration2 = leg2["min"] * 60
+            interval2 = duration2 / POINTS
+            speed2 = leg2["km"] / (leg2["min"] / 60)
 
-        for lat, lng in interpolate(pickup, dropoff, POINTS):
-            await ws.send(
-                json.dumps(
-                    {"lat": lat, "lng": lng, "ts": int(time.time()), "speed": speed2}
+            for lat, lng in interpolate(pickup, dropoff, POINTS):
+                await ws.send(
+                    json.dumps(
+                        {
+                            "lat": lat,
+                            "lng": lng,
+                            "ts": int(time.time()),
+                            "speed": speed2,
+                        }
+                    )
                 )
-            )
-            await asyncio.sleep(interval2)
+                await asyncio.sleep(interval2)
+    except WebSocketException:
+        logger.exception("WebSocket error; aborting simulation")
+        return
+
+
+
+        logger.info("Simulation completed")
 
 
 if __name__ == "__main__":
-    asyncio.run(simulate())
+    logging.basicConfig(level=logging.INFO)
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--radius-km",
+        type=float,
+        default=5.0,
+        help="radius in kilometers for the initial random point",
+    )
+    args = parser.parse_args()
+    asyncio.run(simulate(args.radius_km))
