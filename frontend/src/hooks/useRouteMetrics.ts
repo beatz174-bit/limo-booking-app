@@ -7,18 +7,28 @@ import { apiFetch } from "@/services/apiFetch";
 export function useRouteMetrics() {
   return useCallback(
     async function getMetrics(
-      pickup: { lat: number; lon: number },
-      dropoff: { lat: number; lon: number },
+      pickupLat: number,
+      pickupLon: number,
+      dropoffLat: number,
+      dropoffLon: number,
       rideTime?: string
     ): Promise<{ km: number; min: number } | null> {
-      if (!pickup || !dropoff) return null;
+      if (
+        pickupLat === undefined ||
+        pickupLon === undefined ||
+        dropoffLat === undefined ||
+        dropoffLon === undefined
+      )
+        return null;
       try {
         const base = CONFIG.API_BASE_URL || '';
         const origin = base || window.location.origin;
         const url = new URL('/route-metrics', origin);
         const params = new URLSearchParams({
-          pickup: `${pickup.lat},${pickup.lon}`,
-          dropoff: `${dropoff.lat},${dropoff.lon}`,
+          pickupLat: String(pickupLat),
+          pickupLon: String(pickupLon),
+          dropoffLat: String(dropoffLat),
+          dropoffLon: String(dropoffLon),
         });
         if (rideTime) params.set('ride_time', rideTime);
         url.search = params.toString();
