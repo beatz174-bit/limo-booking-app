@@ -6,10 +6,6 @@ from datetime import datetime, timedelta, timezone
 from math import atan2, cos, radians, sin, sqrt
 
 import stripe
-from fastapi import HTTPException
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.models.availability_slot import AvailabilitySlot
 from app.models.booking import Booking, BookingStatus
 from app.models.route_point import RoutePoint
@@ -18,6 +14,9 @@ from app.models.trip import Trip
 from app.models.user_v2 import User, UserRole
 from app.schemas.api_booking import BookingCreateRequest
 from app.services import pricing_service, routing, stripe_client
+from fastapi import HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def create_booking(
@@ -87,7 +86,10 @@ async def create_booking(
 async def confirm_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
     """Confirm a pending booking and charge the deposit."""
     booking = await db.get(Booking, booking_id)
-    if booking is None or booking.status is not BookingStatus.PENDING:
+    if booking is None or booking.status not in {
+        BookingStatus.PENDING,
+        BookingStatus.DEPOSIT_FAILED,
+    }:
         raise ValueError("booking cannot be confirmed")
     buffer = timedelta(minutes=30)
     block_start = booking.pickup_when - buffer
@@ -103,7 +105,12 @@ async def confirm_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
 
     try:
         intent = stripe_client.charge_deposit(booking.deposit_required_cents)
+    except stripe.error.CardError as exc:
+        raise HTTPException(status_code=402, detail=exc.user_message) from exc
     except stripe.error.StripeError as exc:
+        booking.status = BookingStatus.DEPOSIT_FAILED
+        await db.commit()
+        await db.refresh(booking)
         raise HTTPException(
             status_code=400, detail="Failed to process deposit"
         ) from exc
@@ -117,6 +124,11 @@ async def confirm_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
     await db.commit()
     await db.refresh(booking)
     return booking
+
+
+async def retry_deposit(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
+    """Retry charging the deposit for a booking."""
+    return await confirm_booking(db, booking_id)
 
 
 async def decline_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:

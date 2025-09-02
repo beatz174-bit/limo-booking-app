@@ -47,6 +47,25 @@ async def confirm_booking(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     leave_at = await scheduler.schedule_leave_now(booking)
+    await notifications.create_notification(
+        db,
+        booking.id,
+        NotificationType.CONFIRMATION,
+        UserRole.CUSTOMER,
+        {"deposit_required_cents": booking.deposit_required_cents},
+    )
+    return BookingStatusResponse(status=booking.status, leave_at=leave_at)
+
+
+@router.post("/{booking_id}/retry-deposit", response_model=BookingStatusResponse)
+async def retry_deposit(
+    booking_id: uuid.UUID, db: AsyncSession = Depends(get_async_session)
+):
+    try:
+        booking = await booking_service.retry_deposit(db, booking_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    leave_at = await scheduler.schedule_leave_now(booking)
     return BookingStatusResponse(status=booking.status, leave_at=leave_at)
 
 

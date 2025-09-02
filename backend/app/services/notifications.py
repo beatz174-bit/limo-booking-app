@@ -7,10 +7,13 @@ from typing import Any
 
 import httpx
 from jose import jwt
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.models.notification import Notification, NotificationType
+from app.models.user import User as LegacyUser
+from app.models.user_v2 import User as UserV2
 from app.models.user_v2 import UserRole
 
 
@@ -31,12 +34,15 @@ async def create_notification(
     db.add(note)
     await db.commit()
     await db.refresh(note)
-    await _send_fcm(to_role, notif_type, payload or {})
+    await _send_fcm(db, to_role, notif_type, payload or {})
     return note
 
 
 async def _send_fcm(
-    to_role: UserRole, notif_type: NotificationType, payload: dict[str, Any]
+    db: AsyncSession,
+    to_role: UserRole,
+    notif_type: NotificationType,
+    payload: dict[str, Any],
 ) -> None:
     """Send a Firebase Cloud Messaging push if credentials are configured.
 
@@ -85,18 +91,38 @@ async def _send_fcm(
             for k, v in payload.items():
                 data[k] = json.dumps(v) if not isinstance(v, str) else v
 
-            message = {
-                "message": {
-                    "topic": to_role.value.lower(),
-                    "data": data,
-                }
-            }
-
-            await client.post(
-                f"https://fcm.googleapis.com/v1/projects/{settings.fcm_project_id}/messages:send",
-                headers={"Authorization": f"Bearer {access_token}"},
-                json=message,
+            result = await db.execute(
+                select(LegacyUser.fcm_token)
+                .join(UserV2, LegacyUser.email == UserV2.email)
+                .where(UserV2.role == to_role, LegacyUser.fcm_token.is_not(None))
             )
+            tokens = result.scalars().all()
+
+            if tokens:
+                for token in tokens:
+                    message = {
+                        "message": {
+                            "token": token,
+                            "data": data,
+                        }
+                    }
+                    await client.post(
+                        f"https://fcm.googleapis.com/v1/projects/{settings.fcm_project_id}/messages:send",
+                        headers={"Authorization": f"Bearer {access_token}"},
+                        json=message,
+                    )
+            else:
+                message = {
+                    "message": {
+                        "topic": to_role.value.lower(),
+                        "data": data,
+                    }
+                }
+                await client.post(
+                    f"https://fcm.googleapis.com/v1/projects/{settings.fcm_project_id}/messages:send",
+                    headers={"Authorization": f"Bearer {access_token}"},
+                    json=message,
+                )
         except httpx.HTTPError:
             # Silently ignore push delivery issues to keep core flow resilient
             return

@@ -6,12 +6,13 @@ import logging
 import uuid
 from typing import Optional
 
-from app.core.security import hash_password
-from app.models.user_v2 import User
-from app.schemas.user import UserCreate, UserRead, UserUpdate
 from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.security import hash_password
+from app.models.user_v2 import User
+from app.schemas.user import UserCreate, UserRead, UserUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ async def create_user(db: AsyncSession, data: UserCreate) -> UserRead:
         hashed_password=hash_password(data.password),
     )
     db.add(user)
-    await db.commit()
+    await db.flush()
     await db.refresh(user)
     return UserRead.model_validate(user)
 
@@ -89,7 +90,7 @@ async def update_user(
         if hasattr(user, field):
             setattr(user, field, value)
 
-    await db.commit()
+    await db.flush()
     await db.refresh(user)
     return UserRead.model_validate(user)
 
@@ -104,4 +105,4 @@ async def delete_user(db: AsyncSession, user_id: uuid.UUID):
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
     await db.delete(user)
-    await db.commit()
+    await db.flush()
