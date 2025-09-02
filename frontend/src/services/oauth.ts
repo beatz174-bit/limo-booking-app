@@ -1,3 +1,5 @@
+import * as logger from "@/lib/logger";
+
 // Authorization Code + PKCE helper for OAuth flows.
 // Requires envs via src/config.ts (we’ll wire that below)
 export type TokenResponse = {
@@ -40,6 +42,8 @@ export type OAuthConfig = {
 export async function beginLogin(cfg: OAuthConfig, scope = "openid profile email") {
   const state = rand(16);
   const verifier = rand(64);
+  logger.debug("services/oauth", "generated state", state);
+  logger.debug("services/oauth", "generated verifier", verifier);
   const challenge = await sha256(verifier);
 
   sessionStorage.setItem("oauth_state", state);
@@ -56,6 +60,7 @@ export async function beginLogin(cfg: OAuthConfig, scope = "openid profile email
   });
 
   const authUrl = `${cfg.authorizeUrl}?${params.toString()}`;
+  logger.debug("services/oauth", "redirect URL", authUrl);
   window.location.assign(authUrl);
 }
 
@@ -81,13 +86,30 @@ export async function completeLoginFromRedirect(cfg: OAuthConfig): Promise<Token
     code_verifier: verifier,
   });
 
-  const res = await fetch(cfg.tokenUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
-  });
-  if (!res.ok) throw new Error(`Token exchange failed: ${res.status}`);
-  return res.json();
+  logger.debug(
+    "services/oauth",
+    "token exchange params",
+    Object.fromEntries(body.entries()),
+  );
+
+  let res: Response;
+  try {
+    res = await fetch(cfg.tokenUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body,
+    });
+  } catch (err) {
+    logger.error("services/oauth", "token exchange request failed", err);
+    throw err;
+  }
+  if (!res.ok) {
+    logger.error("services/oauth", "token exchange failed", res.status);
+    throw new Error(`Token exchange failed: ${res.status}`);
+  }
+  const token: TokenResponse = await res.json();
+  logger.info("services/oauth", "token exchange succeeded");
+  return token;
 }
 
 export async function refreshTokens(cfg: OAuthConfig, refresh_token: string): Promise<TokenResponse> {
@@ -96,11 +118,22 @@ export async function refreshTokens(cfg: OAuthConfig, refresh_token: string): Pr
     refresh_token,
     client_id: cfg.clientId,
   });
-  const res = await fetch(cfg.tokenUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
-  });
-  if (!res.ok) throw new Error(`Refresh failed: ${res.status}`);
-  return res.json();
+  let res: Response;
+  try {
+    res = await fetch(cfg.tokenUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body,
+    });
+  } catch (err) {
+    logger.error("services/oauth", "refresh request failed", err);
+    throw err;
+  }
+  if (!res.ok) {
+    logger.error("services/oauth", "refresh failed", res.status);
+    throw new Error(`Refresh failed: ${res.status}`);
+  }
+  const token: TokenResponse = await res.json();
+  logger.info("services/oauth", "token refresh succeeded");
+  return token;
 }
