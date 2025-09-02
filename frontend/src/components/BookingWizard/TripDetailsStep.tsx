@@ -127,8 +127,14 @@ export default function TripDetailsStep({ data, onNext, onBack, onChange }: Prop
           disabled={!pickupValid || !dropoffValid}
           onClick={() =>
             onNext({
-              pickup: { address: pickup, lat: pickupLat, lng: pickupLng },
-              dropoff: { address: dropoff, lat: dropLat, lng: dropLng },
+              pickup:
+                pickupLat !== undefined && pickupLng !== undefined
+                  ? { address: pickup, lat: pickupLat, lng: pickupLng }
+                  : undefined,
+              dropoff:
+                dropLat !== undefined && dropLng !== undefined
+                  ? { address: dropoff, lat: dropLat, lng: dropLng }
+                  : undefined,
               passengers,
               notes,
               pickupValid,

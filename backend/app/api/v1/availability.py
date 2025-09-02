@@ -2,7 +2,7 @@ from calendar import monthrange
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_async_session
@@ -35,7 +35,10 @@ async def get_availability(
         select(AvailabilitySlot).where(
             AvailabilitySlot.start_dt < end,
             AvailabilitySlot.end_dt > start,
-            ~AvailabilitySlot.reason.like("BOOKING:%"),
+            or_(
+                AvailabilitySlot.reason.is_(None),
+                ~AvailabilitySlot.reason.like("BOOKING:%"),
+            ),
         )
     )
     slots = [AvailabilitySlotRead.model_validate(s) for s in slot_res.scalars().all()]
