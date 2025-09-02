@@ -94,9 +94,9 @@ npm run dev
 
 ## Realtime tracking
 
-The backend exposes a WebSocket at `/ws/bookings/{id}` which streams driver
-location updates. Customers can retrieve a tracking link via
-`GET /api/v1/track/{public_code}` and connect to the WebSocket for live
+Drivers send location updates over `/ws/bookings/{id}` using a JWT token.
+Customers can retrieve a tracking link via `GET /api/v1/track/{public_code}`
+and connect to `/ws/bookings/{id}/watch` (also authenticated) for live
 updates.
 
 ## Availability
