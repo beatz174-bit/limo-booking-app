@@ -17,6 +17,8 @@ import { bookingStatusLabels, type BookingStatus } from '@/types/BookingStatus';
 import StatusChip from '@/components/StatusChip';
 import { CONFIG } from '@/config';
 import { apiFetch } from '@/services/apiFetch';
+import type { BookingRead as Booking } from '@/api-client';
+import { getAccessToken } from '@/services/tokenStore';
 
 const statuses: BookingStatus[] = [
   'PENDING',
@@ -55,7 +57,7 @@ export default function DriverDashboard() {
             ? { headers: { Authorization: `Bearer ${token}` } }
             : undefined,
         );
-        setBookings(data as unknown as Booking[]);
+        setBookings(data as Booking[]);
       } catch {
         /* ignore */
       }
