@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 
 import { customerBookingsApi } from '@/components/ApiConfig';
-import type { AppSchemasBookingV2BookingRead as Booking } from '@/api-client';
+import type { BookingRead as Booking } from '@/api-client';
 
 function RideHistoryPage() {
   const navigate = useNavigate();
