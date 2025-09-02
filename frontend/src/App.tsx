@@ -19,6 +19,7 @@ import { useDevFeatures } from "@/contexts/DevFeaturesContext";
 import { useBackendReady } from "@/contexts/BackendReadyContext";
 import HomePage from "@/pages/Dashboard/HomePage";
 import LoadingScreen from "@/components/LoadingScreen";
+import MapProvider from "@/components/MapProvider";
 
 function App() {
   const { accessToken, loading } = useAuth(); // custom hook to get AuthContext
@@ -53,7 +54,14 @@ function App() {
       <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
       <Route path="/driver" element={<RequireAdmin><DriverDashboard /></RequireAdmin>} />
       <Route path="/driver/availability" element={<RequireAdmin><AvailabilityPage /></RequireAdmin>} />
-      <Route path="/t/:code" element={<TrackingPage />} />
+      <Route
+        path="/t/:code"
+        element={
+          <MapProvider>
+            <TrackingPage />
+          </MapProvider>
+        }
+      />
 
       {devEnabled && <Route path="/devnotes" element={<DevNotes />} />}
 
