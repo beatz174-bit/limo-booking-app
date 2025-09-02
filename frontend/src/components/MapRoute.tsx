@@ -67,7 +67,17 @@ export function MapRoute({ pickup, dropoff, rideTime, onMetrics }: Props) {
   if (!valid || !directions) return <Placeholder />;
 
   return (
-    <GoogleMap mapContainerStyle={{ width: '100%', height: 300 }}>
+    <GoogleMap
+      mapContainerStyle={{ width: '100%', height: 300 }}
+      options={{
+        disableDefaultUI: true,
+        draggable: false,
+        keyboardShortcuts: false,
+        scrollwheel: false,
+        disableDoubleClickZoom: true,
+        gestureHandling: 'none',
+      }}
+    >
       <DirectionsRenderer directions={directions} />
     </GoogleMap>
   );
