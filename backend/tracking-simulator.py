@@ -6,6 +6,7 @@ Requirements:
   pip install httpx websockets
 """
 
+import argparse
 import asyncio
 import json
 import logging
@@ -23,7 +24,6 @@ BOOKING_CODE = "ABC123"  # public booking code from the customer link
 POINTS = 120  # samples per leg
 
 logger = logging.getLogger(__name__)
-
 
 # --- helpers -----------------------------------------------------------------
 def interpolate(
@@ -133,6 +133,15 @@ async def simulate():
         return
 
 
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    asyncio.run(simulate())
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--radius-km",
+        type=float,
+        default=5.0,
+        help="radius in kilometers for the initial random point",
+    )
+    args = parser.parse_args()
+    asyncio.run(simulate(args.radius_km))
