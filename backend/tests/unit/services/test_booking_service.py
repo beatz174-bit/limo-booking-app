@@ -3,13 +3,14 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 import stripe
+from fastapi import HTTPException
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.security import hash_password
 from app.models.booking import Booking, BookingStatus
 from app.models.user_v2 import User, UserRole
 from app.services import booking_service
-from fastapi import HTTPException
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
 
 pytestmark = pytest.mark.asyncio
 
@@ -48,9 +49,15 @@ async def test_confirm_booking_handles_stripe_error(
     async_session.add(booking)
     await async_session.commit()
 
+    err = stripe.error.CardError(
+        "fail",
+        param=None,
+        code=None,
+        json_body={"error": {"payment_intent": {"id": "pi_fail"}}},
+    )
     mocker.patch(
         "app.services.stripe_client.charge_deposit",
-        side_effect=stripe.error.StripeError("fail"),
+        side_effect=err,
     )
 
     with pytest.raises(HTTPException) as excinfo:
@@ -58,5 +65,5 @@ async def test_confirm_booking_handles_stripe_error(
 
     assert excinfo.value.status_code == 400
     await async_session.refresh(booking)
-    assert booking.status is BookingStatus.PENDING
-    assert booking.deposit_payment_intent_id is None
+    assert booking.status is BookingStatus.DEPOSIT_FAILED
+    assert booking.deposit_payment_intent_id == "pi_fail"

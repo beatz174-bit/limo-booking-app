@@ -103,6 +103,22 @@ async def confirm_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
 
     try:
         intent = stripe_client.charge_deposit(booking.deposit_required_cents)
+    except stripe.error.CardError as exc:
+        intent_id = None
+        error_obj = getattr(exc, "error", None)
+        if error_obj is not None:
+            pi = getattr(error_obj, "payment_intent", None)
+            if isinstance(pi, dict):
+                intent_id = pi.get("id")
+            else:
+                intent_id = getattr(pi, "id", None)
+        booking.status = BookingStatus.DEPOSIT_FAILED
+        booking.deposit_payment_intent_id = intent_id
+        await db.commit()
+        await db.refresh(booking)
+        raise HTTPException(
+            status_code=400, detail="Failed to process deposit"
+        ) from exc
     except stripe.error.StripeError as exc:
         raise HTTPException(
             status_code=400, detail="Failed to process deposit"
