@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
+import { getAccessToken, onTokenChange } from "@/services/tokenStore";
 
 export interface LocationUpdate {
   lat: number;
@@ -10,11 +11,18 @@ export interface LocationUpdate {
 
 export function useBookingChannel(bookingId: string | null) {
   const [update, setUpdate] = useState<LocationUpdate | null>(null);
+  const [token, setToken] = useState<string | null>(() => getAccessToken());
 
   useEffect(() => {
-    if (!bookingId) return;
-    const token = localStorage.getItem('token');
-    const wsUrl = `${import.meta.env.VITE_BACKEND_URL.replace('http', 'ws')}/ws/bookings/${bookingId}/watch?token=${token}`;
+    const unsubscribe = onTokenChange(() => {
+      setToken(getAccessToken());
+    });
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    if (!bookingId || !token) return;
+    const wsUrl = `${import.meta.env.VITE_BACKEND_URL.replace("http", "ws")}/ws/bookings/${bookingId}/watch?token=${token}`;
     const ws = new WebSocket(wsUrl);
     ws.onmessage = (e) => {
       try {
@@ -24,7 +32,7 @@ export function useBookingChannel(bookingId: string | null) {
       }
     };
     return () => ws.close();
-  }, [bookingId]);
+  }, [bookingId, token]);
 
   return update;
 }
