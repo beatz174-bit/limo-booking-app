@@ -11,6 +11,7 @@ const mockCreateBooking = vi.fn().mockResolvedValue({
 });
 const mockConfirm = vi.fn().mockResolvedValue({});
 const mockCard = {};
+const mockGetMetrics = vi.fn().mockResolvedValue(null);
 
 vi.mock('@/hooks/useStripeSetupIntent', () => ({
   useStripeSetupIntent: () => ({ createBooking: mockCreateBooking, loading: false }),
@@ -19,7 +20,7 @@ vi.mock('@/hooks/useSettings', () => ({
   useSettings: () => ({ data: {} }),
 }));
 vi.mock('@/hooks/useRouteMetrics', () => ({
-  useRouteMetrics: () => async () => null,
+  useRouteMetrics: () => mockGetMetrics,
 }));
 vi.mock('@stripe/react-stripe-js', () => ({
   Elements: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -58,6 +59,34 @@ test('shows tracking link after booking', async () => {
   );
   const link = await screen.findByRole('link', { name: /track this ride/i });
   expect(link).toHaveAttribute('href', '/t/ABC123');
+});
+
+test('updates metrics from route service', async () => {
+  mockGetMetrics.mockResolvedValueOnce({ km: 12, min: 34 });
+  render(
+    <MemoryRouter>
+      <DevFeaturesProvider>
+        <PaymentStep
+          data={{
+            pickup_when: '2025-01-01T00:00:00Z',
+            pickup: { address: 'A', lat: 0, lng: 0 },
+            dropoff: { address: 'B', lat: 1, lng: 1 },
+            passengers: 1,
+            notes: '',
+            customer: { name: '', email: '', phone: '' },
+            pickupValid: true,
+            dropoffValid: true,
+          }}
+          onBack={() => {}}
+        />
+      </DevFeaturesProvider>
+    </MemoryRouter>
+  );
+
+  expect(await screen.findByText(/distance: 12 km/i)).toBeInTheDocument();
+  expect(
+    screen.getByText(/duration: 34 minutes/i)
+  ).toBeInTheDocument();
 });
 
 test('renders fare breakdown when dev features enabled', () => {

@@ -63,8 +63,10 @@ function PaymentInner({ data, onBack }: Props) {
     async function fetchPrice() {
       if (!data.pickup || !data.dropoff) return;
       const metrics = await getMetrics(
-        { lat: data.pickup.lat, lon: data.pickup.lng },
-        { lat: data.dropoff.lat, lon: data.dropoff.lng }
+        data.pickup.lat,
+        data.pickup.lng,
+        data.dropoff.lat,
+        data.dropoff.lng
       );
       if (!ignore && metrics) {
         const estimate =
