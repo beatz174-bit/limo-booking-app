@@ -1,15 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.db.database import get_async_session
 from app.models.booking import Booking
-from app.schemas.booking import BookingRead
 from app.schemas.api_track import TrackResponse
-from app.core.config import get_settings
+from app.schemas.booking import BookingRead
 
 router = APIRouter(prefix="/api/v1/track", tags=["track"])
 settings = get_settings()
+
 
 @router.get("/{code}", response_model=TrackResponse)
 async def track_booking(code: str, db: AsyncSession = Depends(get_async_session)):
@@ -17,5 +18,5 @@ async def track_booking(code: str, db: AsyncSession = Depends(get_async_session)
     booking = result.scalar_one_or_none()
     if not booking:
         raise HTTPException(status_code=404, detail="booking not found")
-    ws_url = f"{settings.app_base_url}/ws/bookings/{booking.id}"
+    ws_url = f"{settings.app_base_url}/ws/bookings/{booking.id}/watch"
     return TrackResponse(booking=BookingRead.model_validate(booking), ws_url=ws_url)

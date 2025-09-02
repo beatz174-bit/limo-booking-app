@@ -19,13 +19,12 @@ import httpx
 import websockets
 from websockets.exceptions import WebSocketException
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 API_BASE = "http://localhost:8000"  # backend base URL
 BOOKING_CODE = "ABC123"  # public booking code from the customer link
+DRIVER_TOKEN = "REPLACE_ME"  # JWT for the driver user
 POINTS = 120  # samples per leg
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # --- helpers -----------------------------------------------------------------
@@ -72,6 +71,7 @@ async def route_metrics(
     metrics = r.json()
     logger.info("Route metrics: %s", metrics)
     return metrics
+
 
 
 
