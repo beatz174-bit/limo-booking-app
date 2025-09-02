@@ -30,6 +30,7 @@ export default function TripDetailsStep({ data, onNext, onBack, onChange }: Prop
   const [dropoff, setDropoff] = useState(data.dropoff?.address || '');
   const [dropLat, setDropLat] = useState<number>(data.dropoff?.lat ?? 0);
   const [dropLng, setDropLng] = useState<number>(data.dropoff?.lng ?? 0);
+  const [dropSelected, setDropSelected] = useState<boolean>(!!data.dropoff);
   const [passengers, setPassengers] = useState<number>(data.passengers ?? 1);
   const [notes, setNotes] = useState(data.notes || '');
 
@@ -61,12 +62,18 @@ export default function TripDetailsStep({ data, onNext, onBack, onChange }: Prop
         value={dropoff}
         onChange={(val) => {
           setDropoff(val);
-          onChange({ dropoff: { address: val, lat: dropLat, lng: dropLng } });
+          if (dropSelected) {
+            setDropSelected(false);
+            setDropLat(0);
+            setDropLng(0);
+            onChange({ dropoff: undefined });
+          }
         }}
         onSelect={(s) => {
           setDropoff(s.address);
           setDropLat(s.lat);
           setDropLng(s.lng);
+          setDropSelected(true);
           onChange({ dropoff: { address: s.address, lat: s.lat, lng: s.lng } });
         }}
         suggestions={dropoffAuto.suggestions}
