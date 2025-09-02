@@ -32,6 +32,17 @@ export function useRouteMetrics() {
         });
         if (rideTime) params.set('ride_time', rideTime);
         url.search = params.toString();
+        logger.debug(
+          'hooks/useRouteMetrics',
+          'Requesting route metrics',
+          {
+            pickupLat,
+            pickupLon,
+            dropoffLat,
+            dropoffLon,
+            rideTime,
+          },
+        );
         const res = await apiFetch(url.toString());
         if (!res.ok) {
           logger.error(
@@ -45,6 +56,11 @@ export function useRouteMetrics() {
         const km = Number(data?.km);
         const min = Number(data?.min);
         if (!Number.isFinite(km) || !Number.isFinite(min)) return null;
+        logger.info(
+          'hooks/useRouteMetrics',
+          'Route metrics computed',
+          { km, min },
+        );
         return { km, min };
       } catch (err) {
         logger.error('hooks/useRouteMetrics', err);
