@@ -4,10 +4,17 @@ import { vi } from 'vitest';
 import type { LocationUpdate } from '@/hooks/useBookingChannel';
 import TrackingPage from './TrackingPage';
 
+type MapProps = {
+  children: React.ReactNode;
+  options?: Record<string, unknown>;
+};
+
+let mapProps: MapProps | null = null;
 vi.mock('@react-google-maps/api', () => ({
-  GoogleMap: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="map">{children}</div>
-  ),
+  GoogleMap: (props: MapProps) => {
+    mapProps = props;
+    return <div data-testid="map">{props.children}</div>;
+  },
   Marker: ({ position }: { position: { lat: number; lng: number } }) => (
     <div data-testid="marker">{position.lat},{position.lng}</div>
   ),
@@ -70,6 +77,15 @@ describe('TrackingPage', () => {
     const { rerender, findByTestId } = render(wrapper);
     currentUpdate = { lat: 1, lng: 2, status: 'leave', ts: 0 };
     rerender(wrapper);
+    await findByTestId('map');
+    expect(mapProps?.options).toEqual({
+      disableDefaultUI: true,
+      draggable: false,
+      keyboardShortcuts: false,
+      scrollwheel: false,
+      disableDoubleClickZoom: true,
+      gestureHandling: 'none',
+    });
     const marker = await findByTestId('marker');
     expect(marker.textContent).toBe('1,2');
     await waitFor(() =>
