@@ -25,12 +25,11 @@ interface Props {
 
 export default function TripDetailsStep({ data, onNext, onBack, onChange }: Props) {
   const [pickup, setPickup] = useState(data.pickup?.address || '');
-  const [pickupLat, setPickupLat] = useState<number>(data.pickup?.lat ?? 0);
-  const [pickupLng, setPickupLng] = useState<number>(data.pickup?.lng ?? 0);
+  const [pickupLat, setPickupLat] = useState<number | undefined>(data.pickup?.lat);
+  const [pickupLng, setPickupLng] = useState<number | undefined>(data.pickup?.lng);
   const [dropoff, setDropoff] = useState(data.dropoff?.address || '');
-  const [dropLat, setDropLat] = useState<number>(data.dropoff?.lat ?? 0);
-  const [dropLng, setDropLng] = useState<number>(data.dropoff?.lng ?? 0);
-  const [dropSelected, setDropSelected] = useState<boolean>(!!data.dropoff);
+  const [dropLat, setDropLat] = useState<number | undefined>(data.dropoff?.lat);
+  const [dropLng, setDropLng] = useState<number | undefined>(data.dropoff?.lng);
   const [passengers, setPassengers] = useState<number>(data.passengers ?? 1);
   const [notes, setNotes] = useState(data.notes || '');
 
@@ -45,7 +44,9 @@ export default function TripDetailsStep({ data, onNext, onBack, onChange }: Prop
         value={pickup}
         onChange={(val) => {
           setPickup(val);
-          onChange({ pickup: { address: val, lat: pickupLat, lng: pickupLng } });
+          setPickupLat(undefined);
+          setPickupLng(undefined);
+          onChange({ pickup: undefined });
         }}
         onSelect={(s) => {
           setPickup(s.address);
@@ -62,12 +63,9 @@ export default function TripDetailsStep({ data, onNext, onBack, onChange }: Prop
         value={dropoff}
         onChange={(val) => {
           setDropoff(val);
-          if (dropSelected) {
-            setDropSelected(false);
-            setDropLat(0);
-            setDropLng(0);
-            onChange({ dropoff: undefined });
-          }
+          setDropLat(undefined);
+          setDropLng(undefined);
+          onChange({ dropoff: undefined });
         }}
         onSelect={(s) => {
           setDropoff(s.address);
@@ -103,8 +101,14 @@ export default function TripDetailsStep({ data, onNext, onBack, onChange }: Prop
           variant="contained"
           onClick={() =>
             onNext({
-              pickup: { address: pickup, lat: pickupLat, lng: pickupLng },
-              dropoff: { address: dropoff, lat: dropLat, lng: dropLng },
+              pickup:
+                pickupLat !== undefined && pickupLng !== undefined
+                  ? { address: pickup, lat: pickupLat, lng: pickupLng }
+                  : undefined,
+              dropoff:
+                dropLat !== undefined && dropLng !== undefined
+                  ? { address: dropoff, lat: dropLat, lng: dropLng }
+                  : undefined,
               passengers,
               notes,
             })
