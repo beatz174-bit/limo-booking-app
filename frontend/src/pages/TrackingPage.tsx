@@ -7,6 +7,7 @@ import { apiFetch } from '@/services/apiFetch';
 import { useBookingChannel } from '@/hooks/useBookingChannel';
 import StatusTimeline, { type StatusStep } from '@/components/StatusTimeline';
 import { calculateDistance } from '@/lib/calculateDistance';
+import type { BookingStatus } from '@/types/BookingStatus';
 
 const pickupIcon = '/assets/pickup-marker-green.svg';
 const dropoffIcon = '/assets/dropoff-marker-red.svg';
@@ -40,18 +41,18 @@ interface TrackResponse {
     id: string;
     pickup_address: string;
     dropoff_address: string;
-    status: string;
+    status: BookingStatus;
   };
   ws_url: string;
 }
 
 const STATUS_STEPS: StatusStep[] = [
-  { key: 'confirm', label: 'Confirmed' },
-  { key: 'leave', label: 'En route to pickup' },
-  { key: 'arrive-pickup', label: 'Arrived pickup' },
-  { key: 'start-trip', label: 'Trip started' },
-  { key: 'arrive-dropoff', label: 'Arrived dropoff' },
-  { key: 'complete', label: 'Completed' },
+  { key: 'DRIVER_CONFIRMED', label: 'Confirmed' },
+  { key: 'ON_THE_WAY', label: 'En route to pickup' },
+  { key: 'ARRIVED_PICKUP', label: 'Arrived pickup' },
+  { key: 'IN_PROGRESS', label: 'Trip started' },
+  { key: 'ARRIVED_DROPOFF', label: 'Arrived dropoff' },
+  { key: 'COMPLETED', label: 'Completed' },
 ];
 
 export default function TrackingPage() {
@@ -59,7 +60,7 @@ export default function TrackingPage() {
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [pickup, setPickup] = useState('');
   const [dropoff, setDropoff] = useState('');
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState<BookingStatus | ''>('');
   const [eta, setEta] = useState<number | null>(null);
   const [nextStop, setNextStop] = useState<{ lat: number; lng: number } | null>(
     null,
@@ -70,16 +71,11 @@ export default function TrackingPage() {
 
   const isDropoff = useMemo(
     () =>
-      ['arrive-pickup', 'start-trip', 'arrive-dropoff', 'complete'].includes(
-        status,
+      ['ARRIVED_PICKUP', 'IN_PROGRESS', 'ARRIVED_DROPOFF', 'COMPLETED'].includes(
+        status as BookingStatus,
       ),
     [status],
   );
-
-  const pickupIcon =
-    'http://maps.google.com/mapfiles/ms/icons/green-dot.png';
-  const dropoffIcon =
-    'http://maps.google.com/mapfiles/ms/icons/blue-dot.png';
 
   useEffect(() => {
     (async () => {
@@ -97,7 +93,7 @@ export default function TrackingPage() {
   }, [code]);
 
   useEffect(() => {
-    if (update?.status) setStatus(update.status);
+    if (update?.status) setStatus(update.status as BookingStatus);
   }, [update?.status]);
 
   useEffect(() => {
@@ -147,11 +143,12 @@ export default function TrackingPage() {
     mapRef.current.setZoom(zoom);
   }, [pos, nextStop, isDropoff]);
 
-  const nextStopIcon = ['arrive-pickup', 'start-trip', 'arrive-dropoff', 'complete'].includes(
-    status,
+  const nextStopIcon = ['ARRIVED_PICKUP', 'IN_PROGRESS', 'ARRIVED_DROPOFF', 'COMPLETED'].includes(
+    status as BookingStatus,
   )
     ? dropoffIcon
     : pickupIcon;
+  const nextStopTestId = isDropoff ? 'dropoff-marker' : 'pickup-marker';
 
   return (
     <div>
@@ -173,20 +170,14 @@ export default function TrackingPage() {
           }}
         >
           <Marker position={pos} />
-          {nextStop &&
-            (isDropoff ? (
-              <Marker
-                position={nextStop}
-                icon={dropoffIcon}
-                data-testid="dropoff-marker"
-              />
-            ) : (
-              <Marker
-                position={nextStop}
-                icon={pickupIcon}
-                data-testid="pickup-marker"
-              />
-            ))}
+          {nextStop && (
+            <Marker
+              position={nextStop}
+              icon={nextStopIcon}
+              data-testid={nextStopTestId}
+            />
+          )}
+          {route && <DirectionsRenderer directions={route} data-testid="route" />}
         </GoogleMap>
       ) : (
         <p>Waiting for driver...</p>

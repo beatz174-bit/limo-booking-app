@@ -18,11 +18,17 @@ vi.mock('@react-google-maps/api', () => ({
     },
   Marker: ({
     position,
+    icon,
     'data-testid': testId,
   }: {
     position: { lat: number; lng: number };
+    icon?: string;
     'data-testid'?: string;
-  }) => <div data-testid={testId ?? 'marker'}>{position.lat},{position.lng}</div>,
+  }) => (
+    <div data-testid={testId ?? 'marker'} data-icon={icon}>
+      {position.lat},{position.lng}
+    </div>
+  ),
   DirectionsRenderer: () => <div data-testid="route">route</div>,
 }));
 
@@ -37,24 +43,24 @@ describe('TrackingPage', () => {
     currentUpdate = null;
     mockMap = { fitBounds: vi.fn(), setZoom: vi.fn() };
     endLocation = { lat: 3, lng: 4 };
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          json: () =>
-            Promise.resolve({
-              booking: {
-                id: '1',
-                pickup_address: 'P',
-                dropoff_address: 'D',
-                status: 'confirm',
-              },
-              ws_url: '',
-            }),
-        }) as unknown as Response,
-      ),
-    );
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(() =>
+          Promise.resolve({
+            ok: true,
+            json: () =>
+              Promise.resolve({
+                booking: {
+                  id: '1',
+                  pickup_address: 'P',
+                  dropoff_address: 'D',
+                  status: 'DRIVER_CONFIRMED',
+                },
+                ws_url: '',
+              }),
+          }) as unknown as Response,
+        ),
+      );
     const maps = {
       DirectionsService: class {
         route() {
@@ -96,7 +102,7 @@ describe('TrackingPage', () => {
       </MemoryRouter>
     );
     const { rerender, unmount } = render(wrapper);
-    currentUpdate = { lat: 1, lng: 2, status: 'leave', ts: 0 };
+    currentUpdate = { lat: 1, lng: 2, status: 'ON_THE_WAY', ts: 0 };
     rerender(wrapper);
     await waitFor(() =>
       expect(screen.getByTestId('pickup-marker')).toBeInTheDocument(),
@@ -114,25 +120,25 @@ describe('TrackingPage', () => {
     await screen.findByTestId('route');
     await waitFor(() => expect(mockMap.fitBounds).toHaveBeenCalled());
     unmount();
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          json: () =>
-            Promise.resolve({
-              booking: {
-                id: '1',
-                pickup_address: 'P',
-                dropoff_address: 'D',
-                status: 'arrive-pickup',
-              },
-              ws_url: '',
-            }),
-        }) as unknown as Response,
-      ),
-    );
-    currentUpdate = { lat: 1, lng: 2, status: 'arrive-pickup', ts: 0 };
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(() =>
+          Promise.resolve({
+            ok: true,
+            json: () =>
+              Promise.resolve({
+                booking: {
+                  id: '1',
+                  pickup_address: 'P',
+                  dropoff_address: 'D',
+                  status: 'ARRIVED_PICKUP',
+                },
+                ws_url: '',
+              }),
+          }) as unknown as Response,
+        ),
+      );
+    currentUpdate = { lat: 1, lng: 2, status: 'ARRIVED_PICKUP', ts: 0 };
     const wrapper2 = (
       <MemoryRouter initialEntries={['/t/abc']}>
         <Routes>
@@ -148,7 +154,7 @@ describe('TrackingPage', () => {
   });
 
   it('uses dropoff icon when heading to dropoff', async () => {
-    currentUpdate = { lat: 1, lng: 2, status: 'start-trip', ts: 0 };
+    currentUpdate = { lat: 1, lng: 2, status: 'IN_PROGRESS', ts: 0 };
     endLocation = { lat: 5, lng: 6 };
     (fetch as unknown as vi.Mock).mockResolvedValueOnce({
       ok: true,
@@ -158,7 +164,7 @@ describe('TrackingPage', () => {
             id: '1',
             pickup_address: 'P',
             dropoff_address: 'D',
-            status: 'start-trip',
+            status: 'IN_PROGRESS',
           },
           ws_url: '',
         }),
@@ -171,9 +177,14 @@ describe('TrackingPage', () => {
       </MemoryRouter>,
     );
     await new Promise((r) => setTimeout(r, 0));
-    await waitFor(() => expect(screen.getAllByTestId('marker')).toHaveLength(2));
-    const markers = screen.getAllByTestId('marker');
-    expect(markers[1]).toHaveAttribute('data-icon', '/assets/dropoff-marker-red.svg');
+    await waitFor(() =>
+      expect(screen.getByTestId('dropoff-marker')).toBeInTheDocument(),
+    );
+    expect(screen.getByTestId('dropoff-marker')).toHaveAttribute(
+      'data-icon',
+      '/assets/dropoff-marker-red.svg',
+    );
+    expect(screen.getByTestId('marker')).toBeInTheDocument();
   });
 
   it('sets zoom to 12 when distance is greater than 5 km', async () => {
@@ -185,7 +196,7 @@ describe('TrackingPage', () => {
       </MemoryRouter>
     );
     const { rerender } = render(wrapper);
-    currentUpdate = { lat: 1, lng: 2, status: 'leave', ts: 0 };
+    currentUpdate = { lat: 1, lng: 2, status: 'ON_THE_WAY', ts: 0 };
     rerender(wrapper);
     await waitFor(() => expect(mockMap.setZoom).toHaveBeenCalledWith(12));
   });
@@ -200,7 +211,7 @@ describe('TrackingPage', () => {
       </MemoryRouter>
     );
     const { rerender } = render(wrapper);
-    currentUpdate = { lat: 1, lng: 2, status: 'leave', ts: 0 };
+    currentUpdate = { lat: 1, lng: 2, status: 'ON_THE_WAY', ts: 0 };
     rerender(wrapper);
     await waitFor(() => expect(mockMap.setZoom).toHaveBeenCalledWith(14));
   });
@@ -215,7 +226,7 @@ describe('TrackingPage', () => {
       </MemoryRouter>
     );
     const { rerender } = render(wrapper);
-    currentUpdate = { lat: 1, lng: 2, status: 'leave', ts: 0 };
+    currentUpdate = { lat: 1, lng: 2, status: 'ON_THE_WAY', ts: 0 };
     rerender(wrapper);
     await waitFor(() => expect(mockMap.setZoom).toHaveBeenCalledWith(16));
   });
