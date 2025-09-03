@@ -11,13 +11,11 @@ type MapProps = {
 };
 
 let mockMap: { fitBounds: ReturnType<typeof vi.fn>; setZoom: ReturnType<typeof vi.fn> };
-let mapProps: MapProps | null = null;
 vi.mock('@react-google-maps/api', () => ({
-  GoogleMap: (props: MapProps) => {
-    mapProps = props;
-    props.onLoad?.(mockMap);
-    return <div data-testid="map">{props.children}</div>;
-  },
+    GoogleMap: (props: MapProps) => {
+      props.onLoad?.(mockMap);
+      return <div data-testid="map">{props.children}</div>;
+    },
   Marker: ({ position }: { position: { lat: number; lng: number } }) => (
     <div data-testid="marker">{position.lat},{position.lng}</div>
   ),
