@@ -44,10 +44,19 @@ export function AddressField(props: {
     <Autocomplete<AddressSuggestion, false, false, true>
       freeSolo
       options={props.suggestions}
-      getOptionLabel={(option) => option.address}
+      getOptionLabel={(option) =>
+        typeof option === "string" ? option : option.address
+      }
       renderOption={(optionProps, option) => (
-        <li {...optionProps} key={option.address}>
-          {option.name ? `${option.name} – ${option.address}` : option.address}
+        <li
+          {...optionProps}
+          key={typeof option === "string" ? option : option.address}
+        >
+          {typeof option === "string"
+            ? option
+            : option.name
+            ? `${option.name} – ${option.address}`
+            : option.address}
         </li>
       )}
       inputValue={props.value}
