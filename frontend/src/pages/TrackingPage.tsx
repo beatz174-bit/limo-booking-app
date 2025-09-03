@@ -177,16 +177,11 @@ export default function TrackingPage() {
         >
           <Marker position={pos} icon={carIcon} />
           {nextStop && (
-            <>
-              <Marker
-                position={nextStop}
-                icon={isDropoff ? dropoffIcon : pickupIcon}
-                data-testid={isDropoff ? 'dropoff-marker' : 'pickup-marker'}
-              />
-              {isDropoff && (
-                <div data-testid="marker" data-icon={dropoffIcon} />
-              )}
-            </>
+            <Marker
+              position={nextStop}
+              icon={isDropoff ? dropoffIcon : pickupIcon}
+              data-testid={isDropoff ? 'dropoff-marker' : 'pickup-marker'}
+            />
           )}
           {route && (
             <DirectionsRenderer
