@@ -105,6 +105,7 @@ describe('TrackingPage', () => {
     );
 
     await screen.findByText('ETA: 10 min');
+    await screen.findByTestId('route');
     await waitFor(() => expect(mockMap.fitBounds).toHaveBeenCalled());
   });
 
