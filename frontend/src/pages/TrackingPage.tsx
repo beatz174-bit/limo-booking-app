@@ -8,6 +8,8 @@ import { useBookingChannel } from '@/hooks/useBookingChannel';
 import StatusTimeline, { type StatusStep } from '@/components/StatusTimeline';
 import { calculateDistance } from '@/lib/calculateDistance';
 import type { BookingStatus } from '@/types/BookingStatus';
+import carIcon from '@/assets/car-marker.svg';
+
 
 const pickupIcon = '/assets/pickup-marker-green.svg';
 const dropoffIcon = '/assets/dropoff-marker-red.svg';
@@ -170,6 +172,7 @@ export default function TrackingPage() {
           }}
         >
           <Marker position={pos} />
+          {route && <DirectionsRenderer directions={route} />}
           {nextStop && (
             <Marker
               position={nextStop}

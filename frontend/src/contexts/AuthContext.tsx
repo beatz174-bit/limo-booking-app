@@ -220,20 +220,14 @@ useEffect(() => {
       const body = res.data as LoginResponse;
       const token = body.access_token ?? body.token ?? null;
       const role: string | null = body.role ?? body.user?.role ?? null;
-      logger.debug("contexts/AuthContext", "storing login tokens");
-      localStorage.setItem(
-        "auth_tokens",
-        JSON.stringify({
-          access_token: token,
-          refresh_token: body.refresh_token ?? null,
-          user: body.user ?? null,
-        }),
+      persist(
+        {
+          access_token: token ?? undefined,
+          refresh_token: body.refresh_token ?? undefined,
+        },
+        body.user ?? null,
+        role,
       );
-      if (role) {
-        localStorage.setItem("role", role ?? "");
-      } else {
-        localStorage.removeItem("role");
-      }
 
       if (body.full_name) {
         localStorage.setItem("userName", body.full_name ?? "");
@@ -248,15 +242,9 @@ useEffect(() => {
 
       setState((s): AuthState => ({
         ...s,
-        accessToken: token,
-        user: body.user ?? s.user,
         userID: body.id != null ? String(body.id) : null,
         userName: body.full_name ?? null,
-        role,
       }));
-      if (token) {
-        maybeSubscribePush();
-      }
       logger.info("contexts/AuthContext", "login successful");
       return role;
     } catch (e: unknown) {
@@ -271,7 +259,7 @@ useEffect(() => {
       }
       throw new Error("Login failed");
     }
-  }, []);
+  }, [persist]);
 
   const registerWithPassword = useCallback(
     async (fullName: string, email: string, password: string) => {
