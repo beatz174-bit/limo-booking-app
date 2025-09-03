@@ -1,7 +1,7 @@
 /// <reference types="google.maps" />
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { GoogleMap, Marker } from '@react-google-maps/api';
+import { GoogleMap, Marker, DirectionsRenderer } from '@react-google-maps/api';
 import { CONFIG } from '@/config';
 import { apiFetch } from '@/services/apiFetch';
 import { useBookingChannel } from '@/hooks/useBookingChannel';
@@ -64,6 +64,7 @@ export default function TrackingPage() {
   const [nextStop, setNextStop] = useState<{ lat: number; lng: number } | null>(
     null,
   );
+  const [route, setRoute] = useState<google.maps.DirectionsResult | null>(null);
   const update = useBookingChannel(bookingId);
   const mapRef = useRef<google.maps.Map | null>(null);
 
@@ -104,6 +105,7 @@ export default function TrackingPage() {
           destination: dest,
           travelMode: g.maps.TravelMode.DRIVING,
         });
+        setRoute(res as unknown as google.maps.DirectionsResult);
         const leg = res.routes[0].legs[0];
         const sec = leg.duration.value;
         setEta(Math.round(sec / 60));
@@ -111,6 +113,7 @@ export default function TrackingPage() {
       } catch {
         setEta(null);
         setNextStop(null);
+        setRoute(null);
       }
     }
     void calcEta();
