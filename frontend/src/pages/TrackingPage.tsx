@@ -163,7 +163,6 @@ export default function TrackingPage() {
           zoom={14}
           onLoad={(m) => {
             mapRef.current = m;
-            fitBoundsAndZoom();
           }}
           options={{
             disableDefaultUI: true,
