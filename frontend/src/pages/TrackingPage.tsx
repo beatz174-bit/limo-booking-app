@@ -130,6 +130,14 @@ export default function TrackingPage() {
     [update],
   );
 
+  const center = useMemo(
+    () =>
+      pos && nextStop
+        ? { lat: (pos.lat + nextStop.lat) / 2, lng: (pos.lng + nextStop.lng) / 2 }
+        : pos,
+    [pos, nextStop],
+  );
+
   useEffect(() => {
     if (!mapRef.current || !pos || !nextStop) return;
     const g = (window as { google?: typeof google }).google;
@@ -143,8 +151,13 @@ export default function TrackingPage() {
     const km = distance / 1000;
     const zoom = km > 5 ? 12 : km > 1 ? 14 : 16;
     mapRef.current.setZoom(zoom);
-  }, [pos, nextStop, isDropoff]);
 
+    const mid = {
+      lat: (pos.lat + nextStop.lat) / 2,
+      lng: (pos.lng + nextStop.lng) / 2,
+    };
+    mapRef.current.setCenter(mid);
+  }, [pos, nextStop, isDropoff]);
   const nextStopIcon = ['ARRIVED_PICKUP', 'IN_PROGRESS', 'ARRIVED_DROPOFF', 'COMPLETED'].includes(
     status as BookingStatus,
   )
@@ -157,7 +170,7 @@ export default function TrackingPage() {
       {pos ? (
         <GoogleMap
           mapContainerStyle={{ width: '100%', height: 300 }}
-          center={pos}
+          center={center ?? undefined}
           zoom={14}
           onLoad={(m) => {
             mapRef.current = m;
