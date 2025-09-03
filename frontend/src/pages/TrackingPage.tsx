@@ -9,10 +9,8 @@ import StatusTimeline, { type StatusStep } from '@/components/StatusTimeline';
 import { calculateDistance } from '@/lib/calculateDistance';
 import type { BookingStatus } from '@/types/BookingStatus';
 import carIcon from '@/assets/car-marker.svg';
-
-
-const pickupIcon = '/assets/pickup-marker-green.svg';
-const dropoffIcon = '/assets/dropoff-marker-red.svg';
+import pickupIcon from '@/assets/pickup-marker-green.svg';
+import dropoffIcon from '@/assets/dropoff-marker-red.svg';
 
 type GoogleLike = {
   maps: {
@@ -178,23 +176,18 @@ export default function TrackingPage() {
           }}
         >
           <Marker position={pos} icon={carIcon} />
-          {nextStop &&
-            (isDropoff ? (
-              <>
-                <Marker
-                  position={nextStop}
-                  icon={dropoffIcon}
-                  data-testid="dropoff-marker"
-                />
-                <div data-testid="marker" data-icon={dropoffIcon} />
-              </>
-            ) : (
+          {nextStop && (
+            <>
               <Marker
                 position={nextStop}
-                icon={pickupIcon}
-                data-testid="pickup-marker"
+                icon={isDropoff ? dropoffIcon : pickupIcon}
+                data-testid={isDropoff ? 'dropoff-marker' : 'pickup-marker'}
               />
-            ))}
+              {isDropoff && (
+                <div data-testid="marker" data-icon={dropoffIcon} />
+              )}
+            </>
+          )}
           {route && (
             <DirectionsRenderer
               directions={route}
