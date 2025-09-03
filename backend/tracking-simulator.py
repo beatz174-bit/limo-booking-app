@@ -24,11 +24,10 @@ from typing import Iterable, Tuple
 
 import httpx
 import websockets
-from sqlalchemy import select
-from websockets.exceptions import WebSocketException
-
 from app.db.database import AsyncSessionLocal
 from app.models.booking import Booking, BookingStatus
+from sqlalchemy import select
+from websockets.exceptions import WebSocketException
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -161,6 +160,7 @@ async def _keepalive(ws: websockets.WebSocketClientProtocol) -> None:
 async def simulate(
     api_base: str, booking_code: str, token: str, distance_km: float, points: int
 ) -> None:
+    SPEEDUP_FACTOR = 3
     transport = httpx.AsyncHTTPTransport(retries=3)
     try:
         async with httpx.AsyncClient(transport=transport) as client:
@@ -190,8 +190,8 @@ async def simulate(
             try:
                 # --- leg 1: home -> pickup
                 duration1 = leg1["min"] * 60
-                interval1 = duration1 / points
-                speed1 = leg1["km"] / (leg1["min"] / 60)
+                interval1 = duration1 / points / SPEEDUP_FACTOR
+                speed1 = leg1["km"] / (leg1["min"] / 60) * SPEEDUP_FACTOR
 
                 for lat, lng in interpolate(start, pickup, points):
                     await ws.send(
@@ -208,8 +208,8 @@ async def simulate(
 
                 # --- leg 2: pickup -> dropoff
                 duration2 = leg2["min"] * 60
-                interval2 = duration2 / points
-                speed2 = leg2["km"] / (leg2["min"] / 60)
+                interval2 = duration2 / points / SPEEDUP_FACTOR
+                speed2 = leg2["km"] / (leg2["min"] / 60) * SPEEDUP_FACTOR
 
                 for lat, lng in interpolate(pickup, dropoff, points):
                     await ws.send(
