@@ -91,9 +91,14 @@ describe('TrackingPage', () => {
         </Routes>
       </MemoryRouter>
     );
+    const fitBounds = vi.fn();
+    const fakeMap = { fitBounds, getZoom: vi.fn(() => 17), setZoom: vi.fn() };
+
     const { rerender } = render(wrapper);
     currentUpdate = { lat: 1, lng: 2, status: 'leave', ts: 0 };
     rerender(wrapper);
+    await waitFor(() => expect(mapProps).not.toBeNull());
+    mapProps?.onLoad?.(fakeMap);
     await waitFor(() => expect(screen.getAllByTestId('marker')).toHaveLength(2));
     const markers = screen.getAllByTestId('marker');
     expect(markers[0].textContent).toBe('1,2');
@@ -105,6 +110,7 @@ describe('TrackingPage', () => {
     );
 
     await screen.findByText('ETA: 10 min');
+    await waitFor(() => expect(fitBounds).toHaveBeenCalled());
   });
 
   it('sets zoom to 12 when distance is greater than 5 km', async () => {
