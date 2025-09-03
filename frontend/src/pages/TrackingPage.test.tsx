@@ -111,6 +111,7 @@ describe('TrackingPage', () => {
     );
 
     await screen.findByText('ETA: 10 min');
+    await screen.findByTestId('route');
     await waitFor(() => expect(mockMap.fitBounds).toHaveBeenCalled());
     unmount();
     vi.stubGlobal(
@@ -144,6 +145,35 @@ describe('TrackingPage', () => {
       expect(screen.getByTestId('dropoff-marker')).toBeInTheDocument(),
     );
     expect(screen.queryByTestId('pickup-marker')).toBeNull();
+  });
+
+  it('uses dropoff icon when heading to dropoff', async () => {
+    currentUpdate = { lat: 1, lng: 2, status: 'start-trip', ts: 0 };
+    endLocation = { lat: 5, lng: 6 };
+    (fetch as unknown as vi.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          booking: {
+            id: '1',
+            pickup_address: 'P',
+            dropoff_address: 'D',
+            status: 'start-trip',
+          },
+          ws_url: '',
+        }),
+    } as Response);
+    render(
+      <MemoryRouter initialEntries={['/t/abc']}>
+        <Routes>
+          <Route path="/t/:code" element={<TrackingPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    await new Promise((r) => setTimeout(r, 0));
+    await waitFor(() => expect(screen.getAllByTestId('marker')).toHaveLength(2));
+    const markers = screen.getAllByTestId('marker');
+    expect(markers[1]).toHaveAttribute('data-icon', '/assets/dropoff-marker-red.svg');
   });
 
   it('sets zoom to 12 when distance is greater than 5 km', async () => {
