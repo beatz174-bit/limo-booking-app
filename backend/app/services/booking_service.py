@@ -112,7 +112,10 @@ async def confirm_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
             await db.commit()
             await db.refresh(booking)
             raise HTTPException(status_code=402, detail=exc.user_message) from exc
-        raise HTTPException(status_code=400, detail=exc.user_message) from exc
+        raise HTTPException(
+            status_code=400,
+            detail=exc.user_message or "Failed to process deposit",
+        ) from exc
     except stripe.error.StripeError as exc:
         booking.status = BookingStatus.DEPOSIT_FAILED
         await db.commit()
