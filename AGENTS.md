@@ -30,6 +30,8 @@ tests use `pytest -q --maxfail=1 --disable-warnings` to stop on the first
 failure and suppress warnings, keeping logs small and preventing the
 session from hanging. Be sure to keep all tests to the bare minimum. 
 Only run the tests that you need to run for the changes you have made.
+When running "npm test" ensure that you run targeted tests. Don't run all 
+the frontend tests, only the tests you need to.
 
 ```bash
 npm run lint 2>&1 | tee /tmp/lint.log | tail -n 200
