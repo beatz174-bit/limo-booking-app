@@ -160,7 +160,7 @@ async def _keepalive(ws: websockets.WebSocketClientProtocol) -> None:
 async def simulate(
     api_base: str, booking_code: str, token: str, distance_km: float, points: int
 ) -> None:
-    SPEEDUP_FACTOR = 3
+    SPEEDUP_FACTOR = 20
     transport = httpx.AsyncHTTPTransport(retries=3)
     try:
         async with httpx.AsyncClient(transport=transport) as client:
