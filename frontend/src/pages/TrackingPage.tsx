@@ -1,12 +1,15 @@
 /// <reference types="google.maps" />
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { GoogleMap, Marker } from '@react-google-maps/api';
+import { GoogleMap, Marker, DirectionsRenderer } from '@react-google-maps/api';
 import { CONFIG } from '@/config';
 import { apiFetch } from '@/services/apiFetch';
 import { useBookingChannel } from '@/hooks/useBookingChannel';
 import StatusTimeline, { type StatusStep } from '@/components/StatusTimeline';
 import { calculateDistance } from '@/lib/calculateDistance';
+
+const pickupIcon = '/assets/pickup-marker-green.svg';
+const dropoffIcon = '/assets/dropoff-marker-red.svg';
 
 type GoogleLike = {
   maps: {
@@ -61,6 +64,7 @@ export default function TrackingPage() {
   const [nextStop, setNextStop] = useState<{ lat: number; lng: number } | null>(
     null,
   );
+  const [route, setRoute] = useState<google.maps.DirectionsResult | null>(null);
   const update = useBookingChannel(bookingId);
   const mapRef = useRef<google.maps.Map | null>(null);
 
@@ -101,6 +105,7 @@ export default function TrackingPage() {
           destination: dest,
           travelMode: g.maps.TravelMode.DRIVING,
         });
+        setRoute(res as unknown as google.maps.DirectionsResult);
         const leg = res.routes[0].legs[0];
         const sec = leg.duration.value;
         setEta(Math.round(sec / 60));
@@ -108,6 +113,7 @@ export default function TrackingPage() {
       } catch {
         setEta(null);
         setNextStop(null);
+        setRoute(null);
       }
     }
     void calcEta();
@@ -133,6 +139,12 @@ export default function TrackingPage() {
     mapRef.current.setZoom(zoom);
   }, [pos, nextStop]);
 
+  const nextStopIcon = ['arrive-pickup', 'start-trip', 'arrive-dropoff', 'complete'].includes(
+    status,
+  )
+    ? dropoffIcon
+    : pickupIcon;
+
   return (
     <div>
       {pos ? (
@@ -153,7 +165,7 @@ export default function TrackingPage() {
           }}
         >
           <Marker position={pos} />
-          {nextStop && <Marker position={nextStop} />}
+          {nextStop && <Marker position={nextStop} icon={nextStopIcon} />}
         </GoogleMap>
       ) : (
         <p>Waiting for driver...</p>
