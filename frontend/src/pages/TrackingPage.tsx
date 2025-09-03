@@ -182,7 +182,7 @@ export default function TrackingPage() {
             gestureHandling: 'none',
           }}
         >
-          <Marker position={pos} icon={carMarkerIcon} />
+          <Marker position={pos} icon={carIcon} />
           {nextStop && (
             <Marker
               position={nextStop}
