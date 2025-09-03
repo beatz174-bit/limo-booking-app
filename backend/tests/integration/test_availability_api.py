@@ -59,6 +59,23 @@ async def test_get_availability_includes_null_reason(
     assert any(s["reason"] is None for s in data["slots"])
 
 
+async def test_non_admin_can_get_availability(client: AsyncClient, user_headers):
+    month = datetime.now(timezone.utc).strftime("%Y-%m")
+    res = await client.get(f"/api/v1/availability?month={month}", headers=user_headers)
+    assert res.status_code == 200
+
+
+async def test_non_admin_cannot_create_slot(client: AsyncClient, user_headers):
+    start = datetime.now(timezone.utc) + timedelta(days=2)
+    end = start + timedelta(hours=1)
+    res = await client.post(
+        "/api/v1/availability",
+        json={"start_dt": start.isoformat(), "end_dt": end.isoformat()},
+        headers=user_headers,
+    )
+    assert res.status_code == 403
+
+
 async def _create_booking(async_session, when: datetime) -> Booking:
     user = User(
         email=f"c{uuid.uuid4()}@example.com",

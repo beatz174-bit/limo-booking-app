@@ -197,3 +197,37 @@ async def admin_headers(async_session: AsyncSession) -> dict[str, str]:
     settings_service._cached_admin_user_id = None
     token = create_jwt_token(admin.id)
     return {"Authorization": f"Bearer {token}"}
+
+
+@pytest_asyncio.fixture
+async def user_headers(async_session: AsyncSession) -> dict[str, str]:
+    user = User(
+        email=f"user{uuid.uuid4()}@example.com",
+        full_name="User",
+        hashed_password=hash_password("user"),
+        role=UserRole.CUSTOMER,
+    )
+    admin = User(
+        email=f"admin{uuid.uuid4()}@example.com",
+        full_name="Admin",
+        hashed_password=hash_password("admin"),
+        role=UserRole.CUSTOMER,
+    )
+    async_session.add_all([user, admin])
+    await async_session.flush()
+    await async_session.merge(
+        AdminConfig(
+            id=1,
+            account_mode=False,
+            flagfall=0,
+            per_km_rate=0,
+            per_minute_rate=0,
+            admin_user_id=admin.id,
+        )
+    )
+    await async_session.commit()
+    from app.services import settings_service
+
+    settings_service._cached_admin_user_id = None
+    token = create_jwt_token(user.id)
+    return {"Authorization": f"Bearer {token}"}
