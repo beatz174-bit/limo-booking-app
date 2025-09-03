@@ -1,5 +1,5 @@
 /// <reference types="google.maps" />
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { GoogleMap, Marker } from '@react-google-maps/api';
 import { CONFIG } from '@/config';
@@ -31,12 +31,6 @@ type GoogleLike = {
   };
 };
 
-type MapLike = {
-  fitBounds: (bounds: unknown) => void;
-  getZoom: () => number;
-  setZoom: (zoom: number) => void;
-};
-
 interface TrackResponse {
   booking: {
     id: string;
@@ -66,7 +60,6 @@ export default function TrackingPage() {
   const [nextStop, setNextStop] = useState<{ lat: number; lng: number } | null>(
     null,
   );
-  const [map, setMap] = useState<MapLike | null>(null);
   const update = useBookingChannel(bookingId);
   const mapRef = useRef<google.maps.Map | null>(null);
 
@@ -124,18 +117,7 @@ export default function TrackingPage() {
     [update],
   );
 
-  useEffect(() => {
-    if (!map || !pos || !nextStop) return;
-    const g = (window as { google?: GoogleLike }).google;
-    if (!g?.maps) return;
-    const bounds = new g.maps.LatLngBounds();
-    bounds.extend(pos);
-    bounds.extend(nextStop);
-    map.fitBounds(bounds);
-    if (map.getZoom() > 16) map.setZoom(16);
-  }, [map, pos, nextStop]);
-
-  useEffect(() => {
+  const fitBoundsAndZoom = useCallback(() => {
     if (!mapRef.current || !pos || !nextStop) return;
     const g = (window as { google?: typeof google }).google;
     if (!g?.maps) return;
@@ -168,6 +150,10 @@ export default function TrackingPage() {
     mapRef.current.setZoom(zoom);
   }, [pos, nextStop]);
 
+  useEffect(() => {
+    fitBoundsAndZoom();
+  }, [fitBoundsAndZoom]);
+
   return (
     <div>
       {pos ? (
@@ -177,7 +163,6 @@ export default function TrackingPage() {
           zoom={14}
           onLoad={(m) => {
             mapRef.current = m;
-            setMap(m as MapLike);
           }}
           options={{
             disableDefaultUI: true,
