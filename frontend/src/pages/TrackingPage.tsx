@@ -7,6 +7,7 @@ import { apiFetch } from '@/services/apiFetch';
 import { useBookingChannel } from '@/hooks/useBookingChannel';
 import StatusTimeline, { type StatusStep } from '@/components/StatusTimeline';
 import { calculateDistance } from '@/lib/calculateDistance';
+import carIcon from '@/assets/car-marker.svg';
 
 const pickupIcon = '/assets/pickup-marker-green.svg';
 const dropoffIcon = '/assets/dropoff-marker-red.svg';
@@ -141,10 +142,8 @@ export default function TrackingPage() {
     const zoom = km > 5 ? 12 : km > 1 ? 14 : 16;
     mapRef.current.setZoom(zoom);
   }, [pos, nextStop, isDropoff]);
-
-  const nextStopIcon = isDropoff ? dropoffIcon : pickupIcon;
-  const nextStopTestId = isDropoff ? 'dropoff-marker' : 'pickup-marker';
-
+    const nextStopIcon = ['ARRIVED_PICKUP', 'IN_PROGRESS', 'ARRIVED_DROPOFF', 'COMPLETED'].includes(
+      status as BookingStatus,
   return (
     <div>
       {pos ? (
