@@ -11,8 +11,10 @@ type MapProps = {
 };
 
 let mockMap: { fitBounds: ReturnType<typeof vi.fn>; setZoom: ReturnType<typeof vi.fn> };
+let mapProps: MapProps | null = null;
 vi.mock('@react-google-maps/api', () => ({
   GoogleMap: (props: MapProps) => {
+    mapProps = props;
     props.onLoad?.(mockMap);
     return <div data-testid="map">{props.children}</div>;
   },
@@ -91,14 +93,9 @@ describe('TrackingPage', () => {
         </Routes>
       </MemoryRouter>
     );
-    const fitBounds = vi.fn();
-    const fakeMap = { fitBounds, getZoom: vi.fn(() => 17), setZoom: vi.fn() };
-
     const { rerender } = render(wrapper);
     currentUpdate = { lat: 1, lng: 2, status: 'leave', ts: 0 };
     rerender(wrapper);
-    await waitFor(() => expect(mapProps).not.toBeNull());
-    mapProps?.onLoad?.(fakeMap);
     await waitFor(() => expect(screen.getAllByTestId('marker')).toHaveLength(2));
     const markers = screen.getAllByTestId('marker');
     expect(markers[0].textContent).toBe('1,2');
@@ -110,7 +107,7 @@ describe('TrackingPage', () => {
     );
 
     await screen.findByText('ETA: 10 min');
-    await waitFor(() => expect(fitBounds).toHaveBeenCalled());
+    await waitFor(() => expect(mockMap.fitBounds).toHaveBeenCalled());
   });
 
   it('sets zoom to 12 when distance is greater than 5 km', async () => {
