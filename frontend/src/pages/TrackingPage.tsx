@@ -32,12 +32,6 @@ type GoogleLike = {
   };
 };
 
-type MapLike = {
-  fitBounds: (bounds: unknown) => void;
-  getZoom: () => number;
-  setZoom: (zoom: number) => void;
-};
-
 interface TrackResponse {
   booking: {
     id: string;
@@ -67,7 +61,6 @@ export default function TrackingPage() {
   const [nextStop, setNextStop] = useState<{ lat: number; lng: number } | null>(
     null,
   );
-  const [map, setMap] = useState<MapLike | null>(null);
   const update = useBookingChannel(bookingId);
   const mapRef = useRef<google.maps.Map | null>(null);
 
@@ -142,7 +135,8 @@ export default function TrackingPage() {
     const g = (window as { google?: typeof google }).google;
     if (!g?.maps) return;
     const bounds = new g.maps.LatLngBounds();
-    bounds.extend(pos);
+    const position = { lat: update.lat, lng: update.lng };
+    bounds.extend(position);
     bounds.extend(nextStop);
     mapRef.current.fitBounds(bounds);
 
@@ -150,7 +144,11 @@ export default function TrackingPage() {
     const km = distance / 1000;
     const zoom = km > 5 ? 12 : km > 1 ? 14 : 16;
     mapRef.current.setZoom(zoom);
-  }, [pos, nextStop]);
+  }, [update, nextStop]);
+
+  useEffect(() => {
+    fitBoundsAndZoom();
+  }, [fitBoundsAndZoom]);
 
   return (
     <div>
