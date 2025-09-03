@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { getAccessToken, onTokenChange } from "@/services/tokenStore";
+import type { BookingStatus } from "@/types/BookingStatus";
 
 export interface LocationUpdate {
   lat: number;
   lng: number;
   speed?: number;
   ts: number;
-  status?: string;
+  status?: BookingStatus;
 }
 
 export function useBookingChannel(bookingId: string | null) {
