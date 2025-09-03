@@ -76,11 +76,6 @@ export default function TrackingPage() {
     [status],
   );
 
-  const pickupIcon =
-    'http://maps.google.com/mapfiles/ms/icons/green-dot.png';
-  const dropoffIcon =
-    'http://maps.google.com/mapfiles/ms/icons/blue-dot.png';
-
   useEffect(() => {
     (async () => {
       const res = await apiFetch(
@@ -132,6 +127,14 @@ export default function TrackingPage() {
     [update],
   );
 
+  const center = useMemo(
+    () =>
+      pos && nextStop
+        ? { lat: (pos.lat + nextStop.lat) / 2, lng: (pos.lng + nextStop.lng) / 2 }
+        : pos,
+    [pos, nextStop],
+  );
+
   useEffect(() => {
     if (!mapRef.current || !pos || !nextStop) return;
     const g = (window as { google?: typeof google }).google;
@@ -145,20 +148,20 @@ export default function TrackingPage() {
     const km = distance / 1000;
     const zoom = km > 5 ? 12 : km > 1 ? 14 : 16;
     mapRef.current.setZoom(zoom);
-  }, [pos, nextStop, isDropoff]);
 
-  const nextStopIcon = ['arrive-pickup', 'start-trip', 'arrive-dropoff', 'complete'].includes(
-    status,
-  )
-    ? dropoffIcon
-    : pickupIcon;
+    const mid = {
+      lat: (pos.lat + nextStop.lat) / 2,
+      lng: (pos.lng + nextStop.lng) / 2,
+    };
+    mapRef.current.setCenter(mid);
+  }, [pos, nextStop, isDropoff]);
 
   return (
     <div>
       {pos ? (
         <GoogleMap
           mapContainerStyle={{ width: '100%', height: 300 }}
-          center={pos}
+          center={center ?? undefined}
           zoom={14}
           onLoad={(m) => {
             mapRef.current = m;
@@ -187,6 +190,7 @@ export default function TrackingPage() {
                 data-testid="pickup-marker"
               />
             ))}
+          {route && <DirectionsRenderer directions={route} />}
         </GoogleMap>
       ) : (
         <p>Waiting for driver...</p>

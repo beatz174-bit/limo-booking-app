@@ -10,7 +10,11 @@ type MapProps = {
   onLoad?: (map: unknown) => void;
 };
 
-let mockMap: { fitBounds: ReturnType<typeof vi.fn>; setZoom: ReturnType<typeof vi.fn> };
+let mockMap: {
+  fitBounds: ReturnType<typeof vi.fn>;
+  setZoom: ReturnType<typeof vi.fn>;
+  setCenter: ReturnType<typeof vi.fn>;
+};
 vi.mock('@react-google-maps/api', () => ({
     GoogleMap: (props: MapProps) => {
       props.onLoad?.(mockMap);
@@ -18,11 +22,17 @@ vi.mock('@react-google-maps/api', () => ({
     },
   Marker: ({
     position,
+    icon,
     'data-testid': testId,
   }: {
     position: { lat: number; lng: number };
+    icon?: string;
     'data-testid'?: string;
-  }) => <div data-testid={testId ?? 'marker'}>{position.lat},{position.lng}</div>,
+  }) => (
+    <div data-testid={testId ?? 'marker'} data-icon={icon}>
+      {position.lat},{position.lng}
+    </div>
+  ),
   DirectionsRenderer: () => <div data-testid="route">route</div>,
 }));
 
@@ -35,7 +45,7 @@ vi.mock('@/hooks/useBookingChannel', () => ({
 describe('TrackingPage', () => {
   beforeEach(() => {
     currentUpdate = null;
-    mockMap = { fitBounds: vi.fn(), setZoom: vi.fn() };
+    mockMap = { fitBounds: vi.fn(), setZoom: vi.fn(), setCenter: vi.fn() };
     endLocation = { lat: 3, lng: 4 };
     vi.stubGlobal(
       'fetch',
@@ -113,6 +123,9 @@ describe('TrackingPage', () => {
     await screen.findByText('ETA: 10 min');
     await screen.findByTestId('route');
     await waitFor(() => expect(mockMap.fitBounds).toHaveBeenCalled());
+    await waitFor(() =>
+      expect(mockMap.setCenter).toHaveBeenCalledWith({ lat: 2, lng: 3 }),
+    );
     unmount();
     vi.stubGlobal(
       'fetch',
@@ -171,9 +184,13 @@ describe('TrackingPage', () => {
       </MemoryRouter>,
     );
     await new Promise((r) => setTimeout(r, 0));
-    await waitFor(() => expect(screen.getAllByTestId('marker')).toHaveLength(2));
-    const markers = screen.getAllByTestId('marker');
-    expect(markers[1]).toHaveAttribute('data-icon', '/assets/dropoff-marker-red.svg');
+    await waitFor(() =>
+      expect(screen.getByTestId('dropoff-marker')).toBeInTheDocument(),
+    );
+    expect(screen.getByTestId('dropoff-marker')).toHaveAttribute(
+      'data-icon',
+      '/assets/dropoff-marker-red.svg',
+    );
   });
 
   it('sets zoom to 12 when distance is greater than 5 km', async () => {
