@@ -36,6 +36,13 @@ cd backend && pytest -q --maxfail=1 --disable-warnings >/tmp/backend.log 2>&1; t
 cd ../frontend && npm test >/tmp/frontend.log 2>&1; tail -n 200 /tmp/frontend.log
 ```
 
+### Selective Test Runs
+
+- Run only unit tests with `pytest tests/unit`.
+- Filter tests using patterns via `pytest -k <pattern>`.
+- Integration and end-to-end tests may be skipped by default.
+- Tests may be omitted entirely when the user explicitly states they will run them locally.
+
 ## Commit Messages
 
 - Use [Conventional Commits](https://www.conventionalcommits.org/) (e.g., `feat:`, `fix:`, `docs:`, `chore:`).
