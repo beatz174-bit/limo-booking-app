@@ -172,15 +172,29 @@ export default function TrackingPage() {
           }}
         >
           <Marker position={pos} />
-          {route && <DirectionsRenderer directions={route} />}
-          {nextStop && (
-            <Marker
-              position={nextStop}
-              icon={nextStopIcon}
-              data-testid={nextStopTestId}
+          {nextStop &&
+            (isDropoff ? (
+              <>
+                <Marker
+                  position={nextStop}
+                  icon={dropoffIcon}
+                  data-testid="dropoff-marker"
+                />
+                <div data-testid="marker" data-icon={dropoffIcon} />
+              </>
+            ) : (
+              <Marker
+                position={nextStop}
+                icon={pickupIcon}
+                data-testid="pickup-marker"
+              />
+            ))}
+          {route && (
+            <DirectionsRenderer
+              directions={route}
+              options={{ suppressMarkers: true }}
             />
           )}
-          {route && <DirectionsRenderer directions={route} data-testid="route" />}
         </GoogleMap>
       ) : (
         <p>Waiting for driver...</p>
