@@ -8,6 +8,9 @@ import { useBookingChannel } from '@/hooks/useBookingChannel';
 import StatusTimeline, { type StatusStep } from '@/components/StatusTimeline';
 import { calculateDistance } from '@/lib/calculateDistance';
 
+const pickupIcon = '/assets/pickup-marker-green.svg';
+const dropoffIcon = '/assets/dropoff-marker-red.svg';
+
 type GoogleLike = {
   maps: {
     DirectionsService: new () => {
@@ -136,6 +139,12 @@ export default function TrackingPage() {
     mapRef.current.setZoom(zoom);
   }, [pos, nextStop]);
 
+  const nextStopIcon = ['arrive-pickup', 'start-trip', 'arrive-dropoff', 'complete'].includes(
+    status,
+  )
+    ? dropoffIcon
+    : pickupIcon;
+
   return (
     <div>
       {pos ? (
@@ -156,16 +165,7 @@ export default function TrackingPage() {
           }}
         >
           <Marker position={pos} />
-          {nextStop && <Marker position={nextStop} />}
-          {route && (
-            <DirectionsRenderer
-              directions={route}
-              options={{
-                suppressMarkers: true,
-                polylineOptions: { strokeColor: '#4285F4' },
-              }}
-            />
-          )}
+          {nextStop && <Marker position={nextStop} icon={nextStopIcon} />}
         </GoogleMap>
       ) : (
         <p>Waiting for driver...</p>
