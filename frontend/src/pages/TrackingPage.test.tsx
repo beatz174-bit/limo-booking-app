@@ -7,6 +7,8 @@ import TrackingPage from './TrackingPage';
 type MapProps = {
   children: React.ReactNode;
   options?: Record<string, unknown>;
+  onLoad?: (map: unknown) => void;
+  [key: string]: unknown;
 };
 
 let mapProps: MapProps | null = null;
@@ -67,6 +69,9 @@ describe('TrackingPage', () => {
       LatLng: class {
         constructor(public lat: number, public lng: number) {}
       },
+      LatLngBounds: class {
+        extend() {}
+      },
       TravelMode: { DRIVING: 'DRIVING' },
     };
     (window as unknown as { google: { maps: typeof maps } }).google = { maps };
@@ -84,9 +89,14 @@ describe('TrackingPage', () => {
         </Routes>
       </MemoryRouter>
     );
+    const fitBounds = vi.fn();
+    const fakeMap = { fitBounds, getZoom: vi.fn(() => 17), setZoom: vi.fn() };
+
     const { rerender } = render(wrapper);
     currentUpdate = { lat: 1, lng: 2, status: 'leave', ts: 0 };
     rerender(wrapper);
+    await waitFor(() => expect(mapProps).not.toBeNull());
+    mapProps?.onLoad?.(fakeMap);
     await waitFor(() => expect(screen.getAllByTestId('marker')).toHaveLength(2));
     const markers = screen.getAllByTestId('marker');
     expect(markers[0].textContent).toBe('1,2');
@@ -98,6 +108,7 @@ describe('TrackingPage', () => {
     );
 
     await screen.findByText('ETA: 10 min');
+    await waitFor(() => expect(fitBounds).toHaveBeenCalled());
   });
 });
 
