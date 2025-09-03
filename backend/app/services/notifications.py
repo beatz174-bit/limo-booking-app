@@ -15,6 +15,41 @@ from app.models.notification import Notification, NotificationType
 from app.models.user_v2 import User as UserV2
 from app.models.user_v2 import UserRole
 
+notification_map: dict[NotificationType, dict[str, str]] = {
+    NotificationType.NEW_BOOKING: {
+        "title": "New booking",
+        "body": "You have a new booking",
+    },
+    NotificationType.CONFIRMATION: {
+        "title": "Booking confirmed",
+        "body": "Your booking has been confirmed",
+    },
+    NotificationType.LEAVE_NOW: {
+        "title": "Time to leave",
+        "body": "Please leave now for your ride",
+    },
+    NotificationType.ON_THE_WAY: {
+        "title": "Driver on the way",
+        "body": "Your driver is on the way",
+    },
+    NotificationType.ARRIVED_PICKUP: {
+        "title": "Driver arrived",
+        "body": "Your driver has arrived at the pickup location",
+    },
+    NotificationType.STARTED: {
+        "title": "Ride started",
+        "body": "Your ride has started",
+    },
+    NotificationType.ARRIVED_DROPOFF: {
+        "title": "Arrived at dropoff",
+        "body": "You have arrived at your destination",
+    },
+    NotificationType.COMPLETED: {
+        "title": "Ride completed",
+        "body": "Your ride is complete",
+    },
+}
+
 
 async def create_notification(
     db: AsyncSession,
@@ -90,6 +125,10 @@ async def _send_fcm(
             for k, v in payload.items():
                 data[k] = json.dumps(v) if not isinstance(v, str) else v
 
+            notification = notification_map.get(notif_type)
+            if notification:
+                notification = {k: str(v) for k, v in notification.items()}
+
             result = await db.execute(
                 select(UserV2.fcm_token).where(
                     UserV2.role == to_role, UserV2.fcm_token.is_not(None)
@@ -103,6 +142,7 @@ async def _send_fcm(
                         "message": {
                             "token": token,
                             "data": data,
+                            "notification": notification,
                         }
                     }
                     await client.post(
@@ -115,6 +155,7 @@ async def _send_fcm(
                     "message": {
                         "topic": to_role.value.lower(),
                         "data": data,
+                        "notification": notification,
                     }
                 }
                 await client.post(
