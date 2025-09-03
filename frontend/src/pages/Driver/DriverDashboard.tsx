@@ -207,7 +207,7 @@ export default function DriverDashboard() {
                   </Button>
                 )}
                 {b.status === 'COMPLETED' &&
-                  b.final_price_cents !== undefined && (
+                  b.final_price_cents != null && (
                     <Typography>
                       ${(b.final_price_cents / 100).toFixed(2)}
                     </Typography>
