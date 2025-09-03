@@ -28,7 +28,8 @@ To prevent excessive console output from hanging sessions, redirect test
 and lint output to log files and view the tail for context. The backend
 tests use `pytest -q --maxfail=1 --disable-warnings` to stop on the first
 failure and suppress warnings, keeping logs small and preventing the
-session from hanging.
+session from hanging. Be sure to keep all tests to the bare minimum. 
+Only run the tests that you need to run for the changes you have made.
 
 ```bash
 npm run lint 2>&1 | tee /tmp/lint.log | tail -n 200

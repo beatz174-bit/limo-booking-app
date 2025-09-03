@@ -4,6 +4,7 @@ import { vi } from 'vitest';
 import type { LocationUpdate } from '@/hooks/useBookingChannel';
 import TrackingPage from './TrackingPage';
 import carIcon from '@/assets/car-marker.svg';
+import dropoffIcon from '@/assets/dropoff-marker-red.svg';
 
 type MapProps = {
   children: React.ReactNode;
@@ -191,7 +192,7 @@ describe('TrackingPage', () => {
     );
     expect(screen.getByTestId('dropoff-marker')).toHaveAttribute(
       'data-icon',
-      '/assets/dropoff-marker-red.svg',
+      dropoffIcon,
     );
   });
 
