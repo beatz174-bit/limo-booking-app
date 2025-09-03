@@ -7,6 +7,7 @@ import { apiFetch } from '@/services/apiFetch';
 import { useBookingChannel } from '@/hooks/useBookingChannel';
 import StatusTimeline, { type StatusStep } from '@/components/StatusTimeline';
 import { calculateDistance } from '@/lib/calculateDistance';
+import carIcon from '@/assets/car-marker.svg';
 
 const pickupIcon = '/assets/pickup-marker-green.svg';
 const dropoffIcon = '/assets/dropoff-marker-red.svg';
@@ -76,11 +77,6 @@ export default function TrackingPage() {
     [status],
   );
 
-  const pickupIcon =
-    'http://maps.google.com/mapfiles/ms/icons/green-dot.png';
-  const dropoffIcon =
-    'http://maps.google.com/mapfiles/ms/icons/blue-dot.png';
-
   useEffect(() => {
     (async () => {
       const res = await apiFetch(
@@ -147,12 +143,6 @@ export default function TrackingPage() {
     mapRef.current.setZoom(zoom);
   }, [pos, nextStop, isDropoff]);
 
-  const nextStopIcon = ['arrive-pickup', 'start-trip', 'arrive-dropoff', 'complete'].includes(
-    status,
-  )
-    ? dropoffIcon
-    : pickupIcon;
-
   return (
     <div>
       {pos ? (
@@ -172,7 +162,7 @@ export default function TrackingPage() {
             gestureHandling: 'none',
           }}
         >
-          <Marker position={pos} />
+          <Marker position={pos} icon={carIcon} />
           {nextStop &&
             (isDropoff ? (
               <Marker
@@ -187,6 +177,7 @@ export default function TrackingPage() {
                 data-testid="pickup-marker"
               />
             ))}
+          {route && <DirectionsRenderer directions={route} />}
         </GoogleMap>
       ) : (
         <p>Waiting for driver...</p>
