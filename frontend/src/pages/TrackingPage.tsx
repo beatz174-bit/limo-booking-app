@@ -1,11 +1,12 @@
 /// <reference types="google.maps" />
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { GoogleMap, Marker } from '@react-google-maps/api';
 import { CONFIG } from '@/config';
 import { apiFetch } from '@/services/apiFetch';
 import { useBookingChannel } from '@/hooks/useBookingChannel';
 import StatusTimeline, { type StatusStep } from '@/components/StatusTimeline';
+import { calculateDistance } from '@/lib/calculateDistance';
 
 type GoogleLike = {
   maps: {
@@ -132,7 +133,8 @@ export default function TrackingPage() {
     bounds.extend(pos);
     bounds.extend(nextStop);
     map.fitBounds(bounds);
-    if (map.getZoom() > 16) map.setZoom(16);
+    if (typeof map.getZoom === 'function' && map.getZoom() > 16)
+      map.setZoom(16);
   }, [map, pos, nextStop]);
 
   useEffect(() => {
@@ -144,25 +146,7 @@ export default function TrackingPage() {
     bounds.extend(nextStop);
     mapRef.current.fitBounds(bounds);
 
-    let distance = 0;
-    const compute = g.maps.geometry?.spherical?.computeDistanceBetween;
-    if (compute) {
-      distance = compute(
-        new g.maps.LatLng(pos.lat, pos.lng),
-        new g.maps.LatLng(nextStop.lat, nextStop.lng),
-      );
-    } else {
-      const R = 6371e3;
-      const phi1 = (pos.lat * Math.PI) / 180;
-      const phi2 = (nextStop.lat * Math.PI) / 180;
-      const dphi = ((nextStop.lat - pos.lat) * Math.PI) / 180;
-      const dlambda = ((nextStop.lng - pos.lng) * Math.PI) / 180;
-      const a =
-        Math.sin(dphi / 2) ** 2 +
-        Math.cos(phi1) * Math.cos(phi2) * Math.sin(dlambda / 2) ** 2;
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      distance = R * c;
-    }
+    const distance = calculateDistance(pos, nextStop, g);
     const km = distance / 1000;
     const zoom = km > 5 ? 12 : km > 1 ? 14 : 16;
     mapRef.current.setZoom(zoom);
@@ -177,6 +161,7 @@ export default function TrackingPage() {
           zoom={14}
           onLoad={(m) => {
             mapRef.current = m;
+            setMap(m as MapLike);
           }}
           options={{
             disableDefaultUI: true,
@@ -186,7 +171,6 @@ export default function TrackingPage() {
             disableDoubleClickZoom: true,
             gestureHandling: 'none',
           }}
-          onLoad={(m) => setMap(m as MapLike)}
         >
           <Marker position={pos} />
           {nextStop && <Marker position={nextStop} />}
