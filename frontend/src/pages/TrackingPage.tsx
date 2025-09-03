@@ -119,24 +119,11 @@ export default function TrackingPage() {
   );
 
   useEffect(() => {
-    if (!map || !pos || !nextStop) return;
-    const g = (window as { google?: GoogleLike }).google;
-    if (!g?.maps) return;
-    const bounds = new g.maps.LatLngBounds();
-    bounds.extend(pos);
-    bounds.extend(nextStop);
-    map.fitBounds(bounds);
-    if (typeof map.getZoom === 'function' && map.getZoom() > 16)
-      map.setZoom(16);
-  }, [map, pos, nextStop]);
-
-  useEffect(() => {
     if (!mapRef.current || !pos || !nextStop) return;
     const g = (window as { google?: typeof google }).google;
     if (!g?.maps) return;
     const bounds = new g.maps.LatLngBounds();
-    const position = { lat: update.lat, lng: update.lng };
-    bounds.extend(position);
+    bounds.extend(pos);
     bounds.extend(nextStop);
     mapRef.current.fitBounds(bounds);
 
@@ -144,11 +131,7 @@ export default function TrackingPage() {
     const km = distance / 1000;
     const zoom = km > 5 ? 12 : km > 1 ? 14 : 16;
     mapRef.current.setZoom(zoom);
-  }, [update, nextStop]);
-
-  useEffect(() => {
-    fitBoundsAndZoom();
-  }, [fitBoundsAndZoom]);
+  }, [pos, nextStop]);
 
   return (
     <div>
@@ -159,7 +142,6 @@ export default function TrackingPage() {
           zoom={14}
           onLoad={(m) => {
             mapRef.current = m;
-            setMap(m as MapLike);
           }}
           options={{
             disableDefaultUI: true,
