@@ -94,7 +94,7 @@ export default function TrackingPage() {
 
   useEffect(() => {
     if (update?.status) setStatus(update.status as BookingStatus);
-  }, [update?.status]);
+  }, [update]);
 
   useEffect(() => {
     async function calcEta() {
@@ -102,7 +102,13 @@ export default function TrackingPage() {
       const g = (window as { google?: GoogleLike }).google;
       if (!g?.maps) return;
       const svc = new g.maps.DirectionsService();
-      const dest = isDropoff ? dropoff : pickup;
+      const goingToDropoff = [
+        'ARRIVED_PICKUP',
+        'IN_PROGRESS',
+        'ARRIVED_DROPOFF',
+        'COMPLETED',
+      ].includes(update.status as BookingStatus);
+      const dest = goingToDropoff ? dropoff : pickup;
       try {
         const res = await svc.route({
           origin: new g.maps.LatLng(update.lat, update.lng),
@@ -121,7 +127,7 @@ export default function TrackingPage() {
       }
     }
     void calcEta();
-  }, [update, pickup, dropoff, isDropoff]);
+  }, [update, update?.status, pickup, dropoff]);
 
   const pos = useMemo(
     () => (update ? { lat: update.lat, lng: update.lng } : null),
@@ -155,7 +161,10 @@ export default function TrackingPage() {
       lng: (pos.lng + nextStop.lng) / 2,
     };
     mapRef.current.setCenter(mid);
-  }, [pos, nextStop, isDropoff]);
+  }, [pos, nextStop]);
+  const nextStopIcon = isDropoff ? dropoffIcon : pickupIcon;
+  const nextStopTestId = isDropoff ? 'dropoff-marker' : 'pickup-marker';
+
   return (
     <div>
       {pos ? (
@@ -179,8 +188,8 @@ export default function TrackingPage() {
           {nextStop && (
             <Marker
               position={nextStop}
-              icon={isDropoff ? dropoffIcon : pickupIcon}
-              data-testid={isDropoff ? 'dropoff-marker' : 'pickup-marker'}
+              icon={nextStopIcon}
+              data-testid={nextStopTestId}
             />
           )}
           {route && (
