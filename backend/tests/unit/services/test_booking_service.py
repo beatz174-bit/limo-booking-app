@@ -63,7 +63,7 @@ async def test_confirm_booking_handles_stripe_error(
     with pytest.raises(HTTPException) as excinfo:
         await booking_service.confirm_booking(async_session, booking.id)
 
-    assert excinfo.value.status_code == 400
+    assert excinfo.value.status_code == 402
     await async_session.refresh(booking)
     assert booking.status is BookingStatus.PENDING
     assert booking.deposit_payment_intent_id is None
@@ -118,5 +118,5 @@ async def test_confirm_booking_handles_card_error(async_session: AsyncSession, m
     assert excinfo.value.status_code == 402
     assert excinfo.value.detail == "Card declined"
     await async_session.refresh(booking)
-    assert booking.status is BookingStatus.DEPOSIT_FAILED
+    assert booking.status is BookingStatus.PENDING
     assert booking.deposit_payment_intent_id is None

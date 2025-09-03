@@ -68,6 +68,19 @@ export default function TrackingPage() {
   const update = useBookingChannel(bookingId);
   const mapRef = useRef<google.maps.Map | null>(null);
 
+  const isDropoff = useMemo(
+    () =>
+      ['arrive-pickup', 'start-trip', 'arrive-dropoff', 'complete'].includes(
+        status,
+      ),
+    [status],
+  );
+
+  const pickupIcon =
+    'http://maps.google.com/mapfiles/ms/icons/green-dot.png';
+  const dropoffIcon =
+    'http://maps.google.com/mapfiles/ms/icons/blue-dot.png';
+
   useEffect(() => {
     (async () => {
       const res = await apiFetch(
@@ -93,12 +106,7 @@ export default function TrackingPage() {
       const g = (window as { google?: GoogleLike }).google;
       if (!g?.maps) return;
       const svc = new g.maps.DirectionsService();
-      const dest =
-        ['arrive-pickup', 'start-trip', 'arrive-dropoff', 'complete'].includes(
-          status
-        )
-          ? dropoff
-          : pickup;
+      const dest = isDropoff ? dropoff : pickup;
       try {
         const res = await svc.route({
           origin: new g.maps.LatLng(update.lat, update.lng),
@@ -117,7 +125,7 @@ export default function TrackingPage() {
       }
     }
     void calcEta();
-  }, [update, status, pickup, dropoff]);
+  }, [update, pickup, dropoff, isDropoff]);
 
   const pos = useMemo(
     () => (update ? { lat: update.lat, lng: update.lng } : null),
@@ -137,7 +145,7 @@ export default function TrackingPage() {
     const km = distance / 1000;
     const zoom = km > 5 ? 12 : km > 1 ? 14 : 16;
     mapRef.current.setZoom(zoom);
-  }, [pos, nextStop]);
+  }, [pos, nextStop, isDropoff]);
 
   const nextStopIcon = ['arrive-pickup', 'start-trip', 'arrive-dropoff', 'complete'].includes(
     status,
@@ -165,7 +173,20 @@ export default function TrackingPage() {
           }}
         >
           <Marker position={pos} />
-          {nextStop && <Marker position={nextStop} icon={nextStopIcon} />}
+          {nextStop &&
+            (isDropoff ? (
+              <Marker
+                position={nextStop}
+                icon={dropoffIcon}
+                data-testid="dropoff-marker"
+              />
+            ) : (
+              <Marker
+                position={nextStop}
+                icon={pickupIcon}
+                data-testid="pickup-marker"
+              />
+            ))}
         </GoogleMap>
       ) : (
         <p>Waiting for driver...</p>
