@@ -142,7 +142,8 @@ export default function TrackingPage() {
     const zoom = km > 5 ? 12 : km > 1 ? 14 : 16;
     mapRef.current.setZoom(zoom);
   }, [pos, nextStop, isDropoff]);
-
+    const nextStopIcon = ['ARRIVED_PICKUP', 'IN_PROGRESS', 'ARRIVED_DROPOFF', 'COMPLETED'].includes(
+      status as BookingStatus,
   return (
     <div>
       {pos ? (
@@ -162,22 +163,15 @@ export default function TrackingPage() {
             gestureHandling: 'none',
           }}
         >
-          <Marker position={pos} icon={carIcon} />
-          {nextStop &&
-            (isDropoff ? (
-              <Marker
-                position={nextStop}
-                icon={dropoffIcon}
-                data-testid="dropoff-marker"
-              />
-            ) : (
-              <Marker
-                position={nextStop}
-                icon={pickupIcon}
-                data-testid="pickup-marker"
-              />
-            ))}
+          <Marker position={pos} />
           {route && <DirectionsRenderer directions={route} />}
+          {nextStop && (
+            <Marker
+              position={nextStop}
+              icon={nextStopIcon}
+              data-testid={nextStopTestId}
+            />
+          )}
         </GoogleMap>
       ) : (
         <p>Waiting for driver...</p>

@@ -179,13 +179,8 @@ describe('TrackingPage', () => {
       </MemoryRouter>,
     );
     await new Promise((r) => setTimeout(r, 0));
-    await waitFor(() =>
-      expect(screen.getByTestId('dropoff-marker')).toBeInTheDocument(),
-    );
-    expect(screen.getByTestId('dropoff-marker')).toHaveAttribute(
-      'data-icon',
-      '/assets/dropoff-marker-red.svg',
-    );
+    const marker = await screen.findByTestId('dropoff-marker');
+    expect(marker).toHaveAttribute('data-icon', '/assets/dropoff-marker-red.svg');
   });
 
   it('sets zoom to 12 when distance is greater than 5 km', async () => {
