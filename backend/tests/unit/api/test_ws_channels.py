@@ -3,15 +3,21 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from starlette.testclient import TestClient
-from starlette.websockets import WebSocketDisconnect
-
 from app.core.security import create_jwt_token, hash_password
 from app.main import app
 from app.models.booking import Booking, BookingStatus
+from app.models.settings import AdminConfig
 from app.models.user_v2 import User, UserRole
+from app.services import scheduler as scheduler_service
+from app.services import settings_service
+from starlette.testclient import TestClient
+from starlette.websockets import WebSocketDisconnect
 
 pytestmark = pytest.mark.asyncio
+
+# Disable scheduler during tests to avoid event loop issues
+scheduler_service.scheduler.start = lambda *_, **__: None
+scheduler_service.scheduler.shutdown = lambda *_, **__: None
 
 
 async def _prepare_data(async_session):
@@ -45,7 +51,18 @@ async def _prepare_data(async_session):
         status=BookingStatus.IN_PROGRESS,
     )
     async_session.add(booking)
+    async_session.merge(
+        AdminConfig(
+            id=1,
+            account_mode=False,
+            flagfall=0,
+            per_km_rate=0,
+            per_minute_rate=0,
+            admin_user_id=driver.id,
+        )
+    )
     await async_session.commit()
+    settings_service._cached_admin_user_id = driver.id
     await async_session.refresh(booking)
     return driver, customer, booking
 
@@ -63,23 +80,23 @@ async def test_unauthorized_connections_rejected(async_session):
     other_token = create_jwt_token(other.id)
     customer_token = create_jwt_token(customer.id)
 
-    client = TestClient(app)
-    with pytest.raises(WebSocketDisconnect):
-        with client.websocket_connect(f"/ws/bookings/{booking.id}"):
-            pass
-    with pytest.raises(WebSocketDisconnect):
-        with client.websocket_connect(
-            f"/ws/bookings/{booking.id}?token={customer_token}"
-        ):
-            pass
-    with pytest.raises(WebSocketDisconnect):
-        with client.websocket_connect(f"/ws/bookings/{booking.id}/watch"):
-            pass
-    with pytest.raises(WebSocketDisconnect):
-        with client.websocket_connect(
-            f"/ws/bookings/{booking.id}/watch?token={other_token}"
-        ):
-            pass
+    with TestClient(app) as client:
+        with pytest.raises(WebSocketDisconnect):
+            with client.websocket_connect(f"/ws/bookings/{booking.id}"):
+                pass
+        with pytest.raises(WebSocketDisconnect):
+            with client.websocket_connect(
+                f"/ws/bookings/{booking.id}?token={customer_token}"
+            ):
+                pass
+        with pytest.raises(WebSocketDisconnect):
+            with client.websocket_connect(f"/ws/bookings/{booking.id}/watch"):
+                pass
+        with pytest.raises(WebSocketDisconnect):
+            with client.websocket_connect(
+                f"/ws/bookings/{booking.id}/watch?token={other_token}"
+            ):
+                pass
 
 
 async def test_driver_and_owner_channels(async_session):
@@ -87,18 +104,18 @@ async def test_driver_and_owner_channels(async_session):
     driver_token = create_jwt_token(driver.id)
     customer_token = create_jwt_token(customer.id)
 
-    client = TestClient(app)
-    with client.websocket_connect(
-        f"/ws/bookings/{booking.id}?token={driver_token}"
-    ) as driver_ws, client.websocket_connect(
-        f"/ws/bookings/{booking.id}/watch?token={customer_token}"
-    ) as owner_ws:
-        payload = {"lat": 1.0, "lng": 2.0, "ts": 1}
-        driver_ws.send_text(json.dumps(payload))
-        assert owner_ws.receive_json() == payload
-        assert driver_ws.receive_json() == payload
+    with TestClient(app) as client:
+        with client.websocket_connect(
+            f"/ws/bookings/{booking.id}?token={driver_token}"
+        ) as driver_ws, client.websocket_connect(
+            f"/ws/bookings/{booking.id}/watch?token={customer_token}"
+        ) as owner_ws:
+            payload = {"lat": 1.0, "lng": 2.0, "ts": 1}
+            driver_ws.send_text(json.dumps(payload))
+            assert owner_ws.receive_json() == payload
+            assert driver_ws.receive_json() == payload
 
-        owner_ws.send_text(json.dumps({"lat": 9, "lng": 9, "ts": 1}))
-        payload2 = {"lat": 3.0, "lng": 4.0, "ts": 2}
-        driver_ws.send_text(json.dumps(payload2))
-        assert owner_ws.receive_json() == payload2
+            owner_ws.send_text(json.dumps({"lat": 9, "lng": 9, "ts": 1}))
+            payload2 = {"lat": 3.0, "lng": 4.0, "ts": 2}
+            driver_ws.send_text(json.dumps(payload2))
+            assert owner_ws.receive_json() == payload2
