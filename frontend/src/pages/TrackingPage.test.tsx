@@ -7,12 +7,13 @@ import TrackingPage from './TrackingPage';
 type MapProps = {
   children: React.ReactNode;
   options?: Record<string, unknown>;
+  onLoad?: (map: unknown) => void;
 };
 
-let mapProps: MapProps | null = null;
+let mockMap: { fitBounds: ReturnType<typeof vi.fn>; setZoom: ReturnType<typeof vi.fn> };
 vi.mock('@react-google-maps/api', () => ({
   GoogleMap: (props: MapProps) => {
-    mapProps = props;
+    props.onLoad?.(mockMap);
     return <div data-testid="map">{props.children}</div>;
   },
   Marker: ({ position }: { position: { lat: number; lng: number } }) => (
@@ -22,6 +23,7 @@ vi.mock('@react-google-maps/api', () => ({
 }));
 
 let currentUpdate: LocationUpdate | null = null;
+let endLocation: { lat: number; lng: number };
 vi.mock('@/hooks/useBookingChannel', () => ({
   useBookingChannel: () => currentUpdate,
 }));
@@ -29,6 +31,8 @@ vi.mock('@/hooks/useBookingChannel', () => ({
 describe('TrackingPage', () => {
   beforeEach(() => {
     currentUpdate = null;
+    mockMap = { fitBounds: vi.fn(), setZoom: vi.fn() };
+    endLocation = { lat: 3, lng: 4 };
     vi.stubGlobal(
       'fetch',
       vi.fn(() =>
@@ -56,7 +60,7 @@ describe('TrackingPage', () => {
                 legs: [
                   {
                     duration: { value: 600 },
-                    end_location: { toJSON: () => ({ lat: 3, lng: 4 }) },
+                    end_location: { toJSON: () => endLocation },
                   },
                 ],
               },
@@ -66,6 +70,9 @@ describe('TrackingPage', () => {
       },
       LatLng: class {
         constructor(public lat: number, public lng: number) {}
+      },
+      LatLngBounds: class {
+        extend() {}
       },
       TravelMode: { DRIVING: 'DRIVING' },
     };
@@ -98,6 +105,50 @@ describe('TrackingPage', () => {
     );
 
     await screen.findByText('ETA: 10 min');
+  });
+
+  it('sets zoom to 12 when distance is greater than 5 km', async () => {
+    const wrapper = (
+      <MemoryRouter initialEntries={['/t/abc']}>
+        <Routes>
+          <Route path="/t/:code" element={<TrackingPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+    const { rerender } = render(wrapper);
+    currentUpdate = { lat: 1, lng: 2, status: 'leave', ts: 0 };
+    rerender(wrapper);
+    await waitFor(() => expect(mockMap.setZoom).toHaveBeenCalledWith(12));
+  });
+
+  it('sets zoom to 14 when distance is between 1 and 5 km', async () => {
+    endLocation = { lat: 1.02, lng: 2 };
+    const wrapper = (
+      <MemoryRouter initialEntries={['/t/abc']}>
+        <Routes>
+          <Route path="/t/:code" element={<TrackingPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+    const { rerender } = render(wrapper);
+    currentUpdate = { lat: 1, lng: 2, status: 'leave', ts: 0 };
+    rerender(wrapper);
+    await waitFor(() => expect(mockMap.setZoom).toHaveBeenCalledWith(14));
+  });
+
+  it('sets zoom to 16 when distance is less than 1 km', async () => {
+    endLocation = { lat: 1.005, lng: 2 };
+    const wrapper = (
+      <MemoryRouter initialEntries={['/t/abc']}>
+        <Routes>
+          <Route path="/t/:code" element={<TrackingPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+    const { rerender } = render(wrapper);
+    currentUpdate = { lat: 1, lng: 2, status: 'leave', ts: 0 };
+    rerender(wrapper);
+    await waitFor(() => expect(mockMap.setZoom).toHaveBeenCalledWith(16));
   });
 });
 
