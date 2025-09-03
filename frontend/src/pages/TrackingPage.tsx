@@ -76,11 +76,6 @@ export default function TrackingPage() {
     [status],
   );
 
-  const pickupIcon =
-    'http://maps.google.com/mapfiles/ms/icons/green-dot.png';
-  const dropoffIcon =
-    'http://maps.google.com/mapfiles/ms/icons/blue-dot.png';
-
   useEffect(() => {
     (async () => {
       const res = await apiFetch(
@@ -147,11 +142,8 @@ export default function TrackingPage() {
     mapRef.current.setZoom(zoom);
   }, [pos, nextStop, isDropoff]);
 
-  const nextStopIcon = ['arrive-pickup', 'start-trip', 'arrive-dropoff', 'complete'].includes(
-    status,
-  )
-    ? dropoffIcon
-    : pickupIcon;
+  const nextStopIcon = isDropoff ? dropoffIcon : pickupIcon;
+  const nextStopTestId = isDropoff ? 'dropoff-marker' : 'pickup-marker';
 
   return (
     <div>
@@ -173,20 +165,14 @@ export default function TrackingPage() {
           }}
         >
           <Marker position={pos} />
-          {nextStop &&
-            (isDropoff ? (
-              <Marker
-                position={nextStop}
-                icon={dropoffIcon}
-                data-testid="dropoff-marker"
-              />
-            ) : (
-              <Marker
-                position={nextStop}
-                icon={pickupIcon}
-                data-testid="pickup-marker"
-              />
-            ))}
+          {route && <DirectionsRenderer directions={route} />}
+          {nextStop && (
+            <Marker
+              position={nextStop}
+              icon={nextStopIcon}
+              data-testid={nextStopTestId}
+            />
+          )}
         </GoogleMap>
       ) : (
         <p>Waiting for driver...</p>

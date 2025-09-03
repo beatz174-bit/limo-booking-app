@@ -18,11 +18,17 @@ vi.mock('@react-google-maps/api', () => ({
     },
   Marker: ({
     position,
+    icon,
     'data-testid': testId,
   }: {
     position: { lat: number; lng: number };
+    icon?: string;
     'data-testid'?: string;
-  }) => <div data-testid={testId ?? 'marker'}>{position.lat},{position.lng}</div>,
+  }) => (
+    <div data-testid={testId ?? 'marker'} data-icon={icon}>
+      {position.lat},{position.lng}
+    </div>
+  ),
   DirectionsRenderer: () => <div data-testid="route">route</div>,
 }));
 
@@ -171,9 +177,8 @@ describe('TrackingPage', () => {
       </MemoryRouter>,
     );
     await new Promise((r) => setTimeout(r, 0));
-    await waitFor(() => expect(screen.getAllByTestId('marker')).toHaveLength(2));
-    const markers = screen.getAllByTestId('marker');
-    expect(markers[1]).toHaveAttribute('data-icon', '/assets/dropoff-marker-red.svg');
+    const marker = await screen.findByTestId('dropoff-marker');
+    expect(marker).toHaveAttribute('data-icon', '/assets/dropoff-marker-red.svg');
   });
 
   it('sets zoom to 12 when distance is greater than 5 km', async () => {
