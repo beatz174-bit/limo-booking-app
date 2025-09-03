@@ -16,8 +16,10 @@ vi.mock('@react-google-maps/api', () => ({
       props.onLoad?.(mockMap);
       return <div data-testid="map">{props.children}</div>;
     },
-  Marker: ({ position }: { position: { lat: number; lng: number } }) => (
-    <div data-testid="marker">{position.lat},{position.lng}</div>
+  Marker: ({ position, icon }: { position: { lat: number; lng: number }; icon?: string }) => (
+    <div data-testid="marker" data-icon={icon}>
+      {position.lat},{position.lng}
+    </div>
   ),
   DirectionsRenderer: () => <div data-testid="route">route</div>,
 }));
@@ -98,6 +100,7 @@ describe('TrackingPage', () => {
     const markers = screen.getAllByTestId('marker');
     expect(markers[0].textContent).toBe('1,2');
     expect(markers[1].textContent).toBe('3,4');
+    expect(markers[1]).toHaveAttribute('data-icon', '/assets/pickup-marker-green.svg');
     await waitFor(() =>
       expect(
         screen.getByText('En route to pickup').getAttribute('data-active'),
@@ -106,6 +109,35 @@ describe('TrackingPage', () => {
 
     await screen.findByText('ETA: 10 min');
     await waitFor(() => expect(mockMap.fitBounds).toHaveBeenCalled());
+  });
+
+  it('uses dropoff icon when heading to dropoff', async () => {
+    currentUpdate = { lat: 1, lng: 2, status: 'start-trip', ts: 0 };
+    endLocation = { lat: 5, lng: 6 };
+    (fetch as unknown as vi.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          booking: {
+            id: '1',
+            pickup_address: 'P',
+            dropoff_address: 'D',
+            status: 'start-trip',
+          },
+          ws_url: '',
+        }),
+    } as Response);
+    render(
+      <MemoryRouter initialEntries={['/t/abc']}>
+        <Routes>
+          <Route path="/t/:code" element={<TrackingPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    await new Promise((r) => setTimeout(r, 0));
+    await waitFor(() => expect(screen.getAllByTestId('marker')).toHaveLength(2));
+    const markers = screen.getAllByTestId('marker');
+    expect(markers[1]).toHaveAttribute('data-icon', '/assets/dropoff-marker-red.svg');
   });
 
   it('sets zoom to 12 when distance is greater than 5 km', async () => {
