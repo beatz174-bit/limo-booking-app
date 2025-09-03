@@ -112,17 +112,15 @@ export default function TrackingPage() {
     void calcEta();
   }, [update, status, pickup, dropoff]);
 
-  const pos = useMemo(
-    () => (update ? { lat: update.lat, lng: update.lng } : null),
-    [update],
-  );
+  const pos = update ? { lat: update.lat, lng: update.lng } : null;
 
   useEffect(() => {
     if (!mapRef.current || !pos || !nextStop) return;
     const g = (window as { google?: typeof google }).google;
     if (!g?.maps) return;
     const bounds = new g.maps.LatLngBounds();
-    bounds.extend(pos);
+    const position = { lat: update.lat, lng: update.lng };
+    bounds.extend(position);
     bounds.extend(nextStop);
     mapRef.current.fitBounds(bounds);
 
@@ -130,15 +128,15 @@ export default function TrackingPage() {
     const compute = g.maps.geometry?.spherical?.computeDistanceBetween;
     if (compute) {
       distance = compute(
-        new g.maps.LatLng(pos.lat, pos.lng),
+        new g.maps.LatLng(update.lat, update.lng),
         new g.maps.LatLng(nextStop.lat, nextStop.lng),
       );
     } else {
       const R = 6371e3;
-      const phi1 = (pos.lat * Math.PI) / 180;
+      const phi1 = (update.lat * Math.PI) / 180;
       const phi2 = (nextStop.lat * Math.PI) / 180;
-      const dphi = ((nextStop.lat - pos.lat) * Math.PI) / 180;
-      const dlambda = ((nextStop.lng - pos.lng) * Math.PI) / 180;
+      const dphi = ((nextStop.lat - update.lat) * Math.PI) / 180;
+      const dlambda = ((nextStop.lng - update.lng) * Math.PI) / 180;
       const a =
         Math.sin(dphi / 2) ** 2 +
         Math.cos(phi1) * Math.cos(phi2) * Math.sin(dlambda / 2) ** 2;
@@ -148,7 +146,11 @@ export default function TrackingPage() {
     const km = distance / 1000;
     const zoom = km > 5 ? 12 : km > 1 ? 14 : 16;
     mapRef.current.setZoom(zoom);
-  }, [pos, nextStop]);
+  }, [update, nextStop]);
+
+  useEffect(() => {
+    fitBoundsAndZoom();
+  }, [fitBoundsAndZoom]);
 
   return (
     <div>
@@ -159,6 +161,7 @@ export default function TrackingPage() {
           zoom={14}
           onLoad={(m) => {
             mapRef.current = m;
+            setMap(m as MapLike);
           }}
           options={{
             disableDefaultUI: true,
