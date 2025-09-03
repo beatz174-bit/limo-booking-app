@@ -1,5 +1,6 @@
 self.addEventListener('push', event => {
-  const data = event.data ? event.data.json() : {};
+  const payload = event.data?.json() ?? {};
+  const msg = payload.data || payload;
   const notificationMap = {
     NEW_BOOKING: {
       title: 'New booking',
@@ -35,8 +36,8 @@ self.addEventListener('push', event => {
     },
   };
 
-  const lookup = data.type ? notificationMap[data.type] : undefined;
-  const title = data.title || (lookup && lookup.title) || 'Notification';
-  const options = { body: data.body || (lookup && lookup.body) };
+  const lookup = msg.type ? notificationMap[msg.type] : undefined;
+  const title = msg.title || (lookup && lookup.title) || 'Notification';
+  const options = { body: msg.body || (lookup && lookup.body) };
   event.waitUntil(self.registration.showNotification(title, options));
 });
