@@ -164,6 +164,13 @@ export default function TrackingPage() {
   }, [pos, nextStop]);
   const nextStopIcon = isDropoff ? dropoffIcon : pickupIcon;
   const nextStopTestId = isDropoff ? 'dropoff-marker' : 'pickup-marker';
+  const carMarkerIcon = useMemo(() => {
+    const g = (window as { google?: typeof google }).google;
+    if (g?.maps && typeof g.maps.Size === 'function') {
+      return { url: carIcon, scaledSize: new g.maps.Size(20, 20) };
+    }
+    return carIcon;
+  }, []);
 
   return (
     <div>
@@ -184,7 +191,7 @@ export default function TrackingPage() {
             gestureHandling: 'none',
           }}
         >
-          <Marker position={pos} icon={carIcon} />
+          <Marker position={pos} icon={carMarkerIcon} />
           {nextStop && (
             <Marker
               position={nextStop}
