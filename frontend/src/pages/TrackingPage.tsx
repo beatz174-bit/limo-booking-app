@@ -1,5 +1,5 @@
 /// <reference types="google.maps" />
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { GoogleMap, Marker } from '@react-google-maps/api';
 import { CONFIG } from '@/config';
