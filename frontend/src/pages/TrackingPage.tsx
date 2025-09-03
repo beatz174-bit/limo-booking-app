@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { GoogleMap, Marker } from '@react-google-maps/api';
+import { GoogleMap, Marker, DirectionsRenderer } from '@react-google-maps/api';
 import { CONFIG } from '@/config';
 import { apiFetch } from '@/services/apiFetch';
 import { useBookingChannel } from '@/hooks/useBookingChannel';
@@ -14,7 +14,12 @@ type GoogleLike = {
         destination: string;
         travelMode: string;
       }) => Promise<{
-        routes: { legs: { duration: { value: number } }[] }[];
+        routes: {
+          legs: {
+            duration: { value: number };
+            end_location: { toJSON: () => { lat: number; lng: number } };
+          }[];
+        }[];
       }>;
     };
     LatLng: new (lat: number, lng: number) => unknown;
@@ -48,6 +53,9 @@ export default function TrackingPage() {
   const [dropoff, setDropoff] = useState('');
   const [status, setStatus] = useState('');
   const [eta, setEta] = useState<number | null>(null);
+  const [nextStop, setNextStop] = useState<{ lat: number; lng: number } | null>(
+    null,
+  );
   const update = useBookingChannel(bookingId);
 
   useEffect(() => {
@@ -87,10 +95,13 @@ export default function TrackingPage() {
           destination: dest,
           travelMode: g.maps.TravelMode.DRIVING,
         });
-        const sec = res.routes[0].legs[0].duration.value;
+        const leg = res.routes[0].legs[0];
+        const sec = leg.duration.value;
         setEta(Math.round(sec / 60));
+        setNextStop(leg.end_location.toJSON());
       } catch {
         setEta(null);
+        setNextStop(null);
       }
     }
     void calcEta();
@@ -115,6 +126,7 @@ export default function TrackingPage() {
           }}
         >
           <Marker position={pos} />
+          {nextStop && <Marker position={nextStop} />}
         </GoogleMap>
       ) : (
         <p>Waiting for driver...</p>

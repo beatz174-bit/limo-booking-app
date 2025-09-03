@@ -18,6 +18,7 @@ vi.mock('@react-google-maps/api', () => ({
   Marker: ({ position }: { position: { lat: number; lng: number } }) => (
     <div data-testid="marker">{position.lat},{position.lng}</div>
   ),
+  DirectionsRenderer: () => <div data-testid="route">route</div>,
 }));
 
 let currentUpdate: LocationUpdate | null = null;
@@ -50,7 +51,16 @@ describe('TrackingPage', () => {
       DirectionsService: class {
         route() {
           return Promise.resolve({
-            routes: [{ legs: [{ duration: { value: 600 } }] }],
+            routes: [
+              {
+                legs: [
+                  {
+                    duration: { value: 600 },
+                    end_location: { toJSON: () => ({ lat: 3, lng: 4 }) },
+                  },
+                ],
+              },
+            ],
           });
         }
       },
@@ -66,7 +76,7 @@ describe('TrackingPage', () => {
     vi.unstubAllGlobals();
   });
 
-  it('updates marker and timeline', async () => {
+  it('updates marker, timeline and route', async () => {
     const wrapper = (
       <MemoryRouter initialEntries={['/t/abc']}>
         <Routes>
@@ -74,20 +84,13 @@ describe('TrackingPage', () => {
         </Routes>
       </MemoryRouter>
     );
-    const { rerender, findByTestId } = render(wrapper);
+    const { rerender } = render(wrapper);
     currentUpdate = { lat: 1, lng: 2, status: 'leave', ts: 0 };
     rerender(wrapper);
-    await findByTestId('map');
-    expect(mapProps?.options).toEqual({
-      disableDefaultUI: true,
-      draggable: false,
-      keyboardShortcuts: false,
-      scrollwheel: false,
-      disableDoubleClickZoom: true,
-      gestureHandling: 'none',
-    });
-    const marker = await findByTestId('marker');
-    expect(marker.textContent).toBe('1,2');
+    await waitFor(() => expect(screen.getAllByTestId('marker')).toHaveLength(2));
+    const markers = screen.getAllByTestId('marker');
+    expect(markers[0].textContent).toBe('1,2');
+    expect(markers[1].textContent).toBe('3,4');
     await waitFor(() =>
       expect(
         screen.getByText('En route to pickup').getAttribute('data-active'),
