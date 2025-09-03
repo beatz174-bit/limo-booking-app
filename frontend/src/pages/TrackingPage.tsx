@@ -177,6 +177,7 @@ export default function TrackingPage() {
           zoom={14}
           onLoad={(m) => {
             mapRef.current = m;
+            setMap(m as MapLike);
           }}
           options={{
             disableDefaultUI: true,
@@ -186,7 +187,6 @@ export default function TrackingPage() {
             disableDoubleClickZoom: true,
             gestureHandling: 'none',
           }}
-          onLoad={(m) => setMap(m as MapLike)}
         >
           <Marker position={pos} />
           {nextStop && <Marker position={nextStop} />}
