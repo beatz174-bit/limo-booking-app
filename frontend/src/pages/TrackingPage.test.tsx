@@ -4,10 +4,17 @@ import { vi } from 'vitest';
 import type { LocationUpdate } from '@/hooks/useBookingChannel';
 import TrackingPage from './TrackingPage';
 
+type MapProps = {
+  children: React.ReactNode;
+  options?: Record<string, unknown>;
+};
+
+let mapProps: MapProps | null = null;
 vi.mock('@react-google-maps/api', () => ({
-  GoogleMap: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="map">{children}</div>
-  ),
+  GoogleMap: (props: MapProps) => {
+    mapProps = props;
+    return <div data-testid="map">{props.children}</div>;
+  },
   Marker: ({ position }: { position: { lat: number; lng: number } }) => (
     <div data-testid="marker">{position.lat},{position.lng}</div>
   ),

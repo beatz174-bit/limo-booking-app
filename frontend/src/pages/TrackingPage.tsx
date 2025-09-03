@@ -116,6 +116,14 @@ export default function TrackingPage() {
           mapContainerStyle={{ width: '100%', height: 300 }}
           center={pos}
           zoom={14}
+          options={{
+            disableDefaultUI: true,
+            draggable: false,
+            keyboardShortcuts: false,
+            scrollwheel: false,
+            disableDoubleClickZoom: true,
+            gestureHandling: 'none',
+          }}
         >
           <Marker position={pos} />
           {nextStop && <Marker position={nextStop} />}
