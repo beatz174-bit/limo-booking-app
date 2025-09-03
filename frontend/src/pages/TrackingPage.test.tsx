@@ -16,9 +16,13 @@ vi.mock('@react-google-maps/api', () => ({
       props.onLoad?.(mockMap);
       return <div data-testid="map">{props.children}</div>;
     },
-  Marker: ({ position }: { position: { lat: number; lng: number } }) => (
-    <div data-testid="marker">{position.lat},{position.lng}</div>
-  ),
+  Marker: ({
+    position,
+    'data-testid': testId,
+  }: {
+    position: { lat: number; lng: number };
+    'data-testid'?: string;
+  }) => <div data-testid={testId ?? 'marker'}>{position.lat},{position.lng}</div>,
   DirectionsRenderer: () => <div data-testid="route">route</div>,
 }));
 
@@ -91,13 +95,15 @@ describe('TrackingPage', () => {
         </Routes>
       </MemoryRouter>
     );
-    const { rerender } = render(wrapper);
+    const { rerender, unmount } = render(wrapper);
     currentUpdate = { lat: 1, lng: 2, status: 'leave', ts: 0 };
     rerender(wrapper);
-    await waitFor(() => expect(screen.getAllByTestId('marker')).toHaveLength(2));
-    const markers = screen.getAllByTestId('marker');
-    expect(markers[0].textContent).toBe('1,2');
-    expect(markers[1].textContent).toBe('3,4');
+    await waitFor(() =>
+      expect(screen.getByTestId('pickup-marker')).toBeInTheDocument(),
+    );
+    expect(screen.getByTestId('marker').textContent).toBe('1,2');
+    expect(screen.getByTestId('pickup-marker').textContent).toBe('3,4');
+    expect(screen.queryByTestId('dropoff-marker')).toBeNull();
     await waitFor(() =>
       expect(
         screen.getByText('En route to pickup').getAttribute('data-active'),
@@ -106,6 +112,38 @@ describe('TrackingPage', () => {
 
     await screen.findByText('ETA: 10 min');
     await waitFor(() => expect(mockMap.fitBounds).toHaveBeenCalled());
+    unmount();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              booking: {
+                id: '1',
+                pickup_address: 'P',
+                dropoff_address: 'D',
+                status: 'arrive-pickup',
+              },
+              ws_url: '',
+            }),
+        }) as unknown as Response,
+      ),
+    );
+    currentUpdate = { lat: 1, lng: 2, status: 'arrive-pickup', ts: 0 };
+    const wrapper2 = (
+      <MemoryRouter initialEntries={['/t/abc']}>
+        <Routes>
+          <Route path="/t/:code" element={<TrackingPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+    render(wrapper2);
+    await waitFor(() =>
+      expect(screen.getByTestId('dropoff-marker')).toBeInTheDocument(),
+    );
+    expect(screen.queryByTestId('pickup-marker')).toBeNull();
   });
 
   it('sets zoom to 12 when distance is greater than 5 km', async () => {
