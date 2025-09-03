@@ -156,7 +156,6 @@ export default function TrackingPage() {
     };
     mapRef.current.setCenter(mid);
   }, [pos, nextStop, isDropoff]);
-
   return (
     <div>
       {pos ? (
