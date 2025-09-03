@@ -158,13 +158,6 @@ export default function TrackingPage() {
     };
     mapRef.current.setCenter(mid);
   }, [pos, nextStop, isDropoff]);
-  const nextStopIcon = ['ARRIVED_PICKUP', 'IN_PROGRESS', 'ARRIVED_DROPOFF', 'COMPLETED'].includes(
-    status as BookingStatus,
-  )
-    ? dropoffIcon
-    : pickupIcon;
-  const nextStopTestId = isDropoff ? 'dropoff-marker' : 'pickup-marker';
-
   return (
     <div>
       {pos ? (
@@ -184,7 +177,7 @@ export default function TrackingPage() {
             gestureHandling: 'none',
           }}
         >
-          <Marker position={pos} />
+          <Marker position={pos} icon={carIcon} />
           {nextStop &&
             (isDropoff ? (
               <>
