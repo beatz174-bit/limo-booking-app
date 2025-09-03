@@ -6,7 +6,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_async_session
-from app.dependencies import require_admin
+from app.dependencies import get_current_user_v2, require_admin
 from app.models.availability_slot import AvailabilitySlot
 from app.models.booking import Booking, BookingStatus
 from app.schemas.api_availability import AvailabilityResponse, BookingSlot
@@ -15,7 +15,7 @@ from app.schemas.availability_slot import AvailabilitySlotCreate, AvailabilitySl
 router = APIRouter(
     prefix="/api/v1/availability",
     tags=["availability"],
-    dependencies=[Depends(require_admin)],
+    dependencies=[Depends(get_current_user_v2)],
 )
 
 
@@ -63,7 +63,10 @@ async def get_availability(
 
 
 @router.post(
-    "", response_model=AvailabilitySlotRead, status_code=status.HTTP_201_CREATED
+    "",
+    response_model=AvailabilitySlotRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_admin)],
 )
 async def create_slot(
     payload: AvailabilitySlotCreate, db: AsyncSession = Depends(get_async_session)
