@@ -25,11 +25,14 @@ These instructions apply to the entire repository.
 Run the following before committing:
 
 To prevent excessive console output from hanging sessions, redirect test
-and lint output to log files and view the tail for context.
+and lint output to log files and view the tail for context. The backend
+tests use `pytest -q --maxfail=1 --disable-warnings` to stop on the first
+failure and suppress warnings, keeping logs small and preventing the
+session from hanging.
 
 ```bash
 npm run lint 2>&1 | tee /tmp/lint.log | tail -n 200
-cd backend && pytest >/tmp/backend.log 2>&1; tail -n 200 /tmp/backend.log
+cd backend && pytest -q --maxfail=1 --disable-warnings >/tmp/backend.log 2>&1; tail -n 200 /tmp/backend.log
 cd ../frontend && npm test >/tmp/frontend.log 2>&1; tail -n 200 /tmp/frontend.log
 ```
 
