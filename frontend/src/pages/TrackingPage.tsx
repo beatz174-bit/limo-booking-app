@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { GoogleMap, Marker, DirectionsRenderer } from '@react-google-maps/api';
+import { GoogleMap, Marker } from '@react-google-maps/api';
 import { CONFIG } from '@/config';
 import { apiFetch } from '@/services/apiFetch';
 import { useBookingChannel } from '@/hooks/useBookingChannel';
@@ -23,8 +23,17 @@ type GoogleLike = {
       }>;
     };
     LatLng: new (lat: number, lng: number) => unknown;
+    LatLngBounds: new () => {
+      extend: (pos: { lat: number; lng: number }) => void;
+    };
     TravelMode: { DRIVING: string };
   };
+};
+
+type MapLike = {
+  fitBounds: (bounds: unknown) => void;
+  getZoom: () => number;
+  setZoom: (zoom: number) => void;
 };
 
 interface TrackResponse {
@@ -56,6 +65,7 @@ export default function TrackingPage() {
   const [nextStop, setNextStop] = useState<{ lat: number; lng: number } | null>(
     null,
   );
+  const [map, setMap] = useState<MapLike | null>(null);
   const update = useBookingChannel(bookingId);
 
   useEffect(() => {
@@ -107,7 +117,21 @@ export default function TrackingPage() {
     void calcEta();
   }, [update, status, pickup, dropoff]);
 
-  const pos = update ? { lat: update.lat, lng: update.lng } : null;
+  const pos = useMemo(
+    () => (update ? { lat: update.lat, lng: update.lng } : null),
+    [update],
+  );
+
+  useEffect(() => {
+    if (!map || !pos || !nextStop) return;
+    const g = (window as { google?: GoogleLike }).google;
+    if (!g?.maps) return;
+    const bounds = new g.maps.LatLngBounds();
+    bounds.extend(pos);
+    bounds.extend(nextStop);
+    map.fitBounds(bounds);
+    if (map.getZoom() > 16) map.setZoom(16);
+  }, [map, pos, nextStop]);
 
   return (
     <div>
@@ -124,6 +148,7 @@ export default function TrackingPage() {
             disableDoubleClickZoom: true,
             gestureHandling: 'none',
           }}
+          onLoad={(m) => setMap(m as MapLike)}
         >
           <Marker position={pos} />
           {nextStop && <Marker position={nextStop} />}
