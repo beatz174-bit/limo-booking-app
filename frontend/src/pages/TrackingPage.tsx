@@ -1,5 +1,5 @@
 /// <reference types="google.maps" />
-import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { GoogleMap, Marker } from '@react-google-maps/api';
 import { CONFIG } from '@/config';
@@ -115,21 +115,7 @@ export default function TrackingPage() {
   const pos = update ? { lat: update.lat, lng: update.lng } : null;
 
   useEffect(() => {
-    if (!map || !update || !nextStop) return;
-    const g = (window as { google?: GoogleLike }).google;
-    if (!g?.maps) return;
-    const bounds = new g.maps.LatLngBounds();
-    const position = { lat: update.lat, lng: update.lng };
-    bounds.extend(position);
-    bounds.extend(nextStop);
-    map.fitBounds(bounds);
-    const currentZoom =
-      typeof map.getZoom === 'function' ? map.getZoom() : null;
-    if (currentZoom !== null && currentZoom > 16) map.setZoom(16);
-  }, [map, update, nextStop]);
-
-  useEffect(() => {
-    if (!mapRef.current || !update || !nextStop) return;
+    if (!mapRef.current || !pos || !nextStop) return;
     const g = (window as { google?: typeof google }).google;
     if (!g?.maps) return;
     const bounds = new g.maps.LatLngBounds();
