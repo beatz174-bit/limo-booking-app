@@ -3,12 +3,17 @@ import { describe, it, expect, vi } from 'vitest';
 import { useStripeSetupIntent } from '@/hooks/useStripeSetupIntent';
 
 describe('useStripeSetupIntent', () => {
-  it('creates booking and returns client secret', async () => {
+  it('creates booking and returns client secret when no saved card', async () => {
     const fakeResp = {
       booking: { id: '1', status: 'PENDING', public_code: 'ABC', estimated_price_cents: 1000, deposit_required_cents: 500 },
       stripe: { setup_intent_client_secret: 'sec' },
     };
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => fakeResp });
+    const fetchMock = vi
+      .fn()
+      // initial call to check saved payment method
+      .mockResolvedValueOnce({ ok: true, json: async () => ({}) })
+      // booking creation
+      .mockResolvedValueOnce({ ok: true, json: async () => fakeResp });
     global.fetch = fetchMock as unknown as typeof fetch;
     const { result } = renderHook(() => useStripeSetupIntent());
     let data;
@@ -21,16 +26,28 @@ describe('useStripeSetupIntent', () => {
         customer: { name: 'x', email: 'y@example.com' },
       });
     });
-    const [, opts] = fetchMock.mock.calls[0];
+    const [, opts] = fetchMock.mock.calls[1];
     expect(JSON.parse(opts.body as string).pickup_when).toBe('2025-01-01T00:00:00Z');
     expect(data.clientSecret).toBe('sec');
+    expect(result.current.savedPaymentMethod).toBeNull();
+  });
+
+  it('returns saved card info when available', async () => {
+    const pm = { brand: 'visa', last4: '4242' };
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => pm });
+    global.fetch = fetchMock as unknown as typeof fetch;
+    const { result } = renderHook(() => useStripeSetupIntent());
+    await act(async () => {});
+    expect(result.current.savedPaymentMethod).toEqual(pm);
   });
 
   it('throws detailed error when booking fails', async () => {
     const errorResp = { detail: 'invalid booking' };
-    global.fetch = vi
+    const fetchMock = vi
       .fn()
-      .mockResolvedValue({ ok: false, json: async () => errorResp }) as unknown as typeof fetch;
+      .mockResolvedValueOnce({ ok: true, json: async () => ({}) })
+      .mockResolvedValueOnce({ ok: false, json: async () => errorResp });
+    global.fetch = fetchMock as unknown as typeof fetch;
     const { result } = renderHook(() => useStripeSetupIntent());
 
     await act(async () => {
