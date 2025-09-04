@@ -12,7 +12,7 @@ class UserBase(BaseModel):
     email: EmailStr
     full_name: str
     default_pickup_address: Optional[str] = None
-    phone: Optional[str] = None
+    phone: Optional[str] = None  # Optional contact number
 
 
 class UserCreate(UserBase):

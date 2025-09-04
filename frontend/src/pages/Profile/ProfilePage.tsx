@@ -68,6 +68,9 @@ const ProfilePage = () => {
       phone,
       default_pickup_address: defaultPickup,
     };
+    if (phone) {
+      body.phone = phone;
+    }
     if (newPassword && newPassword === confirmPassword && oldPasswordValid) {
       body.password = newPassword;
     }

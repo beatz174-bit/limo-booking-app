@@ -40,7 +40,7 @@ async def create_user(db: AsyncSession, data: UserCreate) -> UserRead:
         email=data.email,
         full_name=data.full_name,
         hashed_password=hash_password(data.password),
-        phone=data.phone,
+        phone=data.phone,  # Store phone when provided
     )
     db.add(user)
     await db.flush()

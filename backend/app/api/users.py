@@ -1,4 +1,4 @@
-"""User management API routes."""
+"""User management API routes, including phone support."""
 
 import logging
 import uuid

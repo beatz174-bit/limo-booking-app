@@ -1,16 +1,17 @@
 """add stripe identifiers to users_v2
 
 Revision ID: fa3de645ec11
-Revises: 13b1cf856965
+Revises: c9a2f3e1d4b5
 Create Date: 2025-09-02 13:00:00.000000
 """
 
 import sqlalchemy as sa
+
 from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "fa3de645ec11"
-down_revision = "13b1cf856965"
+down_revision = "c9a2f3e1d4b5"
 branch_labels = None
 depends_on = None
 

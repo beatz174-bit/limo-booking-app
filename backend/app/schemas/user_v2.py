@@ -4,8 +4,9 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from app.models.user_v2 import UserRole
 from pydantic import BaseModel, EmailStr
+
+from app.models.user_v2 import UserRole
 
 
 class UserBase(BaseModel):
@@ -16,7 +17,7 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    pass
+    password: str
 
 
 class UserRead(UserBase):
@@ -26,3 +27,18 @@ class UserRead(UserBase):
 
     class Config:
         from_attributes = True
+
+
+class UserUpdate(BaseModel):
+    email: Optional[EmailStr] = None
+    full_name: Optional[str] = None
+    password: Optional[str] = None
+    phone: Optional[str] = None
+    role: Optional[UserRole] = None
+    fcm_token: Optional[str] = None
+    stripe_customer_id: Optional[str] = None
+    stripe_payment_method_id: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+        extra = "ignore"
