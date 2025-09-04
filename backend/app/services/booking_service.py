@@ -6,10 +6,6 @@ from datetime import datetime, timedelta, timezone
 from math import atan2, cos, radians, sin, sqrt
 
 import stripe
-from fastapi import HTTPException
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.api.ws import send_booking_update
 from app.models.availability_slot import AvailabilitySlot
 from app.models.booking import Booking, BookingStatus
@@ -20,6 +16,9 @@ from app.models.trip import Trip
 from app.models.user_v2 import User, UserRole
 from app.schemas.api_booking import BookingCreateRequest
 from app.services import notifications, pricing_service, routing, stripe_client
+from fastapi import HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def create_booking(
@@ -79,8 +78,6 @@ async def create_booking(
     )
     db.add(booking)
     await db.flush()
-    await db.commit()
-
     await notifications.create_notification(
         db,
         booking.id,
@@ -88,6 +85,8 @@ async def create_booking(
         UserRole.DRIVER,
         {"booking_id": str(booking.id)},
     )
+    await db.commit()
+    await db.refresh(booking)
 
     setup_intent = stripe_client.create_setup_intent(
         data.customer.email, data.customer.name, booking.public_code
