@@ -14,6 +14,7 @@ import type { BookingRead as Booking } from '@/api-client';
 import { apiFetch } from '@/services/apiFetch';
 import { CONFIG } from '@/config';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDriverTracking } from '@/hooks/useDriverTracking';
 
 export type DriverAction =
   | 'confirm'
@@ -188,6 +189,8 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
     return () =>
       navigator.serviceWorker.removeEventListener('message', handler);
   }, [refresh]);
+
+  useDriverTracking(bookings);
 
   return (
     <BookingsContext.Provider
