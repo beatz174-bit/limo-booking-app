@@ -1,18 +1,22 @@
 """Notification helper service."""
 
 import json
+import logging
 import uuid
 from datetime import datetime, timezone
 from typing import Any
 
 import httpx
+from jose import jwt
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.config import get_settings
 from app.models.notification import Notification, NotificationType
 from app.models.user_v2 import User as UserV2
 from app.models.user_v2 import UserRole
-from jose import jwt
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+
+logger = logging.getLogger(__name__)
 
 notification_map: dict[NotificationType, dict[str, str]] = {
     NotificationType.NEW_BOOKING: {
@@ -144,11 +148,13 @@ async def _send_fcm(
                             "webpush": {"notification": notification},
                         }
                     }
-                    await client.post(
+                    logger.info("FCM request: %s", message)
+                    response = await client.post(
                         f"https://fcm.googleapis.com/v1/projects/{settings.fcm_project_id}/messages:send",
                         headers={"Authorization": f"Bearer {access_token}"},
                         json=message,
                     )
+                    logger.info("FCM response: %s", response.json())
             else:
                 message = {
                     "message": {
@@ -157,11 +163,14 @@ async def _send_fcm(
                         "webpush": {"notification": notification},
                     }
                 }
-                await client.post(
+                logger.info("FCM request: %s", message)
+                response = await client.post(
                     f"https://fcm.googleapis.com/v1/projects/{settings.fcm_project_id}/messages:send",
                     headers={"Authorization": f"Bearer {access_token}"},
                     json=message,
                 )
+                logger.info("FCM response: %s", response.json())
         except httpx.HTTPError:
+            logger.exception("FCM send failed")
             # Silently ignore push delivery issues to keep core flow resilient
             return
