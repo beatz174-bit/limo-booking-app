@@ -65,6 +65,7 @@ const ProfilePage = () => {
     const body: Record<string, unknown> = {
       full_name: fullName,
       email,
+      phone,
       default_pickup_address: defaultPickup,
     };
     if (phone) {

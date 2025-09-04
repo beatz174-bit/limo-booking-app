@@ -17,6 +17,22 @@ class _StubIntent:
 
 
 class _StubStripe:  # type: ignore
+    class Customer:
+        @staticmethod
+        def create(**kwargs):
+            return _StubIntent(id="cus_test")
+
+        @staticmethod
+        def retrieve(customer_id):
+            return _StubIntent(
+                id=customer_id,
+                invoice_settings={"default_payment_method": "pm_test"},
+            )
+
+        @staticmethod
+        def modify(customer_id, **kwargs):
+            return _StubIntent(id=customer_id, **kwargs)
+
     class SetupIntent:
         @staticmethod
         def create(**kwargs):
@@ -27,6 +43,19 @@ class _StubStripe:  # type: ignore
         def create(**kwargs):
             return _StubIntent(id="pi_test")
 
+    class PaymentMethod:
+        @staticmethod
+        def attach(payment_method, **kwargs):
+            return _StubIntent(id=payment_method)
+
+        @staticmethod
+        def retrieve(payment_method):
+            return _StubIntent(id=payment_method)
+
+        @staticmethod
+        def detach(payment_method):
+            return _StubIntent(id=payment_method)
+
 
 settings = get_settings()
 if settings.env == "test" or not settings.stripe_secret_key or real_stripe is None:
@@ -36,19 +65,45 @@ else:
     stripe.api_key = settings.stripe_secret_key or ""
 
 
-def create_setup_intent(
-    customer_email: str, customer_name: str, booking_reference: str
-):
-    """Create a Stripe SetupIntent for the provided customer email."""
+def create_customer(email: str, name: str):
+    """Create a Stripe customer."""
+
+    return stripe.Customer.create(email=email, name=name)
+
+
+def create_setup_intent(customer_id: str, booking_reference: str):
+    """Create a SetupIntent for the specified customer."""
+
     return stripe.SetupIntent.create(
+        customer=customer_id,
         payment_method_types=["card"],
         usage="off_session",
-        metadata={
-            "customer_email": customer_email,
-            "customer_name": customer_name,
-            "booking_reference": booking_reference,
-        },
+        metadata={"booking_reference": booking_reference},
     )
+
+
+def get_default_payment_method(customer_id: str) -> str | None:
+    """Return the default payment method ID for a customer if set."""
+
+    customer = stripe.Customer.retrieve(customer_id)
+    invoice_settings = getattr(customer, "invoice_settings", {})
+    return invoice_settings.get("default_payment_method")
+
+
+def set_default_payment_method(customer_id: str, payment_method: str) -> None:
+    """Attach and set the default payment method for a customer."""
+
+    stripe.PaymentMethod.attach(payment_method, customer=customer_id)
+    stripe.Customer.modify(
+        customer_id,
+        invoice_settings={"default_payment_method": payment_method},
+    )
+
+
+def detach_payment_method(payment_method: str) -> None:
+    """Detach a payment method from any customer."""
+
+    stripe.PaymentMethod.detach(payment_method)
 
 
 def charge_deposit(
@@ -60,9 +115,12 @@ def charge_deposit(
     pickup_address: str | None = None,
     dropoff_address: str | None = None,
     pickup_time: datetime | None = None,
-    payment_method: str = "pm_card_visa",
+    payment_method: str,
 ):
     """Charge a deposit using a stored payment method."""
+
+    if not payment_method:
+        raise ValueError("payment_method is required")
 
     params = {
         "amount": amount_cents,
@@ -106,9 +164,12 @@ def charge_final(
     pickup_address: str | None = None,
     dropoff_address: str | None = None,
     pickup_time: datetime | None = None,
-    payment_method: str = "pm_card_visa",
+    payment_method: str,
 ):
     """Charge the remaining fare amount."""
+    if not payment_method:
+        raise ValueError("payment_method is required")
+
     params = {
         "amount": amount_cents,
         "currency": "aud",

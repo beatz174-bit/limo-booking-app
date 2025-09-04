@@ -15,7 +15,7 @@ import * as logger from "@/lib/logger";
 initTokensFromStorage();
 logger.debug("contexts/AuthContext", "tokens initialized from storage");
 
-type UserShape = { email?: string; full_name?: string; role?: string } | null;
+type UserShape = { email?: string; full_name?: string; role?: string; phone?: string } | null;
 
 type LoginResponse = {
   access_token?: string;
@@ -35,6 +35,7 @@ type AuthState = {
   userName: string | null;
   role: string | null;
   adminID: string | null;
+  phone: string | null;
 };
 // eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -65,7 +66,7 @@ async function maybeSubscribePush() {
 }
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, setState] = useState<AuthState>({ accessToken: null, user: null, loading: true, userID: null, userName: null, role: null, adminID: null });
+  const [state, setState] = useState<AuthState>({ accessToken: null, user: null, loading: true, userID: null, userName: null, role: null, adminID: null, phone: null });
   // const [userName, setUserName] = useState<string>('');
   // const [userID, setUserID] = useState<string|null>(null);
 
@@ -77,6 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const storeduserName = localStorage.getItem("userName");
     const storedRole = localStorage.getItem("role");
     const storedAdminID = localStorage.getItem("adminID");
+    const storedPhone = localStorage.getItem("phone");
     if (raw) {
       try {
         const { access_token, refresh_token, user, role } = JSON.parse(raw);
@@ -89,6 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           userName: storeduserName ?? null,
           role: storedRole ?? user?.role ?? null,
           adminID: storedAdminID ?? null,
+          phone: storedPhone ?? null,
         });
         logger.debug("contexts/AuthContext", "tokens loaded from storage");
         if (role ?? storedRole) {
@@ -103,6 +106,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...s,
       loading: false,
       adminID: storedAdminID ?? null,
+      phone: storedPhone ?? null,
     }));
   }, []);
 
@@ -147,6 +151,11 @@ useEffect(() => {
         } else {
           localStorage.removeItem("userName");
         }
+        if (data.phone) {
+          localStorage.setItem("phone", data.phone ?? "");
+        } else {
+          localStorage.removeItem("phone");
+        }
         if (data.id) {
           localStorage.setItem("userID", String(data.id));
         } else {
@@ -157,6 +166,7 @@ useEffect(() => {
         role: data.role ?? s.role,
         userName: data.full_name ?? s.userName,
         userID: data.id ? String(data.id) : s.userID,
+        phone: data.phone ?? s.phone,
       }));
       } catch (err) {
         logger.error(
@@ -307,6 +317,7 @@ useEffect(() => {
     localStorage.removeItem("userName");
     localStorage.removeItem("role");
     localStorage.removeItem("adminID");
+    localStorage.removeItem("phone");
     setState((s): AuthState => ({
       ...s,
       accessToken: null,
@@ -315,6 +326,7 @@ useEffect(() => {
       userName: null,
       role: null,
       adminID: null,
+      phone: null,
     }));
   }, [persist, setState]);
 

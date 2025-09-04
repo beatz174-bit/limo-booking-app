@@ -741,7 +741,7 @@ export interface UserCreate {
      */
     'full_name': string;
     /**
-     * 
+     *
      * @type {string}
      * @memberof UserCreate
      */
@@ -778,7 +778,7 @@ export interface UserRead {
      */
     'full_name': string;
     /**
-     * 
+     *
      * @type {string}
      * @memberof UserRead
      */
@@ -821,13 +821,13 @@ export interface UserUpdate {
      */
     'full_name'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof UserUpdate
      */
     'password'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof UserUpdate
      */

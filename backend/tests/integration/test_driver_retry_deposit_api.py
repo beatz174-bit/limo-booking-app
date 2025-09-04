@@ -4,11 +4,12 @@ from datetime import datetime, timedelta, timezone
 import pytest
 import stripe
 from _pytest.monkeypatch import MonkeyPatch
+from httpx import AsyncClient
+from sqlalchemy import text
+
 from app.core.security import hash_password
 from app.models.booking import Booking, BookingStatus
 from app.models.user_v2 import User, UserRole
-from httpx import AsyncClient
-from sqlalchemy import text
 
 pytestmark = pytest.mark.asyncio
 
@@ -21,6 +22,7 @@ async def _create_booking(async_session) -> Booking:
         full_name="C",
         hashed_password=hash_password("pass"),
         role=UserRole.CUSTOMER,
+        stripe_payment_method_id="pm_test",
     )
     async_session.add(user)
     await async_session.flush()

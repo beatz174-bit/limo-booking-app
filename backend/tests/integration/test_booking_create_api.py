@@ -2,10 +2,11 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
-from app.models.settings import AdminConfig
-from app.models.user_v2 import User
 from httpx import AsyncClient
 from sqlalchemy import delete, select
+
+from app.models.settings import AdminConfig
+from app.models.user_v2 import User
 
 pytestmark = pytest.mark.asyncio
 
@@ -25,13 +26,21 @@ async def test_create_booking_success(
 
     monkeypatch.setattr("app.services.routing.estimate_route", fake_route)
 
+    class FakeCustomer:
+        id = "cus_test"
+
+    monkeypatch.setattr(
+        "app.services.stripe_client.create_customer",
+        lambda email, name: FakeCustomer(),
+    )
+
     class FakeSI:
         client_secret = "sec_test"
 
-    def fake_si(email: str, name: str, booking_reference: str):
-        return FakeSI()
-
-    monkeypatch.setattr("app.services.stripe_client.create_setup_intent", fake_si)
+    monkeypatch.setattr(
+        "app.services.stripe_client.create_setup_intent",
+        lambda customer_id, booking_reference: FakeSI(),
+    )
 
     payload = {
         "customer": {"name": "Jane", "email": "jane@example.com", "phone": "123"},

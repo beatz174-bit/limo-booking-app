@@ -5,16 +5,21 @@ import uuid
 from typing import List
 
 from fastapi import APIRouter, Depends, status
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import get_current_user, get_db
 from app.models.user_v2 import User
+from app.schemas.api_booking import StripeSetupIntent
 from app.schemas.user import UserCreate, UserRead, UserUpdate
 from app.services.user_service import (
+    create_setup_intent_for_user,
     create_user,
     delete_user,
     get_user,
     list_users,
+    remove_payment_method,
+    save_payment_method,
     update_user,
 )
 
@@ -101,3 +106,40 @@ async def api_delete_user(
         extra={"user_id": current_user.id, "target_user_id": user_id},
     )
     await delete_user(db, user_id)
+
+
+class PaymentMethodPayload(BaseModel):
+    payment_method_id: str
+
+
+@router.post("/me/payment-method", response_model=StripeSetupIntent)
+async def api_create_payment_method(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Return a SetupIntent client secret for the current user."""
+
+    client_secret = await create_setup_intent_for_user(db, current_user)
+    return StripeSetupIntent(setup_intent_client_secret=client_secret)
+
+
+@router.put("/me/payment-method", response_model=UserRead)
+async def api_save_payment_method(
+    data: PaymentMethodPayload,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Persist a confirmed payment method to the user's profile."""
+
+    user = await save_payment_method(db, current_user, data.payment_method_id)
+    return user
+
+
+@router.delete("/me/payment-method", status_code=status.HTTP_204_NO_CONTENT)
+async def api_remove_payment_method(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Remove the saved payment method for the current user."""
+
+    await remove_payment_method(db, current_user)

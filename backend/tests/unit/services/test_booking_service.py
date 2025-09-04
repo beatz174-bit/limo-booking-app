@@ -26,6 +26,7 @@ async def test_confirm_booking_handles_stripe_error(
         full_name="Test",
         hashed_password=hash_password("pass"),
         role=UserRole.CUSTOMER,
+        stripe_payment_method_id="pm_test",
     )
     async_session.add(user)
     await async_session.flush()
@@ -78,6 +79,7 @@ async def test_confirm_booking_handles_card_error(async_session: AsyncSession, m
         full_name="Test",
         hashed_password=hash_password("pass"),
         role=UserRole.CUSTOMER,
+        stripe_payment_method_id="pm_test",
     )
     async_session.add(user)
     await async_session.flush()
