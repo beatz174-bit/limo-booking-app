@@ -40,28 +40,32 @@ export const BookingsContext =
   createContext<BookingsContextValue | undefined>(undefined);
 
 export function BookingsProvider({ children }: { children: ReactNode }) {
-  const { accessToken, userID, adminID } = useAuth();
+  const {
+    accessToken,
+    userID: user_id,
+    adminID: admin_user_id,
+  } = useAuth();
+  const isAdmin = user_id === admin_user_id;
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const socketsRef = useRef<Record<string, WebSocket>>({});
 
   const refresh = useCallback(async () => {
-    if (!accessToken) {
+    if (!accessToken || !user_id) {
       setBookings([]);
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      const apiCall =
-        userID === adminID
-          ? driverBookingsApi.listBookingsApiV1DriverBookingsGet.bind(
-              driverBookingsApi,
-            )
-          : customerBookingsApi.listMyBookingsApiV1CustomersMeBookingsGet.bind(
-              customerBookingsApi,
-            );
+      const apiCall = isAdmin
+        ? driverBookingsApi.listBookingsApiV1DriverBookingsGet.bind(
+            driverBookingsApi,
+          )
+        : customerBookingsApi.listMyBookingsApiV1CustomersMeBookingsGet.bind(
+            customerBookingsApi,
+          );
       const { data } = await apiCall();
       setBookings(data as Booking[]);
     } catch (e) {
@@ -71,7 +75,7 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [accessToken, userID, adminID]);
+  }, [accessToken, user_id, isAdmin]);
 
   useEffect(() => {
     refresh();
@@ -190,7 +194,7 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
       navigator.serviceWorker.removeEventListener('message', handler);
   }, [refresh]);
 
-  useDriverTracking(bookings);
+  useDriverTracking(isAdmin ? bookings : []);
 
   return (
     <BookingsContext.Provider

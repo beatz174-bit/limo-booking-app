@@ -3,6 +3,7 @@ import { vi, type Mock } from 'vitest';
 import { BookingsProvider } from '@/contexts/BookingsContext';
 import { useBookings } from '@/hooks/useBookings';
 import { driverBookingsApi, customerBookingsApi } from '@/components/ApiConfig';
+import { useDriverTracking } from '@/hooks/useDriverTracking';
 import type { ReactNode } from 'react';
 
 vi.mock('@/components/ApiConfig', () => ({
@@ -14,12 +15,18 @@ vi.mock('@/components/ApiConfig', () => ({
   },
 }));
 
+const authState = {
+  accessToken: 'test-token',
+  userID: 'driver-1',
+  adminID: 'driver-1',
+};
+
 vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: () => ({
-    accessToken: 'test-token',
-    userID: 'driver-1',
-    adminID: 'driver-1',
-  }),
+  useAuth: () => authState,
+}));
+
+vi.mock('@/hooks/useDriverTracking', () => ({
+  useDriverTracking: vi.fn(),
 }));
 
 class WSStub {
@@ -35,6 +42,9 @@ afterEach(() => {
   vi.clearAllMocks();
   vi.unstubAllGlobals();
   WSStub.instances = [];
+  authState.accessToken = 'test-token';
+  authState.userID = 'driver-1';
+  authState.adminID = 'driver-1';
 });
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -63,6 +73,7 @@ describe('useBookings', () => {
     expect(
       customerBookingsApi.listMyBookingsApiV1CustomersMeBookingsGet,
     ).not.toHaveBeenCalled();
+    expect(useDriverTracking).toHaveBeenLastCalledWith(bookings);
   });
 
   it('websocket message updates a booking\'s status', async () => {
@@ -92,6 +103,45 @@ describe('useBookings', () => {
     });
 
     expect(result.current.bookings[0].status).toBe('COMPLETED');
+  });
+
+  it('refreshes when user changes and tracking stays disabled for non-admins', async () => {
+    authState.userID = 'customer-1';
+    authState.adminID = 'admin-1';
+    const bookings = [
+      {
+        id: '1',
+        pickup_address: 'A',
+        dropoff_address: 'B',
+        pickup_when: new Date().toISOString(),
+        status: 'PENDING',
+      },
+    ];
+    (customerBookingsApi.listMyBookingsApiV1CustomersMeBookingsGet as Mock).mockResolvedValue({
+      data: bookings,
+    });
+    vi.stubGlobal('WebSocket', WSStub as unknown as typeof WebSocket);
+
+    const { result, rerender } = renderHook(() => useBookings(), { wrapper });
+    await waitFor(() => expect(result.current.bookings).toEqual(bookings));
+    expect(useDriverTracking).toHaveBeenLastCalledWith([]);
+    expect(
+      customerBookingsApi.listMyBookingsApiV1CustomersMeBookingsGet,
+    ).toHaveBeenCalledTimes(1);
+
+    authState.userID = 'customer-2';
+    (customerBookingsApi.listMyBookingsApiV1CustomersMeBookingsGet as Mock).mockResolvedValue({
+      data: [],
+    });
+
+    rerender();
+
+    await waitFor(() =>
+      expect(
+        customerBookingsApi.listMyBookingsApiV1CustomersMeBookingsGet,
+      ).toHaveBeenCalledTimes(2),
+    );
+    expect(useDriverTracking).toHaveBeenLastCalledWith([]);
   });
 });
 
