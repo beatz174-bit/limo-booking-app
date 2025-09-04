@@ -10,15 +10,19 @@ type MapProps = {
   children: React.ReactNode;
   options?: Record<string, unknown>;
   onLoad?: (map: unknown) => void;
+  zoom?: number;
+  center?: { lat: number; lng: number };
 };
 
 let mockMap: {
   fitBounds: ReturnType<typeof vi.fn>;
-  setZoom: ReturnType<typeof vi.fn>;
-  setCenter: ReturnType<typeof vi.fn>;
 };
+let mapZoom: number | undefined;
+let mapCenter: { lat: number; lng: number } | undefined;
 vi.mock('@react-google-maps/api', () => ({
     GoogleMap: (props: MapProps) => {
+      mapZoom = props.zoom;
+      mapCenter = props.center;
       props.onLoad?.(mockMap);
       return <div data-testid="map">{props.children}</div>;
     },
@@ -47,7 +51,9 @@ vi.mock('@/hooks/useBookingChannel', () => ({
 describe('TrackingPage', () => {
   beforeEach(() => {
     currentUpdate = null;
-    mockMap = { fitBounds: vi.fn(), setZoom: vi.fn(), setCenter: vi.fn() };
+    mapZoom = undefined;
+    mapCenter = undefined;
+    mockMap = { fitBounds: vi.fn() };
     endLocation = { lat: 3, lng: 4 };
       vi.stubGlobal(
         'fetch',
@@ -126,9 +132,7 @@ describe('TrackingPage', () => {
     await screen.findByText('ETA: 10 min');
     await screen.findByTestId('route');
     await waitFor(() => expect(mockMap.fitBounds).toHaveBeenCalled());
-    await waitFor(() =>
-      expect(mockMap.setCenter).toHaveBeenCalledWith({ lat: 2, lng: 3 }),
-    );
+    await waitFor(() => expect(mapCenter).toEqual({ lat: 2, lng: 3 }));
     unmount();
       vi.stubGlobal(
         'fetch',
@@ -210,7 +214,7 @@ describe('TrackingPage', () => {
     const { rerender } = render(wrapper);
     currentUpdate = { lat: 1, lng: 2, status: 'ON_THE_WAY', ts: 0 };
     rerender(wrapper);
-    await waitFor(() => expect(mockMap.setZoom).toHaveBeenCalledWith(12));
+    await waitFor(() => expect(mapZoom).toBe(12));
   });
 
   it('sets zoom to 14 when distance is between 1 and 5 km', async () => {
@@ -225,7 +229,7 @@ describe('TrackingPage', () => {
     const { rerender } = render(wrapper);
     currentUpdate = { lat: 1, lng: 2, status: 'ON_THE_WAY', ts: 0 };
     rerender(wrapper);
-    await waitFor(() => expect(mockMap.setZoom).toHaveBeenCalledWith(14));
+    await waitFor(() => expect(mapZoom).toBe(14));
   });
 
   it('sets zoom to 16 when distance is less than 1 km', async () => {
@@ -240,7 +244,7 @@ describe('TrackingPage', () => {
     const { rerender } = render(wrapper);
     currentUpdate = { lat: 1, lng: 2, status: 'ON_THE_WAY', ts: 0 };
     rerender(wrapper);
-    await waitFor(() => expect(mockMap.setZoom).toHaveBeenCalledWith(16));
+    await waitFor(() => expect(mapZoom).toBe(16));
   });
 });
 
