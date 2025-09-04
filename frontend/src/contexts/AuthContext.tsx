@@ -220,14 +220,14 @@ useEffect(() => {
       const body = res.data as LoginResponse;
       const token = body.access_token ?? body.token ?? null;
       const role: string | null = body.role ?? body.user?.role ?? null;
-      persist(
-        {
-          access_token: token ?? undefined,
-          refresh_token: body.refresh_token ?? undefined,
-        },
-        body.user ?? null,
-        role,
-      );
+      const tokenRes: TokenResponse | null = token
+        ? {
+            access_token: token,
+            refresh_token: body.refresh_token ?? undefined,
+            token_type: "Bearer",
+          }
+        : null;
+      persist(tokenRes, body.user ?? null, role);
 
       if (body.full_name) {
         localStorage.setItem("userName", body.full_name ?? "");
