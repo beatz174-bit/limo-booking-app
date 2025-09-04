@@ -31,6 +31,12 @@ export function useBookingChannel(bookingId: string | null) {
             const data = JSON.parse(e.data);
             if (typeof data.lat === "number" && typeof data.lng === "number") {
               setUpdate(data);
+            } else if (typeof data.status === "string") {
+              setUpdate((prev) =>
+                prev
+                  ? { ...prev, status: data.status }
+                  : { status: data.status, lat: 0, lng: 0, ts: Date.now() },
+              );
             }
           } catch {
             /* ignore */

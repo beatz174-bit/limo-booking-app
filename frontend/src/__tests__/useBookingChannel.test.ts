@@ -58,4 +58,21 @@ describe('useBookingChannel', () => {
     });
     expect(result.current).toBeNull();
   });
+
+  it('updates status on status-only message', () => {
+    const { result } = renderHook(() => useBookingChannel('44'));
+    const ws = WSStub.instances[2];
+    act(() => {
+      ws.onmessage?.({ data: JSON.stringify({ lat: 7, lng: 8, ts: 0 }) });
+    });
+    expect(result.current).toMatchObject({ lat: 7, lng: 8 });
+    act(() => {
+      ws.onmessage?.({ data: JSON.stringify({ status: 'ARRIVED_PICKUP' }) });
+    });
+    expect(result.current).toMatchObject({
+      lat: 7,
+      lng: 8,
+      status: 'ARRIVED_PICKUP',
+    });
+  });
 });
