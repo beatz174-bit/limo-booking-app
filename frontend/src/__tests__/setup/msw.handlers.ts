@@ -3,7 +3,13 @@ import { http, HttpResponse } from "msw";
 import { CONFIG } from "@/config"
 
 type LoginBody = { email: string; password: string };
-type RegisterBody = { full_name: string; email: string; password: string };
+type RegisterBody = {
+  full_name: string;
+  email: string;
+  password: string;
+  phone?: string;
+  stripe_payment_method_id?: string;
+};
 type SettingsBody = {
   account_mode: boolean;
   flagfall: number;
