@@ -12,6 +12,8 @@ vi.mock('@/components/ApiConfig', () => ({
 import DriverDashboard from '@/pages/Driver/DriverDashboard';
 import { driverBookingsApi } from '@/components/ApiConfig';
 import { CONFIG } from '@/config';
+import { BookingsProvider } from '@/contexts/BookingsContext';
+import { setTokens } from '@/services/tokenStore';
 
 describe('DriverDashboard', () => {
   it.skip('loads and confirms booking', async () => {
@@ -59,9 +61,19 @@ describe('DriverDashboard', () => {
       }) as unknown as Response,
     );
 
+    class WSStub {
+      close() {}
+      onmessage: ((event: { data: string }) => void) | null = null;
+      constructor(public url: string) {}
+      send() {}
+    }
+    vi.stubGlobal('WebSocket', WSStub as unknown as typeof WebSocket);
+
     render(
       <MemoryRouter>
-        <DriverDashboard />
+        <BookingsProvider>
+          <DriverDashboard />
+        </BookingsProvider>
       </MemoryRouter>,
     );
     expect(await screen.findByText('A → B')).toBeInTheDocument();
@@ -92,9 +104,20 @@ describe('DriverDashboard', () => {
       } as unknown as Response);
     vi.stubGlobal('fetch', fetchMock);
 
+    class WSStub {
+      close() {}
+      onmessage: ((event: { data: string }) => void) | null = null;
+      constructor(public url: string) {}
+      send() {}
+    }
+    vi.stubGlobal('WebSocket', WSStub as unknown as typeof WebSocket);
+    setTokens('test-token');
+
     render(
       <MemoryRouter>
-        <DriverDashboard />
+        <BookingsProvider>
+          <DriverDashboard />
+        </BookingsProvider>
       </MemoryRouter>,
     );
 
