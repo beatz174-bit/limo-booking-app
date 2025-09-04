@@ -6,11 +6,15 @@ import { setTokens } from "@/services/tokenStore";
 class WSStub {
   static instances: WSStub[] = [];
   onmessage: ((event: { data: string }) => void) | null = null;
+  onerror: ((event: Event) => void) | null = null;
+  onclose: ((event: Event) => void) | null = null;
   constructor(public url: string) {
     WSStub.instances.push(this);
   }
   send() {}
-  close() {}
+  close() {
+    this.onclose?.(new Event("close"));
+  }
 }
 
 describe('useBookingChannel', () => {
@@ -36,5 +40,22 @@ describe('useBookingChannel', () => {
     });
     expect(result.current?.lat).toBe(1);
     expect(result.current?.lng).toBe(2);
+  });
+
+  it('resets state on error and close', () => {
+    const { result } = renderHook(() => useBookingChannel('43'));
+    const ws = WSStub.instances[1];
+    act(() => {
+      ws.onmessage?.({ data: JSON.stringify({ lat: 5, lng: 6, ts: 0 }) });
+    });
+    expect(result.current?.lat).toBe(5);
+    act(() => {
+      ws.onerror?.(new Event('error'));
+    });
+    expect(result.current).toBeNull();
+    act(() => {
+      ws.onclose?.(new Event('close'));
+    });
+    expect(result.current).toBeNull();
   });
 });

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getAccessToken, onTokenChange } from "@/services/tokenStore";
 import type { BookingStatus } from "@/types/BookingStatus";
+import { createReconnectingWebSocket } from "@/lib/reconnectingWebSocket";
 
 export interface LocationUpdate {
   lat: number;
@@ -24,15 +25,17 @@ export function useBookingChannel(bookingId: string | null) {
   useEffect(() => {
     if (!bookingId || !token) return;
     const wsUrl = `${import.meta.env.VITE_BACKEND_URL.replace("http", "ws")}/ws/bookings/${bookingId}/watch?token=${token}`;
-    const ws = new WebSocket(wsUrl);
-    ws.onmessage = (e) => {
-      try {
-        setUpdate(JSON.parse(e.data));
-      } catch {
-        // ignore
-      }
-    };
-    return () => ws.close();
+    return createReconnectingWebSocket(wsUrl, {
+      onMessage: (e) => {
+        try {
+          setUpdate(JSON.parse(e.data));
+        } catch {
+          /* ignore */
+        }
+      },
+      onError: () => setUpdate(null),
+      onClose: () => setUpdate(null),
+    });
   }, [bookingId, token]);
 
   return update;
