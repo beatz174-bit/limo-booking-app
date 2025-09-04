@@ -6,7 +6,7 @@ import { DevFeaturesProvider } from '@/contexts/DevFeaturesContext';
 
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
-    user: { full_name: 'Test User', email: 'test@example.com', phone: '123' },
+    profile: { full_name: 'Test User', email: 'test@example.com', phone: '123' },
   }),
 }));
 
@@ -113,6 +113,61 @@ test('handles new card flow', async () => {
   expect(mockSavePaymentMethod).toHaveBeenCalledWith('pm_123');
   const link = await screen.findByRole('link', { name: /track this ride/i });
   expect(link).toHaveAttribute('href', '/t/ABC123');
+});
+
+test('renders google pay button when supported', async () => {
+  mockCanMakePayment.mockResolvedValueOnce({ googlePay: true });
+
+  render(
+    <MemoryRouter>
+      <DevFeaturesProvider>
+        <PaymentStep
+          data={{
+            pickup_when: '2025-01-01T00:00:00Z',
+            pickup: { address: 'A', lat: 0, lng: 0 },
+            dropoff: { address: 'B', lat: 1, lng: 1 },
+            passengers: 1,
+            notes: '',
+            customer: { name: '', email: '', phone: '' },
+            pickupValid: true,
+            dropoffValid: true,
+          }}
+          onBack={() => {}}
+        />
+      </DevFeaturesProvider>
+    </MemoryRouter>,
+  );
+
+  const gpButton = await screen.findByTestId('google-pay');
+  expect(gpButton).toBeInTheDocument();
+  expect(mockStripe.paymentRequest).toHaveBeenCalled();
+});
+
+test('does not render google pay button when unsupported', async () => {
+  mockCanMakePayment.mockResolvedValueOnce(null);
+
+  render(
+    <MemoryRouter>
+      <DevFeaturesProvider>
+        <PaymentStep
+          data={{
+            pickup_when: '2025-01-01T00:00:00Z',
+            pickup: { address: 'A', lat: 0, lng: 0 },
+            dropoff: { address: 'B', lat: 1, lng: 1 },
+            passengers: 1,
+            notes: '',
+            customer: { name: '', email: '', phone: '' },
+            pickupValid: true,
+            dropoffValid: true,
+          }}
+          onBack={() => {}}
+        />
+      </DevFeaturesProvider>
+    </MemoryRouter>,
+  );
+
+  await screen.findByRole('button', { name: /submit/i });
+  expect(screen.queryByTestId('google-pay')).not.toBeInTheDocument();
 });
 
 test('handles google pay flow', async () => {

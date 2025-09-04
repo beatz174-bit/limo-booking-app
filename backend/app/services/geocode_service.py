@@ -4,9 +4,9 @@ from __future__ import annotations
 """Service functions wrapping external geocoding APIs."""
 
 import logging
+import math
 
 import httpx
-
 from app.core.config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -75,7 +75,25 @@ async def reverse_geocode(lat: float, lon: float) -> str:
     return address or f"{lat:.5f}, {lon:.5f}"
 
 
-async def search_geocode(query: str, limit: int = 5) -> list[dict]:
+def _haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Return distance in kilometers between two coordinates using the
+    haversine formula."""
+
+    r = 6371.0  # Earth radius in kilometers
+    phi1, phi2 = math.radians(lat1), math.radians(lat2)
+    d_phi = math.radians(lat2 - lat1)
+    d_lambda = math.radians(lon2 - lon1)
+    a = (
+        math.sin(d_phi / 2) ** 2
+        + math.cos(phi1) * math.cos(phi2) * math.sin(d_lambda / 2) ** 2
+    )
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return r * c
+
+
+async def search_geocode(
+    query: str, limit: int = 5, lat: float | None = None, lon: float | None = None
+) -> list[dict]:
     """Use Google Places Autocomplete and Details to resolve addresses.
 
     Returns dictionaries containing ``name``, ``address``, ``lat``, ``lng`` and
@@ -97,9 +115,15 @@ async def search_geocode(query: str, limit: int = 5) -> list[dict]:
             "google autocomplete request",
             extra={"url": autocomplete_url, "query": query, "limit": limit},
         )
-        auto_res = await client.get(
-            autocomplete_url, params={"input": query, "key": api_key}
-        )
+        auto_params = {
+            "input": query,
+            "key": api_key,
+            "components": "country:AU",
+            "types": "address",
+        }
+        if lat is not None and lon is not None:
+            auto_params.update({"location": f"{lat},{lon}", "radius": 50000})
+        auto_res = await client.get(autocomplete_url, params=auto_params)
         auto_res.raise_for_status()
         predictions = auto_res.json().get("predictions", [])[:limit]
 
@@ -129,6 +153,14 @@ async def search_geocode(query: str, limit: int = 5) -> list[dict]:
                     "place_id": det.get("place_id"),
                 }
             )
+
+    if lat is not None and lon is not None and results:
+        for r in results:
+            if r.get("lat") is not None and r.get("lng") is not None:
+                r["_distance"] = _haversine_distance(lat, lon, r["lat"], r["lng"])
+        results.sort(key=lambda r: r.get("_distance", float("inf")))
+        for r in results:
+            r.pop("_distance", None)
 
     if not results:
         logger.warning("no geocoding results", extra={"query": query})

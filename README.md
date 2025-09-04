@@ -30,6 +30,7 @@ The application relies on several external services. Set these variables in a `.
 | `VITE_API_BASE_URL` | (frontend) Base URL of the backend API. |
 | `VITE_GOOGLE_MAPS_API_KEY` | (frontend) Google Maps key for map rendering. |
 | `VITE_STRIPE_PUBLISHABLE_KEY` | (frontend) Stripe publishable key for card collection. |
+| `VITE_GOOGLE_PAY_MERCHANT_ID` | (frontend) Google Pay merchant ID used by Stripe's Payment Request API. Required for production Google Pay. |
 | `LOG_LEVEL` | (backend) Logging verbosity (`DEBUG`, `INFO`, etc.). Defaults to `INFO`. |
 | `GRAYLOG_HOST` / `GRAYLOG_PORT` | (backend) Optional Graylog host and port for log forwarding. Port defaults to `12201`. |
 | `FCM_PROJECT_ID` / `FCM_CLIENT_EMAIL` / `FCM_PRIVATE_KEY` | (backend) Optional Firebase credentials for push notifications. |
@@ -139,6 +140,22 @@ progress the trip lifecycle:
 Authenticated customers can view their booking history via:
 
 - `GET /api/v1/customers/me/bookings`
+
+## Google Pay via Stripe
+
+Stripe's Payment Request button surfaces Google Pay when the browser supports it.
+
+1. In the Stripe Dashboard, go to **Settings → Payment methods → Wallets** and enable **Google Pay**.
+2. Create a merchant in the [Google Pay Business Console](https://pay.google.com/business/console). Use the **Test** environment to generate a sandbox merchant ID.
+3. Verify your domain in the Google Pay console by hosting the provided file under `/.well-known/` or by using Google Search Console.
+4. Set `VITE_GOOGLE_PAY_MERCHANT_ID` in the frontend environment with your merchant ID.
+5. Rebuild or restart the frontend to pick up new environment variables.
+
+### Testing Google Pay
+
+1. Sign in to Chrome or an Android device with a Google account that has a test card added to Google Pay.
+2. Run the frontend with `VITE_GOOGLE_PAY_MERCHANT_ID` set to the sandbox ID.
+3. The booking payment step should display a Google Pay button. Completing a booking runs entirely in Stripe's test mode.
 
 ## Google Maps API Setup
 

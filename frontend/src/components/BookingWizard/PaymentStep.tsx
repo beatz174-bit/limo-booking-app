@@ -46,6 +46,10 @@ function PaymentInner({ data, onBack }: Props) {
   const elements = useElements();
   const { createBooking, savePaymentMethod, savedPaymentMethod } =
     useStripeSetupIntent();
+  const { user: profile } = useAuth();
+  const name = profile?.full_name ?? '';
+  const email = profile?.email ?? '';
+  const phone = profile?.phone ?? '';
   const { data: settings } = useSettings();
   const { profile } = useAuth();
   interface SettingsAliases {
@@ -62,6 +66,10 @@ function PaymentInner({ data, onBack }: Props) {
     perMin: Number(s?.per_minute_rate ?? s?.perMin ?? 0),
   };
   const getMetrics = useRouteMetrics();
+  const { profile } = useAuth();
+  const name = profile?.full_name ?? '';
+  const email = profile?.email ?? '';
+  const phone = profile?.phone ?? '';
   const [price, setPrice] = useState<number | null>(null);
   const [distanceKm, setDistanceKm] = useState<number>(0);
   const [durationMin, setDurationMin] = useState<number>(0);

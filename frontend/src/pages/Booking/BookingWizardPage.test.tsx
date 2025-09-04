@@ -77,7 +77,6 @@ afterEach(() => {
 });
 
 test('advances through steps and aggregates form data', async () => {
-  localStorage.setItem('phone', '000');
   renderWithProviders(<BookingWizardPage />);
   const input = (re: RegExp) => screen.getByLabelText(re, { selector: 'input' });
 
@@ -105,6 +104,11 @@ test('advances through steps and aggregates form data', async () => {
     dropoff: { address: '456 B St', lat: 0, lng: 0 },
     passengers: 2,
     notes: 'Be quick',
+    customer: {
+      name: 'Test User',
+      email: 'test@example.com',
+      phone: '123-4567',
+    },
   });
   localStorage.clear();
 });

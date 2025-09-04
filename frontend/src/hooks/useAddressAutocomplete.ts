@@ -26,7 +26,7 @@ interface GeocodeSearchResponse {
 
 export function useAddressAutocomplete(
   query: string,
-  options?: { debounceMs?: number; minLength?: number }
+  options?: { debounceMs?: number; coords?: { lat: number; lon: number } },
 ) {
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
@@ -50,15 +50,13 @@ export function useAddressAutocomplete(
       try {
         setLoading(true);
         const base = CONFIG.API_BASE_URL || "";
-        const sessionPart = sessionToken ? `&session=${sessionToken}` : "";
-        const url = `${base}/geocode/search?q=${encodeURIComponent(
-          normalizedQuery
-        )}${sessionPart}`;
-        logger.debug(
-          "hooks/useAddressAutocomplete",
-          "request URL",
-          url
-        );
+        const params = new URLSearchParams({ q: query });
+        if (options?.coords) {
+          params.set("lat", String(options.coords.lat));
+          params.set("lon", String(options.coords.lon));
+        }
+        const url = `${base}/geocode/search?${params.toString()}`;
+        logger.debug("hooks/useAddressAutocomplete", "request URL", url);
         const res = await apiFetch(url, { signal: controller.signal });
         if (!res.ok) throw new Error("Geocode search failed");
         const data = (await res.json()) as GeocodeSearchResponse;
@@ -72,7 +70,7 @@ export function useAddressAutocomplete(
         logger.info(
           "hooks/useAddressAutocomplete",
           "suggestion count",
-          mapped.length
+          mapped.length,
         );
         setSuggestions(mapped);
       } catch (e) {
@@ -89,7 +87,7 @@ export function useAddressAutocomplete(
       clearTimeout(timeout);
       controller.abort();
     };
-  }, [normalizedQuery, debounceMs, minLength, sessionToken]);
+  }, [query, debounceMs, options?.coords]);
 
   const onFocus = () => {
     setSessionToken(crypto.randomUUID());
@@ -100,4 +98,3 @@ export function useAddressAutocomplete(
 
   return { suggestions, loading, onFocus, onBlur };
 }
-
