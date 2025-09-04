@@ -9,6 +9,9 @@ class WSStub {
   readyState = WebSocket.OPEN;
   send = vi.fn();
   close = vi.fn();
+  onopen?: () => void;
+  onerror?: (ev: Event) => void;
+  onclose?: (ev: Event) => void;
   constructor(public url: string) {
     WSStub.instances.push(this);
   }
@@ -65,6 +68,26 @@ describe('useDriverTracking', () => {
     act(() => rerender({ status: 'COMPLETED' }));
     expect(clearWatch).toHaveBeenCalledWith(1);
     expect(WSStub.instances[0].close).toHaveBeenCalled();
+    unmount();
+  });
+
+  test('removes watcher if socket fails before open', () => {
+    watchPosition.mockImplementation(() => 1);
+    const booking = { id: '7', status: 'ON_THE_WAY' } as Booking;
+    const { rerender, unmount } = renderHook(
+      ({ bookings }) => useDriverTracking(bookings),
+      { initialProps: { bookings: [booking] } },
+    );
+    const ws = WSStub.instances[0];
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    act(() => {
+      ws.onerror?.(new Event('error'));
+    });
+    expect(clearWatch).toHaveBeenCalledWith(1);
+    watchPosition.mockImplementation(() => 2);
+    act(() => rerender({ bookings: [booking] }));
+    expect(watchPosition).toHaveBeenCalledTimes(2);
+    warn.mockRestore();
     unmount();
   });
 });
