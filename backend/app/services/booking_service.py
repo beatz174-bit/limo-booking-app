@@ -33,7 +33,7 @@ async def create_booking(
     customer = user
     if customer.stripe_customer_id is None:
         stripe_customer = stripe_client.create_customer(
-            customer.email, customer.full_name
+            customer.email, customer.full_name, customer.phone
         )
         customer.stripe_customer_id = stripe_customer.id
 
