@@ -24,10 +24,11 @@ from typing import Iterable, Tuple
 
 import httpx
 import websockets
-from app.db.database import AsyncSessionLocal
-from app.models.booking import Booking, BookingStatus
 from sqlalchemy import select
 from websockets.exceptions import WebSocketException
+
+from app.db.database import AsyncSessionLocal
+from app.models.booking import Booking, BookingStatus
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -162,8 +163,10 @@ async def simulate(
 ) -> None:
     SPEEDUP_FACTOR = 20
     transport = httpx.AsyncHTTPTransport(retries=3)
-    try:
-        async with httpx.AsyncClient(transport=transport) as client:
+    async with httpx.AsyncClient(
+        transport=transport, headers={"Authorization": f"Bearer {token}"}
+    ) as client:
+        try:
             # 1. Get booking + ws_url
             r = await client.get(f"{api_base}/api/v1/track/{booking_code}")
             r.raise_for_status()
@@ -180,58 +183,68 @@ async def simulate(
             # Metrics for both legs
             leg1 = await route_metrics(client, api_base, start, pickup)
             leg2 = await route_metrics(client, api_base, pickup, dropoff)
-    except httpx.HTTPError:
-        logger.exception("HTTP request failed; aborting simulation")
-        return
+        except httpx.HTTPError:
+            logger.exception("HTTP request failed; aborting simulation")
+            return
 
-    try:
-        async with websockets.connect(ws_url) as ws:
-            recv_task = asyncio.create_task(_keepalive(ws))
-            try:
-                # --- leg 1: home -> pickup
-                duration1 = leg1["min"] * 60
-                interval1 = duration1 / points / SPEEDUP_FACTOR
-                speed1 = leg1["km"] / (leg1["min"] / 60) * SPEEDUP_FACTOR
-
-                for lat, lng in interpolate(start, pickup, points):
-                    await ws.send(
-                        json.dumps(
-                            {
-                                "lat": lat,
-                                "lng": lng,
-                                "ts": int(time.time()),
-                                "speed": speed1,
-                            }
-                        )
-                    )
-                    await asyncio.sleep(interval1)
-
-                # --- leg 2: pickup -> dropoff
-                duration2 = leg2["min"] * 60
-                interval2 = duration2 / points / SPEEDUP_FACTOR
-                speed2 = leg2["km"] / (leg2["min"] / 60) * SPEEDUP_FACTOR
-
-                for lat, lng in interpolate(pickup, dropoff, points):
-                    await ws.send(
-                        json.dumps(
-                            {
-                                "lat": lat,
-                                "lng": lng,
-                                "ts": int(time.time()),
-                                "speed": speed2,
-                            }
-                        )
-                    )
-                    await asyncio.sleep(interval2)
-            finally:
-                recv_task.cancel()
+        try:
+            async with websockets.connect(ws_url) as ws:
+                recv_task = asyncio.create_task(_keepalive(ws))
                 try:
-                    await recv_task
-                except asyncio.CancelledError:
-                    pass
-    except WebSocketException:
-        logger.exception("WebSocket error; aborting simulation")
-        return
+                    # --- leg 1: home -> pickup
+                    duration1 = leg1["min"] * 60
+                    interval1 = duration1 / points / SPEEDUP_FACTOR
+                    speed1 = leg1["km"] / (leg1["min"] / 60) * SPEEDUP_FACTOR
+
+                    for lat, lng in interpolate(start, pickup, points):
+                        await ws.send(
+                            json.dumps(
+                                {
+                                    "lat": lat,
+                                    "lng": lng,
+                                    "ts": int(time.time()),
+                                    "speed": speed1,
+                                }
+                            )
+                        )
+                        await asyncio.sleep(interval1)
+
+                    r = await client.post(
+                        f"{api_base}/api/v1/driver/bookings/{booking_id}/start-trip"
+                    )
+                    r.raise_for_status()
+
+                    # --- leg 2: pickup -> dropoff
+                    duration2 = leg2["min"] * 60
+                    interval2 = duration2 / points / SPEEDUP_FACTOR
+                    speed2 = leg2["km"] / (leg2["min"] / 60) * SPEEDUP_FACTOR
+
+                    for lat, lng in interpolate(pickup, dropoff, points):
+                        await ws.send(
+                            json.dumps(
+                                {
+                                    "lat": lat,
+                                    "lng": lng,
+                                    "ts": int(time.time()),
+                                    "speed": speed2,
+                                }
+                            )
+                        )
+                        await asyncio.sleep(interval2)
+
+                    r = await client.post(
+                        f"{api_base}/api/v1/driver/bookings/{booking_id}/complete"
+                    )
+                    r.raise_for_status()
+                finally:
+                    recv_task.cancel()
+                    try:
+                        await recv_task
+                    except asyncio.CancelledError:
+                        pass
+        except WebSocketException:
+            logger.exception("WebSocket error; aborting simulation")
+            return
 
     logger.info("Simulation completed")
 
