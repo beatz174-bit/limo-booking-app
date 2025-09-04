@@ -2,10 +2,9 @@
 import logging
 
 import httpx
-from fastapi import APIRouter, HTTPException, Query
-
 from app.schemas.geocode import GeocodeResponse, GeocodeSearchResponse
 from app.services.geocode_service import reverse_geocode, search_geocode
+from fastapi import APIRouter, HTTPException, Query
 
 logger = logging.getLogger(__name__)
 
@@ -41,12 +40,19 @@ async def api_reverse_geocode(
 async def api_geocode_search(
     q: str = Query(..., min_length=1),
     limit: int = Query(5, ge=1, le=20),
+    lat: float | None = Query(None),
+    lon: float | None = Query(None),
 ) -> GeocodeSearchResponse:
     """Search for addresses matching a query string."""
-    logger.debug("api_geocode_search", extra={"query": q, "limit": limit})
+    logger.debug(
+        "api_geocode_search",
+        extra={"query": q, "limit": limit, "lat": lat, "lon": lon},
+    )
     try:
-        logger.info("search geocode", extra={"query": q, "limit": limit})
-        results = await search_geocode(q, limit)
+        logger.info(
+            "search geocode", extra={"query": q, "limit": limit, "lat": lat, "lon": lon}
+        )
+        results = await search_geocode(q, limit, lat=lat, lon=lon)
         logger.debug(
             "search geocode results",
             extra={"query": q, "count": len(results)},

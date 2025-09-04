@@ -1,6 +1,6 @@
-import { renderHook, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, test, vi } from 'vitest';
-import { useAddressAutocomplete } from './useAddressAutocomplete';
+import { renderHook, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, test, vi } from "vitest";
+import { useAddressAutocomplete } from "./useAddressAutocomplete";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -8,43 +8,60 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe('useAddressAutocomplete', () => {
-  test('resolves SFO to full address with coordinates', async () => {
-    vi.mock('@/config', () => ({ CONFIG: { API_BASE_URL: 'http://api' } }));
+describe("useAddressAutocomplete", () => {
+  test("resolves SFO to full address with coordinates", async () => {
+    vi.mock("@/config", () => ({ CONFIG: { API_BASE_URL: "http://api" } }));
     const fetchMock = vi.fn(async (url: string) => {
-      expect(url).toBe('http://api/geocode/search?q=SFO');
+      expect(url).toBe("http://api/geocode/search?q=SFO");
       return {
         ok: true,
         json: async () => ({
           results: [
             {
-              name: 'San Francisco International Airport',
+              name: "San Francisco International Airport",
               address:
-                'San Francisco International Airport, San Francisco, CA, USA',
+                "San Francisco International Airport, San Francisco, CA, USA",
               lat: 37.62,
               lng: -122.38,
-              placeId: 'sfo1',
+              placeId: "sfo1",
             },
           ],
         }),
       };
     });
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal("fetch", fetchMock);
 
     const { result } = renderHook(() =>
-      useAddressAutocomplete('SFO', { debounceMs: 0 })
+      useAddressAutocomplete("SFO", { debounceMs: 0 }),
     );
 
     await waitFor(() => {
       expect(result.current.suggestions[0]).toEqual({
-        name: 'San Francisco International Airport',
-        address:
-          'San Francisco International Airport, San Francisco, CA, USA',
+        name: "San Francisco International Airport",
+        address: "San Francisco International Airport, San Francisco, CA, USA",
         lat: 37.62,
         lng: -122.38,
-        placeId: 'sfo1',
+        placeId: "sfo1",
       });
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  test("forwards device coordinates to API", async () => {
+    vi.mock("@/config", () => ({ CONFIG: { API_BASE_URL: "http://api" } }));
+    const fetchMock = vi.fn(async (url: string) => {
+      expect(url).toBe("http://api/geocode/search?q=SFO&lat=1&lon=2");
+      return { ok: true, json: async () => ({ results: [] }) };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderHook(() =>
+      useAddressAutocomplete("SFO", {
+        debounceMs: 0,
+        coords: { lat: 1, lon: 2 },
+      }),
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
   });
 });
