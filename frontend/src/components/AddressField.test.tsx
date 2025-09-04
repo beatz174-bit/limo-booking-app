@@ -110,4 +110,34 @@ describe("AddressField", () => {
     await userEvent.type(input, "{arrowdown}");
     expect(await screen.findByText("LAX – 1 World Way, Los Angeles")).toBeInTheDocument();
   });
+
+  test("surfaces suggestion when query matches name", async () => {
+    const suggestions = [
+      {
+        name: "Union Station",
+        address: "800 N Alameda St, Los Angeles",
+        lat: 0,
+        lng: 0,
+        placeId: "u",
+      },
+    ];
+    render(
+      <AddressField
+        id="a"
+        label="A"
+        value=""
+        onChange={() => void 0}
+        suggestions={suggestions}
+        loading={false}
+      />
+    );
+    const input = screen.getByLabelText(/a/i);
+    await userEvent.type(input, "Union");
+    await userEvent.type(input, "{arrowdown}");
+    expect(
+      await screen.findByText(
+        "Union Station – 800 N Alameda St, Los Angeles"
+      )
+    ).toBeInTheDocument();
+  });
 });
