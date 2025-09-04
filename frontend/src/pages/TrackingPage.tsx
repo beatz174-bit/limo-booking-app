@@ -1,5 +1,5 @@
-/// <reference types="google.maps" />
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { LatLngLiteral } from 'google.maps';
 import { useParams } from 'react-router-dom';
 import { GoogleMap, Marker, DirectionsRenderer } from '@react-google-maps/api';
 import { CONFIG } from '@/config';
@@ -68,6 +68,8 @@ export default function TrackingPage() {
   const [route, setRoute] = useState<google.maps.DirectionsResult | null>(null);
   const update = useBookingChannel(bookingId);
   const mapRef = useRef<google.maps.Map | null>(null);
+  const [zoom, setZoom] = useState(14);
+  const [center, setCenter] = useState<LatLngLiteral>();
 
   const isDropoff = useMemo(
     () =>
@@ -135,13 +137,24 @@ export default function TrackingPage() {
     [update],
   );
 
-  const center = useMemo(
-    () =>
-      pos && nextStop
-        ? { lat: (pos.lat + nextStop.lat) / 2, lng: (pos.lng + nextStop.lng) / 2 }
-        : pos,
-    [pos, nextStop],
-  );
+  useEffect(() => {
+    if (!pos) return;
+    if (!nextStop) {
+      setCenter(pos);
+      setZoom(14);
+      return;
+    }
+    const g = (window as { google?: typeof google }).google;
+    if (!g?.maps) return;
+    const distance = calculateDistance(pos, nextStop, g);
+    const km = distance / 1000;
+    const newZoom = km > 5 ? 12 : km > 1 ? 14 : 16;
+    setZoom(newZoom);
+    setCenter({
+      lat: (pos.lat + nextStop.lat) / 2,
+      lng: (pos.lng + nextStop.lng) / 2,
+    });
+  }, [pos, nextStop]);
 
   useEffect(() => {
     if (!mapRef.current || !pos || !nextStop) return;
@@ -151,25 +164,15 @@ export default function TrackingPage() {
     bounds.extend(pos);
     bounds.extend(nextStop);
     mapRef.current.fitBounds(bounds);
-
-    const distance = calculateDistance(pos, nextStop, g);
-    const km = distance / 1000;
-    const zoom = km > 5 ? 12 : km > 1 ? 14 : 16;
-    mapRef.current.setZoom(zoom);
-
-    const mid = {
-      lat: (pos.lat + nextStop.lat) / 2,
-      lng: (pos.lng + nextStop.lng) / 2,
-    };
-    mapRef.current.setCenter(mid);
-  }, [pos, nextStop]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nextStop]);
   return (
     <div>
       {pos ? (
         <GoogleMap
           mapContainerStyle={{ width: '100%', height: 300 }}
-          center={center ?? undefined}
-          zoom={14}
+          center={center}
+          zoom={zoom}
           onLoad={(m) => {
             mapRef.current = m;
           }}
