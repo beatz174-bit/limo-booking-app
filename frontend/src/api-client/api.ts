@@ -106,12 +106,6 @@ export interface AvailabilitySlotRead {
 export interface BookingCreateRequest {
     /**
      * 
-     * @type {CustomerInfo}
-     * @memberof BookingCreateRequest
-     */
-    'customer': CustomerInfo;
-    /**
-     * 
      * @type {string}
      * @memberof BookingCreateRequest
      */
@@ -361,9 +355,9 @@ export interface BookingSlot {
 
 export const BookingStatus = {
     Pending: 'PENDING',
+    DepositFailed: 'DEPOSIT_FAILED',
     DriverConfirmed: 'DRIVER_CONFIRMED',
     Declined: 'DECLINED',
-    DepositFailed: 'DEPOSIT_FAILED',
     OnTheWay: 'ON_THE_WAY',
     ArrivedPickup: 'ARRIVED_PICKUP',
     InProgress: 'IN_PROGRESS',
@@ -402,31 +396,6 @@ export interface BookingStatusResponse {
 }
 
 
-/**
- * 
- * @export
- * @interface CustomerInfo
- */
-export interface CustomerInfo {
-    /**
-     * 
-     * @type {string}
-     * @memberof CustomerInfo
-     */
-    'name': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof CustomerInfo
-     */
-    'email': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof CustomerInfo
-     */
-    'phone'?: string | null;
-}
 /**
  * Single address lookup result.
  * @export
@@ -565,6 +534,19 @@ export interface OAuth2Token {
      * @memberof OAuth2Token
      */
     'token_type'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface PaymentMethodPayload
+ */
+export interface PaymentMethodPayload {
+    /**
+     * 
+     * @type {string}
+     * @memberof PaymentMethodPayload
+     */
+    'payment_method_id': string;
 }
 /**
  * Payload required to create a new user.
@@ -753,13 +735,13 @@ export interface UserCreate {
      */
     'full_name': string;
     /**
-     *
+     * 
      * @type {string}
      * @memberof UserCreate
      */
     'default_pickup_address'?: string | null;
     /**
-     *
+     * 
      * @type {string}
      * @memberof UserCreate
      */
@@ -790,13 +772,13 @@ export interface UserRead {
      */
     'full_name': string;
     /**
-     *
+     * 
      * @type {string}
      * @memberof UserRead
      */
     'default_pickup_address'?: string | null;
     /**
-     *
+     * 
      * @type {string}
      * @memberof UserRead
      */
@@ -813,6 +795,18 @@ export interface UserRead {
      * @memberof UserRead
      */
     'fcm_token'?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof UserRead
+     */
+    'stripe_customer_id'?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof UserRead
+     */
+    'stripe_payment_method_id'?: string | null;
 }
 /**
  * Optional fields for updating a user.
@@ -833,25 +827,37 @@ export interface UserUpdate {
      */
     'full_name'?: string | null;
     /**
-     *
+     * 
      * @type {string}
      * @memberof UserUpdate
      */
     'password'?: string | null;
     /**
-     *
+     * 
      * @type {string}
      * @memberof UserUpdate
      */
     'default_pickup_address'?: string | null;
     /**
-     *
+     * 
      * @type {string}
      * @memberof UserUpdate
      */
     'fcm_token'?: string | null;
     /**
-     *
+     * 
+     * @type {string}
+     * @memberof UserUpdate
+     */
+    'stripe_customer_id'?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof UserUpdate
+     */
+    'stripe_payment_method_id'?: string | null;
+    /**
+     * 
      * @type {string}
      * @memberof UserUpdate
      */
@@ -1525,6 +1531,10 @@ export const BookingsApiAxiosParamCreator = function (configuration?: Configurat
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication OAuth2PasswordBearer required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
+
 
     
             localVarHeaderParameter['Content-Type'] = 'application/json';
@@ -1987,6 +1997,44 @@ export const DriverBookingsApiAxiosParamCreator = function (configuration?: Conf
         },
         /**
          * 
+         * @summary Retry Deposit
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        retryDepositApiV1DriverBookingsBookingIdRetryDepositPost: async (bookingId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bookingId' is not null or undefined
+            assertParamExists('retryDepositApiV1DriverBookingsBookingIdRetryDepositPost', 'bookingId', bookingId)
+            const localVarPath = `/api/v1/driver/bookings/{booking_id}/retry-deposit`
+                .replace(`{${"booking_id"}}`, encodeURIComponent(String(bookingId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OAuth2PasswordBearer required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary Start Trip
          * @param {string} bookingId 
          * @param {*} [options] Override http request option.
@@ -2126,6 +2174,19 @@ export const DriverBookingsApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @summary Retry Deposit
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async retryDepositApiV1DriverBookingsBookingIdRetryDepositPost(bookingId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BookingStatusResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.retryDepositApiV1DriverBookingsBookingIdRetryDepositPost(bookingId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DriverBookingsApi.retryDepositApiV1DriverBookingsBookingIdRetryDepositPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @summary Start Trip
          * @param {string} bookingId 
          * @param {*} [options] Override http request option.
@@ -2216,6 +2277,16 @@ export const DriverBookingsApiFactory = function (configuration?: Configuration,
          */
         listBookingsApiV1DriverBookingsGet(status?: BookingStatus | null, options?: RawAxiosRequestConfig): AxiosPromise<Array<BookingRead>> {
             return localVarFp.listBookingsApiV1DriverBookingsGet(status, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Retry Deposit
+         * @param {string} bookingId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        retryDepositApiV1DriverBookingsBookingIdRetryDepositPost(bookingId: string, options?: RawAxiosRequestConfig): AxiosPromise<BookingStatusResponse> {
+            return localVarFp.retryDepositApiV1DriverBookingsBookingIdRetryDepositPost(bookingId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -2319,6 +2390,18 @@ export class DriverBookingsApi extends BaseAPI {
      */
     public listBookingsApiV1DriverBookingsGet(status?: BookingStatus | null, options?: RawAxiosRequestConfig) {
         return DriverBookingsApiFp(this.configuration).listBookingsApiV1DriverBookingsGet(status, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Retry Deposit
+     * @param {string} bookingId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DriverBookingsApi
+     */
+    public retryDepositApiV1DriverBookingsBookingIdRetryDepositPost(bookingId: string, options?: RawAxiosRequestConfig) {
+        return DriverBookingsApiFp(this.configuration).retryDepositApiV1DriverBookingsBookingIdRetryDepositPost(bookingId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -2656,15 +2739,15 @@ export const RouteMetricsApiAxiosParamCreator = function (configuration?: Config
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiRouteMetricsRouteMetricsPost: async (pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiRouteMetricsRouteMetricsGet: async (pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'pickupLat' is not null or undefined
-            assertParamExists('apiRouteMetricsRouteMetricsPost', 'pickupLat', pickupLat)
+            assertParamExists('apiRouteMetricsRouteMetricsGet', 'pickupLat', pickupLat)
             // verify required parameter 'pickupLon' is not null or undefined
-            assertParamExists('apiRouteMetricsRouteMetricsPost', 'pickupLon', pickupLon)
+            assertParamExists('apiRouteMetricsRouteMetricsGet', 'pickupLon', pickupLon)
             // verify required parameter 'dropoffLat' is not null or undefined
-            assertParamExists('apiRouteMetricsRouteMetricsPost', 'dropoffLat', dropoffLat)
+            assertParamExists('apiRouteMetricsRouteMetricsGet', 'dropoffLat', dropoffLat)
             // verify required parameter 'dropoffLon' is not null or undefined
-            assertParamExists('apiRouteMetricsRouteMetricsPost', 'dropoffLon', dropoffLon)
+            assertParamExists('apiRouteMetricsRouteMetricsGet', 'dropoffLon', dropoffLon)
             const localVarPath = `/route-metrics`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -2725,15 +2808,15 @@ export const RouteMetricsApiAxiosParamCreator = function (configuration?: Config
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiRouteMetricsRouteMetricsPost_1: async (pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiRouteMetricsRouteMetricsGet_1: async (pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'pickupLat' is not null or undefined
-            assertParamExists('apiRouteMetricsRouteMetricsPost_1', 'pickupLat', pickupLat)
+            assertParamExists('apiRouteMetricsRouteMetricsGet_1', 'pickupLat', pickupLat)
             // verify required parameter 'pickupLon' is not null or undefined
-            assertParamExists('apiRouteMetricsRouteMetricsPost_1', 'pickupLon', pickupLon)
+            assertParamExists('apiRouteMetricsRouteMetricsGet_1', 'pickupLon', pickupLon)
             // verify required parameter 'dropoffLat' is not null or undefined
-            assertParamExists('apiRouteMetricsRouteMetricsPost_1', 'dropoffLat', dropoffLat)
+            assertParamExists('apiRouteMetricsRouteMetricsGet_1', 'dropoffLat', dropoffLat)
             // verify required parameter 'dropoffLon' is not null or undefined
-            assertParamExists('apiRouteMetricsRouteMetricsPost_1', 'dropoffLon', dropoffLon)
+            assertParamExists('apiRouteMetricsRouteMetricsGet_1', 'dropoffLon', dropoffLon)
             const localVarPath = `/route-metrics`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -2804,10 +2887,10 @@ export const RouteMetricsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiRouteMetricsRouteMetricsPost(pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiRouteMetricsRouteMetricsPost(pickupLat, pickupLon, dropoffLat, dropoffLon, rideTime, routeMetricsRequest, options);
+        async apiRouteMetricsRouteMetricsGet(pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiRouteMetricsRouteMetricsGet(pickupLat, pickupLon, dropoffLat, dropoffLon, rideTime, routeMetricsRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['RouteMetricsApi.apiRouteMetricsRouteMetricsPost']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['RouteMetricsApi.apiRouteMetricsRouteMetricsGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -2822,10 +2905,10 @@ export const RouteMetricsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiRouteMetricsRouteMetricsPost_1(pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiRouteMetricsRouteMetricsPost_1(pickupLat, pickupLon, dropoffLat, dropoffLon, rideTime, routeMetricsRequest, options);
+        async apiRouteMetricsRouteMetricsGet_1(pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiRouteMetricsRouteMetricsGet_1(pickupLat, pickupLon, dropoffLat, dropoffLon, rideTime, routeMetricsRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['RouteMetricsApi.apiRouteMetricsRouteMetricsPost_1']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['RouteMetricsApi.apiRouteMetricsRouteMetricsGet_1']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
@@ -2850,8 +2933,8 @@ export const RouteMetricsApiFactory = function (configuration?: Configuration, b
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiRouteMetricsRouteMetricsPost(pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options?: RawAxiosRequestConfig): AxiosPromise<any> {
-            return localVarFp.apiRouteMetricsRouteMetricsPost(pickupLat, pickupLon, dropoffLat, dropoffLon, rideTime, routeMetricsRequest, options).then((request) => request(axios, basePath));
+        apiRouteMetricsRouteMetricsGet(pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options?: RawAxiosRequestConfig): AxiosPromise<any> {
+            return localVarFp.apiRouteMetricsRouteMetricsGet(pickupLat, pickupLon, dropoffLat, dropoffLon, rideTime, routeMetricsRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Return travel metrics between pickup and dropoff coordinates.
@@ -2865,8 +2948,8 @@ export const RouteMetricsApiFactory = function (configuration?: Configuration, b
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiRouteMetricsRouteMetricsPost_1(pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options?: RawAxiosRequestConfig): AxiosPromise<any> {
-            return localVarFp.apiRouteMetricsRouteMetricsPost_1(pickupLat, pickupLon, dropoffLat, dropoffLon, rideTime, routeMetricsRequest, options).then((request) => request(axios, basePath));
+        apiRouteMetricsRouteMetricsGet_1(pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options?: RawAxiosRequestConfig): AxiosPromise<any> {
+            return localVarFp.apiRouteMetricsRouteMetricsGet_1(pickupLat, pickupLon, dropoffLat, dropoffLon, rideTime, routeMetricsRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -2891,8 +2974,8 @@ export class RouteMetricsApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof RouteMetricsApi
      */
-    public apiRouteMetricsRouteMetricsPost(pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options?: RawAxiosRequestConfig) {
-        return RouteMetricsApiFp(this.configuration).apiRouteMetricsRouteMetricsPost(pickupLat, pickupLon, dropoffLat, dropoffLon, rideTime, routeMetricsRequest, options).then((request) => request(this.axios, this.basePath));
+    public apiRouteMetricsRouteMetricsGet(pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options?: RawAxiosRequestConfig) {
+        return RouteMetricsApiFp(this.configuration).apiRouteMetricsRouteMetricsGet(pickupLat, pickupLon, dropoffLat, dropoffLon, rideTime, routeMetricsRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -2908,8 +2991,8 @@ export class RouteMetricsApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof RouteMetricsApi
      */
-    public apiRouteMetricsRouteMetricsPost_1(pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options?: RawAxiosRequestConfig) {
-        return RouteMetricsApiFp(this.configuration).apiRouteMetricsRouteMetricsPost_1(pickupLat, pickupLon, dropoffLat, dropoffLon, rideTime, routeMetricsRequest, options).then((request) => request(this.axios, this.basePath));
+    public apiRouteMetricsRouteMetricsGet_1(pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options?: RawAxiosRequestConfig) {
+        return RouteMetricsApiFp(this.configuration).apiRouteMetricsRouteMetricsGet_1(pickupLat, pickupLon, dropoffLat, dropoffLon, rideTime, routeMetricsRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -3378,7 +3461,41 @@ export class TrackApi extends BaseAPI {
 export const UsersApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
         /**
-         * Register a new user in the system.
+         * Return a SetupIntent client secret for the current user.
+         * @summary Api Create Payment Method
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiCreatePaymentMethodUsersMePaymentMethodPost: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/users/me/payment-method`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OAuth2PasswordBearer required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Register a new user in the system, optionally capturing a phone number.
          * @summary Api Create User
          * @param {UserCreate} userCreate 
          * @param {*} [options] Override http request option.
@@ -3558,7 +3675,81 @@ export const UsersApiAxiosParamCreator = function (configuration?: Configuration
             };
         },
         /**
-         * Allow the current user to update their profile.
+         * Remove the saved payment method for the current user.
+         * @summary Api Remove Payment Method
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiRemovePaymentMethodUsersMePaymentMethodDelete: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/users/me/payment-method`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OAuth2PasswordBearer required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Persist a confirmed payment method to the user\'s profile.
+         * @summary Api Save Payment Method
+         * @param {PaymentMethodPayload} paymentMethodPayload 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiSavePaymentMethodUsersMePaymentMethodPut: async (paymentMethodPayload: PaymentMethodPayload, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'paymentMethodPayload' is not null or undefined
+            assertParamExists('apiSavePaymentMethodUsersMePaymentMethodPut', 'paymentMethodPayload', paymentMethodPayload)
+            const localVarPath = `/users/me/payment-method`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OAuth2PasswordBearer required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(paymentMethodPayload, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Allow the current user to update their profile, including phone.
          * @summary Api Update Me
          * @param {UserUpdate} userUpdate 
          * @param {*} [options] Override http request option.
@@ -3598,7 +3789,7 @@ export const UsersApiAxiosParamCreator = function (configuration?: Configuration
             };
         },
         /**
-         * Update selected fields of a user.
+         * Update selected fields of a user, including phone.
          * @summary Api Update User
          * @param {string} userId 
          * @param {UserUpdate} userUpdate 
@@ -3652,7 +3843,19 @@ export const UsersApiFp = function(configuration?: Configuration) {
     const localVarAxiosParamCreator = UsersApiAxiosParamCreator(configuration)
     return {
         /**
-         * Register a new user in the system.
+         * Return a SetupIntent client secret for the current user.
+         * @summary Api Create Payment Method
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiCreatePaymentMethodUsersMePaymentMethodPost(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StripeSetupIntent>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiCreatePaymentMethodUsersMePaymentMethodPost(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UsersApi.apiCreatePaymentMethodUsersMePaymentMethodPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Register a new user in the system, optionally capturing a phone number.
          * @summary Api Create User
          * @param {UserCreate} userCreate 
          * @param {*} [options] Override http request option.
@@ -3715,7 +3918,32 @@ export const UsersApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Allow the current user to update their profile.
+         * Remove the saved payment method for the current user.
+         * @summary Api Remove Payment Method
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiRemovePaymentMethodUsersMePaymentMethodDelete(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiRemovePaymentMethodUsersMePaymentMethodDelete(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UsersApi.apiRemovePaymentMethodUsersMePaymentMethodDelete']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Persist a confirmed payment method to the user\'s profile.
+         * @summary Api Save Payment Method
+         * @param {PaymentMethodPayload} paymentMethodPayload 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiSavePaymentMethodUsersMePaymentMethodPut(paymentMethodPayload: PaymentMethodPayload, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<UserRead>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiSavePaymentMethodUsersMePaymentMethodPut(paymentMethodPayload, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UsersApi.apiSavePaymentMethodUsersMePaymentMethodPut']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Allow the current user to update their profile, including phone.
          * @summary Api Update Me
          * @param {UserUpdate} userUpdate 
          * @param {*} [options] Override http request option.
@@ -3728,7 +3956,7 @@ export const UsersApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Update selected fields of a user.
+         * Update selected fields of a user, including phone.
          * @summary Api Update User
          * @param {string} userId 
          * @param {UserUpdate} userUpdate 
@@ -3752,7 +3980,16 @@ export const UsersApiFactory = function (configuration?: Configuration, basePath
     const localVarFp = UsersApiFp(configuration)
     return {
         /**
-         * Register a new user in the system.
+         * Return a SetupIntent client secret for the current user.
+         * @summary Api Create Payment Method
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiCreatePaymentMethodUsersMePaymentMethodPost(options?: RawAxiosRequestConfig): AxiosPromise<StripeSetupIntent> {
+            return localVarFp.apiCreatePaymentMethodUsersMePaymentMethodPost(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Register a new user in the system, optionally capturing a phone number.
          * @summary Api Create User
          * @param {UserCreate} userCreate 
          * @param {*} [options] Override http request option.
@@ -3800,7 +4037,26 @@ export const UsersApiFactory = function (configuration?: Configuration, basePath
             return localVarFp.apiListUsersUsersGet(options).then((request) => request(axios, basePath));
         },
         /**
-         * Allow the current user to update their profile.
+         * Remove the saved payment method for the current user.
+         * @summary Api Remove Payment Method
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiRemovePaymentMethodUsersMePaymentMethodDelete(options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiRemovePaymentMethodUsersMePaymentMethodDelete(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Persist a confirmed payment method to the user\'s profile.
+         * @summary Api Save Payment Method
+         * @param {PaymentMethodPayload} paymentMethodPayload 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiSavePaymentMethodUsersMePaymentMethodPut(paymentMethodPayload: PaymentMethodPayload, options?: RawAxiosRequestConfig): AxiosPromise<UserRead> {
+            return localVarFp.apiSavePaymentMethodUsersMePaymentMethodPut(paymentMethodPayload, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Allow the current user to update their profile, including phone.
          * @summary Api Update Me
          * @param {UserUpdate} userUpdate 
          * @param {*} [options] Override http request option.
@@ -3810,7 +4066,7 @@ export const UsersApiFactory = function (configuration?: Configuration, basePath
             return localVarFp.apiUpdateMeUsersMePatch(userUpdate, options).then((request) => request(axios, basePath));
         },
         /**
-         * Update selected fields of a user.
+         * Update selected fields of a user, including phone.
          * @summary Api Update User
          * @param {string} userId 
          * @param {UserUpdate} userUpdate 
@@ -3831,7 +4087,18 @@ export const UsersApiFactory = function (configuration?: Configuration, basePath
  */
 export class UsersApi extends BaseAPI {
     /**
-     * Register a new user in the system.
+     * Return a SetupIntent client secret for the current user.
+     * @summary Api Create Payment Method
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UsersApi
+     */
+    public apiCreatePaymentMethodUsersMePaymentMethodPost(options?: RawAxiosRequestConfig) {
+        return UsersApiFp(this.configuration).apiCreatePaymentMethodUsersMePaymentMethodPost(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Register a new user in the system, optionally capturing a phone number.
      * @summary Api Create User
      * @param {UserCreate} userCreate 
      * @param {*} [options] Override http request option.
@@ -3889,7 +4156,30 @@ export class UsersApi extends BaseAPI {
     }
 
     /**
-     * Allow the current user to update their profile.
+     * Remove the saved payment method for the current user.
+     * @summary Api Remove Payment Method
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UsersApi
+     */
+    public apiRemovePaymentMethodUsersMePaymentMethodDelete(options?: RawAxiosRequestConfig) {
+        return UsersApiFp(this.configuration).apiRemovePaymentMethodUsersMePaymentMethodDelete(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Persist a confirmed payment method to the user\'s profile.
+     * @summary Api Save Payment Method
+     * @param {PaymentMethodPayload} paymentMethodPayload 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UsersApi
+     */
+    public apiSavePaymentMethodUsersMePaymentMethodPut(paymentMethodPayload: PaymentMethodPayload, options?: RawAxiosRequestConfig) {
+        return UsersApiFp(this.configuration).apiSavePaymentMethodUsersMePaymentMethodPut(paymentMethodPayload, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Allow the current user to update their profile, including phone.
      * @summary Api Update Me
      * @param {UserUpdate} userUpdate 
      * @param {*} [options] Override http request option.
@@ -3901,7 +4191,7 @@ export class UsersApi extends BaseAPI {
     }
 
     /**
-     * Update selected fields of a user.
+     * Update selected fields of a user, including phone.
      * @summary Api Update User
      * @param {string} userId 
      * @param {UserUpdate} userUpdate 

@@ -46,6 +46,10 @@ function PaymentInner({ data, onBack }: Props) {
   const elements = useElements();
   const { createBooking, savePaymentMethod, savedPaymentMethod } =
     useStripeSetupIntent();
+  const { user: profile } = useAuth();
+  const name = profile?.full_name ?? '';
+  const email = profile?.email ?? '';
+  const phone = profile?.phone ?? '';
   const { data: settings } = useSettings();
   interface SettingsAliases {
     flagfall?: number;
