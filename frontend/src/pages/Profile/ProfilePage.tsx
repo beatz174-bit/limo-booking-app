@@ -213,6 +213,8 @@ const ProfilePage = () => {
         label="Default Pickup Address"
         value={defaultPickup}
         onChange={setDefaultPickup}
+        onFocus={auto.onFocus}
+        onBlur={() => auto.onBlur()}
         suggestions={auto.suggestions}
         loading={auto.loading}
       />

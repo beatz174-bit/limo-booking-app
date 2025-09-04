@@ -51,6 +51,7 @@ function PaymentInner({ data, onBack }: Props) {
   const email = profile?.email ?? '';
   const phone = profile?.phone ?? '';
   const { data: settings } = useSettings();
+  const { profile } = useAuth();
   interface SettingsAliases {
     flagfall?: number;
     per_km_rate?: number;

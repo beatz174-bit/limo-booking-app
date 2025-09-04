@@ -13,7 +13,12 @@ vi.mock('@/contexts/AuthContext', () => ({
 
 // Mock address autocomplete to avoid network activity
 vi.mock('@/hooks/useAddressAutocomplete', () => ({
-  useAddressAutocomplete: () => ({ suggestions: [], loading: false }),
+  useAddressAutocomplete: () => ({
+    suggestions: [],
+    loading: false,
+    onFocus: vi.fn(),
+    onBlur: vi.fn(),
+  }),
 }));
 
 const mockConfirm = vi

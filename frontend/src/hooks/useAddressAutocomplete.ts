@@ -30,15 +30,18 @@ export function useAddressAutocomplete(
 ) {
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
   const debounceMs = options?.debounceMs ?? 300;
+  const minLength = options?.minLength ?? 3;
+  const normalizedQuery = query.trim().toLowerCase();
 
   useEffect(() => {
-    logger.debug("hooks/useAddressAutocomplete", "query", query);
-  }, [query]);
+    logger.debug("hooks/useAddressAutocomplete", "query", normalizedQuery);
+  }, [normalizedQuery]);
 
   useEffect(() => {
     logger.debug("hooks/useAddressAutocomplete", "debounce", debounceMs);
-    if (!query) {
+    if (!normalizedQuery || normalizedQuery.length < minLength) {
       setSuggestions([]);
       return;
     }
@@ -86,5 +89,12 @@ export function useAddressAutocomplete(
     };
   }, [query, debounceMs, options?.coords]);
 
-  return { suggestions, loading };
+  const onFocus = () => {
+    setSessionToken(crypto.randomUUID());
+  };
+  const onBlur = () => {
+    setSessionToken(null);
+  };
+
+  return { suggestions, loading, onFocus, onBlur };
 }

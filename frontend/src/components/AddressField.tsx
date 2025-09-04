@@ -16,6 +16,7 @@ export function AddressField(props: {
   label: string;
   value: string;
   onChange: (v: string) => void;
+  onFocus?: () => void;
   onBlur?: (v: string) => void;
   onSelect?: (s: AddressSuggestion) => void;
   onUseLocation?: () => void;
@@ -77,6 +78,10 @@ export function AddressField(props: {
       onInputChange={(_e, val) => {
         logger.debug("components/AddressField", "Input change", val);
         props.onChange(val);
+      }}
+      onFocus={() => {
+        logger.debug("components/AddressField", "Focus", props.value);
+        props.onFocus?.();
       }}
       onBlur={() => {
         logger.debug("components/AddressField", "Blur", props.value);
