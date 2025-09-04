@@ -38,9 +38,15 @@ async def create_booking(
             full_name=data.customer.name,
             hashed_password="",
             role=UserRole.CUSTOMER,
+            phone=data.customer.phone,
         )
         db.add(customer)
         await db.flush()
+    else:
+        if data.customer.phone is None:
+            data.customer.phone = customer.phone
+        else:
+            customer.phone = data.customer.phone
 
     settings = (await db.execute(select(AdminConfig))).scalar_one_or_none()
     if settings is None:

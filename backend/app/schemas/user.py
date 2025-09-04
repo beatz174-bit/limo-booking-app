@@ -12,6 +12,7 @@ class UserBase(BaseModel):
     email: EmailStr
     full_name: str
     default_pickup_address: Optional[str] = None
+    phone: Optional[str] = None
 
 
 class UserCreate(UserBase):
@@ -38,4 +39,5 @@ class UserUpdate(BaseModel):
     password: Optional[str] = None
     default_pickup_address: Optional[str] = None
     fcm_token: Optional[str] = None
+    phone: Optional[str] = None
     model_config = ConfigDict(from_attributes=True, extra="ignore")

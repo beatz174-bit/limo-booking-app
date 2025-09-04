@@ -3,11 +3,10 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
+from app.db.database import Base
 from sqlalchemy import UUID, DateTime, Enum, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
-
-from app.db.database import Base
 
 
 class UserRole(str, enum.Enum):
@@ -28,6 +27,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String, unique=True, index=True)
     full_name: Mapped[str] = mapped_column(String)
     hashed_password: Mapped[str] = mapped_column(Text, name="password_hash")
+    phone: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.CUSTOMER)
     fcm_token: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
