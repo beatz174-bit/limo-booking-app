@@ -31,7 +31,7 @@ async def test_create_booking_success(
 
     monkeypatch.setattr(
         "app.services.stripe_client.create_customer",
-        lambda email, name: FakeCustomer(),
+        lambda email, name, phone: FakeCustomer(),
     )
 
     class FakeSI:

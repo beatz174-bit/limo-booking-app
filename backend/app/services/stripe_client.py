@@ -65,10 +65,10 @@ else:
     stripe.api_key = settings.stripe_secret_key or ""
 
 
-def create_customer(email: str, name: str):
+def create_customer(email: str, name: str, phone: str | None = None):
     """Create a Stripe customer."""
 
-    return stripe.Customer.create(email=email, name=name)
+    return stripe.Customer.create(email=email, name=name, phone=phone)
 
 
 def create_setup_intent(customer_id: str, booking_reference: str):

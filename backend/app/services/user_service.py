@@ -6,14 +6,13 @@ import logging
 import uuid
 from typing import Optional
 
-from fastapi import HTTPException, status
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.security import hash_password
 from app.models.user_v2 import User
 from app.schemas.user import UserCreate, UserRead, UserUpdate
 from app.services import stripe_client
+from fastapi import HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -114,7 +113,9 @@ async def create_setup_intent_for_user(db: AsyncSession, user: User) -> str:
     """Ensure a customer exists and return a SetupIntent client secret."""
 
     if user.stripe_customer_id is None:
-        stripe_customer = stripe_client.create_customer(user.email, user.full_name)
+        stripe_customer = stripe_client.create_customer(
+            user.email, user.full_name, user.phone
+        )
         user.stripe_customer_id = stripe_customer.id
         await db.flush()
 
@@ -130,7 +131,9 @@ async def save_payment_method(
     """Persist a confirmed payment method and set it as default."""
 
     if user.stripe_customer_id is None:
-        stripe_customer = stripe_client.create_customer(user.email, user.full_name)
+        stripe_customer = stripe_client.create_customer(
+            user.email, user.full_name, user.phone
+        )
         user.stripe_customer_id = stripe_customer.id
 
     stripe_client.set_default_payment_method(user.stripe_customer_id, payment_method_id)
