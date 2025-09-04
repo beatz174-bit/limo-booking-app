@@ -38,7 +38,8 @@ interface Props {
 function PaymentInner({ data, onBack }: Props) {
   const stripe = useStripe();
   const elements = useElements();
-  const { createBooking } = useStripeSetupIntent();
+  const { createBooking, savePaymentMethod, savedPaymentMethod } =
+    useStripeSetupIntent();
   const { data: settings } = useSettings();
   interface SettingsAliases {
     flagfall?: number;
@@ -120,14 +121,6 @@ function PaymentInner({ data, onBack }: Props) {
   const [booking, setBooking] = useState<{ public_code: string } | null>(null);
 
   async function handleSubmit() {
-    if (!stripe || !elements) {
-      logger.warn(
-        'components/BookingWizard/PaymentStep',
-        'Stripe not ready'
-      );
-      return;
-    }
-    const card = elements.getElement(CardElement);
     const payload = {
       pickup_when: data.pickup_when,
       pickup: data.pickup,
@@ -142,23 +135,40 @@ function PaymentInner({ data, onBack }: Props) {
       payload
     );
     const res = await createBooking(payload);
-    if (res.clientSecret && card) {
-      await stripe.confirmCardSetup(res.clientSecret, {
-        payment_method: { card },
-      });
-      setBooking(res.booking);
-      logger.info(
-        'components/BookingWizard/PaymentStep',
-        'Booking confirmed',
-        res.booking
-      );
-    } else {
-      logger.error(
-        'components/BookingWizard/PaymentStep',
-        'Booking creation failed',
-        res
-      );
+
+    if (!savedPaymentMethod) {
+      if (!stripe || !elements) {
+        logger.warn(
+          'components/BookingWizard/PaymentStep',
+          'Stripe not ready'
+        );
+        return;
+      }
+      const card = elements.getElement(CardElement);
+      if (res.clientSecret && card) {
+        const setup = await stripe.confirmCardSetup(res.clientSecret, {
+          payment_method: { card },
+        });
+        const pm = setup?.setupIntent?.payment_method;
+        if (pm) {
+          await savePaymentMethod(pm as string);
+        }
+      } else {
+        logger.error(
+          'components/BookingWizard/PaymentStep',
+          'Booking creation failed',
+          res
+        );
+        return;
+      }
     }
+
+    setBooking(res.booking);
+    logger.info(
+      'components/BookingWizard/PaymentStep',
+      'Booking confirmed',
+      res.booking
+    );
   }
 
   if (booking) {
@@ -196,7 +206,13 @@ function PaymentInner({ data, onBack }: Props) {
         50% deposit{price != null ? ` ($${(price * 0.5).toFixed(2)})` : ''} charged on
         confirmation
       </Typography>
-      <CardElement />
+      {savedPaymentMethod ? (
+        <Typography>
+          Using saved card {savedPaymentMethod.brand} ending in {savedPaymentMethod.last4}
+        </Typography>
+      ) : (
+        <CardElement />
+      )}
       <Stack direction="row" spacing={1}>
         <Button onClick={onBack}>Back</Button>
         <Button variant="contained" onClick={handleSubmit}>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CONFIG } from '@/config';
 import { apiFetch } from '@/services/apiFetch';
 
@@ -11,8 +11,44 @@ interface CreateBookingData {
   customer: { name: string; email: string; phone?: string };
 }
 
+interface SavedPaymentMethod {
+  brand: string;
+  last4: string;
+  exp_month?: number;
+  exp_year?: number;
+}
+
 export function useStripeSetupIntent() {
   const [loading, setLoading] = useState(false);
+  const [savedPaymentMethod, setSavedPaymentMethod] =
+    useState<SavedPaymentMethod | null>(null);
+
+  useEffect(() => {
+    let ignore = false;
+    async function fetchPaymentMethod() {
+      try {
+        const res = await apiFetch(
+          `${CONFIG.API_BASE_URL}/api/v1/users/me/payment-method`,
+        );
+        if (!ignore && res.ok) {
+          try {
+            const json = await res.json();
+            if (json && json.last4) {
+              setSavedPaymentMethod(json as SavedPaymentMethod);
+            }
+          } catch {
+            /* ignore JSON errors */
+          }
+        }
+      } catch {
+        /* ignore network errors */
+      }
+    }
+    fetchPaymentMethod();
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   async function createBooking(data: CreateBookingData) {
     setLoading(true);
@@ -46,5 +82,13 @@ export function useStripeSetupIntent() {
     }
   }
 
-  return { createBooking, loading };
+  async function savePaymentMethod(paymentMethodId: string) {
+    await apiFetch(`${CONFIG.API_BASE_URL}/api/v1/users/me/payment-method`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ payment_method_id: paymentMethodId }),
+    });
+  }
+
+  return { createBooking, savePaymentMethod, savedPaymentMethod, loading };
 }
