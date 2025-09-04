@@ -14,7 +14,6 @@ export default function BookingWizard() {
   const [form, setForm] = useState<BookingFormData>({
     passengers: 1,
     notes: '',
-    customer: {},
     pickupValid: false,
     dropoffValid: false,
   });
