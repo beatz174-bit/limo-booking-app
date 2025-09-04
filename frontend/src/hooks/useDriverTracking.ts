@@ -41,6 +41,10 @@ export function useDriverTracking(bookings: Booking[]) {
           'ws',
         )}/ws/bookings/${b.id}?token=${token}`;
         const ws = new WebSocket(wsUrl);
+        let opened = false;
+        ws.onopen = () => {
+          opened = true;
+        };
         const watchId = navigator.geolocation.watchPosition(
           (pos) => {
             const payload = {
@@ -56,6 +60,21 @@ export function useDriverTracking(bookings: Booking[]) {
           undefined,
           { enableHighAccuracy: true },
         );
+
+        const handleEarlyTermination = (ev: Event) => {
+          if (!opened) {
+            navigator.geolocation.clearWatch(watchId);
+            if (watchersRef.current[b.id]?.watchId === watchId) {
+              delete watchersRef.current[b.id];
+            }
+            console.warn(
+              `driver tracking socket ${ev.type} before open for booking ${b.id}`,
+            );
+          }
+        };
+        ws.onerror = handleEarlyTermination;
+        ws.onclose = handleEarlyTermination;
+
         watchers[b.id] = { watchId, ws };
       } else if (!active && existing) {
         navigator.geolocation.clearWatch(existing.watchId);
