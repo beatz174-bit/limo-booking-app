@@ -148,6 +148,7 @@ describe('TrackingPage', () => {
           }) as unknown as Response,
         ),
       );
+    endLocation = { lat: 5, lng: 6 };
     currentUpdate = { lat: 1, lng: 2, status: 'ARRIVED_PICKUP', ts: 0 };
     const wrapper2 = (
       <MemoryRouter initialEntries={['/t/abc']}>
@@ -160,6 +161,8 @@ describe('TrackingPage', () => {
     await waitFor(() =>
       expect(screen.getByTestId('dropoff-marker')).toBeInTheDocument(),
     );
+    expect(screen.getByTestId('dropoff-marker').textContent).toBe('5,6');
+    await screen.findByTestId('route');
     expect(screen.queryByTestId('pickup-marker')).toBeNull();
   });
 

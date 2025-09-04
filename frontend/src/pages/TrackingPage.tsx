@@ -72,9 +72,9 @@ export default function TrackingPage() {
   const isDropoff = useMemo(
     () =>
       ['ARRIVED_PICKUP', 'IN_PROGRESS', 'ARRIVED_DROPOFF', 'COMPLETED'].includes(
-        status as BookingStatus,
+        (update?.status ?? status) as BookingStatus,
       ),
-    [status],
+    [update?.status, status],
   );
 
   useEffect(() => {
@@ -102,7 +102,7 @@ export default function TrackingPage() {
       const g = (window as { google?: GoogleLike }).google;
       if (!g?.maps) return;
       const svc = new g.maps.DirectionsService();
-      const effectiveStatus = (update.status ?? status) as BookingStatus;
+      const effectiveStatus = (update?.status ?? status) as BookingStatus;
       const goingToDropoff = [
         'ARRIVED_PICKUP',
         'IN_PROGRESS',
