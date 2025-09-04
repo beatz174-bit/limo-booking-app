@@ -117,7 +117,7 @@ function PaymentInner({ data, onBack }: Props) {
   ]);
   const [name, setName] = useState(data.customer?.name || '');
   const [email, setEmail] = useState(data.customer?.email || '');
-  const [phone, setPhone] = useState(data.customer?.phone || '');
+  const phone = data.customer?.phone;
   const [booking, setBooking] = useState<{ public_code: string } | null>(null);
 
   async function handleSubmit() {
@@ -190,7 +190,7 @@ function PaymentInner({ data, onBack }: Props) {
     <Stack spacing={2}>
       <TextField label="Name" value={name} onChange={(e) => setName(e.target.value)} />
       <TextField label="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-      <TextField label="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+      <TextField label="Phone" value={phone ?? ''} InputProps={{ readOnly: true }} />
       {price != null && (
         <Typography>Estimated fare: ${price.toFixed(2)}</Typography>
       )}
