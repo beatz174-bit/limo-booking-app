@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { vi, type Mock } from 'vitest';
 
@@ -9,11 +9,20 @@ vi.mock('@/components/ApiConfig', () => ({
   },
 }));
 
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({ accessToken: 'test-token', role: 'driver' }),
+}));
+
 import DriverDashboard from '@/pages/Driver/DriverDashboard';
 import { driverBookingsApi } from '@/components/ApiConfig';
 import { CONFIG } from '@/config';
 import { BookingsProvider } from '@/contexts/BookingsContext';
 import { setTokens } from '@/services/tokenStore';
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.clearAllMocks();
+});
 
 describe('DriverDashboard', () => {
   it.skip('loads and confirms booking', async () => {
@@ -129,6 +138,49 @@ describe('DriverDashboard', () => {
         expect.objectContaining({ method: 'POST' }),
       ),
     );
+  });
+
+  it('updates booking status via websocket message', async () => {
+    const bookings = [
+      {
+        id: '1',
+        pickup_address: 'A',
+        dropoff_address: 'B',
+        pickup_when: new Date().toISOString(),
+        status: 'PENDING',
+      },
+    ];
+    (driverBookingsApi.listBookingsApiV1DriverBookingsGet as Mock).mockResolvedValue({
+      data: bookings,
+    });
+    class WSStub {
+      static instances: WSStub[] = [];
+      onmessage: ((event: { data: string }) => void) | null = null;
+      constructor(public url: string) {
+        WSStub.instances.push(this);
+      }
+      close() {}
+    }
+    vi.stubGlobal('WebSocket', WSStub as unknown as typeof WebSocket);
+
+    render(
+      <MemoryRouter>
+        <BookingsProvider>
+          <DriverDashboard />
+        </BookingsProvider>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText('A → B')).toBeInTheDocument();
+
+    act(() => {
+      WSStub.instances[0].onmessage?.({
+        data: JSON.stringify({ id: '1', status: 'DRIVER_CONFIRMED' }),
+      });
+    });
+
+    fireEvent.click(screen.getByRole('tab', { name: /driver confirmed/i }));
+    expect(await screen.findByText('A → B')).toBeInTheDocument();
   });
 });
 
