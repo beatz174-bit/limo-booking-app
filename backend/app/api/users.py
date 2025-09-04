@@ -24,7 +24,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 @router.post("", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 async def api_create_user(data: UserCreate, db: AsyncSession = Depends(get_db)):
-    """Register a new user in the system."""
+    """Register a new user in the system, optionally capturing a phone number."""
     logger.info("creating user", extra={"email": data.email})
     user = await create_user(db, data)
     return user
@@ -52,7 +52,7 @@ async def api_update_me(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Allow the current user to update their profile."""
+    """Allow the current user to update their profile, including phone."""
     user = await update_user(db, current_user.id, data)
     return user
 
@@ -79,7 +79,7 @@ async def api_update_user(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Update selected fields of a user."""
+    """Update selected fields of a user, including phone."""
     logger.info(
         "updating user",
         extra={"user_id": current_user.id, "target_user_id": user_id},

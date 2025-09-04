@@ -12,6 +12,7 @@ class UserBase(BaseModel):
     email: EmailStr
     full_name: str
     role: UserRole = UserRole.CUSTOMER
+    phone: Optional[str] = None
 
 
 class UserCreate(UserBase):
