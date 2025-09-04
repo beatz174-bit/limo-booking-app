@@ -10,7 +10,11 @@ vi.mock('@/components/ApiConfig', () => ({
 }));
 
 vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: () => ({ accessToken: 'test-token', role: 'driver' }),
+  useAuth: () => ({
+    accessToken: 'test-token',
+    userID: 'driver-1',
+    adminID: 'driver-1',
+  }),
 }));
 
 import DriverDashboard from '@/pages/Driver/DriverDashboard';
@@ -129,8 +133,10 @@ describe('DriverDashboard', () => {
         </BookingsProvider>
       </MemoryRouter>,
     );
-
     expect(await screen.findByText('A → B')).toBeInTheDocument();
+    expect(
+      driverBookingsApi.listBookingsApiV1DriverBookingsGet,
+    ).toHaveBeenCalled();
     fireEvent.click(screen.getByText('Retry deposit'));
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith(
@@ -170,8 +176,10 @@ describe('DriverDashboard', () => {
         </BookingsProvider>
       </MemoryRouter>,
     );
-
     expect(await screen.findByText('A → B')).toBeInTheDocument();
+    expect(
+      driverBookingsApi.listBookingsApiV1DriverBookingsGet,
+    ).toHaveBeenCalled();
 
     act(() => {
       WSStub.instances[0].onmessage?.({

@@ -39,7 +39,7 @@ export const BookingsContext =
   createContext<BookingsContextValue | undefined>(undefined);
 
 export function BookingsProvider({ children }: { children: ReactNode }) {
-  const { accessToken, role } = useAuth();
+  const { accessToken, userID, adminID } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +54,7 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
     setError(null);
     try {
       const apiCall =
-        role === 'driver'
+        userID === adminID
           ? driverBookingsApi.listBookingsApiV1DriverBookingsGet.bind(
               driverBookingsApi,
             )
@@ -70,7 +70,7 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [accessToken, role]);
+  }, [accessToken, userID, adminID]);
 
   useEffect(() => {
     refresh();
