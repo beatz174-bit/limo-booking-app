@@ -38,6 +38,8 @@ self.addEventListener('push', event => {
 
   const lookup = msg.type ? notificationMap[msg.type] : undefined;
   const title = msg.title || (lookup && lookup.title) || 'Notification';
-  const options = { body: msg.body || (lookup && lookup.body) };
+  const body = msg.body || (lookup && lookup.body);
+  const options = {};
+  if (body) options.body = body;
   event.waitUntil(self.registration.showNotification(title, options));
 });
