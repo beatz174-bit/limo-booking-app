@@ -2,13 +2,12 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from httpx import AsyncClient
-
 from app.core.security import hash_password
 from app.models.booking import Booking, BookingStatus
 from app.models.route_point import RoutePoint
 from app.models.settings import AdminConfig
 from app.models.user_v2 import User, UserRole
+from httpx import AsyncClient
 
 pytestmark = pytest.mark.asyncio
 
@@ -57,10 +56,12 @@ async def test_driver_complete_booking(
             self.id = id
 
     monkeypatch.setattr(
-        "app.services.stripe_client.charge_deposit", lambda amount: FakePI("pi_dep")
+        "app.services.stripe_client.charge_deposit",
+        lambda amount, booking_id, **kwargs: FakePI("pi_dep"),
     )
     monkeypatch.setattr(
-        "app.services.stripe_client.charge_final", lambda amount: FakePI("pi_final")
+        "app.services.stripe_client.charge_final",
+        lambda amount, booking_id, **kwargs: FakePI("pi_final"),
     )
 
     async def fake_route(*args, **kwargs):

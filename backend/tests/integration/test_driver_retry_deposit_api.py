@@ -4,12 +4,11 @@ from datetime import datetime, timedelta, timezone
 import pytest
 import stripe
 from _pytest.monkeypatch import MonkeyPatch
-from httpx import AsyncClient
-from sqlalchemy import text
-
 from app.core.security import hash_password
 from app.models.booking import Booking, BookingStatus
 from app.models.user_v2 import User, UserRole
+from httpx import AsyncClient
+from sqlalchemy import text
 
 pytestmark = pytest.mark.asyncio
 
@@ -51,7 +50,7 @@ async def test_retry_deposit_creates_new_intent(
 ):
     booking = await _create_booking(async_session)
 
-    def fail(_amount):
+    def fail(_amount, _booking_id, **kwargs):
         raise stripe.error.StripeError("fail")
 
     monkeypatch.setattr("app.services.stripe_client.charge_deposit", fail)
@@ -68,7 +67,8 @@ async def test_retry_deposit_creates_new_intent(
         id = "pi_retry"
 
     monkeypatch.setattr(
-        "app.services.stripe_client.charge_deposit", lambda amount: FakePI()
+        "app.services.stripe_client.charge_deposit",
+        lambda amount, booking_id, **kwargs: FakePI(),
     )
 
     async def fake_route(*args, **kwargs):

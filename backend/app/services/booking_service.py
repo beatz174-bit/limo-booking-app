@@ -6,10 +6,6 @@ from datetime import datetime, timedelta, timezone
 from math import atan2, cos, radians, sin, sqrt
 
 import stripe
-from fastapi import HTTPException
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.models.availability_slot import AvailabilitySlot
 from app.models.booking import Booking, BookingStatus
 from app.models.route_point import RoutePoint
@@ -18,6 +14,9 @@ from app.models.trip import Trip
 from app.models.user_v2 import User, UserRole
 from app.schemas.api_booking import BookingCreateRequest
 from app.services import pricing_service, routing, stripe_client
+from fastapi import HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def create_booking(
@@ -79,7 +78,9 @@ async def create_booking(
     await db.flush()
     await db.commit()
 
-    setup_intent = stripe_client.create_setup_intent(data.customer.email)
+    setup_intent = stripe_client.create_setup_intent(
+        data.customer.email, data.customer.name, booking.public_code
+    )
     client_secret = setup_intent.client_secret
     return booking, client_secret
 
@@ -104,18 +105,19 @@ async def confirm_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
     if overlap.scalars().first():
         raise ValueError("booking overlaps existing slot")
 
+    customer = await db.get(User, booking.customer_id)
     try:
-        intent = stripe_client.charge_deposit(booking.deposit_required_cents)
+        intent = stripe_client.charge_deposit(
+            booking.deposit_required_cents,
+            booking.id,
+            public_code=booking.public_code,
+            customer_email=customer.email if customer else None,
+            pickup_address=booking.pickup_address,
+            dropoff_address=booking.dropoff_address,
+            pickup_time=booking.pickup_when,
+        )
     except stripe.error.CardError as exc:
-        if exc.code == "card_declined":
-            booking.status = BookingStatus.DEPOSIT_FAILED
-            await db.commit()
-            await db.refresh(booking)
-            raise HTTPException(status_code=402, detail=exc.user_message) from exc
-        raise HTTPException(
-            status_code=400,
-            detail=exc.user_message or "Failed to process deposit",
-        ) from exc
+        raise HTTPException(status_code=402, detail=exc.user_message) from exc
     except stripe.error.StripeError as exc:
         booking.status = BookingStatus.DEPOSIT_FAILED
         await db.commit()
@@ -247,7 +249,16 @@ async def complete_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
     if fare < booking.deposit_required_cents:
         raise ValueError("final fare less than deposit")
     remainder = fare - booking.deposit_required_cents
-    intent = stripe_client.charge_final(remainder)
+    customer = await db.get(User, booking.customer_id)
+    intent = stripe_client.charge_final(
+        remainder,
+        booking.id,
+        public_code=booking.public_code,
+        customer_email=customer.email if customer else None,
+        pickup_address=booking.pickup_address,
+        dropoff_address=booking.dropoff_address,
+        pickup_time=booking.pickup_when,
+    )
     booking.final_price_cents = fare
     booking.final_payment_intent_id = intent.id
     booking.status = BookingStatus.COMPLETED
