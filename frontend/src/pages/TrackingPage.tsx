@@ -116,6 +116,7 @@ export default function TrackingPage() {
   useEffect(() => {
     async function calcEta() {
       if (!update || !pickupCoords || !dropoffCoords) return;
+      if (typeof update.lat !== 'number' || typeof update.lng !== 'number') return;
       const g = (window as { google?: GoogleLike }).google;
       if (!g?.maps) return;
       const svc = new g.maps.DirectionsService();
@@ -155,7 +156,10 @@ export default function TrackingPage() {
   }, [update, update?.status, status, pickupCoords, dropoffCoords]);
 
   const pos = useMemo(
-    () => (update ? { lat: update.lat, lng: update.lng } : null),
+    () =>
+      typeof update?.lat === 'number' && typeof update?.lng === 'number'
+        ? { lat: update.lat, lng: update.lng }
+        : null,
     [update],
   );
 

@@ -25,18 +25,21 @@ export function useBookingChannel(bookingId: string | null) {
   useEffect(() => {
     if (!bookingId || !token) return;
     const wsUrl = `${import.meta.env.VITE_BACKEND_URL.replace("http", "ws")}/ws/bookings/${bookingId}/watch?token=${token}`;
-    return createReconnectingWebSocket(wsUrl, {
-      onMessage: (e) => {
-        try {
-          setUpdate(JSON.parse(e.data));
-        } catch {
-          /* ignore */
-        }
-      },
-      onError: () => setUpdate(null),
-      onClose: () => setUpdate(null),
-    });
-  }, [bookingId, token]);
+      return createReconnectingWebSocket(wsUrl, {
+        onMessage: (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            if (typeof data.lat === "number" && typeof data.lng === "number") {
+              setUpdate(data);
+            }
+          } catch {
+            /* ignore */
+          }
+        },
+        onError: () => setUpdate(null),
+        onClose: () => setUpdate(null),
+      });
+    }, [bookingId, token]);
 
   return update;
 }
