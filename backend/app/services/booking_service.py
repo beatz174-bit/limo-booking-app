@@ -13,12 +13,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.ws import send_booking_update
 from app.models.availability_slot import AvailabilitySlot
 from app.models.booking import Booking, BookingStatus
+from app.models.notification import NotificationType
 from app.models.route_point import RoutePoint
 from app.models.settings import AdminConfig
 from app.models.trip import Trip
 from app.models.user_v2 import User, UserRole
 from app.schemas.api_booking import BookingCreateRequest
-from app.services import pricing_service, routing, stripe_client
+from app.services import notifications, pricing_service, routing, stripe_client
 
 
 async def create_booking(
@@ -79,6 +80,14 @@ async def create_booking(
     db.add(booking)
     await db.flush()
     await db.commit()
+
+    await notifications.create_notification(
+        db,
+        booking.id,
+        NotificationType.NEW_BOOKING,
+        UserRole.DRIVER,
+        {"booking_id": str(booking.id)},
+    )
 
     setup_intent = stripe_client.create_setup_intent(
         data.customer.email, data.customer.name, booking.public_code
