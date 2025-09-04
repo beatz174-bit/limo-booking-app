@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -11,38 +10,11 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-
-import { customerBookingsApi } from '@/components/ApiConfig';
-import type { BookingRead as Booking } from '@/api-client';
+import { useBookings } from '@/hooks/useBookings';
 
 function RideHistoryPage() {
   const navigate = useNavigate();
-
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-
-    (async () => {
-      try {
-        const res = await customerBookingsApi.listMyBookingsApiV1CustomersMeBookingsGet();
-        if (alive) setBookings(res.data as Booking[]);
-      } catch (e: unknown) {
-        if (alive)
-          setError(
-            e instanceof Error ? e.message : 'Failed to load bookings',
-          );
-      } finally {
-        if (alive) setLoading(false);
-      }
-    })();
-
-    return () => {
-      alive = false;
-    };
-  }, []);
+  const { bookings, loading, error } = useBookings();
 
   if (loading) {
     return (

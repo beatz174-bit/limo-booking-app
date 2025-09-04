@@ -3,11 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import RideHistoryPage from './RideHistoryPage';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { customerBookingsApi } from '@/components/ApiConfig';
+import { BookingsContext, type BookingsContextValue } from '@/contexts/BookingsContext';
 import { vi } from 'vitest';
-import { server } from '@/__tests__/setup/msw.server';
-import { http, HttpResponse } from 'msw';
-import { apiUrl } from '@/__tests__/setup/msw.handlers';
 
 test('shows track link for trackable bookings', async () => {
   const bookings = [
@@ -31,15 +28,20 @@ test('shows track link for trackable bookings', async () => {
     },
   ];
 
-  vi
-    .spyOn(customerBookingsApi, 'listMyBookingsApiV1CustomersMeBookingsGet')
-    .mockResolvedValue({ data: bookings } as never);
+  const context: BookingsContextValue = {
+    bookings,
+    loading: false,
+    error: null,
+    updateBooking: vi.fn(),
+  };
 
   render(
     <AuthProvider>
-      <MemoryRouter initialEntries={['/history']}>
-        <RideHistoryPage />
-      </MemoryRouter>
+      <BookingsContext.Provider value={context}>
+        <MemoryRouter initialEntries={['/history']}>
+          <RideHistoryPage />
+        </MemoryRouter>
+      </BookingsContext.Provider>
     </AuthProvider>,
   );
 
@@ -63,20 +65,23 @@ test('track link navigates to tracking page', async () => {
     },
   ];
 
-  server.use(
-    http.get(apiUrl('/api/v1/customers/me/bookings'), () =>
-      HttpResponse.json(bookings),
-    ),
-  );
+  const context: BookingsContextValue = {
+    bookings,
+    loading: false,
+    error: null,
+    updateBooking: vi.fn(),
+  };
 
   render(
     <AuthProvider>
-      <MemoryRouter initialEntries={['/history']}>
-        <Routes>
-          <Route path="/history" element={<RideHistoryPage />} />
-          <Route path="/t/:code" element={<h1>Tracking</h1>} />
-        </Routes>
-      </MemoryRouter>
+      <BookingsContext.Provider value={context}>
+        <MemoryRouter initialEntries={['/history']}>
+          <Routes>
+            <Route path="/history" element={<RideHistoryPage />} />
+            <Route path="/t/:code" element={<h1>Tracking</h1>} />
+          </Routes>
+        </MemoryRouter>
+      </BookingsContext.Provider>
     </AuthProvider>,
   );
 

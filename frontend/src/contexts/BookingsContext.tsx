@@ -18,6 +18,8 @@ export type DriverAction =
 
 export interface BookingsContextValue {
   bookings: Booking[];
+  loading: boolean;
+  error: string | null;
   updateBooking: (id: string, action: DriverAction) => Promise<void>;
 }
 
@@ -28,6 +30,8 @@ export const BookingsContext = createContext<BookingsContextValue | undefined>(
 
 export function BookingsProvider({ children }: { children: ReactNode }) {
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(() => getAccessToken());
   const socketsRef = useRef<Record<string, WebSocket>>({});
 
@@ -41,8 +45,12 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!token) {
       setBookings([]);
+      setLoading(false);
+      setError(null);
       return;
     }
+    setLoading(true);
+    setError(null);
     (async () => {
       try {
         const { data } = await bookingsApi.listBookingsApiV1DriverBookingsGet(
@@ -50,8 +58,11 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
           { headers: { Authorization: `Bearer ${token}` } },
         );
         setBookings(data as Booking[]);
-      } catch {
-        // ignore
+      } catch (e) {
+        const message = e instanceof Error ? e.message : 'Failed to load bookings';
+        setError(message);
+      } finally {
+        setLoading(false);
       }
     })();
   }, [token]);
@@ -121,7 +132,7 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <BookingsContext.Provider value={{ bookings, updateBooking }}>
+    <BookingsContext.Provider value={{ bookings, loading, error, updateBooking }}>
       {children}
     </BookingsContext.Provider>
   );

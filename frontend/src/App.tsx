@@ -47,7 +47,16 @@ function App() {
 
       {/* Protected user routes */}
       <Route path="/book" element={<RequireAuth><BookingWizardPage /></RequireAuth>} />
-      <Route path="/history" element={<RequireAuth><RideHistoryPage /></RequireAuth>} />
+      <Route
+        path="/history"
+        element={
+          <RequireAuth>
+            <BookingsProvider>
+              <RideHistoryPage />
+            </BookingsProvider>
+          </RequireAuth>
+        }
+      />
       <Route path="/history/:id" element={<RequireAuth><RideDetailsPage /></RequireAuth>} />
       <Route path="/me" element={<RequireAuth><ProfilePage /></RequireAuth>} />
 
