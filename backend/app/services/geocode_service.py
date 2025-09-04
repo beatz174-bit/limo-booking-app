@@ -97,9 +97,13 @@ async def search_geocode(query: str, limit: int = 5) -> list[dict]:
             "google autocomplete request",
             extra={"url": autocomplete_url, "query": query, "limit": limit},
         )
-        auto_res = await client.get(
-            autocomplete_url, params={"input": query, "key": api_key}
-        )
+        auto_params = {
+            "input": query,
+            "key": api_key,
+            "components": "country:AU",
+            "types": "address",
+        }
+        auto_res = await client.get(autocomplete_url, params=auto_params)
         auto_res.raise_for_status()
         predictions = auto_res.json().get("predictions", [])[:limit]
 

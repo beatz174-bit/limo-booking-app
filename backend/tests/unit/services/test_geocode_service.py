@@ -87,6 +87,8 @@ async def test_search_geocode_returns_details(monkeypatch: MonkeyPatch):
         async def get(self, url, params=None):  # type: ignore[override]
             if "autocomplete" in url:
                 assert params["input"] == "SFO"
+                assert params["components"] == "country:AU"
+                assert params["types"] == "address"
                 return AutoResp()
             assert params["place_id"] == "sfo1"
             return DetailsResp()
