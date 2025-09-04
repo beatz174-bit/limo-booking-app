@@ -8,6 +8,7 @@ interface CreateBookingData {
   dropoff: { address: string; lat: number; lng: number };
   passengers: number;
   notes?: string;
+  customer?: { name: string; email: string; phone: string };
 }
 
 interface SavedPaymentMethod {

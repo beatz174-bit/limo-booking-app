@@ -150,6 +150,13 @@ function PaymentInner({ data, onBack }: Props) {
       dropoff: data.dropoff,
       passengers: data.passengers,
       notes: data.notes,
+      customer: profile
+        ? {
+            name: profile.full_name ?? '',
+            email: profile.email ?? '',
+            phone: profile.phone ?? '',
+          }
+        : undefined,
     };
     logger.info(
       'components/BookingWizard/PaymentStep',

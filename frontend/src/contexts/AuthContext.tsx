@@ -6,7 +6,7 @@ import { setTokens, getRefreshToken, initTokensFromStorage } from "../services/t
 import { apiFetch } from "@/services/apiFetch";
 import { beginLogin, completeLoginFromRedirect, refreshTokens, TokenResponse, OAuthConfig } from "../services/oauth";
 import { useLocation, useNavigate } from "react-router-dom";
-import { type AuthContextType } from "@/types/AuthContextType";
+import { type AuthContextType, type UserShape } from "@/types/AuthContextType";
 import { subscribePush } from "@/services/push";
 import * as logger from "@/lib/logger";
 
@@ -15,8 +15,6 @@ import * as logger from "@/lib/logger";
 initTokensFromStorage();
 logger.debug("contexts/AuthContext", "tokens initialized from storage");
 
-type UserShape = { email?: string; full_name?: string; role?: string; phone?: string } | null;
-
 type LoginResponse = {
   access_token?: string;
   token?: string;
@@ -24,7 +22,9 @@ type LoginResponse = {
   role?: string | null;
   user?: { role?: string } | null;
   full_name?: string;
-  id?: string;
+  email?: string;
+  phone?: string;
+  id?: number | string;
 };
 
 type AuthState = {
@@ -135,7 +135,15 @@ useEffect(() => {
 }, [adminID]);
 
   useEffect(() => {
-    if (!state.accessToken || state.role) return;
+    if (!state.accessToken) return;
+    const needsProfile =
+      !state.user?.email ||
+      !state.user?.full_name ||
+      !state.user?.phone ||
+      !state.role ||
+      !state.userID ||
+      !state.userName;
+    if (!needsProfile) return;
     const fetchMe = async () => {
       try {
         const res = await apiFetch(`${CONFIG.API_BASE_URL}/users/me`);
@@ -161,13 +169,21 @@ useEffect(() => {
         } else {
           localStorage.removeItem("userID");
         }
-      setState((s): AuthState => ({
-        ...s,
-        role: data.role ?? s.role,
-        userName: data.full_name ?? s.userName,
-        userID: data.id ? String(data.id) : s.userID,
-        phone: data.phone ?? s.phone,
-      }));
+        setState((s): AuthState => ({
+          ...s,
+          user: {
+            ...s.user,
+            id: data.id ?? s.user?.id,
+            email: data.email ?? s.user?.email,
+            full_name: data.full_name ?? s.user?.full_name,
+            role: data.role ?? s.user?.role,
+            phone: data.phone ?? s.user?.phone,
+          },
+          role: data.role ?? s.role,
+          userName: data.full_name ?? s.userName,
+          userID: data.id ? String(data.id) : s.userID,
+          phone: data.phone ?? s.phone,
+        }));
       } catch (err) {
         logger.error(
           "contexts/AuthContext",
@@ -177,7 +193,14 @@ useEffect(() => {
       }
     };
     fetchMe();
-  }, [state.accessToken, state.role]);
+  }, [
+    state.accessToken,
+    state.user,
+    state.role,
+    state.userID,
+    state.userName,
+    state.phone,
+  ]);
 
   const persist = useCallback((t?: TokenResponse | null, user?: UserShape, role?: string | null) => {
     const access_token = t?.access_token ?? null;
@@ -230,6 +253,15 @@ useEffect(() => {
       const body = res.data as LoginResponse;
       const token = body.access_token ?? body.token ?? null;
       const role: string | null = body.role ?? body.user?.role ?? null;
+      const userFromResp: UserShape | null =
+        body.user ||
+        ({
+          id: typeof body.id === "number" ? body.id : Number(body.id),
+          email: body.email ?? email,
+          full_name: body.full_name,
+          role: role ?? undefined,
+          phone: body.phone,
+        } as UserShape);
       const tokenRes: TokenResponse | null = token
         ? {
             access_token: token,
@@ -237,7 +269,7 @@ useEffect(() => {
             token_type: "Bearer",
           }
         : null;
-      persist(tokenRes, body.user ?? null, role);
+      persist(tokenRes, userFromResp, role);
 
       if (body.full_name) {
         localStorage.setItem("userName", body.full_name ?? "");
@@ -249,11 +281,18 @@ useEffect(() => {
       } else {
         localStorage.removeItem("userID");
       }
+      if (body.phone) {
+        localStorage.setItem("phone", body.phone ?? "");
+      } else {
+        localStorage.removeItem("phone");
+      }
 
       setState((s): AuthState => ({
         ...s,
+        user: userFromResp,
         userID: body.id != null ? String(body.id) : null,
         userName: body.full_name ?? null,
+        phone: body.phone ?? null,
       }));
       logger.info("contexts/AuthContext", "login successful");
       return role;
