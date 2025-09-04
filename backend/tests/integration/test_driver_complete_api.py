@@ -1,13 +1,22 @@
+import json
 import uuid
 from datetime import datetime, timedelta, timezone
 
 import pytest
+from httpx import AsyncClient
+from starlette.testclient import TestClient
+
 from app.core.security import hash_password
+from app.main import app
 from app.models.booking import Booking, BookingStatus
 from app.models.route_point import RoutePoint
 from app.models.settings import AdminConfig
 from app.models.user_v2 import User, UserRole
-from httpx import AsyncClient
+from app.services import scheduler as scheduler_service
+
+# Disable scheduler during tests to avoid event loop issues
+scheduler_service.scheduler.start = lambda *_, **__: None
+scheduler_service.scheduler.shutdown = lambda *_, **__: None
 
 pytestmark = pytest.mark.asyncio
 
@@ -72,12 +81,27 @@ async def test_driver_complete_booking(
     await client.post(
         f"/api/v1/driver/bookings/{booking.id}/confirm", headers=admin_headers
     )
-    await client.post(
-        f"/api/v1/driver/bookings/{booking.id}/leave", headers=admin_headers
-    )
-    await client.post(
-        f"/api/v1/driver/bookings/{booking.id}/arrive-pickup", headers=admin_headers
-    )
+
+    token = admin_headers["Authorization"].split()[1]
+    with TestClient(app) as ws_client:
+        with ws_client.websocket_connect(
+            f"/ws/bookings/{booking.id}?token={token}"
+        ) as ws:
+            ws.send_text(json.dumps({"lat": -27.05, "lng": 153.05, "ts": 1}))
+            ws.receive_json()
+            ws.receive_json()
+    with TestClient(app) as ws_client:
+        with ws_client.websocket_connect(
+            f"/ws/bookings/{booking.id}?token={token}"
+        ) as ws:
+            ws.send_text(
+                json.dumps(
+                    {"lat": booking.pickup_lat, "lng": booking.pickup_lng, "ts": 2}
+                )
+            )
+            ws.receive_json()
+            ws.receive_json()
+
     await client.post(
         f"/api/v1/driver/bookings/{booking.id}/start-trip", headers=admin_headers
     )
@@ -93,9 +117,22 @@ async def test_driver_complete_booking(
     )
     await async_session.commit()
 
-    await client.post(
-        f"/api/v1/driver/bookings/{booking.id}/arrive-dropoff", headers=admin_headers
-    )
+    with TestClient(app) as ws_client:
+        with ws_client.websocket_connect(
+            f"/ws/bookings/{booking.id}?token={token}"
+        ) as ws:
+            ws.send_text(
+                json.dumps(
+                    {
+                        "lat": booking.dropoff_lat,
+                        "lng": booking.dropoff_lng,
+                        "ts": 3,
+                    }
+                )
+            )
+            ws.receive_json()
+            ws.receive_json()
+
     res = await client.post(
         f"/api/v1/driver/bookings/{booking.id}/complete", headers=admin_headers
     )
