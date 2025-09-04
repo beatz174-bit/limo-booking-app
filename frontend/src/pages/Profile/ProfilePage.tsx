@@ -1,11 +1,37 @@
 import { useEffect, useState } from 'react';
-import { Box, Button, TextField, Typography, Tooltip } from '@mui/material';
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Tooltip,
+  Stack,
+} from '@mui/material';
+import {
+  Elements,
+  CardElement,
+  useStripe,
+  useElements,
+} from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+import * as logger from '@/lib/logger';
 import { AddressField } from '@/components/AddressField';
 import { useAuth } from '@/contexts/AuthContext';
 import PushToggle from '@/components/PushToggle';
 import { CONFIG } from '@/config';
 import { apiFetch } from '@/services/apiFetch';
 import { useAddressAutocomplete } from '@/hooks/useAddressAutocomplete';
+
+const stripePromise = (async () => {
+  try {
+    return await loadStripe(
+      import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || ''
+    );
+  } catch (err) {
+    logger.warn('pages/Profile/ProfilePage', 'Stripe init failed', err);
+    return null;
+  }
+})();
 
 const ProfilePage = () => {
   const { ensureFreshToken } = useAuth();
@@ -17,8 +43,13 @@ const ProfilePage = () => {
   const [oldPasswordValid, setOldPasswordValid] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [paymentMethod, setPaymentMethod] =
+    useState<{ brand: string; last4: string } | null>(null);
+  const [editingCard, setEditingCard] = useState(false);
 
   const auto = useAddressAutocomplete(defaultPickup);
+  const stripe = useStripe();
+  const elements = useElements();
 
   useEffect(() => {
     const load = async () => {
@@ -32,6 +63,17 @@ const ProfilePage = () => {
         setEmail(data.email || '');
         setPhone(data.phone || '');
         setDefaultPickup(data.default_pickup_address || '');
+      }
+      try {
+        const pmRes = await apiFetch(`${base}/users/me/payment-method`);
+        if (pmRes.ok) {
+          const pmJson = await pmRes.json();
+          if (pmJson && pmJson.last4) {
+            setPaymentMethod({ brand: pmJson.brand, last4: pmJson.last4 });
+          }
+        }
+      } catch {
+        /* ignore */
       }
     };
     load();
@@ -93,8 +135,64 @@ const ProfilePage = () => {
     setConfirmPassword('');
   };
 
+  const handleSaveCard = async () => {
+    if (!stripe || !elements) return;
+    await ensureFreshToken();
+    try {
+      const base = CONFIG.API_BASE_URL ?? '';
+      const res = await apiFetch(`${base}/users/me/payment-method`, {
+        method: 'POST',
+      });
+      if (!res.ok) return;
+      const json = await res.json();
+      const card = elements.getElement(CardElement);
+      if (!json.client_secret || !card) return;
+      const setup = await stripe.confirmCardSetup(json.client_secret, {
+        payment_method: { card },
+      });
+      const pm = setup?.setupIntent?.payment_method;
+      if (pm) {
+        await apiFetch(`${base}/users/me/payment-method`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ payment_method_id: pm }),
+        });
+        setEditingCard(false);
+        const pmRes = await apiFetch(`${base}/users/me/payment-method`);
+        if (pmRes.ok) {
+          try {
+            const meta = await pmRes.json();
+            if (meta && meta.last4) {
+              setPaymentMethod({ brand: meta.brand, last4: meta.last4 });
+            }
+          } catch {
+            /* ignore */
+          }
+        }
+      }
+    } catch (err) {
+      logger.warn('pages/Profile/ProfilePage', 'save card failed', err);
+    }
+  };
+
+  const handleRemoveCard = async () => {
+    await ensureFreshToken();
+    try {
+      const base = CONFIG.API_BASE_URL ?? '';
+      await apiFetch(`${base}/users/me/payment-method`, { method: 'DELETE' });
+      setPaymentMethod(null);
+    } catch {
+      /* ignore */
+    }
+  };
+
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ p: 2, maxWidth: 400, m: '0 auto' }}>
+    <Elements stripe={stripePromise}>
+      <Box
+        component="form"
+        onSubmit={handleSubmit}
+        sx={{ p: 2, maxWidth: 400, m: '0 auto' }}
+      >
       <Typography variant="h5" gutterBottom>
         My Profile
       </Typography>
@@ -148,7 +246,52 @@ const ProfilePage = () => {
       <Box mt={4}>
         <PushToggle ensureFreshToken={ensureFreshToken} />
       </Box>
+      <Box mt={4}>
+        <Typography variant="h6" gutterBottom>
+          Payment Method
+        </Typography>
+        {paymentMethod && !editingCard ? (
+          <Stack spacing={1}>
+            <Typography>
+              {paymentMethod.brand} ending in {paymentMethod.last4}
+            </Typography>
+            <Stack direction="row" spacing={1}>
+              <Button type="button" onClick={() => setEditingCard(true)}>
+                Replace
+              </Button>
+              <Button type="button" onClick={handleRemoveCard}>
+                Remove
+              </Button>
+            </Stack>
+          </Stack>
+        ) : editingCard ? (
+          <Stack spacing={1}>
+            <CardElement />
+            <Stack direction="row" spacing={1}>
+              <Button
+                type="button"
+                variant="contained"
+                onClick={handleSaveCard}
+              >
+                Save Card
+              </Button>
+              <Button type="button" onClick={() => setEditingCard(false)}>
+                Cancel
+              </Button>
+            </Stack>
+          </Stack>
+        ) : (
+          <Button
+            type="button"
+            variant="contained"
+            onClick={() => setEditingCard(true)}
+          >
+            Add Card
+          </Button>
+        )}
+      </Box>
     </Box>
+    </Elements>
   );
 };
 
