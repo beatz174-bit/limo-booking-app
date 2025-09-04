@@ -1,3 +1,4 @@
+import json
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -5,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.ws import send_booking_update
+from app.core.broadcast import broadcast
 from app.db.database import get_async_session
 from app.dependencies import require_admin
 from app.models.booking import Booking, BookingStatus
@@ -120,6 +122,17 @@ async def start_trip(
         booking = await booking_service.start_trip(db, booking_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    await notifications.create_notification(
+        db,
+        booking.id,
+        NotificationType.STARTED,
+        UserRole.CUSTOMER,
+        {},
+    )
+    await broadcast.publish(
+        channel=f"booking:{booking.id}",
+        message=json.dumps({"status": booking.status}),
+    )
     return BookingStatusResponse(status=booking.status)
 
 
@@ -142,6 +155,17 @@ async def complete_booking(
         booking = await booking_service.complete_booking(db, booking_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    await notifications.create_notification(
+        db,
+        booking.id,
+        NotificationType.COMPLETED,
+        UserRole.CUSTOMER,
+        {},
+    )
+    await broadcast.publish(
+        channel=f"booking:{booking.id}",
+        message=json.dumps({"status": booking.status}),
+    )
     return BookingStatusResponse(
         status=booking.status, final_price_cents=booking.final_price_cents
     )
