@@ -18,7 +18,6 @@ docs/BookingStatus.md
 docs/BookingStatusResponse.md
 docs/BookingsApi.md
 docs/CustomerBookingsApi.md
-docs/CustomerInfo.md
 docs/DriverBookingsApi.md
 docs/GeocodeApi.md
 docs/GeocodeResponse.md
@@ -29,6 +28,7 @@ docs/HealthApi.md
 docs/Location.md
 docs/LoginRequest.md
 docs/OAuth2Token.md
+docs/PaymentMethodPayload.md
 docs/RegisterRequest.md
 docs/RouteMetricsApi.md
 docs/RouteMetricsRequest.md
