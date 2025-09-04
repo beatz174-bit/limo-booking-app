@@ -1,13 +1,15 @@
 """Scheduler for leave-now notifications."""
+
 import uuid
 from datetime import datetime, timedelta
+
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app.core.config import get_settings
 from app.db.database import AsyncSessionLocal
-from app.services import routing, notifications
 from app.models.notification import NotificationType
 from app.models.user_v2 import UserRole
+from app.services import booking_service, notifications, routing
 
 settings = get_settings()
 scheduler = AsyncIOScheduler(timezone=settings.app_tz)
@@ -21,21 +23,31 @@ async def compute_leave_at(booking) -> datetime:
         booking.pickup_lat,
         booking.pickup_lng,
     )
-    return booking.pickup_when - timedelta(minutes=duration_min + settings.leave_buffer_min)
+    return booking.pickup_when - timedelta(
+        minutes=duration_min + settings.leave_buffer_min
+    )
 
 
 async def schedule_leave_now(booking):
     leave_at = await compute_leave_at(booking)
-    scheduler.add_job(_leave_now_job, 'date', run_date=leave_at, args=[booking.id])
+    scheduler.add_job(_leave_now_job, "date", run_date=leave_at, args=[booking.id])
     return leave_at
 
 
 async def _leave_now_job(booking_id: uuid.UUID):
     async with AsyncSessionLocal() as session:
+        await booking_service.leave_booking(session, booking_id)
         await notifications.create_notification(
             session,
             booking_id,
             NotificationType.LEAVE_NOW,
             UserRole.DRIVER,
+            {},
+        )
+        await notifications.create_notification(
+            session,
+            booking_id,
+            NotificationType.ON_THE_WAY,
+            UserRole.CUSTOMER,
             {},
         )
