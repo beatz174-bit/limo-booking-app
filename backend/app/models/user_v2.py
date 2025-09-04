@@ -27,6 +27,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String, unique=True, index=True)
     full_name: Mapped[str] = mapped_column(String)
     hashed_password: Mapped[str] = mapped_column(Text, name="password_hash")
+    phone: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.CUSTOMER)
     fcm_token: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     stripe_customer_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)

@@ -3,8 +3,9 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 from app.models.settings import AdminConfig
+from app.models.user_v2 import User
 from httpx import AsyncClient
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 
 pytestmark = pytest.mark.asyncio
 
@@ -45,6 +46,22 @@ async def test_create_booking_success(
     data = res.json()
     assert data["booking"]["status"] == "PENDING"
     assert data["stripe"]["setup_intent_client_secret"] == "sec_test"
+
+    result = await async_session.execute(
+        select(User).where(User.email == "jane@example.com")
+    )
+    user = result.scalar_one()
+    assert user.phone == "123"
+
+    payload_no_phone = payload.copy()
+    del payload_no_phone["customer"]["phone"]
+    res2 = await client.post("/api/v1/bookings", json=payload_no_phone)
+    assert res2.status_code == 201
+    result = await async_session.execute(
+        select(User).where(User.email == "jane@example.com")
+    )
+    user = result.scalar_one()
+    assert user.phone == "123"
     await async_session.execute(delete(AdminConfig))
     await async_session.commit()
 

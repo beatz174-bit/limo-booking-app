@@ -1,5 +1,5 @@
+/// <reference types="google.maps" />
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { LatLngLiteral } from 'google.maps';
 import { useParams } from 'react-router-dom';
 import { GoogleMap, Marker, DirectionsRenderer } from '@react-google-maps/api';
 import { CONFIG } from '@/config';
@@ -66,8 +66,10 @@ export default function TrackingPage() {
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [status, setStatus] = useState<BookingStatus | ''>('');
   const [eta, setEta] = useState<number | null>(null);
-  const [pickupCoords, setPickupCoords] = useState<LatLngLiteral | null>(null);
-  const [dropoffCoords, setDropoffCoords] = useState<LatLngLiteral | null>(null);
+  const [pickupCoords, setPickupCoords] =
+    useState<google.maps.LatLngLiteral | null>(null);
+  const [dropoffCoords, setDropoffCoords] =
+    useState<google.maps.LatLngLiteral | null>(null);
   const [nextStop, setNextStop] = useState<{ lat: number; lng: number } | null>(
     null,
   );
@@ -75,10 +77,10 @@ export default function TrackingPage() {
   const update = useBookingChannel(bookingId);
   const mapRef = useRef<google.maps.Map | null>(null);
   const [zoom, setZoom] = useState(14);
-  const [center, setCenter] = useState<LatLngLiteral>();
-  const prevPos = useRef<LatLngLiteral | null>(null);
+  const [center, setCenter] = useState<google.maps.LatLngLiteral>();
+  const prevPos = useRef<google.maps.LatLngLiteral | null>(null);
   const [heading, setHeading] = useState(0);
-  const prevDest = useRef<LatLngLiteral | null>(null);
+  const prevDest = useRef<google.maps.LatLngLiteral | null>(null);
 
   const isDropoff = useMemo(
     () =>
