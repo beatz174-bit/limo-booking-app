@@ -28,6 +28,8 @@ class UserRead(UserBase):
     # role: str
     # is_approved: bool
     fcm_token: Optional[str] = None
+    stripe_customer_id: Optional[str] = None
+    stripe_payment_method_id: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -39,5 +41,7 @@ class UserUpdate(BaseModel):
     password: Optional[str] = None
     default_pickup_address: Optional[str] = None
     fcm_token: Optional[str] = None
+    stripe_customer_id: Optional[str] = None
+    stripe_payment_method_id: Optional[str] = None
     phone: Optional[str] = None
     model_config = ConfigDict(from_attributes=True, extra="ignore")
