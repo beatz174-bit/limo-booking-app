@@ -23,6 +23,16 @@ const mockCard = {};
 const mockGetMetrics = vi.fn().mockResolvedValue(null);
 const mockSavePaymentMethod = vi.fn();
 const mockUseStripeSetupIntent = vi.fn();
+const mockCanMakePayment = vi.fn().mockResolvedValue(null);
+const mockShow = vi.fn();
+const mockPaymentRequest = {
+  canMakePayment: mockCanMakePayment,
+  show: mockShow,
+};
+const mockStripe = {
+  confirmCardSetup: mockConfirm,
+  paymentRequest: vi.fn(() => mockPaymentRequest),
+};
 
 vi.mock('@/hooks/useStripeSetupIntent', () => ({
   useStripeSetupIntent: () => mockUseStripeSetupIntent(),
@@ -36,7 +46,12 @@ vi.mock('@/hooks/useRouteMetrics', () => ({
 vi.mock('@stripe/react-stripe-js', () => ({
   Elements: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   CardElement: () => <div data-testid="card" />,
-  useStripe: () => ({ confirmCardSetup: mockConfirm }),
+  PaymentRequestButtonElement: ({
+    onClick,
+  }: {
+    onClick: () => void;
+  }) => <button data-testid="google-pay" onClick={onClick} />,
+  useStripe: () => mockStripe,
   useElements: () => ({ getElement: () => mockCard }),
 }));
 vi.mock('@stripe/stripe-js', () => ({
@@ -48,6 +63,9 @@ beforeEach(() => {
   mockConfirm.mockClear();
   mockSavePaymentMethod.mockClear();
   mockGetMetrics.mockClear();
+  mockCanMakePayment.mockClear();
+  mockShow.mockClear();
+  mockStripe.paymentRequest.mockClear();
   mockUseStripeSetupIntent.mockReturnValue({
     createBooking: mockCreateBooking,
     savePaymentMethod: mockSavePaymentMethod,
@@ -88,6 +106,42 @@ test('handles new card flow', async () => {
   expect(mockConfirm).toHaveBeenCalledWith('sec', {
     payment_method: { card: mockCard },
   });
+  expect(mockSavePaymentMethod).toHaveBeenCalledWith('pm_123');
+  const link = await screen.findByRole('link', { name: /track this ride/i });
+  expect(link).toHaveAttribute('href', '/t/ABC123');
+});
+
+test('handles google pay flow', async () => {
+  mockCanMakePayment.mockResolvedValueOnce({ googlePay: true });
+  mockShow.mockResolvedValueOnce({ token: { id: 'tok_123' }, complete: vi.fn() });
+
+  render(
+    <MemoryRouter>
+      <DevFeaturesProvider>
+        <PaymentStep
+          data={{
+            pickup_when: '2025-01-01T00:00:00Z',
+            pickup: { address: 'A', lat: 0, lng: 0 },
+            dropoff: { address: 'B', lat: 1, lng: 1 },
+            passengers: 1,
+            notes: '',
+            customer: { name: '', email: '', phone: '' },
+            pickupValid: true,
+            dropoffValid: true,
+          }}
+          onBack={() => {}}
+        />
+      </DevFeaturesProvider>
+    </MemoryRouter>,
+  );
+
+  const gpButton = await screen.findByTestId('google-pay');
+  await userEvent.click(gpButton);
+
+  expect(mockStripe.paymentRequest).toHaveBeenCalled();
+  expect(mockCreateBooking).toHaveBeenCalled();
+  expect(mockShow).toHaveBeenCalled();
+  expect(mockConfirm).toHaveBeenCalledWith('sec', { payment_method: 'tok_123' });
   expect(mockSavePaymentMethod).toHaveBeenCalledWith('pm_123');
   const link = await screen.findByRole('link', { name: /track this ride/i });
   expect(link).toHaveAttribute('href', '/t/ABC123');

@@ -2,10 +2,15 @@ import { Stack, TextField, Button, Typography } from '@mui/material';
 import {
   Elements,
   CardElement,
+  PaymentRequestButtonElement,
   useStripe,
   useElements,
 } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
+import {
+  loadStripe,
+  PaymentRequest as StripePaymentRequest,
+  PaymentRequestCanMakePaymentResult,
+} from '@stripe/stripe-js';
 import { useState, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useStripeSetupIntent } from '@/hooks/useStripeSetupIntent';
@@ -61,8 +66,8 @@ function PaymentInner({ data, onBack }: Props) {
   const [price, setPrice] = useState<number | null>(null);
   const [distanceKm, setDistanceKm] = useState<number>(0);
   const [durationMin, setDurationMin] = useState<number>(0);
-  const { user } = useAuth();
-  const [profile, setProfile] = useState(user);
+  const [paymentRequest, setPaymentRequest] =
+    useState<StripePaymentRequest | null>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -123,25 +128,80 @@ function PaymentInner({ data, onBack }: Props) {
   const [booking, setBooking] = useState<{ public_code: string } | null>(null);
 
   useEffect(() => {
-    let ignore = false;
-    async function fetchUser() {
-      try {
-        const res = await apiFetch(`${CONFIG.API_BASE_URL}/api/v1/users/me`);
-        if (!ignore && res.ok) {
-          const json = await res.json();
-          setProfile(json);
-        }
-      } catch {
-        /* ignore */
+    async function initPaymentRequest() {
+      if (!stripe || savedPaymentMethod) return;
+      const pr = stripe.paymentRequest({
+        country: 'US',
+        currency: 'usd',
+        total: { label: 'Deposit', amount: 0 },
+        requestPayerName: true,
+        requestPayerEmail: true,
+        requestPayerPhone: true,
+      });
+      const result = (await pr.canMakePayment()) as
+        | PaymentRequestCanMakePaymentResult
+        | null;
+      if (result?.googlePay) {
+        setPaymentRequest(pr);
       }
     }
-    if (!profile?.full_name || !profile.email || !profile.phone) {
-      fetchUser();
-    }
-    return () => {
-      ignore = true;
+    initPaymentRequest();
+  }, [stripe, savedPaymentMethod]);
+
+  async function handleGooglePay() {
+    const payload = {
+      pickup_when: data.pickup_when,
+      pickup: data.pickup,
+      dropoff: data.dropoff,
+      passengers: data.passengers,
+      notes: data.notes,
+      customer: { name, email, phone },
     };
-  }, [profile]);
+    logger.info(
+      'components/BookingWizard/PaymentStep',
+      'Submitting booking with Google Pay',
+      payload,
+    );
+    const res = await createBooking(payload);
+    if (!stripe || !paymentRequest) {
+      logger.warn(
+        'components/BookingWizard/PaymentStep',
+        'Stripe or payment request not ready',
+      );
+      return;
+    }
+    if (res.clientSecret) {
+      const tokenRes = (await paymentRequest.show()) as {
+        token?: { id: string };
+        complete: (status: string) => Promise<void>;
+      };
+      const token = tokenRes.token?.id;
+      if (token) {
+        const setup = await stripe.confirmCardSetup(res.clientSecret, {
+          payment_method: token,
+        });
+        const pm = setup?.setupIntent?.payment_method;
+        if (pm) {
+          await savePaymentMethod(pm as string);
+        }
+        if (typeof tokenRes.complete === 'function') {
+          await tokenRes.complete('success');
+        }
+        setBooking(res.booking);
+        logger.info(
+          'components/BookingWizard/PaymentStep',
+          'Booking confirmed via Google Pay',
+          res.booking,
+        );
+      }
+    } else {
+      logger.error(
+        'components/BookingWizard/PaymentStep',
+        'Booking creation failed',
+        res,
+      );
+    }
+  }
 
   async function handleSubmit() {
     const payload = {
@@ -240,6 +300,12 @@ function PaymentInner({ data, onBack }: Props) {
         50% deposit{price != null ? ` ($${(price * 0.5).toFixed(2)})` : ''} charged on
         confirmation
       </Typography>
+      {paymentRequest && !savedPaymentMethod && (
+        <PaymentRequestButtonElement
+          options={{ paymentRequest }}
+          onClick={handleGooglePay}
+        />
+      )}
       {savedPaymentMethod ? (
         <Typography>
           Using saved card {savedPaymentMethod.brand} ending in {savedPaymentMethod.last4}
