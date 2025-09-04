@@ -76,9 +76,14 @@ test('handles new card flow', async () => {
     </MemoryRouter>,
   );
 
+  const phoneField = screen.getByLabelText(/phone/i);
+  expect(phoneField).toHaveAttribute('readonly');
   await userEvent.click(screen.getByRole('button', { name: /submit/i }));
   expect(mockCreateBooking).toHaveBeenCalledWith(
-    expect.objectContaining({ pickup_when: '2025-01-01T00:00:00Z' }),
+    expect.objectContaining({
+      pickup_when: '2025-01-01T00:00:00Z',
+      customer: { name: '', email: '', phone: '123' },
+    }),
   );
   expect(mockConfirm).toHaveBeenCalledWith('sec', {
     payment_method: { card: mockCard },

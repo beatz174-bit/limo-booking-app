@@ -69,6 +69,7 @@ afterEach(() => {
 });
 
 test('advances through steps and aggregates form data', async () => {
+  localStorage.setItem('phone', '000');
   renderWithProviders(<BookingWizardPage />);
   const input = (re: RegExp) => screen.getByLabelText(re, { selector: 'input' });
 
@@ -97,4 +98,5 @@ test('advances through steps and aggregates form data', async () => {
     passengers: 2,
     notes: 'Be quick',
   });
+  localStorage.clear();
 });
