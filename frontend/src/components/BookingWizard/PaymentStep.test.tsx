@@ -43,7 +43,7 @@ test('shows tracking link after booking', async () => {
             dropoff: { address: 'B', lat: 1, lng: 1 },
             passengers: 1,
             notes: '',
-            customer: { name: '', email: '', phone: '' },
+            customer: { name: '', email: '', phone: '123' },
             pickupValid: true,
             dropoffValid: true,
           }}
@@ -53,9 +53,14 @@ test('shows tracking link after booking', async () => {
     </MemoryRouter>,
   );
 
+  const phoneField = screen.getByLabelText(/phone/i);
+  expect(phoneField).toHaveAttribute('readonly');
   await userEvent.click(screen.getByRole('button', { name: /submit/i }));
   expect(mockCreateBooking).toHaveBeenCalledWith(
-    expect.objectContaining({ pickup_when: '2025-01-01T00:00:00Z' }),
+    expect.objectContaining({
+      pickup_when: '2025-01-01T00:00:00Z',
+      customer: { name: '', email: '', phone: '123' },
+    }),
   );
   const link = await screen.findByRole('link', { name: /track this ride/i });
   expect(link).toHaveAttribute('href', '/t/ABC123');
@@ -73,7 +78,7 @@ test('updates metrics from route service', async () => {
             dropoff: { address: 'B', lat: 1, lng: 1 },
             passengers: 1,
             notes: '',
-            customer: { name: '', email: '', phone: '' },
+            customer: { name: '', email: '', phone: '123' },
             pickupValid: true,
             dropoffValid: true,
           }}
@@ -100,7 +105,7 @@ test('renders fare breakdown when dev features enabled', () => {
             dropoff: { address: 'B', lat: 1, lng: 1 },
             passengers: 1,
             notes: '',
-            customer: { name: '', email: '', phone: '' },
+            customer: { name: '', email: '', phone: '123' },
             pickupValid: true,
             dropoffValid: true,
           }}
@@ -126,7 +131,7 @@ test('hides fare breakdown when dev features disabled', () => {
             dropoff: { address: 'B', lat: 1, lng: 1 },
             passengers: 1,
             notes: '',
-            customer: { name: '', email: '', phone: '' },
+            customer: { name: '', email: '', phone: '123' },
             pickupValid: true,
             dropoffValid: true,
           }}
