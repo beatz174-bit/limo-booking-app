@@ -11,6 +11,7 @@ const ProfilePage = () => {
   const { ensureFreshToken } = useAuth();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [defaultPickup, setDefaultPickup] = useState('');
   const [oldPassword, setOldPassword] = useState('');
   const [oldPasswordValid, setOldPasswordValid] = useState(false);
@@ -29,6 +30,7 @@ const ProfilePage = () => {
         const data = await res.json();
         setFullName(data.full_name || '');
         setEmail(data.email || '');
+        setPhone(data.phone || '');
         setDefaultPickup(data.default_pickup_address || '');
       }
     };
@@ -63,6 +65,7 @@ const ProfilePage = () => {
     const body: Record<string, unknown> = {
       full_name: fullName,
       email,
+      phone,
       default_pickup_address: defaultPickup,
     };
     if (newPassword && newPassword === confirmPassword && oldPasswordValid) {
@@ -94,6 +97,7 @@ const ProfilePage = () => {
       </Typography>
       <TextField label="Full Name" value={fullName} onChange={e => setFullName(e.target.value)} margin="normal" fullWidth />
       <TextField label="Email" value={email} onChange={e => setEmail(e.target.value)} margin="normal" fullWidth />
+      <TextField label="Phone" value={phone} onChange={e => setPhone(e.target.value)} margin="normal" fullWidth />
       <AddressField
         id="defaultPickup"
         label="Default Pickup Address"
