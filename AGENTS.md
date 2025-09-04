@@ -9,6 +9,8 @@ These instructions apply to the entire repository.
 
 ## Code Style
 
+Be sure to follow all relevant best practices and industry conventions.
+
 ### Backend (Python)
 - Format code with `black` and sort imports with `isort`.
 - Keep lines at or below 88 characters.
