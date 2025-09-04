@@ -144,9 +144,25 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
           /* ignore */
         }
       };
+      ws.onerror = (e) => {
+        console.error('WebSocket error', e);
+        setError('Real-time connection error');
+        ws.close();
+      };
+      ws.onclose = () => {
+        console.warn(`WebSocket closed for booking ${b.id}`);
+        if (sockets[b.id] === ws) {
+          delete sockets[b.id];
+        }
+        setTimeout(() => {
+          if (accessToken) {
+            refresh();
+          }
+        }, 1000);
+      };
       sockets[b.id] = ws;
     });
-  }, [bookings, accessToken]);
+  }, [bookings, accessToken, refresh]);
 
   useEffect(
     () => () => {
