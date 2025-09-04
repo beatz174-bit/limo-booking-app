@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { deleteToken, getMessaging, getToken, onMessage } from 'firebase/messaging';
+import { deleteToken, getMessaging, getToken } from 'firebase/messaging';
 import * as logger from '@/lib/logger';
 
 let messaging: ReturnType<typeof getMessaging> | null = null;
@@ -64,10 +64,6 @@ export async function subscribePush(): Promise<string | null> {
     });
     console.log('FCM token:', token);
     logger.info('services/push', 'FCM token acquired', { token });
-    logger.debug('services/push', 'Listening for foreground messages');
-    onMessage(messaging, (payload) => {
-      logger.info('services/push', 'FCM message', payload);
-    });
     return token;
   } catch (err) {
     logger.error('services/push', 'FCM init failed', err);
