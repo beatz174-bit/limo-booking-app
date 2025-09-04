@@ -1,11 +1,12 @@
 import pytest
+from fastapi import HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.security import hash_password, verify_password
 from app.models.user_v2 import User
 from app.schemas.auth import LoginRequest, RegisterRequest
 from app.services import auth_service
-from fastapi import HTTPException
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest.mark.asyncio
@@ -58,7 +59,11 @@ async def test_authenticate_user_not_found(async_session: AsyncSession):
 @pytest.mark.asyncio
 async def test_register_user_success(async_session: AsyncSession):
     register_req = RegisterRequest(
-        email="new@async.com", full_name="New Async", password="newpass"
+        email="new@async.com",
+        full_name="New Async",
+        password="newpass",
+        phone="555-1234",
+        stripe_payment_method_id="pm_123",
     )
     result = await auth_service.register_user(async_session, register_req)
     # Should return a UserRead schema for the new user
@@ -78,6 +83,8 @@ async def test_register_user_success(async_session: AsyncSession):
     assert new_user is not None
     # Password should be stored hashed
     assert verify_password("newpass", new_user.hashed_password)
+    assert new_user.phone == "555-1234"
+    assert new_user.stripe_payment_method_id == "pm_123"
 
 
 @pytest.mark.asyncio

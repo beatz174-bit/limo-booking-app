@@ -231,7 +231,7 @@ describe('ProfilePage', () => {
     vi.stubGlobal('fetch', fetch);
 
     render(<ProfilePage />);
-    await screen.findByText(/payment method/i);
+    await screen.findByRole('heading', { name: /payment method/i });
     await userEvent.click(screen.getByRole('button', { name: /add card/i }));
     await userEvent.click(screen.getByRole('button', { name: /save card/i }));
     expect(mockConfirm).toHaveBeenCalledWith('sec', {

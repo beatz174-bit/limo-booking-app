@@ -2,6 +2,7 @@
 """Pydantic schemas for authentication endpoints."""
 
 import uuid
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr
 
@@ -39,6 +40,8 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     full_name: str
     password: str
+    phone: Optional[str] = None
+    stripe_payment_method_id: Optional[str] = None
 
 
 class TokenResponse(BaseModel):
