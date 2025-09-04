@@ -1,9 +1,10 @@
-import pytest
 import httpx
-from httpx import AsyncClient
+import pytest
 from _pytest.monkeypatch import MonkeyPatch
+from httpx import AsyncClient
 
 pytestmark = pytest.mark.asyncio
+
 
 async def test_reverse_geocode_timeout(monkeypatch: MonkeyPatch, client: AsyncClient):
     from app.api import geocode as geocode_router
@@ -21,7 +22,9 @@ async def test_reverse_geocode_timeout(monkeypatch: MonkeyPatch, client: AsyncCl
 async def test_geocode_search_http_error(monkeypatch: MonkeyPatch, client: AsyncClient):
     from app.api import geocode as geocode_router
 
-    async def fake_search(q: str, limit: int = 5):
+    async def fake_search(
+        q: str, limit: int = 5, lat: float | None = None, lon: float | None = None
+    ):
         raise httpx.HTTPError("boom")
 
     monkeypatch.setattr(geocode_router, "search_geocode", fake_search)
