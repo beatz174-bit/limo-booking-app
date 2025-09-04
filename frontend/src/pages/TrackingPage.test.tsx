@@ -3,7 +3,6 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { vi } from 'vitest';
 import type { LocationUpdate } from '@/hooks/useBookingChannel';
 import TrackingPage from './TrackingPage';
-import carIcon from '@/assets/car-marker.svg';
 import dropoffIcon from '@/assets/dropoff-marker-red.svg';
 
 type MapProps = {
@@ -32,10 +31,13 @@ vi.mock('@react-google-maps/api', () => ({
     'data-testid': testId,
   }: {
     position: { lat: number; lng: number };
-    icon?: string;
+    icon?: unknown;
     'data-testid'?: string;
   }) => (
-    <div data-testid={testId ?? 'marker'} data-icon={icon}>
+    <div
+      data-testid={testId ?? 'marker'}
+      data-icon={typeof icon === 'string' ? icon : 'object'}
+    >
       {position.lat},{position.lng}
     </div>
   ),
@@ -120,7 +122,7 @@ describe('TrackingPage', () => {
       expect(screen.getByTestId('pickup-marker')).toBeInTheDocument(),
     );
     expect(screen.getByTestId('marker').textContent).toBe('1,2');
-    expect(screen.getByTestId('marker')).toHaveAttribute('data-icon', carIcon);
+    expect(screen.getByTestId('marker')).toHaveAttribute('data-icon', 'object');
     expect(screen.getByTestId('pickup-marker').textContent).toBe('3,4');
     expect(screen.queryByTestId('dropoff-marker')).toBeNull();
     await waitFor(() =>

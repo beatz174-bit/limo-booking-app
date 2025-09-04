@@ -8,7 +8,6 @@ import { useBookingChannel } from '@/hooks/useBookingChannel';
 import StatusTimeline, { type StatusStep } from '@/components/StatusTimeline';
 import { calculateDistance } from '@/lib/calculateDistance';
 import type { BookingStatus } from '@/types/BookingStatus';
-import carIcon from '@/assets/car-marker.svg';
 import pickupIcon from '@/assets/pickup-marker-green.svg';
 import dropoffIcon from '@/assets/dropoff-marker-red.svg';
 
@@ -55,6 +54,9 @@ const STATUS_STEPS: StatusStep[] = [
   { key: 'COMPLETED', label: 'Completed' },
 ];
 
+const DRIVER_ARROW_PATH =
+  'M16 0a16 16 0 1 0 0 32a16 16 0 1 0 0-32m0 6l6 8h-4v12h-4V14h-4z';
+
 export default function TrackingPage() {
   const { code } = useParams();
   const [bookingId, setBookingId] = useState<string | null>(null);
@@ -70,6 +72,8 @@ export default function TrackingPage() {
   const mapRef = useRef<google.maps.Map | null>(null);
   const [zoom, setZoom] = useState(14);
   const [center, setCenter] = useState<LatLngLiteral>();
+  const prevPos = useRef<LatLngLiteral | null>(null);
+  const [heading, setHeading] = useState(0);
 
   const isDropoff = useMemo(
     () =>
@@ -139,6 +143,19 @@ export default function TrackingPage() {
 
   useEffect(() => {
     if (!pos) return;
+    if (prevPos.current) {
+      const dx = pos.lng - prevPos.current.lng;
+      const dy = pos.lat - prevPos.current.lat;
+      if (dx !== 0 || dy !== 0) {
+        const angle = (Math.atan2(dx, dy) * 180) / Math.PI;
+        setHeading(angle);
+      }
+    }
+    prevPos.current = pos;
+  }, [pos]);
+
+  useEffect(() => {
+    if (!pos) return;
     if (!nextStop) {
       setCenter(pos);
       setZoom(14);
@@ -185,7 +202,19 @@ export default function TrackingPage() {
             gestureHandling: 'none',
           }}
         >
-          <Marker position={pos} icon={carIcon} />
+          <Marker
+            position={pos}
+            icon={{
+              path: DRIVER_ARROW_PATH,
+              fillColor: '#333',
+              fillOpacity: 1,
+              strokeColor: '#333',
+              strokeWeight: 2,
+              rotation: heading,
+              scale: 0.3,
+              anchor: { x: 16, y: 16 } as google.maps.Point,
+            }}
+          />
           {nextStop && (
             <Marker
               position={nextStop}
