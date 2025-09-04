@@ -57,6 +57,7 @@ export function AddressField(props: {
     <Autocomplete<AddressSuggestion, false, false, true>
       freeSolo
       options={props.suggestions}
+      filterOptions={(opts) => opts}
       getOptionLabel={(option) =>
         typeof option === "string" ? option : option.address
       }

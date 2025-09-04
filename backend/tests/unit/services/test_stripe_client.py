@@ -1,3 +1,5 @@
+import uuid
+
 import pytest
 
 from app.core.security import hash_password
@@ -39,3 +41,39 @@ async def test_save_payment_method_stores_id(async_session, mocker):
 
     mock_set_default.assert_called_once_with("cus_test", "pm_gpay")
     assert user.stripe_payment_method_id == "pm_gpay"
+
+
+def test_charge_deposit_with_google_pay_payment_method(mocker):
+    captured: dict = {}
+
+    def fake_create(**kwargs):
+        captured.update(kwargs)
+        return stripe_client._StubIntent(id="pi_test")
+
+    mocker.patch.object(stripe_client.stripe.PaymentIntent, "create", fake_create)
+
+    stripe_client.charge_deposit(
+        amount_cents=5000,
+        booking_id=uuid.uuid4(),
+        payment_method="pm_gpay",
+    )
+
+    assert captured["payment_method"] == "pm_gpay"
+
+
+def test_charge_final_with_google_pay_payment_method(mocker):
+    captured: dict = {}
+
+    def fake_create(**kwargs):
+        captured.update(kwargs)
+        return stripe_client._StubIntent(id="pi_test")
+
+    mocker.patch.object(stripe_client.stripe.PaymentIntent, "create", fake_create)
+
+    stripe_client.charge_final(
+        amount_cents=5000,
+        booking_id=uuid.uuid4(),
+        payment_method="pm_gpay",
+    )
+
+    assert captured["payment_method"] == "pm_gpay"

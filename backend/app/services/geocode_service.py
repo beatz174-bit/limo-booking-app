@@ -115,7 +115,12 @@ async def search_geocode(
             "google autocomplete request",
             extra={"url": autocomplete_url, "query": query, "limit": limit},
         )
-        auto_params = {"input": query, "key": api_key}
+        auto_params = {
+            "input": query,
+            "key": api_key,
+            "components": "country:AU",
+            "types": "address",
+        }
         if lat is not None and lon is not None:
             auto_params.update({"location": f"{lat},{lon}", "radius": 50000})
         auto_res = await client.get(autocomplete_url, params=auto_params)
