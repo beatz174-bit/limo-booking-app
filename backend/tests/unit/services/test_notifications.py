@@ -3,11 +3,10 @@ from types import SimpleNamespace
 import httpx
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
-from jose import jwt
-
 from app.models.notification import NotificationType
 from app.models.user_v2 import UserRole
-from app.services.notifications import _send_fcm
+from app.services.notifications import _send_fcm, notification_map
+from jose import jwt
 
 
 @pytest.mark.asyncio
@@ -75,3 +74,6 @@ async def test_send_fcm_uses_async_client(monkeypatch: MonkeyPatch):
     assert "oauth2.googleapis.com/token" in token_call[0]
     assert msg_call[1]["headers"]["Authorization"] == "Bearer abc"
     assert msg_call[1]["json"]["message"]["token"] == "tok"
+    notif = msg_call[1]["json"]["message"]["webpush"]["notification"]
+    assert notif == notification_map[NotificationType.ON_THE_WAY]
+    assert all(isinstance(v, str) for v in notif.values())

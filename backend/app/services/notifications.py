@@ -6,14 +6,13 @@ from datetime import datetime, timezone
 from typing import Any
 
 import httpx
-from jose import jwt
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.config import get_settings
 from app.models.notification import Notification, NotificationType
 from app.models.user_v2 import User as UserV2
 from app.models.user_v2 import UserRole
+from jose import jwt
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 notification_map: dict[NotificationType, dict[str, str]] = {
     NotificationType.NEW_BOOKING: {
@@ -142,7 +141,7 @@ async def _send_fcm(
                         "message": {
                             "token": token,
                             "data": data,
-                            "notification": notification,
+                            "webpush": {"notification": notification},
                         }
                     }
                     await client.post(
@@ -155,7 +154,7 @@ async def _send_fcm(
                     "message": {
                         "topic": to_role.value.lower(),
                         "data": data,
-                        "notification": notification,
+                        "webpush": {"notification": notification},
                     }
                 }
                 await client.post(
