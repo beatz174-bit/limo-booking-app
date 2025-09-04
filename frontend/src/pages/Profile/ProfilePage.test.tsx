@@ -45,6 +45,7 @@ describe('ProfilePage', () => {
           json: async () => ({
             full_name: 'John Doe',
             email: 'john@example.com',
+            phone: '111-2222',
             default_pickup_address: 'Old St',
           }),
         } as Response);
@@ -59,10 +60,13 @@ describe('ProfilePage', () => {
     render(<ProfilePage />);
 
     await screen.findByDisplayValue('John Doe');
+    await screen.findByDisplayValue('111-2222');
     await userEvent.clear(screen.getByLabelText(/full name/i));
     await userEvent.type(screen.getByLabelText(/full name/i), 'Jane Doe');
     await userEvent.clear(screen.getByLabelText(/email/i));
     await userEvent.type(screen.getByLabelText(/email/i), 'jane@example.com');
+    await userEvent.clear(screen.getByLabelText(/phone/i));
+    await userEvent.type(screen.getByLabelText(/phone/i), '999-8888');
     const addr = screen.getByLabelText(/default pickup address/i);
     await userEvent.clear(addr);
     await userEvent.type(addr, '123 New St');
@@ -88,6 +92,7 @@ describe('ProfilePage', () => {
     expect(JSON.parse(options.body as string)).toEqual({
       full_name: 'Jane Doe',
       email: 'jane@example.com',
+      phone: '999-8888',
       default_pickup_address: '123 New St',
       password: 'newpw',
     });
@@ -102,6 +107,7 @@ describe('ProfilePage', () => {
           json: async () => ({
             full_name: 'John Doe',
             email: 'john@example.com',
+            phone: '',
             default_pickup_address: '',
           }),
         } as Response),
@@ -129,6 +135,7 @@ describe('ProfilePage', () => {
           json: async () => ({
             full_name: 'John Doe',
             email: 'john@example.com',
+            phone: '',
             default_pickup_address: '',
           }),
         } as Response),

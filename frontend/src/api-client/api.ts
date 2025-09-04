@@ -741,11 +741,17 @@ export interface UserCreate {
      */
     'full_name': string;
     /**
-     * 
+     *
      * @type {string}
      * @memberof UserCreate
      */
     'default_pickup_address'?: string | null;
+    /**
+     *
+     * @type {string}
+     * @memberof UserCreate
+     */
+    'phone'?: string | null;
     /**
      * 
      * @type {string}
@@ -772,11 +778,17 @@ export interface UserRead {
      */
     'full_name': string;
     /**
-     * 
+     *
      * @type {string}
      * @memberof UserRead
      */
     'default_pickup_address'?: string | null;
+    /**
+     *
+     * @type {string}
+     * @memberof UserRead
+     */
+    'phone'?: string | null;
     /**
      * 
      * @type {string}
@@ -809,23 +821,29 @@ export interface UserUpdate {
      */
     'full_name'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof UserUpdate
      */
     'password'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof UserUpdate
      */
     'default_pickup_address'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof UserUpdate
      */
     'fcm_token'?: string | null;
+    /**
+     *
+     * @type {string}
+     * @memberof UserUpdate
+     */
+    'phone'?: string | null;
 }
 /**
  * 
