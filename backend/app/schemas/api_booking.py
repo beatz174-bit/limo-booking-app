@@ -4,9 +4,8 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from pydantic import BaseModel, Field, field_validator
-
 from app.models.booking import BookingStatus
+from pydantic import BaseModel, Field, field_validator
 
 
 class Location(BaseModel):
@@ -15,14 +14,7 @@ class Location(BaseModel):
     lng: float
 
 
-class CustomerInfo(BaseModel):
-    name: str
-    email: str
-    phone: Optional[str] = None
-
-
 class BookingCreateRequest(BaseModel):
-    customer: CustomerInfo
     pickup_when: datetime
     pickup: Location
     dropoff: Location

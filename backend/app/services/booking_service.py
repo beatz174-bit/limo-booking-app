@@ -6,10 +6,6 @@ from datetime import datetime, timedelta, timezone
 from math import atan2, cos, radians, sin, sqrt
 
 import stripe
-from fastapi import HTTPException
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.api.ws import send_booking_update
 from app.models.availability_slot import AvailabilitySlot
 from app.models.booking import Booking, BookingStatus
@@ -20,10 +16,13 @@ from app.models.trip import Trip
 from app.models.user_v2 import User, UserRole
 from app.schemas.api_booking import BookingCreateRequest
 from app.services import notifications, pricing_service, routing, stripe_client
+from fastapi import HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def create_booking(
-    db: AsyncSession, data: BookingCreateRequest
+    db: AsyncSession, data: BookingCreateRequest, user: User
 ) -> tuple[Booking, str]:
     """Create a booking and corresponding Stripe SetupIntent."""
     # ``pickup_when`` is normalized to UTC by the request schema validator.
@@ -31,24 +30,7 @@ async def create_booking(
     if data.pickup_when <= now_utc:
         raise ValueError("pickup time must be in the future")
 
-    result = await db.execute(select(User).where(User.email == data.customer.email))
-    customer = result.scalar_one_or_none()
-    if customer is None:
-        customer = User(
-            email=data.customer.email,
-            full_name=data.customer.name,
-            hashed_password="",
-            role=UserRole.CUSTOMER,
-            phone=data.customer.phone,
-        )
-        db.add(customer)
-        await db.flush()
-    else:
-        if data.customer.phone is None:
-            data.customer.phone = customer.phone
-        else:
-            customer.phone = data.customer.phone
-
+    customer = user
     if customer.stripe_customer_id is None:
         stripe_customer = stripe_client.create_customer(
             customer.email, customer.full_name
