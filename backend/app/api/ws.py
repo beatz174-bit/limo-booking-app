@@ -4,19 +4,19 @@ import logging
 import uuid
 from datetime import datetime, timezone
 
-from broadcaster import Broadcast
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-
+from app.core.broadcast import broadcast
 from app.core.security import decode_token
 from app.db.database import AsyncSessionLocal
 from app.models.booking import Booking, BookingStatus
+from app.models.notification import NotificationType
 from app.models.route_point import RoutePoint
 from app.models.user_v2 import User, UserRole
+from app.services import notifications
 from app.services.settings_service import get_admin_user_id
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-broadcast = Broadcast("memory://")
 
 
 async def send_booking_update(booking: Booking, **fields) -> None:
@@ -42,6 +42,8 @@ async def send_booking_update(booking: Booking, **fields) -> None:
 
 @router.websocket("/ws/bookings/{booking_id}")
 async def booking_ws(websocket: WebSocket, booking_id: uuid.UUID):
+    from app.services import booking_service
+
     token = websocket.query_params.get("token")
     if not token:
         await websocket.close(code=1008)
@@ -89,7 +91,7 @@ async def booking_ws(websocket: WebSocket, booking_id: uuid.UUID):
                 if isinstance(payload, dict) and {"lat", "lng", "ts"} <= payload.keys():
                     async with AsyncSessionLocal() as db:
                         booking = await db.get(Booking, booking_id)
-                        if booking and booking.status == BookingStatus.IN_PROGRESS:
+                        if booking:
                             point = RoutePoint(
                                 booking_id=booking_id,
                                 ts=datetime.fromtimestamp(payload["ts"], timezone.utc),
@@ -107,6 +109,57 @@ async def booking_ws(websocket: WebSocket, booking_id: uuid.UUID):
                                     "lng": payload["lng"],
                                 },
                             )
+
+                            if booking.status == BookingStatus.DRIVER_CONFIRMED:
+                                await booking_service.leave_booking(db, booking_id)
+                                await broadcast.publish(
+                                    channel=channel,
+                                    message=json.dumps({"status": "ON_THE_WAY"}),
+                                )
+                            elif booking.status == BookingStatus.ON_THE_WAY:
+                                distance = booking_service._haversine(
+                                    payload["lat"],
+                                    payload["lng"],
+                                    booking.pickup_lat,
+                                    booking.pickup_lng,
+                                )
+                                if distance < 50:
+                                    await booking_service.arrive_pickup(db, booking_id)
+                                    await notifications.create_notification(
+                                        db,
+                                        booking.id,
+                                        NotificationType.ARRIVED_PICKUP,
+                                        UserRole.CUSTOMER,
+                                        {},
+                                    )
+                                    await broadcast.publish(
+                                        channel=channel,
+                                        message=json.dumps(
+                                            {"status": "ARRIVED_PICKUP"}
+                                        ),
+                                    )
+                            elif booking.status == BookingStatus.IN_PROGRESS:
+                                distance = booking_service._haversine(
+                                    payload["lat"],
+                                    payload["lng"],
+                                    booking.dropoff_lat,
+                                    booking.dropoff_lng,
+                                )
+                                if distance < 50:
+                                    await booking_service.arrive_dropoff(db, booking_id)
+                                    await notifications.create_notification(
+                                        db,
+                                        booking.id,
+                                        NotificationType.ARRIVED_DROPOFF,
+                                        UserRole.CUSTOMER,
+                                        {},
+                                    )
+                                    await broadcast.publish(
+                                        channel=channel,
+                                        message=json.dumps(
+                                            {"status": "ARRIVED_DROPOFF"}
+                                        ),
+                                    )
                 await broadcast.publish(channel=channel, message=data)
         except WebSocketDisconnect:
             logger.info(
