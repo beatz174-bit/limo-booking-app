@@ -24,7 +24,12 @@ async def test_reverse_geocode_endpoint(monkeypatch: MonkeyPatch, client: AsyncC
 async def test_geocode_search_endpoint(monkeypatch: MonkeyPatch, client: AsyncClient):
     from app.api import geocode as geocode_router
 
-    async def fake_search(q: str, limit: int = 5):  # type: ignore
+    async def fake_search(
+        q: str,
+        limit: int = 5,
+        lat: float | None = None,
+        lon: float | None = None,
+    ):  # type: ignore
         assert q == "Main St"
         assert limit == 5
         return [
