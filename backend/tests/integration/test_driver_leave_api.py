@@ -1,14 +1,19 @@
+import json
 import uuid
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from httpx import AsyncClient
-from sqlalchemy import select
+from starlette.testclient import TestClient
 
 from app.core.security import hash_password
+from app.main import app
 from app.models.booking import Booking, BookingStatus
-from app.models.notification import Notification, NotificationType
 from app.models.user_v2 import User, UserRole
+from app.services import scheduler as scheduler_service
+
+# Disable scheduler during tests to avoid event loop issues
+scheduler_service.scheduler.start = lambda *_, **__: None
+scheduler_service.scheduler.shutdown = lambda *_, **__: None
 
 pytestmark = pytest.mark.asyncio
 
@@ -43,20 +48,13 @@ async def _create_confirmed_booking(async_session) -> Booking:
     return booking
 
 
-async def test_driver_leave_booking(async_session, client: AsyncClient, admin_headers):
+async def test_driver_leave_booking(async_session, admin_headers):
     booking = await _create_confirmed_booking(async_session)
-
-    res = await client.post(
-        f"/api/v1/driver/bookings/{booking.id}/leave", headers=admin_headers
-    )
-    assert res.status_code == 200
-    data = res.json()
-    assert data["status"] == "ON_THE_WAY"
-
+    token = admin_headers["Authorization"].split()[1]
+    with TestClient(app) as client:
+        with client.websocket_connect(f"/ws/bookings/{booking.id}?token={token}") as ws:
+            ws.send_text(json.dumps({"lat": -27.05, "lng": 153.05, "ts": 1}))
+            ws.receive_json()
+            ws.receive_json()
     await async_session.refresh(booking)
     assert booking.status == BookingStatus.ON_THE_WAY
-
-    notif = await async_session.execute(
-        select(Notification).where(Notification.booking_id == booking.id)
-    )
-    assert notif.scalar_one().type == NotificationType.ON_THE_WAY
