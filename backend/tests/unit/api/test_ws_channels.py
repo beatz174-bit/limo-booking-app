@@ -3,6 +3,9 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 import pytest
+from starlette.testclient import TestClient
+from starlette.websockets import WebSocketDisconnect
+
 from app.core.security import create_jwt_token, hash_password
 from app.main import app
 from app.models.booking import Booking, BookingStatus
@@ -10,8 +13,6 @@ from app.models.settings import AdminConfig
 from app.models.user_v2 import User, UserRole
 from app.services import scheduler as scheduler_service
 from app.services import settings_service
-from starlette.testclient import TestClient
-from starlette.websockets import WebSocketDisconnect
 
 pytestmark = pytest.mark.asyncio
 
@@ -119,3 +120,18 @@ async def test_driver_and_owner_channels(async_session):
             payload2 = {"lat": 3.0, "lng": 4.0, "ts": 2}
             driver_ws.send_text(json.dumps(payload2))
             assert owner_ws.receive_json() == payload2
+
+
+async def test_admin_can_watch_booking(async_session):
+    driver, customer, booking = await _prepare_data(async_session)
+    driver_token = create_jwt_token(driver.id)
+
+    with TestClient(app) as client:
+        with client.websocket_connect(
+            f"/ws/bookings/{booking.id}?token={driver_token}"
+        ) as driver_ws, client.websocket_connect(
+            f"/ws/bookings/{booking.id}/watch?token={driver_token}"
+        ) as admin_ws:
+            payload = {"lat": 5.0, "lng": 6.0, "ts": 3}
+            driver_ws.send_text(json.dumps(payload))
+            assert admin_ws.receive_json() == payload
