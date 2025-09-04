@@ -73,12 +73,11 @@ def create_customer(email: str, name: str, phone: str | None = None):
 
 def create_setup_intent(customer_id: str, booking_reference: str):
     """Create a SetupIntent for the specified customer."""
-
     return stripe.SetupIntent.create(
         customer=customer_id,
-        payment_method_types=["card"],
         usage="off_session",
         metadata={"booking_reference": booking_reference},
+        automatic_payment_methods={"enabled": True},
     )
 
 
