@@ -19,9 +19,6 @@ import { useRouteMetrics } from '@/hooks/useRouteMetrics';
 import FareBreakdown from '@/components/FareBreakdown';
 import * as logger from '@/lib/logger';
 import { BookingFormData } from '@/types/BookingFormData';
-import { useAuth } from '@/contexts/AuthContext';
-import { apiFetch } from '@/services/apiFetch';
-import { CONFIG } from '@/config';
 
 const stripePromise = (async () => {
   try {
