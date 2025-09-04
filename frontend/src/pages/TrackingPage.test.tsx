@@ -57,24 +57,28 @@ describe('TrackingPage', () => {
     mapCenter = undefined;
     mockMap = { fitBounds: vi.fn() };
     endLocation = { lat: 3, lng: 4 };
-      vi.stubGlobal(
-        'fetch',
-        vi.fn(() =>
-          Promise.resolve({
-            ok: true,
-            json: () =>
-              Promise.resolve({
-                booking: {
-                  id: '1',
-                  pickup_address: 'P',
-                  dropoff_address: 'D',
-                  status: 'DRIVER_CONFIRMED',
-                },
-                ws_url: '',
-              }),
-          }) as unknown as Response,
-        ),
-      );
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              booking: {
+                id: '1',
+                pickup_address: 'P',
+                dropoff_address: 'D',
+                status: 'DRIVER_CONFIRMED',
+                pickup_lat: endLocation.lat,
+                pickup_lng: endLocation.lng,
+                dropoff_lat: 5,
+                dropoff_lng: 6,
+              },
+              ws_url: '',
+            }),
+        }) as unknown as Response,
+      ),
+    );
     const maps = {
       DirectionsService: class {
         route() {
@@ -148,6 +152,10 @@ describe('TrackingPage', () => {
                   pickup_address: 'P',
                   dropoff_address: 'D',
                   status: 'ARRIVED_PICKUP',
+                  pickup_lat: 3,
+                  pickup_lng: 4,
+                  dropoff_lat: endLocation.lat,
+                  dropoff_lng: endLocation.lng,
                 },
                 ws_url: '',
               }),
@@ -184,6 +192,10 @@ describe('TrackingPage', () => {
             pickup_address: 'P',
             dropoff_address: 'D',
             status: 'IN_PROGRESS',
+            pickup_lat: 3,
+            pickup_lng: 4,
+            dropoff_lat: 5,
+            dropoff_lng: 6,
           },
           ws_url: '',
         }),

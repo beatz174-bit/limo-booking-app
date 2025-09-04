@@ -16,7 +16,7 @@ type GoogleLike = {
     DirectionsService: new () => {
       route: (req: {
         origin: unknown;
-        destination: string;
+        destination: unknown;
         travelMode: string;
       }) => Promise<{
         routes: {
@@ -41,6 +41,10 @@ interface TrackResponse {
     pickup_address: string;
     dropoff_address: string;
     status: BookingStatus;
+    pickup_lat: number;
+    pickup_lng: number;
+    dropoff_lat: number;
+    dropoff_lng: number;
   };
   ws_url: string;
 }
@@ -60,10 +64,10 @@ const DRIVER_ARROW_PATH =
 export default function TrackingPage() {
   const { code } = useParams();
   const [bookingId, setBookingId] = useState<string | null>(null);
-  const [pickup, setPickup] = useState('');
-  const [dropoff, setDropoff] = useState('');
   const [status, setStatus] = useState<BookingStatus | ''>('');
   const [eta, setEta] = useState<number | null>(null);
+  const [pickupCoords, setPickupCoords] = useState<LatLngLiteral | null>(null);
+  const [dropoffCoords, setDropoffCoords] = useState<LatLngLiteral | null>(null);
   const [nextStop, setNextStop] = useState<{ lat: number; lng: number } | null>(
     null,
   );
@@ -74,6 +78,7 @@ export default function TrackingPage() {
   const [center, setCenter] = useState<LatLngLiteral>();
   const prevPos = useRef<LatLngLiteral | null>(null);
   const [heading, setHeading] = useState(0);
+  const prevDest = useRef<LatLngLiteral | null>(null);
 
   const isDropoff = useMemo(
     () =>
@@ -91,9 +96,15 @@ export default function TrackingPage() {
       if (res.ok) {
         const data: TrackResponse = await res.json();
         setBookingId(data.booking.id);
-        setPickup(data.booking.pickup_address);
-        setDropoff(data.booking.dropoff_address);
         setStatus(data.booking.status);
+        setPickupCoords({
+          lat: data.booking.pickup_lat,
+          lng: data.booking.pickup_lng,
+        });
+        setDropoffCoords({
+          lat: data.booking.dropoff_lat,
+          lng: data.booking.dropoff_lng,
+        });
       }
     })();
   }, [code]);
@@ -104,7 +115,7 @@ export default function TrackingPage() {
 
   useEffect(() => {
     async function calcEta() {
-      if (!update || !pickup || !dropoff) return;
+      if (!update || !pickupCoords || !dropoffCoords) return;
       const g = (window as { google?: GoogleLike }).google;
       if (!g?.maps) return;
       const svc = new g.maps.DirectionsService();
@@ -115,26 +126,33 @@ export default function TrackingPage() {
         'ARRIVED_DROPOFF',
         'COMPLETED',
       ].includes(effectiveStatus);
-      const dest = goingToDropoff ? dropoff : pickup;
+      const destCoords = goingToDropoff ? dropoffCoords : pickupCoords;
+      if (
+        !prevDest.current ||
+        prevDest.current.lat !== destCoords.lat ||
+        prevDest.current.lng !== destCoords.lng
+      ) {
+        setRoute(null);
+        prevDest.current = destCoords;
+      }
+      setNextStop(destCoords);
       try {
         const res = await svc.route({
           origin: new g.maps.LatLng(update.lat, update.lng),
-          destination: dest,
+          destination: new g.maps.LatLng(destCoords.lat, destCoords.lng),
           travelMode: g.maps.TravelMode.DRIVING,
         });
         setRoute(res as unknown as google.maps.DirectionsResult);
         const leg = res.routes[0].legs[0];
         const sec = leg.duration.value;
         setEta(Math.round(sec / 60));
-        setNextStop(leg.end_location.toJSON());
       } catch {
         setEta(null);
-        setNextStop(null);
         setRoute(null);
       }
     }
     void calcEta();
-  }, [update, update?.status, status, pickup, dropoff]);
+  }, [update, update?.status, status, pickupCoords, dropoffCoords]);
 
   const pos = useMemo(
     () => (update ? { lat: update.lat, lng: update.lng } : null),
