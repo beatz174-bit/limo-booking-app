@@ -38,55 +38,53 @@ function App() {
 
   return (
     <>
-    {accessToken && <NavBar />}
-    <Routes>
-      <Route path="/" element={<RequireAuth><HomePage /></RequireAuth>} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={!accessToken ? <RegisterPage /> : <Navigate to="/" />} />
-      <Route path="/setup" element={<SetupPage />} />
+      {accessToken && <NavBar />}
+      <BookingsProvider>
+        <Routes>
+          <Route path="/" element={<RequireAuth><HomePage /></RequireAuth>} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={!accessToken ? <RegisterPage /> : <Navigate to="/" />} />
+          <Route path="/setup" element={<SetupPage />} />
 
-      {/* Protected user routes */}
-      <Route path="/book" element={<RequireAuth><BookingWizardPage /></RequireAuth>} />
-      <Route
-        path="/history"
-        element={
-          <RequireAuth>
-            <BookingsProvider>
-              <RideHistoryPage />
-            </BookingsProvider>
-          </RequireAuth>
-        }
-      />
-      <Route path="/history/:id" element={<RequireAuth><RideDetailsPage /></RequireAuth>} />
-      <Route path="/me" element={<RequireAuth><ProfilePage /></RequireAuth>} />
+          {/* Protected user routes */}
+          <Route path="/book" element={<RequireAuth><BookingWizardPage /></RequireAuth>} />
+          <Route
+            path="/history"
+            element={
+              <RequireAuth>
+                <RideHistoryPage />
+              </RequireAuth>
+            }
+          />
+          <Route path="/history/:id" element={<RequireAuth><RideDetailsPage /></RequireAuth>} />
+          <Route path="/me" element={<RequireAuth><ProfilePage /></RequireAuth>} />
 
-      {/* Protected admin-only routes */}
-      <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
-      <Route
-        path="/driver"
-        element={
-          <RequireAdmin>
-            <BookingsProvider>
-              <DriverDashboard />
-            </BookingsProvider>
-          </RequireAdmin>
-        }
-      />
-      <Route path="/driver/availability" element={<RequireAdmin><AvailabilityPage /></RequireAdmin>} />
-      <Route
-        path="/t/:code"
-        element={
-          <MapProvider>
-            <TrackingPage />
-          </MapProvider>
-        }
-      />
+          {/* Protected admin-only routes */}
+          <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
+          <Route
+            path="/driver"
+            element={
+              <RequireAdmin>
+                <DriverDashboard />
+              </RequireAdmin>
+            }
+          />
+          <Route path="/driver/availability" element={<RequireAdmin><AvailabilityPage /></RequireAdmin>} />
+          <Route
+            path="/t/:code"
+            element={
+              <MapProvider>
+                <TrackingPage />
+              </MapProvider>
+            }
+          />
 
-      {devEnabled && <Route path="/devnotes" element={<DevNotes />} />}
+          {devEnabled && <Route path="/devnotes" element={<DevNotes />} />}
 
-      {/* Default/fallback route */}
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
+          {/* Default/fallback route */}
+          <Route path="*" element={<PageNotFound />} />
+        </Routes>
+      </BookingsProvider>
     </>
   );
 }
