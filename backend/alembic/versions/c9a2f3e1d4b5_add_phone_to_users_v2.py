@@ -1,4 +1,4 @@
-"""add phone to users_v2
+"""add nullable phone to users_v2
 
 Revision ID: c9a2f3e1d4b5
 Revises: 13b1cf856965
@@ -6,6 +6,7 @@ Create Date: 2025-02-15 00:00:00.000000
 """
 
 import sqlalchemy as sa
+
 from alembic import op
 
 # revision identifiers, used by Alembic.

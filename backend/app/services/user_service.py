@@ -6,12 +6,13 @@ import logging
 import uuid
 from typing import Optional
 
-from app.core.security import hash_password
-from app.models.user_v2 import User
-from app.schemas.user import UserCreate, UserRead, UserUpdate
 from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.security import hash_password
+from app.models.user_v2 import User
+from app.schemas.user import UserCreate, UserRead, UserUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ async def create_user(db: AsyncSession, data: UserCreate) -> UserRead:
         email=data.email,
         full_name=data.full_name,
         hashed_password=hash_password(data.password),
-        phone=data.phone,
+        phone=data.phone,  # Store phone when provided
     )
     db.add(user)
     await db.flush()

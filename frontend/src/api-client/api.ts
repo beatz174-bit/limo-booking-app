@@ -747,6 +747,12 @@ export interface UserCreate {
      */
     'default_pickup_address'?: string | null;
     /**
+     *
+     * @type {string}
+     * @memberof UserCreate
+     */
+    'phone'?: string | null;
+    /**
      * 
      * @type {string}
      * @memberof UserCreate
@@ -777,6 +783,12 @@ export interface UserRead {
      * @memberof UserRead
      */
     'default_pickup_address'?: string | null;
+    /**
+     *
+     * @type {string}
+     * @memberof UserRead
+     */
+    'phone'?: string | null;
     /**
      * 
      * @type {string}
@@ -821,11 +833,17 @@ export interface UserUpdate {
      */
     'default_pickup_address'?: string | null;
     /**
-     * 
+     *
      * @type {string}
      * @memberof UserUpdate
      */
     'fcm_token'?: string | null;
+    /**
+     *
+     * @type {string}
+     * @memberof UserUpdate
+     */
+    'phone'?: string | null;
 }
 /**
  * 

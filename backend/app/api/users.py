@@ -1,8 +1,11 @@
-"""User management API routes."""
+"""User management API routes, including phone support."""
 
 import logging
 import uuid
 from typing import List
+
+from fastapi import APIRouter, Depends, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import get_current_user, get_db
 from app.models.user_v2 import User
@@ -14,8 +17,6 @@ from app.services.user_service import (
     list_users,
     update_user,
 )
-from fastapi import APIRouter, Depends, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
