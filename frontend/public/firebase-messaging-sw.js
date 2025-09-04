@@ -36,6 +36,8 @@ self.addEventListener('push', event => {
     },
   };
 
+  console.log(msg);
+
   const lookup = msg.type ? notificationMap[msg.type] : undefined;
   const title = msg.title || (lookup && lookup.title) || 'Notification';
   const options = { body: msg.body || (lookup && lookup.body) };
