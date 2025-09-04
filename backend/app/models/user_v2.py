@@ -3,11 +3,10 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
+from app.db.database import Base
 from sqlalchemy import UUID, DateTime, Enum, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
-
-from app.db.database import Base
 
 
 class UserRole(str, enum.Enum):
@@ -30,6 +29,10 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(Text, name="password_hash")
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.CUSTOMER)
     fcm_token: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    stripe_customer_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    stripe_payment_method_id: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
