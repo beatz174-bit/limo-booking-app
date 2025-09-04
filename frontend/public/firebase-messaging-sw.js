@@ -1,4 +1,5 @@
 self.addEventListener('push', event => {
+  console.log('Push event:', event);
   const payload = event.data?.json() ?? {};
   const msg = payload.data || payload;
   const notificationMap = {
