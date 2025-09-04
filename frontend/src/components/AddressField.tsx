@@ -1,6 +1,12 @@
 // Text field with autocomplete and optional geolocation button.
 import { useEffect } from "react";
-import { TextField, InputAdornment, IconButton, CircularProgress, Autocomplete } from "@mui/material";
+import {
+  TextField,
+  InputAdornment,
+  IconButton,
+  CircularProgress,
+  Autocomplete,
+} from "@mui/material";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
 import * as logger from "@/lib/logger";
 import { AddressSuggestion } from "@/hooks/useAddressAutocomplete";
@@ -17,12 +23,19 @@ export function AddressField(props: {
   errorText?: string;
   suggestions: AddressSuggestion[];
   loading?: boolean;
+  coords?: { lat: number; lon: number };
 }) {
   useEffect(() => {
     if (props.errorText) {
       logger.warn("components/AddressField", "Error text", props.errorText);
     }
   }, [props.errorText]);
+
+  useEffect(() => {
+    if (props.coords) {
+      logger.debug("components/AddressField", "coords", props.coords);
+    }
+  }, [props.coords]);
 
   const adornment = props.onUseLocation ? (
     <InputAdornment position="end">
@@ -56,8 +69,8 @@ export function AddressField(props: {
           {typeof option === "string"
             ? option
             : option.name
-            ? `${option.name} – ${option.address}`
-            : option.address}
+              ? `${option.name} – ${option.address}`
+              : option.address}
         </li>
       )}
       inputValue={props.value}
