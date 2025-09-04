@@ -4,18 +4,40 @@ import logging
 import uuid
 from datetime import datetime, timezone
 
+from broadcaster import Broadcast
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+
 from app.core.security import decode_token
 from app.db.database import AsyncSessionLocal
 from app.models.booking import Booking, BookingStatus
 from app.models.route_point import RoutePoint
 from app.models.user_v2 import User, UserRole
 from app.services.settings_service import get_admin_user_id
-from broadcaster import Broadcast
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 broadcast = Broadcast("memory://")
+
+
+async def send_booking_update(booking: Booking, **fields) -> None:
+    """Publish booking updates to the broadcast channel.
+
+    Parameters
+    ----------
+    booking:
+        The updated booking instance.
+    fields:
+        Additional fields to include in the payload.
+    """
+    payload = {"id": str(booking.id), "status": booking.status}
+    if fields:
+        payload.update(fields)
+    if getattr(broadcast, "_listener_task", None) is None:
+        await broadcast.connect()
+    await broadcast.publish(
+        channel=f"booking:{booking.id}",
+        message=json.dumps(payload, default=str),
+    )
 
 
 @router.websocket("/ws/bookings/{booking_id}")
