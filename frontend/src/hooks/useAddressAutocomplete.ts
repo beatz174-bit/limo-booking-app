@@ -26,22 +26,27 @@ interface GeocodeSearchResponse {
 
 export function useAddressAutocomplete(
   query: string,
-  options?: { debounceMs?: number; coords?: { lat: number; lon: number } },
+  options?: {
+    debounceMs?: number;
+    coords?: { lat: number; lon: number };
+    minLength?: number;
+  },
 ) {
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [, setSessionToken] = useState<string | null>(null);
   const debounceMs = options?.debounceMs ?? 300;
   const minLength = options?.minLength ?? 3;
-  const normalizedQuery = query.replace(/\s+/g, "").toLowerCase();
+  const rawQuery = query;
+  const trimmed = query.trim();
 
   useEffect(() => {
-    logger.debug("hooks/useAddressAutocomplete", "query", normalizedQuery);
-  }, [normalizedQuery]);
+    logger.debug("hooks/useAddressAutocomplete", "query", trimmed);
+  }, [trimmed]);
 
   useEffect(() => {
     logger.debug("hooks/useAddressAutocomplete", "debounce", debounceMs);
-    if (!normalizedQuery || normalizedQuery.length < minLength) {
+    if (!trimmed || trimmed.length < minLength) {
       setSuggestions([]);
       return;
     }
@@ -50,7 +55,7 @@ export function useAddressAutocomplete(
       try {
         setLoading(true);
         const base = CONFIG.API_BASE_URL || "";
-        const params = new URLSearchParams({ q: normalizedQuery });
+        const params = new URLSearchParams({ q: rawQuery });
         if (options?.coords) {
           params.set("lat", String(options.coords.lat));
           params.set("lon", String(options.coords.lon));
@@ -87,7 +92,7 @@ export function useAddressAutocomplete(
       clearTimeout(timeout);
       controller.abort();
     };
-  }, [query, debounceMs, options?.coords]);
+  }, [rawQuery, trimmed, debounceMs, minLength, options?.coords]);
 
   const onFocus = () => {
     setSessionToken(crypto.randomUUID());
