@@ -32,7 +32,7 @@ describe("useAddressAutocomplete", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const { result } = renderHook(() =>
-      useAddressAutocomplete('  sFo ', { debounceMs: 0 })
+      useAddressAutocomplete(' s F O ', { debounceMs: 0 })
     );
 
     await waitFor(() => {
