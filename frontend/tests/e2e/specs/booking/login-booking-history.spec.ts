@@ -73,9 +73,20 @@ test('user logs in, creates booking via UI, views history', async ({ page }) => 
     });
   });
 
+  // Current user profile
+  await page.route('**/users/me', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ id: '1', full_name: 'Jane', phone: '000' })
+    });
+  });
+
   let created: Booking | null = null;
   await page.route('**/api/v1/bookings', async route => {
     if (route.request().method() === 'POST') {
+      const body = JSON.parse(route.request().postData() || '{}');
+      expect(body.customer.phone).toBe('000');
       created = {
         id: '1',
         pickup_address: 'A St',
@@ -131,7 +142,7 @@ test('user logs in, creates booking via UI, views history', async ({ page }) => 
   // Step 3
   await page.getByLabel(/name/i).fill('Jane');
   await page.getByLabel(/^email$/i).fill('jane@example.com');
-  await page.getByLabel(/phone/i).fill('000');
+  await expect(page.getByLabel(/phone/i)).toHaveValue('000');
   await page.getByRole('button', { name: /submit/i }).click();
 
   // View history

@@ -23,7 +23,6 @@ describe('useStripeSetupIntent', () => {
         pickup: { address: 'A', lat: 0, lng: 0 },
         dropoff: { address: 'B', lat: 0, lng: 1 },
         passengers: 1,
-        customer: { name: 'x', email: 'y@example.com' },
       });
     });
     const [, opts] = fetchMock.mock.calls[1];
@@ -57,7 +56,6 @@ describe('useStripeSetupIntent', () => {
           pickup: { address: 'A', lat: 0, lng: 0 },
           dropoff: { address: 'B', lat: 0, lng: 1 },
           passengers: 1,
-          customer: { name: 'x', email: 'y@example.com' },
         }),
       ).rejects.toThrow('invalid booking');
     });

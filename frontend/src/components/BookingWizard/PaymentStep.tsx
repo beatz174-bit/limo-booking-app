@@ -19,6 +19,9 @@ import { useRouteMetrics } from '@/hooks/useRouteMetrics';
 import FareBreakdown from '@/components/FareBreakdown';
 import * as logger from '@/lib/logger';
 import { BookingFormData } from '@/types/BookingFormData';
+import { useAuth } from '@/contexts/AuthContext';
+import { apiFetch } from '@/services/apiFetch';
+import { CONFIG } from '@/config';
 
 const stripePromise = (async () => {
   try {
@@ -122,9 +125,6 @@ function PaymentInner({ data, onBack }: Props) {
     tariff.perKm,
     tariff.perMin,
   ]);
-  const [name, setName] = useState(data.customer?.name || '');
-  const [email, setEmail] = useState(data.customer?.email || '');
-  const [phone, setPhone] = useState(data.customer?.phone || '');
   const [booking, setBooking] = useState<{ public_code: string } | null>(null);
 
   useEffect(() => {
@@ -210,7 +210,6 @@ function PaymentInner({ data, onBack }: Props) {
       dropoff: data.dropoff,
       passengers: data.passengers,
       notes: data.notes,
-      customer: { name, email, phone },
     };
     logger.info(
       'components/BookingWizard/PaymentStep',
@@ -271,9 +270,21 @@ function PaymentInner({ data, onBack }: Props) {
 
   return (
     <Stack spacing={2}>
-      <TextField label="Name" value={name} onChange={(e) => setName(e.target.value)} />
-      <TextField label="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-      <TextField label="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+      <TextField
+        label="Name"
+        value={profile?.full_name || ''}
+        InputProps={{ readOnly: true }}
+      />
+      <TextField
+        label="Email"
+        value={profile?.email || ''}
+        InputProps={{ readOnly: true }}
+      />
+      <TextField
+        label="Phone"
+        value={profile?.phone || ''}
+        InputProps={{ readOnly: true }}
+      />
       {price != null && (
         <Typography>Estimated fare: ${price.toFixed(2)}</Typography>
       )}

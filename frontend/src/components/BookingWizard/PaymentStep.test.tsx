@@ -3,6 +3,13 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { vi, expect, test, beforeEach } from 'vitest';
 import { DevFeaturesProvider } from '@/contexts/DevFeaturesContext';
+
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({
+    user: { full_name: 'Test User', email: 'test@example.com', phone: '123' },
+  }),
+}));
+
 import PaymentStep from './PaymentStep';
 
 const mockCreateBooking = vi.fn().mockResolvedValue({
@@ -78,7 +85,6 @@ test('handles new card flow', async () => {
             dropoff: { address: 'B', lat: 1, lng: 1 },
             passengers: 1,
             notes: '',
-            customer: { name: '', email: '', phone: '' },
             pickupValid: true,
             dropoffValid: true,
           }}
@@ -88,9 +94,14 @@ test('handles new card flow', async () => {
     </MemoryRouter>,
   );
 
+  const phoneField = screen.getByLabelText(/phone/i);
+  expect(phoneField).toHaveAttribute('readonly');
   await userEvent.click(screen.getByRole('button', { name: /submit/i }));
   expect(mockCreateBooking).toHaveBeenCalledWith(
-    expect.objectContaining({ pickup_when: '2025-01-01T00:00:00Z' }),
+    expect.objectContaining({
+      pickup_when: '2025-01-01T00:00:00Z',
+      customer: { name: '', email: '', phone: '123' },
+    }),
   );
   expect(mockConfirm).toHaveBeenCalledWith('sec', {
     payment_method: { card: mockCard },
@@ -154,7 +165,6 @@ test('uses saved card when available', async () => {
             dropoff: { address: 'B', lat: 1, lng: 1 },
             passengers: 1,
             notes: '',
-            customer: { name: '', email: '', phone: '' },
             pickupValid: true,
             dropoffValid: true,
           }}
@@ -185,7 +195,6 @@ test('updates metrics from route service', async () => {
             dropoff: { address: 'B', lat: 1, lng: 1 },
             passengers: 1,
             notes: '',
-            customer: { name: '', email: '', phone: '' },
             pickupValid: true,
             dropoffValid: true,
           }}
@@ -212,7 +221,6 @@ test('renders fare breakdown when dev features enabled', () => {
             dropoff: { address: 'B', lat: 1, lng: 1 },
             passengers: 1,
             notes: '',
-            customer: { name: '', email: '', phone: '' },
             pickupValid: true,
             dropoffValid: true,
           }}
@@ -238,7 +246,6 @@ test('hides fare breakdown when dev features disabled', () => {
             dropoff: { address: 'B', lat: 1, lng: 1 },
             passengers: 1,
             notes: '',
-            customer: { name: '', email: '', phone: '' },
             pickupValid: true,
             dropoffValid: true,
           }}

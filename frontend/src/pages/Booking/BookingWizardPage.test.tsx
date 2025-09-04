@@ -53,7 +53,23 @@ beforeAll(() => {
   vi.stubGlobal('alert', vi.fn());
 });
 
+beforeEach(() => {
+  localStorage.setItem(
+    'auth_tokens',
+    JSON.stringify({
+      access_token: 'tok',
+      refresh_token: 'ref',
+      user: { full_name: 'John Doe', email: 'john@example.com', phone: '123' },
+    })
+  );
+});
+
+afterEach(() => {
+  localStorage.clear();
+});
+
 test('advances through steps and aggregates form data', async () => {
+  localStorage.setItem('phone', '000');
   renderWithProviders(<BookingWizardPage />);
   const input = (re: RegExp) => screen.getByLabelText(re, { selector: 'input' });
 
@@ -73,8 +89,6 @@ test('advances through steps and aggregates form data', async () => {
   await userEvent.click(screen.getByRole('button', { name: /next/i }));
 
   // Step 3: payment details
-  await userEvent.type(input(/^name$/i), 'John Doe');
-  await userEvent.type(input(/^email$/i), 'john@example.com');
   await userEvent.click(screen.getByRole('button', { name: /submit/i }));
 
   expect(createBooking).toHaveBeenCalledWith({
@@ -83,6 +97,6 @@ test('advances through steps and aggregates form data', async () => {
     dropoff: { address: '456 B St', lat: 0, lng: 0 },
     passengers: 2,
     notes: 'Be quick',
-    customer: { name: 'John Doe', email: 'john@example.com', phone: '' },
   });
+  localStorage.clear();
 });

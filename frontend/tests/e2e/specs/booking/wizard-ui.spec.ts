@@ -63,9 +63,20 @@ test('customer completes booking wizard via UI', async ({ page }) => {
     });
   });
 
+  // Current user profile
+  await page.route('**/users/me', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ id: '1', full_name: 'Jane', phone: '000' })
+    });
+  });
+
   // Booking creation
   await page.route('**/api/v1/bookings', async route => {
     if (route.request().method() === 'POST') {
+      const body = JSON.parse(route.request().postData() || '{}');
+      expect(body.customer.phone).toBe('000');
       await route.fulfill({
         status: 201,
         contentType: 'application/json',
@@ -106,7 +117,7 @@ test('customer completes booking wizard via UI', async ({ page }) => {
   // Step 3: payment
   await page.getByLabel(/name/i).fill('Jane');
   await page.getByLabel(/email/i).fill('jane@example.com');
-  await page.getByLabel(/phone/i).fill('000');
+  await expect(page.getByLabel(/phone/i)).toHaveValue('000');
   await page.getByRole('button', { name: /submit/i }).click();
 
   await expect(page.getByText(/booking created/i)).toBeVisible();

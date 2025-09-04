@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Stepper, Step, StepLabel, Box } from '@mui/material';
 import SelectTimeStep from './SelectTimeStep';
 import TripDetailsStep from './TripDetailsStep';
@@ -6,18 +6,35 @@ import PaymentStep from './PaymentStep';
 import { MapProvider } from '@/components/MapProvider';
 import { MapRoute } from '@/components/MapRoute';
 import { BookingFormData } from '@/types/BookingFormData';
+import { useAuth } from '@/contexts/AuthContext';
 
 const steps = ['Select time', 'Trip details', 'Payment'];
 
 export default function BookingWizard() {
+  const { userName, user, phone } = useAuth();
   const [active, setActive] = useState(0);
   const [form, setForm] = useState<BookingFormData>({
     passengers: 1,
     notes: '',
-    customer: {},
+    customer: {
+      name: userName ?? undefined,
+      email: user?.email ?? undefined,
+      phone: phone ?? user?.phone ?? undefined,
+    },
     pickupValid: false,
     dropoffValid: false,
   });
+  useEffect(() => {
+    setForm((f) => ({
+      ...f,
+      customer: {
+        ...f.customer,
+        name: userName ?? undefined,
+        email: user?.email ?? undefined,
+        phone: phone ?? user?.phone ?? undefined,
+      },
+    }));
+  }, [userName, user?.email, phone, user?.phone]);
   const update = (data: Partial<BookingFormData>) => {
     setForm((f) => ({ ...f, ...data }));
   };
