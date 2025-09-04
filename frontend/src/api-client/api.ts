@@ -590,6 +590,18 @@ export interface RegisterRequest {
      * @memberof RegisterRequest
      */
     'password': string;
+    /**
+     *
+     * @type {string}
+     * @memberof RegisterRequest
+     */
+    'phone'?: string;
+    /**
+     *
+     * @type {string}
+     * @memberof RegisterRequest
+     */
+    'stripe_payment_method_id'?: string;
 }
 /**
  * 

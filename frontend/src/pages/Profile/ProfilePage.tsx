@@ -6,6 +6,7 @@ import {
   Typography,
   Tooltip,
   Stack,
+  Alert,
 } from '@mui/material';
 import {
   Elements,
@@ -196,6 +197,14 @@ const ProfilePage = () => {
       <Typography variant="h5" gutterBottom>
         My Profile
       </Typography>
+      {(!phone || !paymentMethod) && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Please add your
+          {!phone ? ' phone number' : ''}
+          {!phone && !paymentMethod ? ' and' : ''}
+          {!paymentMethod ? ' payment method' : ''} before booking.
+        </Alert>
+      )}
       <TextField label="Full Name" value={fullName} onChange={e => setFullName(e.target.value)} margin="normal" fullWidth />
       <TextField label="Email" value={email} onChange={e => setEmail(e.target.value)} margin="normal" fullWidth />
       <TextField label="Phone" value={phone} onChange={e => setPhone(e.target.value)} margin="normal" fullWidth />
