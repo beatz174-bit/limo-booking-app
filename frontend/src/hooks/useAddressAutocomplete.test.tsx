@@ -1,6 +1,7 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { useAddressAutocomplete } from "./useAddressAutocomplete";
+
+vi.mock("@/config", () => ({ CONFIG: { API_BASE_URL: "http://api" } }));
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -10,9 +11,9 @@ afterEach(() => {
 
 describe("useAddressAutocomplete", () => {
   test("resolves SFO to full address with coordinates", async () => {
-    vi.mock("@/config", () => ({ CONFIG: { API_BASE_URL: "http://api" } }));
+    const { useAddressAutocomplete } = await import("./useAddressAutocomplete");
     const fetchMock = vi.fn(async (url: string) => {
-      expect(url).toBe('http://api/geocode/search?q=sfo');
+      expect(url).toBe("http://api/geocode/search?q=++sFo+");
       return {
         ok: true,
         json: async () => ({
@@ -32,7 +33,7 @@ describe("useAddressAutocomplete", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const { result } = renderHook(() =>
-      useAddressAutocomplete('  sFo ', { debounceMs: 0 })
+      useAddressAutocomplete("  sFo ", { debounceMs: 0 })
     );
 
     await waitFor(() => {
@@ -47,12 +48,14 @@ describe("useAddressAutocomplete", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  test('skips search when below minimum length', async () => {
-    vi.mock('@/config', () => ({ CONFIG: { API_BASE_URL: 'http://api' } }));
+  test("skips search when below minimum length", async () => {
+    const { useAddressAutocomplete } = await import("./useAddressAutocomplete");
     const fetchMock = vi.fn();
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal("fetch", fetchMock);
 
-    renderHook(() => useAddressAutocomplete(' a ', { debounceMs: 0, minLength: 2 }));
+    renderHook(() =>
+      useAddressAutocomplete(" a ", { debounceMs: 0, minLength: 2 })
+    );
 
     await waitFor(() => {
       expect(fetchMock).not.toHaveBeenCalled();
