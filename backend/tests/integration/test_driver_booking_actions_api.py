@@ -3,11 +3,10 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
-from httpx import AsyncClient
-
 from app.core.security import hash_password
 from app.models.booking import Booking, BookingStatus
 from app.models.user_v2 import User, UserRole
+from httpx import AsyncClient
 
 pytestmark = pytest.mark.asyncio
 
@@ -51,7 +50,8 @@ async def test_driver_confirm_booking(
         id = "pi_test"
 
     monkeypatch.setattr(
-        "app.services.stripe_client.charge_deposit", lambda amount: FakePI()
+        "app.services.stripe_client.charge_deposit",
+        lambda amount, booking_id, **kwargs: FakePI(),
     )
 
     async def fake_route(*args, **kwargs):

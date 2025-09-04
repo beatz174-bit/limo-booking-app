@@ -27,7 +27,7 @@ async def test_create_booking_success(
     class FakeSI:
         client_secret = "sec_test"
 
-    def fake_si(email: str):
+    def fake_si(email: str, name: str, booking_reference: str):
         return FakeSI()
 
     monkeypatch.setattr("app.services.stripe_client.create_setup_intent", fake_si)
