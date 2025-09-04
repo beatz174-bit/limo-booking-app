@@ -52,6 +52,10 @@ class _StubStripe:  # type: ignore
         def retrieve(payment_method):
             return _StubIntent(id=payment_method)
 
+        @staticmethod
+        def detach(payment_method):
+            return _StubIntent(id=payment_method)
+
 
 settings = get_settings()
 if settings.env == "test" or not settings.stripe_secret_key or real_stripe is None:
@@ -94,6 +98,12 @@ def set_default_payment_method(customer_id: str, payment_method: str) -> None:
         customer_id,
         invoice_settings={"default_payment_method": payment_method},
     )
+
+
+def detach_payment_method(payment_method: str) -> None:
+    """Detach a payment method from any customer."""
+
+    stripe.PaymentMethod.detach(payment_method)
 
 
 def charge_deposit(

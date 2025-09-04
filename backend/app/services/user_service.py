@@ -6,12 +6,14 @@ import logging
 import uuid
 from typing import Optional
 
-from app.core.security import hash_password
-from app.models.user_v2 import User
-from app.schemas.user import UserCreate, UserRead, UserUpdate
 from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.security import hash_password
+from app.models.user_v2 import User
+from app.schemas.user import UserCreate, UserRead, UserUpdate
+from app.services import stripe_client
 
 logger = logging.getLogger(__name__)
 
@@ -106,3 +108,43 @@ async def delete_user(db: AsyncSession, user_id: uuid.UUID):
         )
     await db.delete(user)
     await db.flush()
+
+
+async def create_setup_intent_for_user(db: AsyncSession, user: User) -> str:
+    """Ensure a customer exists and return a SetupIntent client secret."""
+
+    if user.stripe_customer_id is None:
+        stripe_customer = stripe_client.create_customer(user.email, user.full_name)
+        user.stripe_customer_id = stripe_customer.id
+        await db.flush()
+
+    setup_intent = stripe_client.create_setup_intent(
+        user.stripe_customer_id, str(user.id)
+    )
+    return setup_intent.client_secret
+
+
+async def save_payment_method(
+    db: AsyncSession, user: User, payment_method_id: str
+) -> UserRead:
+    """Persist a confirmed payment method and set it as default."""
+
+    if user.stripe_customer_id is None:
+        stripe_customer = stripe_client.create_customer(user.email, user.full_name)
+        user.stripe_customer_id = stripe_customer.id
+
+    stripe_client.set_default_payment_method(user.stripe_customer_id, payment_method_id)
+    user.stripe_payment_method_id = payment_method_id
+
+    await db.flush()
+    await db.refresh(user)
+    return UserRead.model_validate(user)
+
+
+async def remove_payment_method(db: AsyncSession, user: User) -> None:
+    """Detach and clear the stored payment method for a user."""
+
+    if user.stripe_payment_method_id:
+        stripe_client.detach_payment_method(user.stripe_payment_method_id)
+        user.stripe_payment_method_id = None
+        await db.flush()
