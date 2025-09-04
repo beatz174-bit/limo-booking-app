@@ -9,7 +9,7 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const { loginWithPassword, finishOAuthIfCallback } = useAuth();
+  const { loginWithPassword, finishOAuthIfCallback, accessToken } = useAuth();
   const { ready } = useBackendReady();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,6 +32,13 @@ export default function LoginPage() {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (accessToken) {
+      const dest = params.get("from") || "/";
+      navigate(dest, { replace: true });
+    }
+  }, [accessToken, params, navigate]);
 
   // in your existing <form onSubmit=...> handler:
   const onSubmit = async (e: React.FormEvent) => {
