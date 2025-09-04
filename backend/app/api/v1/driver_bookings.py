@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.ws import send_booking_update
 from app.db.database import get_async_session
 from app.dependencies import require_admin
 from app.models.booking import Booking, BookingStatus
@@ -54,6 +55,7 @@ async def confirm_booking(
         UserRole.CUSTOMER,
         {"deposit_required_cents": booking.deposit_required_cents},
     )
+    await send_booking_update(booking, leave_at=leave_at)
     return BookingStatusResponse(status=booking.status, leave_at=leave_at)
 
 
@@ -66,6 +68,7 @@ async def retry_deposit(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     leave_at = await scheduler.schedule_leave_now(booking)
+    await send_booking_update(booking, leave_at=leave_at)
     return BookingStatusResponse(status=booking.status, leave_at=leave_at)
 
 

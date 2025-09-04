@@ -6,6 +6,11 @@ from datetime import datetime, timedelta, timezone
 from math import atan2, cos, radians, sin, sqrt
 
 import stripe
+from fastapi import HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.ws import send_booking_update
 from app.models.availability_slot import AvailabilitySlot
 from app.models.booking import Booking, BookingStatus
 from app.models.route_point import RoutePoint
@@ -14,9 +19,6 @@ from app.models.trip import Trip
 from app.models.user_v2 import User, UserRole
 from app.schemas.api_booking import BookingCreateRequest
 from app.services import pricing_service, routing, stripe_client
-from fastapi import HTTPException
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def create_booking(
@@ -134,6 +136,7 @@ async def confirm_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
     db.add(slot)
     await db.commit()
     await db.refresh(booking)
+    await send_booking_update(booking)
     return booking
 
 
@@ -151,6 +154,7 @@ async def decline_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
     booking.status = BookingStatus.DECLINED
     await db.commit()
     await db.refresh(booking)
+    await send_booking_update(booking)
     return booking
 
 
@@ -162,6 +166,7 @@ async def leave_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
     booking.status = BookingStatus.ON_THE_WAY
     await db.commit()
     await db.refresh(booking)
+    await send_booking_update(booking)
     return booking
 
 
@@ -172,6 +177,7 @@ async def arrive_pickup(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
     booking.status = BookingStatus.ARRIVED_PICKUP
     await db.commit()
     await db.refresh(booking)
+    await send_booking_update(booking)
     return booking
 
 
@@ -184,6 +190,7 @@ async def start_trip(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
     db.add(trip)
     await db.commit()
     await db.refresh(booking)
+    await send_booking_update(booking)
     return booking
 
 
@@ -198,6 +205,7 @@ async def arrive_dropoff(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
     trip.ended_at = datetime.now(timezone.utc)
     await db.commit()
     await db.refresh(booking)
+    await send_booking_update(booking)
     return booking
 
 
@@ -264,4 +272,5 @@ async def complete_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
     booking.status = BookingStatus.COMPLETED
     await db.commit()
     await db.refresh(booking)
+    await send_booking_update(booking, final_price_cents=booking.final_price_cents)
     return booking
