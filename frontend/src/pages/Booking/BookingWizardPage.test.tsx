@@ -12,7 +12,13 @@ import { apiUrl } from '@/__tests__/setup/msw.handlers';
 vi.mock('@stripe/react-stripe-js', () => ({
   Elements: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   CardElement: () => <div data-testid="card-element" />,
-  useStripe: () => ({ confirmCardSetup: vi.fn() }),
+  useStripe: () => ({
+    confirmCardSetup: vi.fn(),
+    paymentRequest: vi.fn(() => ({
+      canMakePayment: vi.fn(),
+      on: vi.fn(),
+    })),
+  }),
   useElements: () => ({ getElement: vi.fn().mockReturnValue({}) }),
 }));
 vi.mock('@stripe/stripe-js', () => ({ loadStripe: vi.fn() }));
@@ -35,6 +41,8 @@ vi.mock('@/hooks/useAddressAutocomplete', () => ({
   useAddressAutocomplete: (input: string) => ({
     suggestions: input ? [{ address: input, lat: 0, lng: 0 }] : [],
     loading: false,
+    onFocus: vi.fn(),
+    onBlur: vi.fn(),
   }),
 }));
 vi.mock('@/components/MapProvider', () => ({

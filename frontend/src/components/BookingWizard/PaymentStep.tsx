@@ -20,8 +20,6 @@ import FareBreakdown from '@/components/FareBreakdown';
 import * as logger from '@/lib/logger';
 import { BookingFormData } from '@/types/BookingFormData';
 import { useAuth } from '@/contexts/AuthContext';
-import { apiFetch } from '@/services/apiFetch';
-import { CONFIG } from '@/config';
 
 const stripePromise = (async () => {
   try {
@@ -49,6 +47,7 @@ function PaymentInner({ data, onBack }: Props) {
   const { createBooking, savePaymentMethod, savedPaymentMethod } =
     useStripeSetupIntent();
   const { data: settings } = useSettings();
+  const { profile } = useAuth();
   interface SettingsAliases {
     flagfall?: number;
     per_km_rate?: number;

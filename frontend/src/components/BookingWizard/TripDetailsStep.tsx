@@ -54,7 +54,11 @@ export default function TripDetailsStep({ data, onNext, onBack, onChange }: Prop
             pickupValid: true,
           });
         }}
-        onBlur={() => setPickupTouched(true)}
+        onFocus={pickupAuto.onFocus}
+        onBlur={() => {
+          pickupAuto.onBlur();
+          setPickupTouched(true);
+        }}
         errorText={!pickupValid && pickupTouched ? 'Select a pickup address' : undefined}
         suggestions={pickupAuto.suggestions}
         loading={pickupAuto.loading}
@@ -83,7 +87,11 @@ export default function TripDetailsStep({ data, onNext, onBack, onChange }: Prop
             dropoffValid: true,
           });
         }}
-        onBlur={() => setDropoffTouched(true)}
+        onFocus={dropoffAuto.onFocus}
+        onBlur={() => {
+          dropoffAuto.onBlur();
+          setDropoffTouched(true);
+        }}
         errorText={!dropoffValid && dropoffTouched ? 'Select a dropoff address' : undefined}
         suggestions={dropoffAuto.suggestions}
         loading={dropoffAuto.loading}

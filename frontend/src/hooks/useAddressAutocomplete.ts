@@ -26,19 +26,22 @@ interface GeocodeSearchResponse {
 
 export function useAddressAutocomplete(
   query: string,
-  options?: { debounceMs?: number }
+  options?: { debounceMs?: number; minLength?: number }
 ) {
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
   const debounceMs = options?.debounceMs ?? 300;
+  const minLength = options?.minLength ?? 3;
+  const normalizedQuery = query.trim().toLowerCase();
 
   useEffect(() => {
-    logger.debug("hooks/useAddressAutocomplete", "query", query);
-  }, [query]);
+    logger.debug("hooks/useAddressAutocomplete", "query", normalizedQuery);
+  }, [normalizedQuery]);
 
   useEffect(() => {
     logger.debug("hooks/useAddressAutocomplete", "debounce", debounceMs);
-    if (!query) {
+    if (!normalizedQuery || normalizedQuery.length < minLength) {
       setSuggestions([]);
       return;
     }
@@ -47,7 +50,10 @@ export function useAddressAutocomplete(
       try {
         setLoading(true);
         const base = CONFIG.API_BASE_URL || "";
-        const url = `${base}/geocode/search?q=${encodeURIComponent(query)}`;
+        const sessionPart = sessionToken ? `&session=${sessionToken}` : "";
+        const url = `${base}/geocode/search?q=${encodeURIComponent(
+          normalizedQuery
+        )}${sessionPart}`;
         logger.debug(
           "hooks/useAddressAutocomplete",
           "request URL",
@@ -83,8 +89,15 @@ export function useAddressAutocomplete(
       clearTimeout(timeout);
       controller.abort();
     };
-  }, [query, debounceMs]);
+  }, [normalizedQuery, debounceMs, minLength, sessionToken]);
 
-  return { suggestions, loading };
+  const onFocus = () => {
+    setSessionToken(crypto.randomUUID());
+  };
+  const onBlur = () => {
+    setSessionToken(null);
+  };
+
+  return { suggestions, loading, onFocus, onBlur };
 }
 
