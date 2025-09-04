@@ -2,7 +2,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { vi, type Mock } from 'vitest';
 import { BookingsProvider } from '@/contexts/BookingsContext';
 import { useBookings } from '@/hooks/useBookings';
-import { driverBookingsApi } from '@/components/ApiConfig';
+import { driverBookingsApi, customerBookingsApi } from '@/components/ApiConfig';
 import type { ReactNode } from 'react';
 
 vi.mock('@/components/ApiConfig', () => ({
@@ -15,7 +15,11 @@ vi.mock('@/components/ApiConfig', () => ({
 }));
 
 vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: () => ({ accessToken: 'test-token', role: 'driver' }),
+  useAuth: () => ({
+    accessToken: 'test-token',
+    userID: 'driver-1',
+    adminID: 'driver-1',
+  }),
 }));
 
 class WSStub {
@@ -53,6 +57,12 @@ describe('useBookings', () => {
 
     const { result } = renderHook(() => useBookings(), { wrapper });
     await waitFor(() => expect(result.current.bookings).toEqual(bookings));
+    expect(
+      driverBookingsApi.listBookingsApiV1DriverBookingsGet,
+    ).toHaveBeenCalled();
+    expect(
+      customerBookingsApi.listMyBookingsApiV1CustomersMeBookingsGet,
+    ).not.toHaveBeenCalled();
   });
 
   it('websocket message updates a booking\'s status', async () => {
@@ -68,6 +78,12 @@ describe('useBookings', () => {
 
     const { result } = renderHook(() => useBookings(), { wrapper });
     await waitFor(() => expect(result.current.bookings[0].status).toBe('PENDING'));
+    expect(
+      driverBookingsApi.listBookingsApiV1DriverBookingsGet,
+    ).toHaveBeenCalled();
+    expect(
+      customerBookingsApi.listMyBookingsApiV1CustomersMeBookingsGet,
+    ).not.toHaveBeenCalled();
 
     act(() => {
       WSStub.instances[0].onmessage?.({

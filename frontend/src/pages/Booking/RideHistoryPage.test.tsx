@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import RideHistoryPage from './RideHistoryPage';
 import { BookingsProvider } from '@/contexts/BookingsContext';
-import { driverBookingsApi } from '@/components/ApiConfig';
+import { driverBookingsApi, customerBookingsApi } from '@/components/ApiConfig';
 import { vi, type Mock } from 'vitest';
 
 vi.mock('@/components/ApiConfig', () => ({
@@ -16,7 +16,11 @@ vi.mock('@/components/ApiConfig', () => ({
 }));
 
 vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: () => ({ accessToken: 'test-token', role: 'driver' }),
+  useAuth: () => ({
+    accessToken: 'test-token',
+    userID: 'driver-1',
+    adminID: 'driver-1',
+  }),
 }));
 
 class WSStub {
@@ -65,8 +69,13 @@ test('shows track link for trackable bookings', async () => {
       </BookingsProvider>
     </MemoryRouter>,
   );
-
   expect(await screen.findByText(/Ride History/i)).toBeInTheDocument();
+  expect(
+    driverBookingsApi.listBookingsApiV1DriverBookingsGet,
+  ).toHaveBeenCalled();
+  expect(
+    customerBookingsApi.listMyBookingsApiV1CustomersMeBookingsGet,
+  ).not.toHaveBeenCalled();
   const trackLinks = screen.getAllByRole('link', { name: /track/i });
   expect(trackLinks).toHaveLength(1);
   expect(trackLinks[0]).toHaveAttribute('href', '/t/abc123');
@@ -99,6 +108,12 @@ test('track link navigates to tracking page', async () => {
   );
 
   const link = await screen.findByRole('link', { name: /track/i });
+  expect(
+    driverBookingsApi.listBookingsApiV1DriverBookingsGet,
+  ).toHaveBeenCalled();
+  expect(
+    customerBookingsApi.listMyBookingsApiV1CustomersMeBookingsGet,
+  ).not.toHaveBeenCalled();
   await userEvent.click(link);
   expect(
     await screen.findByRole('heading', { name: /tracking/i }),
@@ -125,8 +140,13 @@ test('updates status when websocket message received', async () => {
       </BookingsProvider>
     </MemoryRouter>,
   );
-
   expect(await screen.findByText('PENDING')).toBeInTheDocument();
+  expect(
+    driverBookingsApi.listBookingsApiV1DriverBookingsGet,
+  ).toHaveBeenCalled();
+  expect(
+    customerBookingsApi.listMyBookingsApiV1CustomersMeBookingsGet,
+  ).not.toHaveBeenCalled();
 
   act(() => {
     WSStub.instances[0].onmessage?.({
