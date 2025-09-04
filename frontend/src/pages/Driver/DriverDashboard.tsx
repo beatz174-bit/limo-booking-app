@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Button,
   List,
@@ -50,10 +50,7 @@ export default function DriverDashboard() {
     action:
       | 'confirm'
       | 'decline'
-      | 'leave'
-      | 'arrive-pickup'
       | 'start-trip'
-      | 'arrive-dropoff'
       | 'complete'
       | 'retry-deposit',
   ) {
@@ -64,12 +61,6 @@ export default function DriverDashboard() {
       setError(message);
     }
   }
-
-  const [now, setNow] = useState(Date.now());
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
 
   return (
     <Stack spacing={2} sx={{ p: 2 }}>
@@ -117,17 +108,6 @@ export default function DriverDashboard() {
                     </Button>
                   </>
                 )}
-                {b.status === 'DRIVER_CONFIRMED' && (
-                  <Button
-                    variant="contained"
-                    onClick={async () => {
-                      await update(b.id, 'leave');
-                    }}
-                    disabled={b.leave_at ? new Date(b.leave_at).getTime() > now : true}
-                  >
-                    Leave now
-                  </Button>
-                )}
                 {b.status === 'DEPOSIT_FAILED' && (
                   <Button
                     variant="contained"
@@ -137,28 +117,12 @@ export default function DriverDashboard() {
                     Retry deposit
                   </Button>
                 )}
-                {b.status === 'ON_THE_WAY' && (
-                  <Button
-                    variant="contained"
-                    onClick={() => update(b.id, 'arrive-pickup')}
-                  >
-                    Arrived pickup
-                  </Button>
-                )}
                 {b.status === 'ARRIVED_PICKUP' && (
                   <Button
                     variant="contained"
                     onClick={() => update(b.id, 'start-trip')}
                   >
                     Start trip
-                  </Button>
-                )}
-                {b.status === 'IN_PROGRESS' && (
-                  <Button
-                    variant="contained"
-                    onClick={() => update(b.id, 'arrive-dropoff')}
-                  >
-                    Arrived dropoff
                   </Button>
                 )}
                 {b.status === 'ARRIVED_DROPOFF' && (
