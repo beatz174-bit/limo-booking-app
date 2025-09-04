@@ -1,10 +1,19 @@
-import { createContext, useEffect, useRef, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import type { ReactNode } from 'react';
-import { driverBookingsApi as bookingsApi } from '@/components/ApiConfig';
+import {
+  driverBookingsApi,
+  customerBookingsApi,
+} from '@/components/ApiConfig';
 import type { BookingRead as Booking } from '@/api-client';
 import { apiFetch } from '@/services/apiFetch';
 import { CONFIG } from '@/config';
-import { getAccessToken, onTokenChange } from '@/services/tokenStore';
+import { useAuth } from '@/contexts/AuthContext';
 
 export type DriverAction =
   | 'confirm'
@@ -20,90 +29,58 @@ export interface BookingsContextValue {
   bookings: Booking[];
   loading: boolean;
   error: string | null;
+  refresh: () => Promise<void>;
   updateBooking: (id: string, action: DriverAction) => Promise<void>;
+  addBooking: (booking: Booking) => void;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const BookingsContext = createContext<BookingsContextValue | undefined>(
-  undefined,
-);
+export const BookingsContext =
+  createContext<BookingsContextValue | undefined>(undefined);
 
 export function BookingsProvider({ children }: { children: ReactNode }) {
+  const { accessToken, role } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [token, setToken] = useState<string | null>(() => getAccessToken());
   const socketsRef = useRef<Record<string, WebSocket>>({});
 
-  useEffect(() => {
-    const unsubscribe = onTokenChange(() => {
-      setToken(getAccessToken());
-    });
-    return unsubscribe;
-  }, []);
-
-  useEffect(() => {
-    if (!token) {
+  const refresh = useCallback(async () => {
+    if (!accessToken) {
       setBookings([]);
-      setLoading(false);
-      setError(null);
       return;
     }
     setLoading(true);
     setError(null);
-    (async () => {
-      try {
-        const { data } = await bookingsApi.listBookingsApiV1DriverBookingsGet(
-          undefined,
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
-        setBookings(data as Booking[]);
-      } catch (e) {
-        const message = e instanceof Error ? e.message : 'Failed to load bookings';
-        setError(message);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [token]);
+    try {
+      const apiCall =
+        role === 'driver'
+          ? driverBookingsApi.listBookingsApiV1DriverBookingsGet.bind(
+              driverBookingsApi,
+            )
+          : customerBookingsApi.listMyBookingsApiV1CustomersMeBookingsGet.bind(
+              customerBookingsApi,
+            );
+      const { data } = await apiCall();
+      setBookings(data as Booking[]);
+    } catch (e) {
+      const message =
+        e instanceof Error ? e.message : 'Failed to load bookings';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }, [accessToken, role]);
 
   useEffect(() => {
-    const t = token;
-    if (!t) return;
-    const wsBase = (CONFIG.API_BASE_URL || window.location.origin).replace(
-      'http',
-      'ws',
-    );
-    const ids = new Set(bookings.map((b) => b.id));
-    Object.entries(socketsRef.current).forEach(([id, ws]) => {
-      if (!ids.has(id)) {
-        ws.close();
-        delete socketsRef.current[id];
-      }
-    });
-    bookings.forEach((b) => {
-      if (socketsRef.current[b.id]) return;
-      const ws = new WebSocket(
-        `${wsBase}/ws/bookings/${b.id}?token=${t}`,
-      );
-      ws.onmessage = (e) => {
-        try {
-          const data = JSON.parse(e.data) as Partial<Booking> & { id: string };
-          setBookings((prev) =>
-            prev.map((item) =>
-              item.id === data.id ? { ...item, ...data } : item,
-            ),
-          );
-        } catch {
-          // ignore
-        }
-      };
-      socketsRef.current[b.id] = ws;
-    });
-  }, [bookings, token]);
+    refresh();
+  }, [refresh]);
 
-  useEffect(() => () => {
-    Object.values(socketsRef.current).forEach((ws) => ws.close());
+  const addBooking = useCallback((booking: Booking) => {
+    setBookings((prev) => {
+      if (prev.some((b) => b.id === booking.id)) return prev;
+      return [...prev, booking];
+    });
   }, []);
 
   async function updateBooking(id: string, action: DriverAction) {
@@ -131,8 +108,75 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
     );
   }
 
+  useEffect(() => {
+    const t = accessToken;
+    const wsBase = (CONFIG.API_BASE_URL || window.location.origin).replace(
+      'http',
+      'ws',
+    );
+    const sockets = socketsRef.current;
+    if (!t) {
+      Object.values(sockets).forEach((ws) => ws.close());
+      socketsRef.current = {};
+      return;
+    }
+    const ids = new Set(bookings.map((b) => b.id));
+    Object.entries(sockets).forEach(([id, ws]) => {
+      if (!ids.has(id)) {
+        ws.close();
+        delete sockets[id];
+      }
+    });
+    bookings.forEach((b) => {
+      if (sockets[b.id]) return;
+      const ws = new WebSocket(
+        `${wsBase}/ws/bookings/${b.id}/watch?token=${t}`,
+      );
+      ws.onmessage = (e) => {
+        try {
+          const data = JSON.parse(e.data) as Partial<Booking> & { id: string };
+          setBookings((prev) =>
+            prev.map((item) =>
+              item.id === data.id ? { ...item, ...data } : item,
+            ),
+          );
+        } catch {
+          /* ignore */
+        }
+      };
+      sockets[b.id] = ws;
+    });
+  }, [bookings, accessToken]);
+
+  useEffect(
+    () => () => {
+      Object.values(socketsRef.current).forEach((ws) => ws.close());
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+    const handler = (event: MessageEvent) => {
+      const msg = event.data as {
+        type?: string;
+        notification?: { type?: string };
+        data?: { type?: string };
+      };
+      const type = msg?.type || msg?.notification?.type || msg?.data?.type;
+      if (type === 'NEW_BOOKING') {
+        refresh();
+      }
+    };
+    navigator.serviceWorker.addEventListener('message', handler);
+    return () =>
+      navigator.serviceWorker.removeEventListener('message', handler);
+  }, [refresh]);
+
   return (
-    <BookingsContext.Provider value={{ bookings, loading, error, updateBooking }}>
+    <BookingsContext.Provider
+      value={{ bookings, loading, error, refresh, updateBooking, addBooking }}
+    >
       {children}
     </BookingsContext.Provider>
   );

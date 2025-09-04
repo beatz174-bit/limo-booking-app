@@ -1,9 +1,11 @@
 import { useContext } from 'react';
-import { BookingsContext, type BookingsContextValue } from '@/contexts/BookingsContext';
+import { BookingsContext } from '@/contexts/BookingsContext';
 
-export function useBookings(): BookingsContextValue {
+export function useBookings() {
   const ctx = useContext(BookingsContext);
-  if (!ctx) throw new Error('useBookings must be used within a BookingsProvider');
+  if (!ctx) {
+    throw new Error('useBookings must be used within a BookingsProvider');
+  }
   return ctx;
 }
 
