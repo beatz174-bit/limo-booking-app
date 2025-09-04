@@ -88,6 +88,8 @@ async def create_booking(
     await db.commit()
     await db.refresh(booking)
 
+    await db.commit()
+
     setup_intent = stripe_client.create_setup_intent(
         data.customer.email, data.customer.name, booking.public_code
     )

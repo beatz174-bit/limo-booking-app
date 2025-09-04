@@ -133,6 +133,7 @@ async def booking_ws(websocket: WebSocket, booking_id: uuid.UUID):
                                         UserRole.CUSTOMER,
                                         {},
                                     )
+                                    await db.commit()
                                     await broadcast.publish(
                                         channel=channel,
                                         message=json.dumps(
@@ -155,6 +156,7 @@ async def booking_ws(websocket: WebSocket, booking_id: uuid.UUID):
                                         UserRole.CUSTOMER,
                                         {},
                                     )
+                                    await db.commit()
                                     await broadcast.publish(
                                         channel=channel,
                                         message=json.dumps(

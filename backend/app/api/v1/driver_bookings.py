@@ -57,6 +57,7 @@ async def confirm_booking(
         UserRole.CUSTOMER,
         {"deposit_required_cents": booking.deposit_required_cents},
     )
+    await db.commit()
     await send_booking_update(booking, leave_at=leave_at)
     return BookingStatusResponse(status=booking.status, leave_at=leave_at)
 
@@ -100,6 +101,7 @@ async def leave_booking(
         UserRole.CUSTOMER,
         {},
     )
+    await db.commit()
     return BookingStatusResponse(status=booking.status)
 
 
@@ -129,6 +131,7 @@ async def start_trip(
         UserRole.CUSTOMER,
         {},
     )
+    await db.commit()
     await broadcast.publish(
         channel=f"booking:{booking.id}",
         message=json.dumps({"status": booking.status}),
@@ -162,6 +165,7 @@ async def complete_booking(
         UserRole.CUSTOMER,
         {},
     )
+    await db.commit()
     await broadcast.publish(
         channel=f"booking:{booking.id}",
         message=json.dumps({"status": booking.status}),

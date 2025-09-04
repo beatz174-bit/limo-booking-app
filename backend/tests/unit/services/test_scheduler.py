@@ -20,7 +20,7 @@ async def test_leave_now_job_creates_notifications(
     mocker.patch("app.services.notifications._send_fcm", return_value=None)
 
     customer = User(
-        email="test@example.com",
+        email=f"test{uuid.uuid4().hex}@example.com",
         full_name="Test",
         hashed_password=hash_password("pass"),
         role=UserRole.CUSTOMER,
