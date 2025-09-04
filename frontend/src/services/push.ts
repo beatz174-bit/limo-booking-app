@@ -62,6 +62,7 @@ export async function subscribePush(): Promise<string | null> {
       vapidKey: vapid,
       serviceWorkerRegistration: registration,
     });
+    console.log('FCM token:', token);
     logger.info('services/push', 'FCM token acquired', { token });
     logger.debug('services/push', 'Listening for foreground messages');
     onMessage(messaging, (payload) => {
