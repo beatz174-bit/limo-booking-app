@@ -51,7 +51,6 @@ function PaymentInner({ data, onBack }: Props) {
   const email = profile?.email ?? '';
   const phone = profile?.phone ?? '';
   const { data: settings } = useSettings();
-  const { profile } = useAuth();
   interface SettingsAliases {
     flagfall?: number;
     per_km_rate?: number;
@@ -66,10 +65,6 @@ function PaymentInner({ data, onBack }: Props) {
     perMin: Number(s?.per_minute_rate ?? s?.perMin ?? 0),
   };
   const getMetrics = useRouteMetrics();
-  const { profile } = useAuth();
-  const name = profile?.full_name ?? '';
-  const email = profile?.email ?? '';
-  const phone = profile?.phone ?? '';
   const [price, setPrice] = useState<number | null>(null);
   const [distanceKm, setDistanceKm] = useState<number>(0);
   const [durationMin, setDurationMin] = useState<number>(0);
@@ -217,13 +212,7 @@ function PaymentInner({ data, onBack }: Props) {
       dropoff: data.dropoff,
       passengers: data.passengers,
       notes: data.notes,
-      customer: profile
-        ? {
-            name: profile.full_name ?? '',
-            email: profile.email ?? '',
-            phone: profile.phone ?? '',
-          }
-        : undefined,
+      customer: profile ? { name, email, phone } : undefined,
     };
     logger.info(
       'components/BookingWizard/PaymentStep',
@@ -284,21 +273,9 @@ function PaymentInner({ data, onBack }: Props) {
 
   return (
     <Stack spacing={2}>
-      <TextField
-        label="Name"
-        value={profile?.full_name || ''}
-        InputProps={{ readOnly: true }}
-      />
-      <TextField
-        label="Email"
-        value={profile?.email || ''}
-        InputProps={{ readOnly: true }}
-      />
-      <TextField
-        label="Phone"
-        value={profile?.phone || ''}
-        InputProps={{ readOnly: true }}
-      />
+      <TextField label="Name" value={name} InputProps={{ readOnly: true }} />
+      <TextField label="Email" value={email} InputProps={{ readOnly: true }} />
+      <TextField label="Phone" value={phone} InputProps={{ readOnly: true }} />
       {price != null && (
         <Typography>Estimated fare: ${price.toFixed(2)}</Typography>
       )}
