@@ -32,6 +32,10 @@ async def test_save_payment_method_stores_id(async_session, mocker):
     )
     async_session.add(user)
     await async_session.flush()
+    mocker.patch(
+        "app.services.stripe_client.create_customer",
+        return_value=stripe_client._StubIntent(id="cus_test"),
+    )
 
     mock_set_default = mocker.patch(
         "app.services.stripe_client.set_default_payment_method"

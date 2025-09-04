@@ -30,10 +30,10 @@ export function useAddressAutocomplete(
 ) {
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
-  const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [, setSessionToken] = useState<string | null>(null);
   const debounceMs = options?.debounceMs ?? 300;
   const minLength = options?.minLength ?? 3;
-  const normalizedQuery = query.trim().toLowerCase();
+  const normalizedQuery = query.replace(/\s+/g, "").toLowerCase();
 
   useEffect(() => {
     logger.debug("hooks/useAddressAutocomplete", "query", normalizedQuery);
@@ -50,7 +50,7 @@ export function useAddressAutocomplete(
       try {
         setLoading(true);
         const base = CONFIG.API_BASE_URL || "";
-        const params = new URLSearchParams({ q: query });
+        const params = new URLSearchParams({ q: normalizedQuery });
         if (options?.coords) {
           params.set("lat", String(options.coords.lat));
           params.set("lon", String(options.coords.lon));
