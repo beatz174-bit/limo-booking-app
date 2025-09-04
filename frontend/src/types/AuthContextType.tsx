@@ -1,5 +1,11 @@
 // Type definitions for the authentication context values.
-export type UserShape = { email?: string; full_name?: string; role?: string; phone?: string } | null;
+export type UserShape = {
+  id?: number;
+  email?: string;
+  full_name?: string;
+  role?: string;
+  phone?: string;
+};
 
 export type AuthContextType = {
   accessToken: string | null;

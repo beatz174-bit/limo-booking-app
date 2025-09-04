@@ -100,7 +100,11 @@ test('handles new card flow', async () => {
   expect(mockCreateBooking).toHaveBeenCalledWith(
     expect.objectContaining({
       pickup_when: '2025-01-01T00:00:00Z',
-      customer: { name: '', email: '', phone: '123' },
+      customer: {
+        name: 'Test User',
+        email: 'test@example.com',
+        phone: '123',
+      },
     }),
   );
   expect(mockConfirm).toHaveBeenCalledWith('sec', {

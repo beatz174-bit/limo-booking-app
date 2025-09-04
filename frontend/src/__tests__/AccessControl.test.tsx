@@ -20,6 +20,7 @@ const baseAuth: AuthContextType = {
   userID: null,
   role: null,
   adminID: CONFIG.ADMIN_USER_ID,
+  phone: null,
   loginWithPassword: vi.fn(),
   registerWithPassword: vi.fn(),
   loginWithOAuth: vi.fn(),
