@@ -69,8 +69,7 @@ async def create_notification(
         created_at=datetime.now(timezone.utc),
     )
     db.add(note)
-    await db.commit()
-    await db.refresh(note)
+    await db.flush()
     await _send_fcm(db, to_role, notif_type, payload or {})
     return note
 

@@ -74,7 +74,7 @@ async def test_confirm_booking_handles_card_error(async_session: AsyncSession, m
     await async_session.commit()
 
     user = User(
-        email="test@example.com",
+        email=f"test{uuid.uuid4().hex}@example.com",
         full_name="Test",
         hashed_password=hash_password("pass"),
         role=UserRole.CUSTOMER,

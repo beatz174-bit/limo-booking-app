@@ -51,3 +51,4 @@ async def _leave_now_job(booking_id: uuid.UUID):
             UserRole.CUSTOMER,
             {},
         )
+        await session.commit()

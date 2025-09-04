@@ -79,8 +79,6 @@ async def create_booking(
     )
     db.add(booking)
     await db.flush()
-    await db.commit()
-
     await notifications.create_notification(
         db,
         booking.id,
@@ -88,6 +86,8 @@ async def create_booking(
         UserRole.DRIVER,
         {"booking_id": str(booking.id)},
     )
+
+    await db.commit()
 
     setup_intent = stripe_client.create_setup_intent(
         data.customer.email, data.customer.name, booking.public_code
