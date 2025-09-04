@@ -8,4 +8,14 @@ firebase.initializeApp({
   messagingSenderId: '${VITE_FCM_SENDER_ID}',
 });
 
-firebase.messaging();
+const messaging = firebase.messaging();
+
+messaging.onBackgroundMessage((payload) => {
+  self.clients
+    .matchAll({ type: 'window', includeUncontrolled: true })
+    .then((clients) => {
+      for (const client of clients) {
+        client.postMessage(payload);
+      }
+    });
+});
