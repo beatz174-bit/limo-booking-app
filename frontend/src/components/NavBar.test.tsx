@@ -9,12 +9,22 @@ import type { ReactNode } from 'react';
 import { CONFIG } from '@/config';
 
 function seedAuth({ id, name, role }: { id: string; name: string; role: string }) {
-  localStorage.setItem('auth_tokens', JSON.stringify({ access_token: 't', refresh_token: 'r', user: { email: 'x' }, role }));
+  localStorage.clear();
+  localStorage.setItem(
+    'auth_tokens',
+    JSON.stringify({
+      access_token: 't',
+      refresh_token: 'r',
+      user: { email: 'x', phone: '123', full_name: name },
+      role,
+    })
+  );
   localStorage.setItem('userID', id);
   localStorage.setItem('userName', name);
   localStorage.setItem('userRole', role);
   localStorage.setItem('role', role);
   localStorage.setItem('adminID', CONFIG.ADMIN_USER_ID);
+  localStorage.setItem('phone', '123');
 }
 
 function renderWithAuth(initialPath = '/book', extraRoutes?: ReactNode) {

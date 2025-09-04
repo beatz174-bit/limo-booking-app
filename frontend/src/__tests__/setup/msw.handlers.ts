@@ -61,6 +61,7 @@ export const handlers = [
         full_name: 'Test User',
         email: body.email,
         role: 'CUSTOMER',
+        phone: '123-4567',
       },
     });
   }),
@@ -71,6 +72,7 @@ export const handlers = [
       id: CONFIG.ADMIN_USER_ID,
       full_name: 'Test User',
       email: 'test@example.com',
+      phone: '123-4567',
       default_pickup_address: '123 Street',
     });
   }),
@@ -81,6 +83,7 @@ export const handlers = [
       id: CONFIG.ADMIN_USER_ID,
       full_name: body.full_name ?? 'Test User',
       email: body.email ?? 'test@example.com',
+      phone: body.phone ?? '123-4567',
       default_pickup_address:
         body.default_pickup_address ?? '123 Street',
     });

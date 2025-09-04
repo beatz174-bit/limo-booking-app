@@ -8,12 +8,18 @@ import { CONFIG } from '@/config';
 function seedAuth(id: string, role = 'CUSTOMER') {
   localStorage.setItem(
     'auth_tokens',
-    JSON.stringify({ access_token: 't', refresh_token: 'r', user: { email: 'x', role }, role })
+    JSON.stringify({
+      access_token: 't',
+      refresh_token: 'r',
+      user: { email: 'x', phone: '123', role },
+      role,
+    })
   );
   localStorage.setItem('userID', id);
   localStorage.setItem('userName', 'Test User');
   localStorage.setItem('role', role);
   localStorage.setItem('adminID', CONFIG.ADMIN_USER_ID);
+  localStorage.setItem('phone', '123');
 }
 
 describe('HomePage', () => {

@@ -12,7 +12,10 @@ import { apiUrl } from '@/__tests__/setup/msw.handlers';
 vi.mock('@stripe/react-stripe-js', () => ({
   Elements: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   CardElement: () => <div data-testid="card-element" />,
-  useStripe: () => ({ confirmCardSetup: vi.fn() }),
+  useStripe: () => ({
+    confirmCardSetup: vi.fn(),
+    paymentRequest: vi.fn(() => ({ canMakePayment: vi.fn(), show: vi.fn() })),
+  }),
   useElements: () => ({ getElement: vi.fn().mockReturnValue({}) }),
 }));
 vi.mock('@stripe/stripe-js', () => ({ loadStripe: vi.fn() }));
@@ -69,7 +72,6 @@ afterEach(() => {
 });
 
 test('advances through steps and aggregates form data', async () => {
-  localStorage.setItem('phone', '000');
   renderWithProviders(<BookingWizardPage />);
   const input = (re: RegExp) => screen.getByLabelText(re, { selector: 'input' });
 
@@ -97,6 +99,11 @@ test('advances through steps and aggregates form data', async () => {
     dropoff: { address: '456 B St', lat: 0, lng: 0 },
     passengers: 2,
     notes: 'Be quick',
+    customer: {
+      name: 'Test User',
+      email: 'test@example.com',
+      phone: '123-4567',
+    },
   });
   localStorage.clear();
 });
