@@ -9,16 +9,13 @@ import {
   Tabs,
   Tab,
   Snackbar,
-  Alert
+  Alert,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { driverBookingsApi as bookingsApi } from '@/components/ApiConfig';
 import { bookingStatusLabels, type BookingStatus } from '@/types/BookingStatus';
 import StatusChip from '@/components/StatusChip';
-import { CONFIG } from '@/config';
-import { apiFetch } from '@/services/apiFetch';
 import type { BookingRead as Booking } from '@/api-client';
-import { getAccessToken } from '@/services/tokenStore';
+import { useBookings } from '@/hooks/useBookings';
 
 const statuses: BookingStatus[] = [
   'PENDING',
@@ -34,7 +31,7 @@ const statuses: BookingStatus[] = [
 ];
 
 export default function DriverDashboard() {
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const { bookings, updateBooking } = useBookings();
   const [error, setError] = useState<string | null>(null);
   const bookingsByStatus = useMemo(() => {
     const groups = statuses.reduce(
@@ -48,23 +45,6 @@ export default function DriverDashboard() {
   }, [bookings]);
   const [tab, setTab] = useState<BookingStatus>('PENDING');
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const token = getAccessToken();
-        const { data } = await bookingsApi.listBookingsApiV1DriverBookingsGet(
-          undefined,
-          token
-            ? { headers: { Authorization: `Bearer ${token}` } }
-            : undefined,
-        );
-        setBookings(data as Booking[]);
-      } catch {
-        /* ignore */
-      }
-    })();
-  }, []);
-
   async function update(
     id: string,
     action:
@@ -77,28 +57,11 @@ export default function DriverDashboard() {
       | 'complete'
       | 'retry-deposit',
   ) {
-    const res = await apiFetch(
-      `${CONFIG.API_BASE_URL}/api/v1/driver/bookings/${id}/${action}`,
-      {
-        method: 'POST',
-      }
-    );
-    const data = await res.json().catch(() => ({}));
-    if (res.ok) {
-      setBookings((b) =>
-        b.map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                status: data.status,
-                final_price_cents:
-                  data.final_price_cents ?? item.final_price_cents,
-              }
-            : item,
-        ),
-      );
-    } else {
-      setError(`${res.status} ${data.message ?? data.detail ?? res.statusText}`);
+    try {
+      await updateBooking(id, action);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message);
     }
   }
 

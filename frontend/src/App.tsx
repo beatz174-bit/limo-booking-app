@@ -4,6 +4,7 @@ import LoginPage from "@/pages/Auth/LoginPage";
 import BookingWizardPage from "@/pages/Booking/BookingWizardPage";
 import AdminDashboard from "@/pages/Admin/AdminDashboard";
 import DriverDashboard from "@/pages/Driver/DriverDashboard";
+import { BookingsProvider } from "@/contexts/BookingsContext";
 import AvailabilityPage from "@/pages/Driver/AvailabilityPage";
 import TrackingPage from "@/pages/TrackingPage";
 import RideHistoryPage from "@/pages/Booking/RideHistoryPage";
@@ -52,7 +53,16 @@ function App() {
 
       {/* Protected admin-only routes */}
       <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
-      <Route path="/driver" element={<RequireAdmin><DriverDashboard /></RequireAdmin>} />
+      <Route
+        path="/driver"
+        element={
+          <RequireAdmin>
+            <BookingsProvider>
+              <DriverDashboard />
+            </BookingsProvider>
+          </RequireAdmin>
+        }
+      />
       <Route path="/driver/availability" element={<RequireAdmin><AvailabilityPage /></RequireAdmin>} />
       <Route
         path="/t/:code"
