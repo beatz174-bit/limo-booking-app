@@ -6,7 +6,7 @@ import { DevFeaturesProvider } from '@/contexts/DevFeaturesContext';
 
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
-    profile: { full_name: 'Test User', email: 'test@example.com', phone: '123' },
+    user: { full_name: 'Test User', email: 'test@example.com', phone: '123' },
   }),
 }));
 
