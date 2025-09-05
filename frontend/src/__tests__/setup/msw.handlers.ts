@@ -105,4 +105,14 @@ export const handlers = [
     __settings = { ...__settings, ...body };
     return HttpResponse.json({ ok: true });
   }),
+
+  // ---- GET /api/v1/driver/bookings ----
+  http.get(apiUrl('/api/v1/driver/bookings'), () => {
+    return HttpResponse.json([]);
+  }),
+
+  // ---- GET /api/v1/customers/me/bookings ----
+  http.get(apiUrl('/api/v1/customers/me/bookings'), () => {
+    return HttpResponse.json([]);
+  }),
 ];
