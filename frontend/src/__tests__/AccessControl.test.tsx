@@ -7,6 +7,25 @@ import { DevFeaturesProvider } from '@/contexts/DevFeaturesContext';
 import { vi } from 'vitest';
 import { CONFIG } from '@/config';
 
+vi.mock('@/components/ApiConfig', async () => {
+  const actual = await vi.importActual<
+    typeof import('@/components/ApiConfig')
+  >('@/components/ApiConfig');
+  return {
+    ...actual,
+    driverBookingsApi: {
+      listBookingsApiV1DriverBookingsGet: vi
+        .fn()
+        .mockResolvedValue({ data: [] }),
+    },
+    customerBookingsApi: {
+      listMyBookingsApiV1CustomersMeBookingsGet: vi
+        .fn()
+        .mockResolvedValue({ data: [] }),
+    },
+  };
+});
+
 vi.mock('@/pages/Admin/AdminDashboard', () => ({ default: () => <div>Admin Page</div> }));
 vi.mock('@/pages/Driver/DriverDashboard', () => ({ default: () => <div>Driver Page</div> }));
 vi.mock('@/pages/Auth/LoginPage', () => ({ default: () => <div>Login Page</div> }));
