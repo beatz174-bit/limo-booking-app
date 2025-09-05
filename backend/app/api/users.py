@@ -10,12 +10,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import get_current_user, get_db
 from app.models.user_v2 import User
-from app.schemas.api_booking import StripeSetupIntent
+from app.schemas.api_booking import StripePaymentMethod, StripeSetupIntent
 from app.schemas.user import UserCreate, UserRead, UserUpdate
 from app.services.user_service import (
     create_setup_intent_for_user,
     create_user,
     delete_user,
+    get_payment_method,
     get_user,
     list_users,
     remove_payment_method,
@@ -143,3 +144,8 @@ async def api_remove_payment_method(
     """Remove the saved payment method for the current user."""
 
     await remove_payment_method(db, current_user)
+
+
+@router.get("/me/payment-method", response_model=StripePaymentMethod)
+async def api_get_payment_method(current_user: User = Depends(get_current_user)):
+    return await get_payment_method(current_user)

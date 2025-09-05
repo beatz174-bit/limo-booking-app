@@ -50,7 +50,9 @@ class _StubStripe:  # type: ignore
 
         @staticmethod
         def retrieve(payment_method):
-            return _StubIntent(id=payment_method)
+            return _StubIntent(
+                id=payment_method, card={"brand": "visa", "last4": "4242"}
+            )
 
         @staticmethod
         def detach(payment_method):
@@ -103,6 +105,14 @@ def detach_payment_method(payment_method: str) -> None:
     """Detach a payment method from any customer."""
 
     stripe.PaymentMethod.detach(payment_method)
+
+
+def get_payment_method_details(payment_method_id: str) -> dict:
+    """Retrieve basic card details for a payment method."""
+
+    payment_method = stripe.PaymentMethod.retrieve(payment_method_id)
+    card = getattr(payment_method, "card", {}) or {}
+    return {"brand": card.get("brand"), "last4": card.get("last4")}
 
 
 def charge_deposit(

@@ -2,11 +2,12 @@ import uuid
 from typing import Any, Dict, List, cast
 
 import pytest
-from app.core.security import create_jwt_token, hash_password
-from app.models.user_v2 import User
 from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.security import create_jwt_token, hash_password
+from app.models.user_v2 import User
 
 
 @pytest.mark.asyncio
@@ -296,3 +297,51 @@ async def test_delete_user_success(client: AsyncClient, async_session: AsyncSess
         .execution_options(populate_existing=True)
     )
     assert res.scalar_one_or_none() is None
+
+
+@pytest.mark.asyncio
+async def test_get_payment_method_not_found(
+    client: AsyncClient, async_session: AsyncSession
+):
+    user = User(
+        email="nopm@example.com",
+        full_name="No PM",
+        hashed_password=hash_password("pass"),
+    )
+    async_session.add(user)
+    await async_session.commit()
+    await async_session.refresh(user)
+    token = create_jwt_token(user.id)
+    headers = {"Authorization": f"Bearer {token}"}
+    response = await client.get("/users/me/payment-method", headers=headers)
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_get_payment_method_success(
+    client: AsyncClient, async_session: AsyncSession
+):
+    user = User(
+        email="withpm@example.com",
+        full_name="With PM",
+        hashed_password=hash_password("pass"),
+    )
+    async_session.add(user)
+    await async_session.commit()
+    await async_session.refresh(user)
+
+    token = create_jwt_token(user.id)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    save_resp = await client.put(
+        "/users/me/payment-method",
+        json={"payment_method_id": "pm_test"},
+        headers=headers,
+    )
+    assert save_resp.status_code == 200
+
+    response = await client.get("/users/me/payment-method", headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["brand"] == "visa"
+    assert data["last4"] == "4242"
