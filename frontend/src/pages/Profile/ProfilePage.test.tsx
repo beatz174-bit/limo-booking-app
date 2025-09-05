@@ -224,7 +224,7 @@ describe('ProfilePage', () => {
         if (init?.method === 'POST') {
           return Promise.resolve({
             ok: true,
-            json: async () => ({ client_secret: 'sec' }),
+            json: async () => ({ setup_intent_client_secret: 'sec' }),
           } as Response);
         }
         if (init?.method === 'PUT') {

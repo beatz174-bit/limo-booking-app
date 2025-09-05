@@ -130,8 +130,8 @@ const ProfileForm = () => {
       if (!res.ok) return;
       const json = await res.json();
       const card = elements.getElement(CardElement);
-      if (!json.client_secret || !card) return;
-      const setup = await stripe.confirmCardSetup(json.client_secret, {
+      if (!json.setup_intent_client_secret || !card) return;
+      const setup = await stripe.confirmCardSetup(json.setup_intent_client_secret, {
         payment_method: { card },
       });
       const pm = setup?.setupIntent?.payment_method;
