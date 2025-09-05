@@ -50,7 +50,7 @@ class _StubStripe:  # type: ignore
 
         @staticmethod
         def retrieve(payment_method):
-            return _StubIntent(id=payment_method)
+            return _StubIntent(id=payment_method, customer=None)
 
         @staticmethod
         def detach(payment_method):
@@ -92,7 +92,9 @@ def get_default_payment_method(customer_id: str) -> str | None:
 def set_default_payment_method(customer_id: str, payment_method: str) -> None:
     """Attach and set the default payment method for a customer."""
 
-    stripe.PaymentMethod.attach(payment_method, customer=customer_id)
+    payment_method_obj = stripe.PaymentMethod.retrieve(payment_method)
+    if getattr(payment_method_obj, "customer", None) is None:
+        stripe.PaymentMethod.attach(payment_method, customer=customer_id)
     stripe.Customer.modify(
         customer_id,
         invoice_settings={"default_payment_method": payment_method},
