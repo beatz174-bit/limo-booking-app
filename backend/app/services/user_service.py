@@ -6,13 +6,15 @@ import logging
 import uuid
 from typing import Optional
 
-from app.core.security import hash_password
-from app.models.user_v2 import User
-from app.schemas.user import UserCreate, UserRead, UserUpdate
-from app.services import stripe_client
 from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.security import hash_password
+from app.models.user_v2 import User
+from app.schemas.api_booking import StripePaymentMethod
+from app.schemas.user import UserCreate, UserRead, UserUpdate
+from app.services import stripe_client
 
 logger = logging.getLogger(__name__)
 
@@ -151,3 +153,13 @@ async def remove_payment_method(db: AsyncSession, user: User) -> None:
         stripe_client.detach_payment_method(user.stripe_payment_method_id)
         user.stripe_payment_method_id = None
         await db.flush()
+
+
+async def get_payment_method(user: User) -> StripePaymentMethod:
+    """Return stored payment method details for a user."""
+
+    if not user.stripe_payment_method_id:
+        raise HTTPException(status_code=404)
+
+    details = stripe_client.get_payment_method_details(user.stripe_payment_method_id)
+    return StripePaymentMethod(**details)

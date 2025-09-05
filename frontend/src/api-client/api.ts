@@ -573,17 +573,17 @@ export interface RegisterRequest {
      */
     'password': string;
     /**
-     *
+     * 
      * @type {string}
      * @memberof RegisterRequest
      */
-    'phone'?: string;
+    'phone'?: string | null;
     /**
-     *
+     * 
      * @type {string}
      * @memberof RegisterRequest
      */
-    'stripe_payment_method_id'?: string;
+    'stripe_payment_method_id'?: string | null;
 }
 /**
  * 
@@ -683,6 +683,25 @@ export interface SetupPayload {
      * @memberof SetupPayload
      */
     'settings': SettingsPayload;
+}
+/**
+ * 
+ * @export
+ * @interface StripePaymentMethod
+ */
+export interface StripePaymentMethod {
+    /**
+     * 
+     * @type {string}
+     * @memberof StripePaymentMethod
+     */
+    'brand': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof StripePaymentMethod
+     */
+    'last4': string;
 }
 /**
  * 
@@ -2430,10 +2449,12 @@ export const GeocodeApiAxiosParamCreator = function (configuration?: Configurati
          * @summary Api Geocode Search
          * @param {string} q 
          * @param {number} [limit] 
+         * @param {number | null} [lat] 
+         * @param {number | null} [lon] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiGeocodeSearchGeocodeSearchGet: async (q: string, limit?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiGeocodeSearchGeocodeSearchGet: async (q: string, limit?: number, lat?: number | null, lon?: number | null, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'q' is not null or undefined
             assertParamExists('apiGeocodeSearchGeocodeSearchGet', 'q', q)
             const localVarPath = `/geocode/search`;
@@ -2454,6 +2475,14 @@ export const GeocodeApiAxiosParamCreator = function (configuration?: Configurati
 
             if (limit !== undefined) {
                 localVarQueryParameter['limit'] = limit;
+            }
+
+            if (lat !== undefined) {
+                localVarQueryParameter['lat'] = lat;
+            }
+
+            if (lon !== undefined) {
+                localVarQueryParameter['lon'] = lon;
             }
 
 
@@ -2526,11 +2555,13 @@ export const GeocodeApiFp = function(configuration?: Configuration) {
          * @summary Api Geocode Search
          * @param {string} q 
          * @param {number} [limit] 
+         * @param {number | null} [lat] 
+         * @param {number | null} [lon] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiGeocodeSearchGeocodeSearchGet(q: string, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GeocodeSearchResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiGeocodeSearchGeocodeSearchGet(q, limit, options);
+        async apiGeocodeSearchGeocodeSearchGet(q: string, limit?: number, lat?: number | null, lon?: number | null, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GeocodeSearchResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiGeocodeSearchGeocodeSearchGet(q, limit, lat, lon, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['GeocodeApi.apiGeocodeSearchGeocodeSearchGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -2564,11 +2595,13 @@ export const GeocodeApiFactory = function (configuration?: Configuration, basePa
          * @summary Api Geocode Search
          * @param {string} q 
          * @param {number} [limit] 
+         * @param {number | null} [lat] 
+         * @param {number | null} [lon] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiGeocodeSearchGeocodeSearchGet(q: string, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<GeocodeSearchResponse> {
-            return localVarFp.apiGeocodeSearchGeocodeSearchGet(q, limit, options).then((request) => request(axios, basePath));
+        apiGeocodeSearchGeocodeSearchGet(q: string, limit?: number, lat?: number | null, lon?: number | null, options?: RawAxiosRequestConfig): AxiosPromise<GeocodeSearchResponse> {
+            return localVarFp.apiGeocodeSearchGeocodeSearchGet(q, limit, lat, lon, options).then((request) => request(axios, basePath));
         },
         /**
          * Look up an address from latitude and longitude.
@@ -2596,12 +2629,14 @@ export class GeocodeApi extends BaseAPI {
      * @summary Api Geocode Search
      * @param {string} q 
      * @param {number} [limit] 
+     * @param {number | null} [lat] 
+     * @param {number | null} [lon] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof GeocodeApi
      */
-    public apiGeocodeSearchGeocodeSearchGet(q: string, limit?: number, options?: RawAxiosRequestConfig) {
-        return GeocodeApiFp(this.configuration).apiGeocodeSearchGeocodeSearchGet(q, limit, options).then((request) => request(this.axios, this.basePath));
+    public apiGeocodeSearchGeocodeSearchGet(q: string, limit?: number, lat?: number | null, lon?: number | null, options?: RawAxiosRequestConfig) {
+        return GeocodeApiFp(this.configuration).apiGeocodeSearchGeocodeSearchGet(q, limit, lat, lon, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -3603,6 +3638,40 @@ export const UsersApiAxiosParamCreator = function (configuration?: Configuration
             };
         },
         /**
+         * 
+         * @summary Api Get Payment Method
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiGetPaymentMethodUsersMePaymentMethodGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/users/me/payment-method`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OAuth2PasswordBearer required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OAuth2PasswordBearer", [], configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * Fetch a single user by ID.
          * @summary Api Get User
          * @param {string} userId 
@@ -3893,6 +3962,18 @@ export const UsersApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * 
+         * @summary Api Get Payment Method
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiGetPaymentMethodUsersMePaymentMethodGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StripePaymentMethod>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiGetPaymentMethodUsersMePaymentMethodGet(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UsersApi.apiGetPaymentMethodUsersMePaymentMethodGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * Fetch a single user by ID.
          * @summary Api Get User
          * @param {string} userId 
@@ -4018,6 +4099,15 @@ export const UsersApiFactory = function (configuration?: Configuration, basePath
             return localVarFp.apiGetMeUsersMeGet(options).then((request) => request(axios, basePath));
         },
         /**
+         * 
+         * @summary Api Get Payment Method
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiGetPaymentMethodUsersMePaymentMethodGet(options?: RawAxiosRequestConfig): AxiosPromise<StripePaymentMethod> {
+            return localVarFp.apiGetPaymentMethodUsersMePaymentMethodGet(options).then((request) => request(axios, basePath));
+        },
+        /**
          * Fetch a single user by ID.
          * @summary Api Get User
          * @param {string} userId 
@@ -4130,6 +4220,17 @@ export class UsersApi extends BaseAPI {
      */
     public apiGetMeUsersMeGet(options?: RawAxiosRequestConfig) {
         return UsersApiFp(this.configuration).apiGetMeUsersMeGet(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Api Get Payment Method
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UsersApi
+     */
+    public apiGetPaymentMethodUsersMePaymentMethodGet(options?: RawAxiosRequestConfig) {
+        return UsersApiFp(this.configuration).apiGetPaymentMethodUsersMePaymentMethodGet(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
