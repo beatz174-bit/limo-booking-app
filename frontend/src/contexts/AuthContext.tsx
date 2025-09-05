@@ -1,5 +1,5 @@
 // React context providing authentication state and helpers.
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { authApi } from "@/components/ApiConfig";
 import { CONFIG } from "@/config";
 import { setTokens, getRefreshToken, initTokensFromStorage } from "../services/tokenStore";
@@ -134,8 +134,10 @@ useEffect(() => {
   fetchAdminID();
 }, [adminID]);
 
+  const profileFetched = useRef(false);
+
   useEffect(() => {
-    if (!state.accessToken) return;
+    if (!state.accessToken || profileFetched.current) return;
     const needsProfile =
       !state.user?.email ||
       !state.user?.full_name ||
@@ -143,7 +145,10 @@ useEffect(() => {
       !state.role ||
       !state.userID ||
       !state.userName;
-    if (!needsProfile) return;
+    if (!needsProfile) {
+      profileFetched.current = true;
+      return;
+    }
     const fetchMe = async () => {
       try {
         const res = await apiFetch(`${CONFIG.API_BASE_URL}/users/me`);
@@ -190,6 +195,8 @@ useEffect(() => {
           "failed to fetch user profile",
           err,
         );
+      } finally {
+        profileFetched.current = true;
       }
     };
     fetchMe();
@@ -201,6 +208,12 @@ useEffect(() => {
     state.userName,
     state.phone,
   ]);
+
+  useEffect(() => {
+    if (!state.accessToken) {
+      profileFetched.current = false;
+    }
+  }, [state.accessToken]);
 
   const persist = useCallback((t?: TokenResponse | null, user?: UserShape, role?: string | null) => {
     const access_token = t?.access_token ?? null;
