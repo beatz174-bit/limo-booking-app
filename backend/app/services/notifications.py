@@ -7,14 +7,13 @@ from datetime import datetime, timezone
 from typing import Any
 
 import httpx
-from jose import jwt
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-
 from app.core.config import get_settings
 from app.models.notification import Notification, NotificationType
 from app.models.user_v2 import User as UserV2
 from app.models.user_v2 import UserRole
+from jose import jwt
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 logger = logging.getLogger(__name__)
 
@@ -102,6 +101,14 @@ async def _send_fcm(
         and settings.fcm_client_email
         and settings.fcm_private_key
     ):
+        logger.warning(
+            "FCM disabled",
+            extra={
+                "fcm_project_id": settings.fcm_project_id,
+                "fcm_client_email": settings.fcm_client_email,
+                "fcm_private_key_len": len(settings.fcm_private_key or ""),
+            },
+        )
         return
 
     now = int(datetime.now(timezone.utc).timestamp())
