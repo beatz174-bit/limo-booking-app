@@ -1,4 +1,10 @@
-import { Stack, Button, Typography, Alert } from '@mui/material';
+import {
+  Stack,
+  Button,
+  Typography,
+  Alert,
+  CircularProgress,
+} from '@mui/material';
 import {
   Elements,
   PaymentElement,
@@ -11,7 +17,7 @@ import {
   PaymentRequest as StripePaymentRequest,
   PaymentRequestCanMakePaymentResult,
 } from '@stripe/stripe-js';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useStripeSetupIntent } from '@/hooks/useStripeSetupIntent';
 import { useSettings } from '@/hooks/useSettings';
@@ -334,11 +340,13 @@ export default function PaymentStep({ data, onBack }: Props) {
   const name = profile?.full_name ?? '';
   const email = profile?.email ?? '';
   const phone = profile?.phone ?? '';
+  const initialized = useRef(false);
 
   useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
     let ignore = false;
     async function init() {
-      if (clientSecret) return;
       const payload = {
         pickup_when: data.pickup_when,
         pickup: data.pickup,
@@ -368,7 +376,7 @@ export default function PaymentStep({ data, onBack }: Props) {
     return () => {
       ignore = true;
     };
-  }, [createBooking, data, name, email, phone, clientSecret, profile]);
+  }, [createBooking, data, name, email, phone, profile]);
 
   if (initError) {
     return (
@@ -380,7 +388,11 @@ export default function PaymentStep({ data, onBack }: Props) {
   }
 
   if (!clientSecret || !bookingData) {
-    return null;
+    return (
+      <Stack alignItems="center">
+        <CircularProgress />
+      </Stack>
+    );
   }
 
   return (
