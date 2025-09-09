@@ -35,10 +35,10 @@ services:
       - ./backend/.env.production
     # ports:
     #   - "8000:8000"
-    environment:
-      # - DATABASE_PATH=/data/app.db  # or your production DB
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - ORS_API_KEY=${ORS_API_KEY}
+    # environment:
+    #   # - DATABASE_PATH=/data/app.db  # or your production DB
+    #   - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+    #   - ORS_API_KEY=${ORS_API_KEY}
       # - GRAYLOG_HOST=graylog.example.com  # Optional Graylog server
       # - GRAYLOG_PORT=12201
     volumes:
