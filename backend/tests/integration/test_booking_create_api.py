@@ -26,28 +26,14 @@ async def test_create_booking_success(
 
     monkeypatch.setattr("app.services.routing.estimate_route", fake_route)
 
-    class FakeCustomer:
-        id = "cus_test"
-
-    monkeypatch.setattr(
-        "app.services.stripe_client.create_customer",
-        lambda email, name, phone: FakeCustomer(),
-    )
-
-    class FakeSI:
-        client_secret = "sec_test"
-
-    monkeypatch.setattr(
-        "app.services.stripe_client.create_setup_intent",
-        lambda customer_id, booking_reference: FakeSI(),
-    )
-
     user = User(
         email="jane@example.com",
         full_name="Jane",
         hashed_password=hash_password("pass"),
         role=UserRole.CUSTOMER,
         phone="123",
+        stripe_customer_id="cus_test",
+        stripe_payment_method_id="pm_test",
     )
     async_session.add(user)
     await async_session.commit()
@@ -66,7 +52,7 @@ async def test_create_booking_success(
     assert res.status_code == 201
     data = res.json()
     assert data["booking"]["status"] == "PENDING"
-    assert data["stripe"]["setup_intent_client_secret"] == "sec_test"
+    assert "stripe" not in data
     await async_session.execute(delete(AdminConfig))
     await async_session.commit()
 
@@ -84,6 +70,8 @@ async def test_create_booking_past_forbidden(async_session, client: AsyncClient)
         full_name="Jane",
         hashed_password=hash_password("pass"),
         role=UserRole.CUSTOMER,
+        stripe_customer_id="cus_test",
+        stripe_payment_method_id="pm_test",
     )
     async_session.add(user)
     await async_session.commit()
@@ -117,6 +105,8 @@ async def test_create_booking_route_not_found(
         hashed_password=hash_password("pass"),
         role=UserRole.CUSTOMER,
         phone="123",
+        stripe_customer_id="cus_test",
+        stripe_payment_method_id="pm_test",
     )
     async_session.add(user)
     await async_session.commit()
@@ -134,3 +124,30 @@ async def test_create_booking_route_not_found(
     res = await client.post("/api/v1/bookings", json=payload, headers=headers)
     assert res.status_code == 400
     assert res.json()["detail"] == "no route found"
+
+
+async def test_create_booking_requires_payment_method(
+    async_session, client: AsyncClient
+):
+    user = User(
+        email="nopm@example.com",
+        full_name="No PM",
+        hashed_password=hash_password("pass"),
+        role=UserRole.CUSTOMER,
+    )
+    async_session.add(user)
+    await async_session.commit()
+
+    token = create_jwt_token(user.id)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    payload = {
+        "pickup_when": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
+        "pickup": {"address": "A", "lat": -27.47, "lng": 153.02},
+        "dropoff": {"address": "B", "lat": -27.5, "lng": 153.03},
+        "passengers": 2,
+    }
+
+    res = await client.post("/api/v1/bookings", json=payload, headers=headers)
+    assert res.status_code == 400
+    assert res.json()["detail"] == "customer has no payment method"

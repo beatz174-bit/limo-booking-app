@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { vi, expect, test, beforeEach } from 'vitest';
 import PaymentStep from './PaymentStep';
 
+// Auth context
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
     user: { full_name: 'Test User', email: 'test@example.com', phone: '123' },
