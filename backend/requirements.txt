@@ -36,6 +36,7 @@ pytest-mock
 httpx
 python-multipart
 python-json-logger
+stripe
 apscheduler
 broadcaster
 websockets
