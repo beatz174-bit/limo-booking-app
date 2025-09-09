@@ -148,10 +148,28 @@ async def test_create_booking_commits_once(async_session: AsyncSession, mocker):
         passengers=1,
     )
 
-    booking, client_secret = await booking_service.create_booking(
-        async_session, data, user
-    )
+    booking = await booking_service.create_booking(async_session, data, user)
 
     assert commit_spy.call_count == 1
     assert booking.id is not None
-    assert client_secret is None
+
+
+async def test_create_booking_requires_payment_method(async_session: AsyncSession):
+    user = User(
+        email=f"test{uuid.uuid4().hex}@example.com",
+        full_name="Test",
+        hashed_password=hash_password("pass"),
+        role=UserRole.CUSTOMER,
+    )
+    async_session.add(user)
+    await async_session.commit()
+
+    data = BookingCreateRequest(
+        pickup_when=datetime.now(timezone.utc) + timedelta(hours=1),
+        pickup=Location(address="A", lat=0.0, lng=0.0),
+        dropoff=Location(address="B", lat=1.0, lng=1.0),
+        passengers=1,
+    )
+
+    with pytest.raises(ValueError):
+        await booking_service.create_booking(async_session, data, user)

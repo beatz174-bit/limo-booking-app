@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from app.models.booking import BookingStatus
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, field_validator
 
 
 class Location(BaseModel):
@@ -40,12 +40,6 @@ class BookingPublic(BaseModel):
         from_attributes = True
 
 
-class StripeSetupIntent(BaseModel):
-    setup_intent_client_secret: Optional[str] = Field(
-        default=None, alias="setup_intent_client_secret"
-    )
-
-
 class StripePaymentMethod(BaseModel):
     brand: str
     last4: str
@@ -53,7 +47,6 @@ class StripePaymentMethod(BaseModel):
 
 class BookingCreateResponse(BaseModel):
     booking: BookingPublic
-    stripe: StripeSetupIntent
 
 
 class BookingStatusResponse(BaseModel):
