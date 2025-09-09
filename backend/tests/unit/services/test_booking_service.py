@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.security import hash_password
 from app.models.booking import Booking, BookingStatus
 from app.models.user_v2 import User, UserRole
+from app.schemas.api_booking import BookingCreateRequest, Location
 from app.services import booking_service
 
 pytestmark = pytest.mark.asyncio
@@ -122,3 +123,33 @@ async def test_confirm_booking_handles_card_error(async_session: AsyncSession, m
     await async_session.refresh(booking)
     assert booking.status is BookingStatus.PENDING
     assert booking.deposit_payment_intent_id is None
+
+
+async def test_create_booking_commits_once(async_session: AsyncSession, mocker):
+    user = User(
+        email=f"test{uuid.uuid4().hex}@example.com",
+        full_name="Test",
+        hashed_password=hash_password("pass"),
+        role=UserRole.CUSTOMER,
+        stripe_customer_id="cus_123",
+        stripe_payment_method_id="pm_123",
+    )
+    async_session.add(user)
+    await async_session.commit()
+
+    mocker.patch("app.services.routing.estimate_route", return_value=(1.0, 1.0))
+    mocker.patch("app.services.notifications._send_fcm", return_value=None)
+
+    commit_spy = mocker.spy(async_session, "commit")
+
+    data = BookingCreateRequest(
+        pickup_when=datetime.now(timezone.utc) + timedelta(hours=1),
+        pickup=Location(address="A", lat=0.0, lng=0.0),
+        dropoff=Location(address="B", lat=1.0, lng=1.0),
+        passengers=1,
+    )
+
+    booking, _ = await booking_service.create_booking(async_session, data, user)
+
+    assert commit_spy.call_count == 1
+    assert booking.id is not None
