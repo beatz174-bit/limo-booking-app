@@ -6,7 +6,6 @@ from app.schemas.api_booking import (
     BookingCreateRequest,
     BookingCreateResponse,
     BookingPublic,
-    StripeSetupIntent,
 )
 from app.services import booking_service
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -24,11 +23,8 @@ async def create_booking_endpoint(
     user: User = Depends(get_current_user_v2),
 ) -> BookingCreateResponse:
     try:
-        booking, client_secret = await booking_service.create_booking(db, payload, user)
+        booking = await booking_service.create_booking(db, payload, user)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     booking_public = BookingPublic.model_validate(booking)
-    return BookingCreateResponse(
-        booking=booking_public,
-        stripe=StripeSetupIntent(setup_intent_client_secret=client_secret),
-    )
+    return BookingCreateResponse(booking=booking_public)

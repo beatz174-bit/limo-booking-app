@@ -2,15 +2,11 @@
 
 import logging
 import uuid
-from typing import List
-
-from fastapi import APIRouter, Depends, status
-from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import List, Optional
 
 from app.dependencies import get_current_user, get_db
 from app.models.user_v2 import User
-from app.schemas.api_booking import StripePaymentMethod, StripeSetupIntent
+from app.schemas.api_booking import StripePaymentMethod
 from app.schemas.user import UserCreate, UserRead, UserUpdate
 from app.services.user_service import (
     create_setup_intent_for_user,
@@ -23,6 +19,9 @@ from app.services.user_service import (
     save_payment_method,
     update_user,
 )
+from fastapi import APIRouter, Depends, status
+from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -111,6 +110,12 @@ async def api_delete_user(
 
 class PaymentMethodPayload(BaseModel):
     payment_method_id: str
+
+
+class StripeSetupIntent(BaseModel):
+    setup_intent_client_secret: Optional[str] = Field(
+        default=None, alias="setup_intent_client_secret"
+    )
 
 
 @router.post("/me/payment-method", response_model=StripeSetupIntent)
