@@ -177,6 +177,8 @@ const ProfileForm = ({
         const setup = await stripe.confirmSetup({
           elements,
           clientSecret,
+          confirmParams: { return_url: window.location.href },
+          redirect: 'if_required',
         });
         logger.info(
           'pages/Profile/ProfileForm',
