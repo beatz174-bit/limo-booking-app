@@ -40,8 +40,26 @@ interface Props {
   data: Required<BookingFormData>;
   onBack: () => void;
 }
+interface SavedPaymentMethod {
+  brand: string;
+  last4: string;
+}
 
-function PaymentInner({ data, onBack }: Props) {
+interface InnerProps extends Props {
+  clientSecret: string;
+  bookingData: { public_code: string };
+  savePaymentMethod: (paymentMethodId: string) => Promise<void>;
+  savedPaymentMethod: SavedPaymentMethod | null;
+}
+
+function PaymentInner({
+  data,
+  onBack,
+  clientSecret,
+  bookingData,
+  savePaymentMethod,
+  savedPaymentMethod,
+}: InnerProps) {
   const { user: profile } = useAuth();
   const name = profile?.full_name ?? '';
   const email = profile?.email ?? '';
@@ -49,8 +67,6 @@ function PaymentInner({ data, onBack }: Props) {
 
   const stripe = useStripe();
   const elements = useElements();
-  const { createBooking, savePaymentMethod, savedPaymentMethod } =
-    useStripeSetupIntent();
   const { data: settings } = useSettings();
   interface SettingsAliases {
     flagfall?: number;
@@ -71,6 +87,8 @@ function PaymentInner({ data, onBack }: Props) {
   const [durationMin, setDurationMin] = useState<number>(0);
   const [paymentRequest, setPaymentRequest] =
     useState<StripePaymentRequest | null>(null);
+  const [booking, setBooking] =
+    useState<{ public_code: string } | null>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -128,7 +146,6 @@ function PaymentInner({ data, onBack }: Props) {
     tariff.perKm,
     tariff.perMin,
   ]);
-  const [booking, setBooking] = useState<{ public_code: string } | null>(null);
 
   useEffect(() => {
     async function initPaymentRequest() {
@@ -152,25 +169,6 @@ function PaymentInner({ data, onBack }: Props) {
   }, [stripe, savedPaymentMethod]);
 
   async function handleGooglePay() {
-    const payload = {
-      pickup_when: data.pickup_when,
-      pickup: data.pickup,
-      dropoff: data.dropoff,
-      passengers: data.passengers,
-      notes: data.notes,
-      customer: { name, email, phone },
-    };
-    logger.info(
-      'components/BookingWizard/PaymentStep',
-      'Submitting booking with Google Pay',
-      payload,
-    );
-    const res = await createBooking(payload);
-    logger.info(
-      'components/BookingWizard/PaymentStep',
-      'setup-intent response',
-      { clientSecret: res.clientSecret },
-    );
     if (!stripe || !paymentRequest) {
       logger.warn(
         'components/BookingWizard/PaymentStep',
@@ -178,103 +176,65 @@ function PaymentInner({ data, onBack }: Props) {
       );
       return;
     }
-    if (res.clientSecret) {
-      const tokenRes = (await paymentRequest.show()) as {
-        token?: { id: string };
-        complete: (status: string) => Promise<void>;
-      };
-      const token = tokenRes.token?.id;
-      if (token) {
-        const setup = await stripe.confirmSetup({
-          clientSecret: res.clientSecret,
-          payment_method: token,
-        });
-        logger.info(
-          'components/BookingWizard/PaymentStep',
-          'confirmSetup result',
-          setup,
-        );
-        const pm = setup?.setupIntent?.payment_method;
-        if (pm) {
-          await savePaymentMethod(pm as string);
-        }
-        if (typeof tokenRes.complete === 'function') {
-          await tokenRes.complete('success');
-        }
-        setBooking(res.booking);
-        logger.info(
-          'components/BookingWizard/PaymentStep',
-          'Booking confirmed via Google Pay',
-          res.booking,
-        );
-      }
-    } else {
-      logger.error(
+    const tokenRes = (await paymentRequest.show()) as {
+      token?: { id: string };
+      complete: (status: string) => Promise<void>;
+    };
+    const token = tokenRes.token?.id;
+    if (token) {
+      const setup = await stripe.confirmSetup({
+        clientSecret,
+        payment_method: token,
+      });
+      logger.info(
         'components/BookingWizard/PaymentStep',
-        'Booking creation failed',
-        res,
+        'confirmSetup result',
+        setup,
+      );
+      const pm = setup?.setupIntent?.payment_method;
+      if (pm) {
+        await savePaymentMethod(pm as string);
+      }
+      if (typeof tokenRes.complete === 'function') {
+        await tokenRes.complete('success');
+      }
+      setBooking(bookingData);
+      logger.info(
+        'components/BookingWizard/PaymentStep',
+        'Booking confirmed via Google Pay',
+        bookingData,
       );
     }
   }
 
   async function handleSubmit() {
-    const payload = {
-      pickup_when: data.pickup_when,
-      pickup: data.pickup,
-      dropoff: data.dropoff,
-      passengers: data.passengers,
-      notes: data.notes,
-      customer: profile ? { name, email, phone } : undefined,
-    };
-    logger.info(
-      'components/BookingWizard/PaymentStep',
-      'Submitting booking',
-      payload
-    );
-    const res = await createBooking(payload);
-    logger.info(
-      'components/BookingWizard/PaymentStep',
-      'setup-intent response',
-      { clientSecret: res.clientSecret },
-    );
-
     if (!savedPaymentMethod) {
       if (!stripe || !elements) {
         logger.warn(
           'components/BookingWizard/PaymentStep',
-          'Stripe not ready'
+          'Stripe not ready',
         );
         return;
       }
-      if (res.clientSecret) {
-        const setup = await stripe.confirmSetup({
-          elements,
-          clientSecret: res.clientSecret,
-        });
-        logger.info(
-          'components/BookingWizard/PaymentStep',
-          'confirmSetup result',
-          setup,
-        );
-        const pm = setup?.setupIntent?.payment_method;
-        if (pm) {
-          await savePaymentMethod(pm as string);
-        }
-      } else {
-        logger.error(
-          'components/BookingWizard/PaymentStep',
-          'Booking creation failed',
-          res
-        );
-        return;
+      const setup = await stripe.confirmSetup({
+        elements,
+        clientSecret,
+      });
+      logger.info(
+        'components/BookingWizard/PaymentStep',
+        'confirmSetup result',
+        setup,
+      );
+      const pm = setup?.setupIntent?.payment_method;
+      if (pm) {
+        await savePaymentMethod(pm as string);
       }
     }
-
-    setBooking(res.booking);
+    setBooking(bookingData);
     logger.info(
       'components/BookingWizard/PaymentStep',
       'Booking confirmed',
-      res.booking
+      bookingData,
     );
   }
 
@@ -336,10 +296,55 @@ function PaymentInner({ data, onBack }: Props) {
   );
 }
 
-export default function PaymentStep(props: Props) {
+export default function PaymentStep({ data, onBack }: Props) {
+  const { user: profile } = useAuth();
+  const { createBooking, savePaymentMethod, savedPaymentMethod } =
+    useStripeSetupIntent();
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [bookingData, setBookingData] =
+    useState<{ public_code: string } | null>(null);
+
+  useEffect(() => {
+    let ignore = false;
+    async function init() {
+      if (clientSecret) return;
+      const name = profile?.full_name ?? '';
+      const email = profile?.email ?? '';
+      const phone = profile?.phone ?? '';
+      const payload = {
+        pickup_when: data.pickup_when,
+        pickup: data.pickup,
+        dropoff: data.dropoff,
+        passengers: data.passengers,
+        notes: data.notes,
+        customer: profile ? { name, email, phone } : undefined,
+      };
+      const res = await createBooking(payload);
+      if (!ignore) {
+        setClientSecret(res.clientSecret);
+        setBookingData(res.booking);
+      }
+    }
+    init();
+    return () => {
+      ignore = true;
+    };
+  }, [createBooking, data, profile, clientSecret]);
+
+  if (!clientSecret || !bookingData) {
+    return null;
+  }
+
   return (
-    <Elements stripe={stripePromise}>
-      <PaymentInner {...props} />
+    <Elements stripe={stripePromise} options={{ clientSecret }}>
+      <PaymentInner
+        data={data}
+        onBack={onBack}
+        clientSecret={clientSecret}
+        bookingData={bookingData}
+        savePaymentMethod={savePaymentMethod}
+        savedPaymentMethod={savedPaymentMethod}
+      />
     </Elements>
   );
 }
