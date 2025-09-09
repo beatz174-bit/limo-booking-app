@@ -10,15 +10,56 @@ vi.mock('@/contexts/AuthContext', () => ({
   }),
 }));
 
-const mockCreateBooking = vi.fn().mockResolvedValue({ booking: { public_code: 'ABC123' } });
-const mockUseBooking = vi.fn();
+import PaymentStep from './PaymentStep';
 
-vi.mock('@/hooks/useBooking', () => ({
-  useBooking: () => mockUseBooking(),
+const mockCreateBooking = vi.fn().mockResolvedValue({
+  booking: { public_code: 'ABC123' },
+});
+const mockUseStripeSetupIntent = vi.fn();
+const mockGetMetrics = vi.fn().mockResolvedValue(null);
+
+vi.mock('@/hooks/useStripeSetupIntent', () => ({
+  useStripeSetupIntent: () => mockUseStripeSetupIntent(),
+}));
+vi.mock('@/hooks/useSettings', () => ({
+  useSettings: () => ({ data: {} }),
+}));
+vi.mock('@/hooks/useRouteMetrics', () => ({
+  useRouteMetrics: () => mockGetMetrics,
 }));
 
 beforeEach(() => {
   mockCreateBooking.mockClear();
+  mockGetMetrics.mockClear();
+  mockUseStripeSetupIntent.mockReturnValue({
+    createBooking: mockCreateBooking,
+    savedPaymentMethod: null,
+    loading: false,
+  });
+});
+
+const baseData = {
+  pickup_when: '2025-01-01T00:00:00Z',
+  pickup: { address: 'A', lat: 0, lng: 0 },
+  dropoff: { address: 'B', lat: 1, lng: 1 },
+  passengers: 1,
+  notes: '',
+  pickupValid: true,
+  dropoffValid: true,
+};
+
+test('shows profile link when no saved card', async () => {
+  render(
+    <MemoryRouter>
+      <DevFeaturesProvider>
+        <PaymentStep data={baseData} onBack={() => {}} />
+      </DevFeaturesProvider>
+    </MemoryRouter>,
+  );
+
+  const link = await screen.findByRole('link', { name: /add a payment method/i });
+  expect(link).toHaveAttribute('href', '/profile');
+  expect(screen.queryByRole('button', { name: /submit/i })).not.toBeInTheDocument();
 });
 
 test('creates booking when saved card exists', async () => {
@@ -48,6 +89,86 @@ test('creates booking when saved card exists', async () => {
   expect(mockCreateBooking).toHaveBeenCalled();
 });
 
+test('updates metrics from route service', async () => {
+  mockGetMetrics.mockResolvedValueOnce({ km: 12, min: 34 });
+  mockUseStripeSetupIntent.mockReturnValue({
+    createBooking: mockCreateBooking,
+    savedPaymentMethod: { brand: 'visa', last4: '4242' },
+    loading: false,
+  });
+
+  render(
+    <MemoryRouter>
+      <DevFeaturesProvider>
+        <PaymentStep data={baseData} onBack={() => {}} />
+      </DevFeaturesProvider>
+    </MemoryRouter>,
+  );
+
+  expect(await screen.findByText(/distance: 12 km/i)).toBeInTheDocument();
+  expect(screen.getByText(/duration: 34 minutes/i)).toBeInTheDocument();
+});
+
+test('renders fare breakdown when dev features enabled', async () => {
+  mockUseStripeSetupIntent.mockReturnValue({
+    createBooking: mockCreateBooking,
+    savedPaymentMethod: { brand: 'visa', last4: '4242' },
+    loading: false,
+  });
+
+  render(
+    <MemoryRouter>
+      <DevFeaturesProvider>
+        <PaymentStep data={baseData} onBack={() => {}} />
+      </DevFeaturesProvider>
+    </MemoryRouter>,
+  );
+
+  expect(await screen.findByText(/fare breakdown/i)).toBeInTheDocument();
+});
+
+test('hides fare breakdown when dev features disabled', async () => {
+  vi.stubEnv('ENV', 'production');
+  localStorage.setItem('devFeaturesEnabled', 'false');
+
+  mockUseStripeSetupIntent.mockReturnValue({
+    createBooking: mockCreateBooking,
+    savedPaymentMethod: { brand: 'visa', last4: '4242' },
+    loading: false,
+  });
+
+  render(
+    <MemoryRouter>
+      <DevFeaturesProvider>
+        <PaymentStep data={baseData} onBack={() => {}} />
+      </DevFeaturesProvider>
+    </MemoryRouter>,
+  );
+
+  await screen.findByRole('button', { name: /submit/i });
+  expect(screen.queryByText(/fare breakdown/i)).not.toBeInTheDocument();
+
+  vi.unstubAllEnvs();
+  localStorage.clear();
+});
+
+test('shows error when booking creation fails', async () => {
+  mockCreateBooking.mockRejectedValueOnce(new Error('boom'));
+
+  render(
+    <MemoryRouter>
+      <DevFeaturesProvider>
+        <PaymentStep data={baseData} onBack={() => {}} />
+      </DevFeaturesProvider>
+    </MemoryRouter>,
+  );
+
+  expect(
+    await screen.findByText(/failed to create booking/i),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole('button', { name: /back/i }),
+  ).toBeInTheDocument();
 test('shows warning when no saved card', async () => {
   mockUseBooking.mockReturnValue({
     createBooking: mockCreateBooking,
@@ -73,3 +194,4 @@ test('shows warning when no saved card', async () => {
   expect(await screen.findByText(/no saved payment method/i)).toBeInTheDocument();
   expect(mockCreateBooking).not.toHaveBeenCalled();
 });
+

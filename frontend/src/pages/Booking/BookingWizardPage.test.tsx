@@ -7,7 +7,6 @@ import React from 'react';
 import { server } from '@/__tests__/setup/msw.server';
 import { http, HttpResponse } from 'msw';
 import { apiUrl } from '@/__tests__/setup/msw.handlers';
-
 // Backend and map related hooks
 const createBooking = vi
   .fn()

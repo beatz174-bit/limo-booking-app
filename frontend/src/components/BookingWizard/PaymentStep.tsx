@@ -96,3 +96,4 @@ export default function PaymentStep({ data, onBack }: Props) {
     </Stack>
   );
 }
+
