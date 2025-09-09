@@ -16,10 +16,7 @@ describe('useBooking', () => {
     };
     const fetchMock = vi
       .fn()
-      // initial call to check saved payment method
-      .mockResolvedValueOnce({ ok: true, json: async () => ({}) })
-      // booking creation
-      .mockResolvedValueOnce({ ok: true, json: async () => fakeResp });
+      .mockResolvedValue({ ok: true, json: async () => fakeResp });
     global.fetch = fetchMock as unknown as typeof fetch;
     const { result } = renderHook(() => useBooking());
     let data;
@@ -31,37 +28,21 @@ describe('useBooking', () => {
         passengers: 1,
       });
     });
-    const [, opts] = fetchMock.mock.calls[1];
+    const [, opts] = fetchMock.mock.calls[0];
     expect(JSON.parse(opts.body as string).pickup_when).toBe(
       '2025-01-01T00:00:00Z',
     );
     expect(fetchMock.mock.calls[0][0]).toBe(
-      `${CONFIG.API_BASE_URL}/users/me/payment-method`,
+      `${CONFIG.API_BASE_URL}/api/v1/bookings`,
     );
     expect(data.booking.public_code).toBe('ABC');
-    expect(result.current.savedPaymentMethod).toBeNull();
-  });
-
-  it('returns saved card info when available', async () => {
-    const pm = { brand: 'visa', last4: '4242' };
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue({ ok: true, json: async () => pm });
-    global.fetch = fetchMock as unknown as typeof fetch;
-    const { result } = renderHook(() => useBooking());
-    await act(async () => {});
-    expect(fetchMock.mock.calls[0][0]).toBe(
-      `${CONFIG.API_BASE_URL}/users/me/payment-method`,
-    );
-    expect(result.current.savedPaymentMethod).toEqual(pm);
   });
 
   it('throws detailed error when booking fails', async () => {
     const errorResp = { detail: 'invalid booking' };
     const fetchMock = vi
       .fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({}) })
-      .mockResolvedValueOnce({ ok: false, json: async () => errorResp });
+      .mockResolvedValue({ ok: false, json: async () => errorResp });
     global.fetch = fetchMock as unknown as typeof fetch;
     const { result } = renderHook(() => useBooking());
     await act(async () => {
@@ -75,7 +56,7 @@ describe('useBooking', () => {
       ).rejects.toThrow('invalid booking');
     });
     expect(fetchMock.mock.calls[0][0]).toBe(
-      `${CONFIG.API_BASE_URL}/users/me/payment-method`,
+      `${CONFIG.API_BASE_URL}/api/v1/bookings`,
     );
   });
 });
