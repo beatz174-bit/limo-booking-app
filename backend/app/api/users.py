@@ -119,8 +119,17 @@ async def api_create_payment_method(
     current_user: User = Depends(get_current_user),
 ):
     """Return a SetupIntent client secret for the current user."""
+    logger.info(
+        "api_create_payment_method:start",
+        extra={"user_id": current_user.id, "payment_method_id": None},
+    )
 
     client_secret = await create_setup_intent_for_user(db, current_user)
+
+    logger.info(
+        "api_create_payment_method:success",
+        extra={"user_id": current_user.id, "payment_method_id": None},
+    )
     return StripeSetupIntent(setup_intent_client_secret=client_secret)
 
 
@@ -131,8 +140,23 @@ async def api_save_payment_method(
     current_user: User = Depends(get_current_user),
 ):
     """Persist a confirmed payment method to the user's profile."""
+    logger.info(
+        "api_save_payment_method:start",
+        extra={
+            "user_id": current_user.id,
+            "payment_method_id": data.payment_method_id,
+        },
+    )
 
     user = await save_payment_method(db, current_user, data.payment_method_id)
+
+    logger.info(
+        "api_save_payment_method:success",
+        extra={
+            "user_id": current_user.id,
+            "payment_method_id": data.payment_method_id,
+        },
+    )
     return user
 
 

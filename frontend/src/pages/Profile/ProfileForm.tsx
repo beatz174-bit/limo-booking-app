@@ -135,11 +135,21 @@ const ProfileForm = () => {
         return;
       }
       const json = await res.json();
+      logger.info(
+        'pages/Profile/ProfileForm',
+        'setup-intent response',
+        json,
+      );
       const card = elements.getElement(CardElement);
       if (!json.setup_intent_client_secret || !card) return;
       const setup = await stripe.confirmCardSetup(json.setup_intent_client_secret, {
         payment_method: { card },
       });
+      logger.info(
+        'pages/Profile/ProfileForm',
+        'confirmCardSetup result',
+        setup,
+      );
       const pm = setup?.setupIntent?.payment_method;
       if (!pm) {
         const message = setup?.error?.message || 'Failed to confirm card.';
