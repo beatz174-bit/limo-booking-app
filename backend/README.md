@@ -48,6 +48,12 @@ alembic upgrade head
 You may need to drop or rename tables created outside Alembic before applying
 migrations.
 
+## SQLite Tuning
+
+The development SQLite database is configured with a 30-second timeout and
+enables Write-Ahead Logging (WAL) for improved concurrency. These settings are
+applied automatically by the application.
+
 > Scroll down for code samples, example requests and responses. Select a language for code samples from the tabs above or the mobile navigation menu.
 
 # Authentication

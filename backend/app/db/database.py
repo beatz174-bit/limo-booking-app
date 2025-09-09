@@ -3,12 +3,10 @@ import warnings
 
 """Database connection and session management utilities."""
 
+import asyncio
 from pathlib import Path
 from typing import Awaitable, Dict, Protocol, Union
 
-from alembic import command
-from alembic.config import Config
-from app.core.config import get_settings
 from sqlalchemy.engine.url import URL, make_url
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -17,6 +15,10 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 from sqlalchemy.orm import DeclarativeBase
+
+from alembic import command
+from alembic.config import Config
+from app.core.config import get_settings
 
 settings = get_settings()
 
@@ -50,11 +52,13 @@ if url.drivername == "sqlite":
 # 📦 2. Engine kwargs (type-safe assignments)
 
 is_sqlite_async = url.drivername.startswith("sqlite+aiosqlite")
-engine_kwargs: Dict[str, Union[int, bool, Dict[str, bool]]] = {
-    "connect_args": {"check_same_thread": False} if is_sqlite_async else {}
+engine_kwargs: Dict[str, Union[int, bool, Dict[str, Union[bool, int]]]] = {
+    "connect_args": {"timeout": 30}
 }
 
-if not is_sqlite_async:
+if is_sqlite_async:
+    engine_kwargs["connect_args"]["check_same_thread"] = False
+else:
     engine_kwargs["pool_size"] = settings.database_pool_size
     engine_kwargs["max_overflow"] = settings.database_max_overflow
     engine_kwargs["pool_pre_ping"] = True
@@ -67,6 +71,17 @@ async_engine: AsyncEngine = create_async_engine(
     str(url),
     **engine_kwargs,
 )
+
+
+async def _enable_wal() -> None:
+    if hasattr(async_engine, "run_sync"):
+        await async_engine.run_sync(
+            lambda conn: conn.exec_driver_sql("PRAGMA journal_mode=WAL")
+        )
+    else:
+        async with async_engine.begin() as conn:
+            await conn.run_sync(lambda c: c.exec_driver_sql("PRAGMA journal_mode=WAL"))
+
 
 AsyncSessionLocal = async_sessionmaker(
     async_engine,
@@ -88,6 +103,7 @@ class Base(DeclarativeBase):
 
 async def connect() -> None:
     """Run on app startup to ensure the database is migrated."""
+    await _enable_wal()
     # Import all ORM models so that metadata is populated. Legacy models are
     # still imported for backward compatibility.
     # New domain models
