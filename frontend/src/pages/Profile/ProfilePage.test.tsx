@@ -238,23 +238,22 @@ describe('ProfilePage', () => {
     await screen.findByRole('heading', { name: /payment method/i });
     await userEvent.click(screen.getByRole('button', { name: /add card/i }));
     await screen.findByTestId('payment-element');
-    await userEvent.click(screen.getByRole('button', { name: /save card/i }));
-    expect(mockConfirm).toHaveBeenCalledWith({
-      elements: mockElements,
-      clientSecret: 'sec',
-      confirmParams: {
-        payment_method_data: {
-          billing_details: {
-            name: 'John Doe',
-            email: 'john@example.com',
-            phone: '',
+      await userEvent.click(screen.getByRole('button', { name: /save card/i }));
+      expect(mockConfirm).toHaveBeenCalledWith({
+        elements: mockElements,
+        clientSecret: 'sec',
+        confirmParams: {
+          payment_method_data: {
+            billing_details: {
+              name: 'John Doe',
+              email: 'john@example.com',
+              phone: '',
+            },
           },
-        },
           return_url: expect.any(String),
-        }),
+        },
         redirect: 'if_required',
-      }),
-    );
+      });
     const postCalls = fetch.mock.calls.filter(
       ([url, init]) =>
         typeof url === 'string' &&
