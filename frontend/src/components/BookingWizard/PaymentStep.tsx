@@ -306,18 +306,21 @@ function PaymentInner({
           Using saved card {savedPaymentMethod.brand} ending in {savedPaymentMethod.last4}
         </Typography>
       ) : (
-        <PaymentElement
-          options={{
-            defaultValues: { billingDetails: { name, email, phone } },
-            fields: {
-              billingDetails: {
-                name: 'never',
-                email: 'never',
-                phone: 'never',
+        <>
+          <Typography>Add card</Typography>
+          <PaymentElement
+            options={{
+              defaultValues: { billingDetails: { name, email, phone } },
+              fields: {
+                billingDetails: {
+                  name: 'never',
+                  email: 'never',
+                  phone: 'never',
+                },
               },
-            },
-          }}
-        />
+            }}
+          />
+        </>
       )}
       <Stack direction="row" spacing={1}>
         <Button onClick={onBack}>Back</Button>
