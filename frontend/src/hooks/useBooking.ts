@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { CONFIG } from '@/config';
 import { apiFetch } from '@/services/apiFetch';
 import * as logger from '@/lib/logger';
@@ -12,44 +12,8 @@ interface CreateBookingData {
   customer?: { name: string; email: string; phone: string };
 }
 
-interface SavedPaymentMethod {
-  brand: string;
-  last4: string;
-  exp_month?: number;
-  exp_year?: number;
-}
-
 export function useBooking() {
   const [loading, setLoading] = useState(false);
-  const [savedPaymentMethod, setSavedPaymentMethod] =
-    useState<SavedPaymentMethod | null>(null);
-
-  useEffect(() => {
-    let ignore = false;
-    async function fetchPaymentMethod() {
-      try {
-        const res = await apiFetch(
-          `${CONFIG.API_BASE_URL}/users/me/payment-method`,
-        );
-        if (!ignore && res.ok) {
-          try {
-            const json = await res.json();
-            if (json && json.last4) {
-              setSavedPaymentMethod(json as SavedPaymentMethod);
-            }
-          } catch {
-            /* ignore JSON errors */
-          }
-        }
-      } catch {
-        /* ignore network errors */
-      }
-    }
-    fetchPaymentMethod();
-    return () => {
-      ignore = true;
-    };
-  }, []);
 
   async function createBooking(data: CreateBookingData) {
     setLoading(true);
@@ -81,5 +45,5 @@ export function useBooking() {
     }
   }
 
-  return { createBooking, savedPaymentMethod, loading };
+  return { createBooking, loading };
 }
