@@ -1,10 +1,20 @@
 import { useState } from 'react';
-import { Box, Button } from '@mui/material';
+import {
+  Box,
+  Button,
+  Stack,
+  Typography,
+  Alert,
+  CircularProgress,
+} from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import TripDetails from './TripDetails';
-import PaymentStep from './PaymentStep';
 import { MapProvider } from '@/components/MapProvider';
 import { MapRoute } from '@/components/MapRoute';
 import { BookingFormData } from '@/types/BookingFormData';
+import { useBooking } from '@/hooks/useBooking';
+import { useAuth } from '@/contexts/AuthContext';
+import * as logger from '@/lib/logger';
 
 export default function BookingWizard() {
   const [form, setForm] = useState<BookingFormData>({
@@ -13,17 +23,53 @@ export default function BookingWizard() {
     pickupValid: false,
     dropoffValid: false,
   });
-  const [confirmed, setConfirmed] = useState(false);
+  const { user: profile } = useAuth();
+  const { createBooking, loading } = useBooking();
+  const [bookingData, setBookingData] = useState<{ public_code: string } | null>(
+    null,
+  );
+  const [error, setError] = useState<string | null>(null);
   const update = (data: Partial<BookingFormData>) => {
     setForm((f) => ({ ...f, ...data }));
   };
+  const handleConfirm = async () => {
+    if (!form.pickup_when || !form.pickup || !form.dropoff) return;
+    setError(null);
+    try {
+      const payload = {
+        pickup_when: form.pickup_when,
+        pickup: form.pickup,
+        dropoff: form.dropoff,
+        passengers: form.passengers,
+        notes: form.notes,
+        customer: profile
+          ? {
+              name: profile.full_name ?? '',
+              email: profile.email ?? '',
+              phone: profile.phone ?? '',
+            }
+          : undefined,
+      };
+      const res = await createBooking(payload);
+      setBookingData(res.booking);
+    } catch (err) {
+      logger.error('components/BookingWizard/BookingWizard', 'Booking creation failed', err);
+      setError('Failed to create booking. Please try again.');
+    }
+  };
 
-  if (confirmed) {
+  if (bookingData) {
     return (
-      <PaymentStep
-        data={form as Required<BookingFormData>}
-        onBack={() => setConfirmed(false)}
-      />
+      <Stack spacing={2}>
+        <Typography>Your booking is confirmed.</Typography>
+        <Button
+          component={RouterLink}
+          to={`/t/${bookingData.public_code}`}
+          variant="contained"
+        >
+          Track this ride
+        </Button>
+      </Stack>
     );
   }
 
@@ -39,13 +85,24 @@ export default function BookingWizard() {
               rideTime={form.pickup_when}
             />
           </MapProvider>
-          <Button
-            sx={{ mt: 2 }}
-            variant="contained"
-            onClick={() => setConfirmed(true)}
-          >
-            Confirm booking
-          </Button>
+          {error && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {error}
+            </Alert>
+          )}
+          {loading ? (
+            <Stack alignItems="center" sx={{ mt: 2 }}>
+              <CircularProgress />
+            </Stack>
+          ) : (
+            <Button
+              sx={{ mt: 2 }}
+              variant="contained"
+              onClick={handleConfirm}
+            >
+              Confirm booking
+            </Button>
+          )}
         </Box>
       )}
     </Box>
