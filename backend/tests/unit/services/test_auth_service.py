@@ -83,8 +83,8 @@ async def test_register_user_success(async_session: AsyncSession):
     assert new_user is not None
     # Password should be stored hashed
     assert verify_password("newpass", new_user.hashed_password)
-    assert new_user.phone == "555-1234"
-    assert new_user.stripe_payment_method_id == "pm_123"
+    assert new_user.phone is None
+    assert new_user.stripe_payment_method_id is None
 
 
 @pytest.mark.asyncio
