@@ -31,9 +31,13 @@ vi.mock('@stripe/stripe-js', () => ({ loadStripe: vi.fn() }));
 // Stub backend and map related hooks
 const createBooking = vi
   .fn()
-  .mockResolvedValue({ clientSecret: 'sec', booking: { public_code: 'test' } });
-vi.mock('@/hooks/useStripeSetupIntent', () => ({
-  useStripeSetupIntent: () => ({ createBooking }),
+  .mockResolvedValue({ booking: { public_code: 'test' } });
+vi.mock('@/hooks/useBooking', () => ({
+  useBooking: () => ({
+    createBooking,
+    savedPaymentMethod: { brand: 'visa', last4: '4242' },
+    loading: false,
+  }),
 }));
 vi.mock('@/hooks/useAvailability', () => ({
   default: () => ({ data: { slots: [], bookings: [] } }),
@@ -103,7 +107,7 @@ test('advances through steps and aggregates form data', async () => {
   await userEvent.click(screen.getByRole('button', { name: /next/i }));
 
   // Step 3: payment details
-  await userEvent.click(await screen.findByRole('button', { name: /submit/i }));
+  await screen.findByRole('link', { name: /track this ride/i });
 
   expect(createBooking).toHaveBeenCalledWith({
     pickup_when: new Date('2025-01-01T10:00').toISOString(),
