@@ -16,7 +16,13 @@ import { useBooking } from '@/hooks/useBooking';
 import { useAuth } from '@/contexts/AuthContext';
 import * as logger from '@/lib/logger';
 
-export default function BookingWizard() {
+interface BookingWizardProps {
+  onRequirePaymentMethod?: () => void;
+}
+
+export default function BookingWizard({
+  onRequirePaymentMethod,
+}: BookingWizardProps) {
   const [form, setForm] = useState<BookingFormData>({
     passengers: 1,
     notes: '',
@@ -53,8 +59,18 @@ export default function BookingWizard() {
       const res = await createBooking(payload);
       setBookingData(res.booking);
     } catch (err) {
-      logger.error('components/BookingWizard/BookingWizard', 'Booking creation failed', err);
-      setError('Failed to create booking. Please try again.');
+      logger.error(
+        'components/BookingWizard/BookingWizard',
+        'Booking creation failed',
+        err,
+      );
+      const apiErr = err as Error & { status?: number };
+      if (apiErr.status === 400 && /payment method/i.test(apiErr.message)) {
+        setError(apiErr.message);
+        onRequirePaymentMethod?.();
+      } else {
+        setError('Failed to create booking. Please try again.');
+      }
     }
   };
 
