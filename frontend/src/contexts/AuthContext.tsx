@@ -215,7 +215,8 @@ useEffect(() => {
     }
   }, [state.accessToken]);
 
-  const persist = useCallback((t?: TokenResponse | null, user?: UserShape, role?: string | null) => {
+  const persist = useCallback(
+    (t?: TokenResponse | null, user?: UserShape | null, role?: string | null) => {
     const access_token = t?.access_token ?? null;
     const refresh_token = t?.refresh_token ?? null;
     if (access_token || refresh_token || user) {

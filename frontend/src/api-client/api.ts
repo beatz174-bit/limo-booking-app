@@ -147,12 +147,6 @@ export interface BookingCreateResponse {
      * @memberof BookingCreateResponse
      */
     'booking': BookingPublic;
-    /**
-     * 
-     * @type {StripeSetupIntent}
-     * @memberof BookingCreateResponse
-     */
-    'stripe': StripeSetupIntent;
 }
 /**
  * 
@@ -702,7 +696,7 @@ export interface StripeSetupIntent {
      * @type {string}
      * @memberof StripeSetupIntent
      */
-    'setup_intent_client_secret': string;
+    'setup_intent_client_secret'?: string | null;
 }
 /**
  * 
@@ -2762,15 +2756,15 @@ export const RouteMetricsApiAxiosParamCreator = function (configuration?: Config
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiRouteMetricsRouteMetricsGet: async (pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiRouteMetricsRouteMetricsPost: async (pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'pickupLat' is not null or undefined
-            assertParamExists('apiRouteMetricsRouteMetricsGet', 'pickupLat', pickupLat)
+            assertParamExists('apiRouteMetricsRouteMetricsPost', 'pickupLat', pickupLat)
             // verify required parameter 'pickupLon' is not null or undefined
-            assertParamExists('apiRouteMetricsRouteMetricsGet', 'pickupLon', pickupLon)
+            assertParamExists('apiRouteMetricsRouteMetricsPost', 'pickupLon', pickupLon)
             // verify required parameter 'dropoffLat' is not null or undefined
-            assertParamExists('apiRouteMetricsRouteMetricsGet', 'dropoffLat', dropoffLat)
+            assertParamExists('apiRouteMetricsRouteMetricsPost', 'dropoffLat', dropoffLat)
             // verify required parameter 'dropoffLon' is not null or undefined
-            assertParamExists('apiRouteMetricsRouteMetricsGet', 'dropoffLon', dropoffLon)
+            assertParamExists('apiRouteMetricsRouteMetricsPost', 'dropoffLon', dropoffLon)
             const localVarPath = `/route-metrics`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -2831,15 +2825,15 @@ export const RouteMetricsApiAxiosParamCreator = function (configuration?: Config
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiRouteMetricsRouteMetricsGet_1: async (pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiRouteMetricsRouteMetricsPost_1: async (pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'pickupLat' is not null or undefined
-            assertParamExists('apiRouteMetricsRouteMetricsGet_1', 'pickupLat', pickupLat)
+            assertParamExists('apiRouteMetricsRouteMetricsPost_1', 'pickupLat', pickupLat)
             // verify required parameter 'pickupLon' is not null or undefined
-            assertParamExists('apiRouteMetricsRouteMetricsGet_1', 'pickupLon', pickupLon)
+            assertParamExists('apiRouteMetricsRouteMetricsPost_1', 'pickupLon', pickupLon)
             // verify required parameter 'dropoffLat' is not null or undefined
-            assertParamExists('apiRouteMetricsRouteMetricsGet_1', 'dropoffLat', dropoffLat)
+            assertParamExists('apiRouteMetricsRouteMetricsPost_1', 'dropoffLat', dropoffLat)
             // verify required parameter 'dropoffLon' is not null or undefined
-            assertParamExists('apiRouteMetricsRouteMetricsGet_1', 'dropoffLon', dropoffLon)
+            assertParamExists('apiRouteMetricsRouteMetricsPost_1', 'dropoffLon', dropoffLon)
             const localVarPath = `/route-metrics`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -2910,10 +2904,10 @@ export const RouteMetricsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiRouteMetricsRouteMetricsGet(pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiRouteMetricsRouteMetricsGet(pickupLat, pickupLon, dropoffLat, dropoffLon, rideTime, routeMetricsRequest, options);
+        async apiRouteMetricsRouteMetricsPost(pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiRouteMetricsRouteMetricsPost(pickupLat, pickupLon, dropoffLat, dropoffLon, rideTime, routeMetricsRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['RouteMetricsApi.apiRouteMetricsRouteMetricsGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['RouteMetricsApi.apiRouteMetricsRouteMetricsPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -2928,10 +2922,10 @@ export const RouteMetricsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiRouteMetricsRouteMetricsGet_1(pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiRouteMetricsRouteMetricsGet_1(pickupLat, pickupLon, dropoffLat, dropoffLon, rideTime, routeMetricsRequest, options);
+        async apiRouteMetricsRouteMetricsPost_1(pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiRouteMetricsRouteMetricsPost_1(pickupLat, pickupLon, dropoffLat, dropoffLon, rideTime, routeMetricsRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['RouteMetricsApi.apiRouteMetricsRouteMetricsGet_1']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['RouteMetricsApi.apiRouteMetricsRouteMetricsPost_1']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
@@ -2956,8 +2950,8 @@ export const RouteMetricsApiFactory = function (configuration?: Configuration, b
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiRouteMetricsRouteMetricsGet(pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options?: RawAxiosRequestConfig): AxiosPromise<any> {
-            return localVarFp.apiRouteMetricsRouteMetricsGet(pickupLat, pickupLon, dropoffLat, dropoffLon, rideTime, routeMetricsRequest, options).then((request) => request(axios, basePath));
+        apiRouteMetricsRouteMetricsPost(pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options?: RawAxiosRequestConfig): AxiosPromise<any> {
+            return localVarFp.apiRouteMetricsRouteMetricsPost(pickupLat, pickupLon, dropoffLat, dropoffLon, rideTime, routeMetricsRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Return travel metrics between pickup and dropoff coordinates.
@@ -2971,8 +2965,8 @@ export const RouteMetricsApiFactory = function (configuration?: Configuration, b
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiRouteMetricsRouteMetricsGet_1(pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options?: RawAxiosRequestConfig): AxiosPromise<any> {
-            return localVarFp.apiRouteMetricsRouteMetricsGet_1(pickupLat, pickupLon, dropoffLat, dropoffLon, rideTime, routeMetricsRequest, options).then((request) => request(axios, basePath));
+        apiRouteMetricsRouteMetricsPost_1(pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options?: RawAxiosRequestConfig): AxiosPromise<any> {
+            return localVarFp.apiRouteMetricsRouteMetricsPost_1(pickupLat, pickupLon, dropoffLat, dropoffLon, rideTime, routeMetricsRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -2997,8 +2991,8 @@ export class RouteMetricsApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof RouteMetricsApi
      */
-    public apiRouteMetricsRouteMetricsGet(pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options?: RawAxiosRequestConfig) {
-        return RouteMetricsApiFp(this.configuration).apiRouteMetricsRouteMetricsGet(pickupLat, pickupLon, dropoffLat, dropoffLon, rideTime, routeMetricsRequest, options).then((request) => request(this.axios, this.basePath));
+    public apiRouteMetricsRouteMetricsPost(pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options?: RawAxiosRequestConfig) {
+        return RouteMetricsApiFp(this.configuration).apiRouteMetricsRouteMetricsPost(pickupLat, pickupLon, dropoffLat, dropoffLon, rideTime, routeMetricsRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -3014,8 +3008,8 @@ export class RouteMetricsApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof RouteMetricsApi
      */
-    public apiRouteMetricsRouteMetricsGet_1(pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options?: RawAxiosRequestConfig) {
-        return RouteMetricsApiFp(this.configuration).apiRouteMetricsRouteMetricsGet_1(pickupLat, pickupLon, dropoffLat, dropoffLon, rideTime, routeMetricsRequest, options).then((request) => request(this.axios, this.basePath));
+    public apiRouteMetricsRouteMetricsPost_1(pickupLat: number, pickupLon: number, dropoffLat: number, dropoffLon: number, rideTime?: string | null, routeMetricsRequest?: RouteMetricsRequest, options?: RawAxiosRequestConfig) {
+        return RouteMetricsApiFp(this.configuration).apiRouteMetricsRouteMetricsPost_1(pickupLat, pickupLon, dropoffLat, dropoffLon, rideTime, routeMetricsRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
