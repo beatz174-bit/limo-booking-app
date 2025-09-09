@@ -35,6 +35,9 @@ async def create_booking(
 
     customer = user
 
+    if not customer.stripe_payment_method_id:
+        raise ValueError("default payment method required")
+
     settings = (await db.execute(select(AdminConfig))).scalar_one_or_none()
     if settings is None:
         settings = AdminConfig(

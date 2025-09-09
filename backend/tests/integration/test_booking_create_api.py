@@ -2,11 +2,12 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
+from httpx import AsyncClient
+from sqlalchemy import delete
+
 from app.core.security import create_jwt_token, hash_password
 from app.models.settings import AdminConfig
 from app.models.user_v2 import User, UserRole
-from httpx import AsyncClient
-from sqlalchemy import delete
 
 pytestmark = pytest.mark.asyncio
 
@@ -150,4 +151,4 @@ async def test_create_booking_requires_payment_method(
 
     res = await client.post("/api/v1/bookings", json=payload, headers=headers)
     assert res.status_code == 400
-    assert res.json()["detail"] == "customer has no payment method"
+    assert res.json()["detail"] == "default payment method required"
