@@ -1,4 +1,4 @@
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import RideHistoryPage from './RideHistoryPage';
@@ -140,6 +140,7 @@ test('updates status when websocket message received', async () => {
       </BookingsProvider>
     </MemoryRouter>,
   );
+  await waitFor(() => expect(WSStub.instances.length).toBeGreaterThan(0));
   expect(await screen.findByText('PENDING')).toBeInTheDocument();
   expect(
     driverBookingsApi.listBookingsApiV1DriverBookingsGet,
