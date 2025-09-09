@@ -1,5 +1,8 @@
-import asyncio
 import os
+
+os.environ.setdefault("ENV", "test")
+
+import asyncio
 import tempfile
 import uuid
 from pathlib import Path
