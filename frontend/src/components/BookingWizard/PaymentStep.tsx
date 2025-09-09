@@ -89,6 +89,7 @@ function PaymentInner({
     useState<StripePaymentRequest | null>(null);
   const [booking, setBooking] =
     useState<{ public_code: string } | null>(null);
+  const [cardError, setCardError] = useState<string | null>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -220,6 +221,12 @@ function PaymentInner({
         );
         return;
       }
+      setCardError(null);
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        setCardError(submitError.message || 'Failed to submit card details.');
+        return;
+      }
       const setup = await stripe.confirmSetup({
         elements,
         clientSecret,
@@ -281,6 +288,7 @@ function PaymentInner({
         50% deposit{price != null ? ` ($${(price * 0.5).toFixed(2)})` : ''} charged on
         confirmation
       </Typography>
+      {cardError && <Alert severity="error">{cardError}</Alert>}
       {paymentRequest && !savedPaymentMethod && (
         <PaymentRequestButtonElement
           options={{ paymentRequest }}

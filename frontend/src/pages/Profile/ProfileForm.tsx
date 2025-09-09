@@ -170,6 +170,11 @@ const ProfileForm = ({
 
     const handleSaveCard = async () => {
       if (!stripe || !elements || !clientSecret) return;
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        setCardError(submitError.message || 'Failed to submit card details.');
+        return;
+      }
       await ensureFreshToken();
       setCardError(null);
       try {
@@ -185,8 +190,8 @@ const ProfileForm = ({
                 phone,
               },
             },
+            return_url: window.location.href,
           },
-          confirmParams: { return_url: window.location.href },
           redirect: 'if_required',
         });
         logger.info(

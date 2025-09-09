@@ -19,7 +19,9 @@ const mockCreateBooking = vi.fn().mockResolvedValue({
 const mockConfirm = vi
   .fn()
   .mockResolvedValue({ setupIntent: { payment_method: 'pm_123' } });
-const mockElements = {};
+const mockElements = {
+  submit: vi.fn().mockResolvedValue({}),
+};
 const mockGetMetrics = vi.fn().mockResolvedValue(null);
 const mockSavePaymentMethod = vi.fn();
 const mockUseStripeSetupIntent = vi.fn();
@@ -65,6 +67,7 @@ beforeEach(() => {
   mockGetMetrics.mockClear();
   mockCanMakePayment.mockClear();
   mockShow.mockClear();
+  mockElements.submit.mockClear();
   mockStripe.paymentRequest.mockClear();
   mockUseStripeSetupIntent.mockReturnValue({
     createBooking: mockCreateBooking,
@@ -111,6 +114,11 @@ test('handles new card flow', async () => {
     screen.getByRole('button', { name: /submit/i })
   );
   expect(mockCreateBooking).toHaveBeenCalledTimes(1);
+  expect(mockElements.submit).toHaveBeenCalled();
+  expect(
+    mockElements.submit.mock.invocationCallOrder[0] <
+      mockConfirm.mock.invocationCallOrder[0],
+  ).toBe(true);
   expect(mockConfirm).toHaveBeenCalledWith({
     elements: mockElements,
     clientSecret: 'sec',
@@ -259,6 +267,7 @@ test('uses saved card when available', async () => {
   await userEvent.click(screen.getByRole('button', { name: /submit/i }));
   expect(mockCreateBooking).toHaveBeenCalledTimes(1);
   expect(mockConfirm).not.toHaveBeenCalled();
+  expect(mockElements.submit).not.toHaveBeenCalled();
   expect(mockSavePaymentMethod).not.toHaveBeenCalled();
   const link = await screen.findByRole('link', { name: /track this ride/i });
   expect(link).toHaveAttribute('href', '/t/ABC123');
