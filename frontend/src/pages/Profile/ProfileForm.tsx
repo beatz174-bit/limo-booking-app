@@ -129,18 +129,38 @@ const ProfileForm = () => {
       });
       if (!res.ok) return;
       const json = await res.json();
+      logger.info(
+        'pages/Profile/ProfileForm',
+        'setup-intent response',
+        json,
+      );
       const card = elements.getElement(CardElement);
       if (!json.setup_intent_client_secret || !card) return;
       const setup = await stripe.confirmCardSetup(json.setup_intent_client_secret, {
         payment_method: { card },
       });
+      logger.info(
+        'pages/Profile/ProfileForm',
+        'confirmCardSetup result',
+        setup,
+      );
       const pm = setup?.setupIntent?.payment_method;
       if (pm) {
-        await apiFetch(`${base}/users/me/payment-method`, {
+        logger.info(
+          'pages/Profile/ProfileForm',
+          'saving payment method',
+          { payment_method_id: pm },
+        );
+        const saveRes = await apiFetch(`${base}/users/me/payment-method`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ payment_method_id: pm }),
         });
+        logger.info(
+          'pages/Profile/ProfileForm',
+          'save payment method response',
+          { status: saveRes.status },
+        );
         setEditingCard(false);
         const pmRes = await apiFetch(`${base}/users/me/payment-method`);
         if (pmRes.ok) {

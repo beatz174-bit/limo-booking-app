@@ -1,5 +1,6 @@
 """Stripe API convenience helpers."""
 
+import logging
 import uuid
 from datetime import datetime
 
@@ -67,6 +68,9 @@ else:
     stripe.api_key = settings.stripe_secret_key or ""
 
 
+logger = logging.getLogger(__name__)
+
+
 def create_customer(email: str, name: str, phone: str | None = None):
     """Create a Stripe customer."""
 
@@ -85,21 +89,88 @@ def create_setup_intent(customer_id: str, booking_reference: str):
 
 def get_default_payment_method(customer_id: str) -> str | None:
     """Return the default payment method ID for a customer if set."""
-
-    customer = stripe.Customer.retrieve(customer_id)
+    logger.info(
+        "stripe.Customer.retrieve:start",
+        extra={"customer_id": customer_id},
+    )
+    try:
+        customer = stripe.Customer.retrieve(customer_id)
+    except Exception:
+        logger.exception(
+            "stripe.Customer.retrieve:error",
+            extra={"customer_id": customer_id},
+        )
+        raise
+    logger.info(
+        "stripe.Customer.retrieve:success",
+        extra={"customer_id": customer_id},
+    )
     invoice_settings = getattr(customer, "invoice_settings", {})
     return invoice_settings.get("default_payment_method")
 
 
 def set_default_payment_method(customer_id: str, payment_method: str) -> None:
     """Attach and set the default payment method for a customer."""
-
-    payment_method_obj = stripe.PaymentMethod.retrieve(payment_method)
+    logger.info(
+        "stripe.PaymentMethod.retrieve:start",
+        extra={"payment_method_id": payment_method, "customer_id": customer_id},
+    )
+    try:
+        payment_method_obj = stripe.PaymentMethod.retrieve(payment_method)
+    except Exception:
+        logger.exception(
+            "stripe.PaymentMethod.retrieve:error",
+            extra={"payment_method_id": payment_method, "customer_id": customer_id},
+        )
+        raise
+    logger.info(
+        "stripe.PaymentMethod.retrieve:success",
+        extra={"payment_method_id": payment_method, "customer_id": customer_id},
+    )
     if getattr(payment_method_obj, "customer", None) is None:
-        stripe.PaymentMethod.attach(payment_method, customer=customer_id)
-    stripe.Customer.modify(
-        customer_id,
-        invoice_settings={"default_payment_method": payment_method},
+        logger.info(
+            "stripe.PaymentMethod.attach:start",
+            extra={
+                "payment_method_id": payment_method,
+                "customer_id": customer_id,
+            },
+        )
+        try:
+            stripe.PaymentMethod.attach(payment_method, customer=customer_id)
+        except Exception:
+            logger.exception(
+                "stripe.PaymentMethod.attach:error",
+                extra={
+                    "payment_method_id": payment_method,
+                    "customer_id": customer_id,
+                },
+            )
+            raise
+        logger.info(
+            "stripe.PaymentMethod.attach:success",
+            extra={
+                "payment_method_id": payment_method,
+                "customer_id": customer_id,
+            },
+        )
+    logger.info(
+        "stripe.Customer.modify:start",
+        extra={"payment_method_id": payment_method, "customer_id": customer_id},
+    )
+    try:
+        stripe.Customer.modify(
+            customer_id,
+            invoice_settings={"default_payment_method": payment_method},
+        )
+    except Exception:
+        logger.exception(
+            "stripe.Customer.modify:error",
+            extra={"payment_method_id": payment_method, "customer_id": customer_id},
+        )
+        raise
+    logger.info(
+        "stripe.Customer.modify:success",
+        extra={"payment_method_id": payment_method, "customer_id": customer_id},
     )
 
 
@@ -111,8 +182,22 @@ def detach_payment_method(payment_method: str) -> None:
 
 def get_payment_method_details(payment_method_id: str) -> dict:
     """Retrieve basic card details for a payment method."""
-
-    payment_method = stripe.PaymentMethod.retrieve(payment_method_id)
+    logger.info(
+        "stripe.PaymentMethod.retrieve:start",
+        extra={"payment_method_id": payment_method_id},
+    )
+    try:
+        payment_method = stripe.PaymentMethod.retrieve(payment_method_id)
+    except Exception:
+        logger.exception(
+            "stripe.PaymentMethod.retrieve:error",
+            extra={"payment_method_id": payment_method_id},
+        )
+        raise
+    logger.info(
+        "stripe.PaymentMethod.retrieve:success",
+        extra={"payment_method_id": payment_method_id},
+    )
     card = getattr(payment_method, "card", {}) or {}
     return {"brand": card.get("brand"), "last4": card.get("last4")}
 
