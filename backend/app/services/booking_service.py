@@ -115,7 +115,11 @@ async def confirm_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
         raise ValueError("booking overlaps existing slot")
 
     customer = await db.get(User, booking.customer_id)
-    if not customer or not customer.stripe_payment_method_id:
+    if (
+        not customer
+        or not customer.stripe_payment_method_id
+        or not customer.stripe_customer_id
+    ):
         raise ValueError("customer has no payment method")
     try:
         intent = stripe_client.charge_deposit(
@@ -127,6 +131,7 @@ async def confirm_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
             dropoff_address=booking.dropoff_address,
             pickup_time=booking.pickup_when,
             payment_method=customer.stripe_payment_method_id,
+            customer_id=customer.stripe_customer_id,
         )
     except stripe.error.CardError as exc:
         raise HTTPException(status_code=402, detail=exc.user_message) from exc
@@ -268,7 +273,11 @@ async def complete_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
         raise ValueError("final fare less than deposit")
     remainder = fare - booking.deposit_required_cents
     customer = await db.get(User, booking.customer_id)
-    if not customer or not customer.stripe_payment_method_id:
+    if (
+        not customer
+        or not customer.stripe_payment_method_id
+        or not customer.stripe_customer_id
+    ):
         raise ValueError("customer has no payment method")
     intent = stripe_client.charge_final(
         remainder,
@@ -279,6 +288,7 @@ async def complete_booking(db: AsyncSession, booking_id: uuid.UUID) -> Booking:
         dropoff_address=booking.dropoff_address,
         pickup_time=booking.pickup_when,
         payment_method=customer.stripe_payment_method_id,
+        customer_id=customer.stripe_customer_id,
     )
     booking.final_price_cents = fare
     booking.final_payment_intent_id = intent.id

@@ -212,6 +212,7 @@ def charge_deposit(
     dropoff_address: str | None = None,
     pickup_time: datetime | None = None,
     payment_method: str,
+    customer_id: str | None = None,
 ):
     """Charge a deposit using a stored payment method."""
 
@@ -225,6 +226,9 @@ def charge_deposit(
         "confirm": True,
         "payment_method_types": ["card"],
     }
+    if customer_id:
+        params["customer"] = customer_id
+        params["off_session"] = True
 
     metadata = {
         "booking_id": str(booking_id),
@@ -258,6 +262,7 @@ def charge_final(
     dropoff_address: str | None = None,
     pickup_time: datetime | None = None,
     payment_method: str,
+    customer_id: str | None = None,
 ):
     """Charge the remaining fare amount."""
     if not payment_method:
@@ -270,6 +275,9 @@ def charge_final(
         "confirm": True,
         "payment_method_types": ["card"],
     }
+    if customer_id:
+        params["customer"] = customer_id
+        params["off_session"] = True
 
     metadata = {
         "booking_id": str(booking_id),

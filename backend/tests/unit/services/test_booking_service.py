@@ -3,14 +3,15 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 import stripe
+from fastapi import HTTPException
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.security import hash_password
 from app.models.booking import Booking, BookingStatus
 from app.models.user_v2 import User, UserRole
 from app.schemas.api_booking import BookingCreateRequest, Location
 from app.services import booking_service
-from fastapi import HTTPException
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
 
 pytestmark = pytest.mark.asyncio
 
@@ -27,6 +28,7 @@ async def test_confirm_booking_handles_stripe_error(
         hashed_password=hash_password("pass"),
         role=UserRole.CUSTOMER,
         stripe_payment_method_id="pm_test",
+        stripe_customer_id="cus_test",
     )
     async_session.add(user)
     await async_session.flush()
@@ -80,6 +82,7 @@ async def test_confirm_booking_handles_card_error(async_session: AsyncSession, m
         hashed_password=hash_password("pass"),
         role=UserRole.CUSTOMER,
         stripe_payment_method_id="pm_test",
+        stripe_customer_id="cus_test",
     )
     async_session.add(user)
     await async_session.flush()
