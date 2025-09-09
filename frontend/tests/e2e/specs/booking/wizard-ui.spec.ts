@@ -1,18 +1,6 @@
 import { test, expect } from '@playwright/test';
 
 test('customer completes booking wizard via UI', async ({ page }) => {
-  // Mock Stripe script
-  await page.route('https://js.stripe.com/v3', route => {
-    route.fulfill({
-      status: 200,
-      contentType: 'application/javascript',
-      body: `window.Stripe = function(){ return {
-        elements(){ return { create(){ return { mount(){} }; }, getElement(){ return {}; } }; },
-        confirmCardSetup: async () => ({})
-      }; };`
-    });
-  });
-
   // Mock auth token
   await page.route('**/auth/token', async route => {
     await route.fulfill({
@@ -81,8 +69,7 @@ test('customer completes booking wizard via UI', async ({ page }) => {
         status: 201,
         contentType: 'application/json',
         body: JSON.stringify({
-          booking: { id: '1', public_code: 'abc', status: 'PENDING' },
-          stripe: { setup_intent_client_secret: 'secret' }
+          booking: { id: '1', public_code: 'abc', status: 'PENDING' }
         })
       });
     } else {

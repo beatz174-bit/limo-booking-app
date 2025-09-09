@@ -11,18 +11,6 @@ interface Booking {
 }
 
 test('user logs in, creates booking via UI, views history', async ({ page }) => {
-  // Mock Stripe
-  await page.route('https://js.stripe.com/v3', route => {
-    route.fulfill({
-      status: 200,
-      contentType: 'application/javascript',
-      body: `window.Stripe = function(){ return {
-        elements(){ return { create(){ return { mount(){} }; }, getElement(){ return {}; } }; },
-        confirmCardSetup: async () => ({})
-      }; };`
-    });
-  });
-
   // Auth
   await page.route('**/auth/token', async route => {
     await route.fulfill({
@@ -98,7 +86,7 @@ test('user logs in, creates booking via UI, views history', async ({ page }) => 
       await route.fulfill({
         status: 201,
         contentType: 'application/json',
-        body: JSON.stringify({ booking: created, stripe: { setup_intent_client_secret: 'secret' } })
+        body: JSON.stringify({ booking: created })
       });
       return;
     }
