@@ -138,11 +138,36 @@ async def save_payment_method(
         )
         user.stripe_customer_id = stripe_customer.id
 
+    logger.info(
+        "set_default_payment_method:start",
+        extra={"user_id": user.id, "payment_method_id": payment_method_id},
+    )
     stripe_client.set_default_payment_method(user.stripe_customer_id, payment_method_id)
+    logger.info(
+        "set_default_payment_method:success",
+        extra={"user_id": user.id, "payment_method_id": payment_method_id},
+    )
     user.stripe_payment_method_id = payment_method_id
 
+    logger.info(
+        "db_flush:start",
+        extra={"user_id": user.id, "payment_method_id": payment_method_id},
+    )
     await db.flush()
+    logger.info(
+        "db_flush:success",
+        extra={"user_id": user.id, "payment_method_id": payment_method_id},
+    )
+
+    logger.info(
+        "db_refresh:start",
+        extra={"user_id": user.id, "payment_method_id": payment_method_id},
+    )
     await db.refresh(user)
+    logger.info(
+        "db_refresh:success",
+        extra={"user_id": user.id, "payment_method_id": payment_method_id},
+    )
     return UserRead.model_validate(user)
 
 

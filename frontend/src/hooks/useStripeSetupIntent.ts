@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { CONFIG } from '@/config';
 import { apiFetch } from '@/services/apiFetch';
+import * as logger from '@/lib/logger';
 
 interface CreateBookingData {
   pickup_when: string;
@@ -73,6 +74,11 @@ export function useStripeSetupIntent() {
         throw new Error(message);
       }
       const json = await res.json();
+      logger.info(
+        'hooks/useStripeSetupIntent',
+        'setup-intent response',
+        { clientSecret: json.stripe.setup_intent_client_secret },
+      );
       return {
         booking: json.booking,
         clientSecret: json.stripe.setup_intent_client_secret as string,
@@ -83,11 +89,24 @@ export function useStripeSetupIntent() {
   }
 
   async function savePaymentMethod(paymentMethodId: string) {
-    await apiFetch(`${CONFIG.API_BASE_URL}/api/v1/users/me/payment-method`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ payment_method_id: paymentMethodId }),
-    });
+    logger.info(
+      'hooks/useStripeSetupIntent',
+      'saving payment method',
+      { payment_method_id: paymentMethodId },
+    );
+    const res = await apiFetch(
+      `${CONFIG.API_BASE_URL}/api/v1/users/me/payment-method`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payment_method_id: paymentMethodId }),
+      },
+    );
+    logger.info(
+      'hooks/useStripeSetupIntent',
+      'save payment method response',
+      { status: res.status, payment_method_id: paymentMethodId },
+    );
   }
 
   return { createBooking, savePaymentMethod, savedPaymentMethod, loading };

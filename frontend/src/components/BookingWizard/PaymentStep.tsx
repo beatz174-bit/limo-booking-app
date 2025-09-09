@@ -166,6 +166,11 @@ function PaymentInner({ data, onBack }: Props) {
       payload,
     );
     const res = await createBooking(payload);
+    logger.info(
+      'components/BookingWizard/PaymentStep',
+      'setup-intent response',
+      { clientSecret: res.clientSecret },
+    );
     if (!stripe || !paymentRequest) {
       logger.warn(
         'components/BookingWizard/PaymentStep',
@@ -183,6 +188,11 @@ function PaymentInner({ data, onBack }: Props) {
         const setup = await stripe.confirmCardSetup(res.clientSecret, {
           payment_method: token,
         });
+        logger.info(
+          'components/BookingWizard/PaymentStep',
+          'confirmCardSetup result',
+          setup,
+        );
         const pm = setup?.setupIntent?.payment_method;
         if (pm) {
           await savePaymentMethod(pm as string);
@@ -221,6 +231,11 @@ function PaymentInner({ data, onBack }: Props) {
       payload
     );
     const res = await createBooking(payload);
+    logger.info(
+      'components/BookingWizard/PaymentStep',
+      'setup-intent response',
+      { clientSecret: res.clientSecret },
+    );
 
     if (!savedPaymentMethod) {
       if (!stripe || !elements) {
@@ -235,6 +250,11 @@ function PaymentInner({ data, onBack }: Props) {
         const setup = await stripe.confirmCardSetup(res.clientSecret, {
           payment_method: { card },
         });
+        logger.info(
+          'components/BookingWizard/PaymentStep',
+          'confirmCardSetup result',
+          setup,
+        );
         const pm = setup?.setupIntent?.payment_method;
         if (pm) {
           await savePaymentMethod(pm as string);
