@@ -5,12 +5,9 @@ import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 from math import atan2, cos, radians, sin, sqrt
+from typing import Optional
 
 import stripe
-from fastapi import HTTPException
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.api.ws import send_booking_update
 from app.db.database import AsyncSessionLocal
 from app.models.availability_slot import AvailabilitySlot
@@ -22,11 +19,14 @@ from app.models.trip import Trip
 from app.models.user_v2 import User, UserRole
 from app.schemas.api_booking import BookingCreateRequest
 from app.services import notifications, pricing_service, routing, stripe_client
+from fastapi import HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def create_booking(
     db: AsyncSession, data: BookingCreateRequest, user: User
-) -> tuple[Booking, str]:
+) -> tuple[Booking, Optional[str]]:
     """Create a booking and corresponding Stripe SetupIntent."""
     # ``pickup_when`` is normalized to UTC by the request schema validator.
     now_utc = datetime.now(timezone.utc)
@@ -94,7 +94,7 @@ async def create_booking(
         )
     )
 
-    client_secret = ""
+    client_secret: Optional[str] = None
     if customer.stripe_payment_method_id is None:
         setup_intent = stripe_client.create_setup_intent(
             customer.stripe_customer_id, booking.public_code

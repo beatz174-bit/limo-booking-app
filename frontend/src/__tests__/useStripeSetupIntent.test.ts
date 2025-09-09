@@ -47,6 +47,37 @@ describe('useStripeSetupIntent', () => {
     expect(result.current.savedPaymentMethod).toEqual(pm);
   });
 
+  it('propagates null client secret when absent', async () => {
+    const pm = { brand: 'visa', last4: '4242' };
+    const fakeResp = {
+      booking: {
+        id: '1',
+        status: 'PENDING',
+        public_code: 'ABC',
+        estimated_price_cents: 1000,
+        deposit_required_cents: 500,
+      },
+      stripe: { setup_intent_client_secret: null },
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => pm })
+      .mockResolvedValueOnce({ ok: true, json: async () => fakeResp });
+    global.fetch = fetchMock as unknown as typeof fetch;
+    const { result } = renderHook(() => useStripeSetupIntent());
+    let data;
+    await act(async () => {
+      data = await result.current.createBooking({
+        pickup_when: '2025-01-01T00:00:00Z',
+        pickup: { address: 'A', lat: 0, lng: 0 },
+        dropoff: { address: 'B', lat: 0, lng: 1 },
+        passengers: 1,
+      });
+    });
+    expect(data.clientSecret).toBeNull();
+    expect(result.current.savedPaymentMethod).toEqual(pm);
+  });
+
   it('throws detailed error when booking fails', async () => {
     const errorResp = { detail: 'invalid booking' };
     const fetchMock = vi

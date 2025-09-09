@@ -3,15 +3,14 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 import stripe
-from fastapi import HTTPException
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.security import hash_password
 from app.models.booking import Booking, BookingStatus
 from app.models.user_v2 import User, UserRole
 from app.schemas.api_booking import BookingCreateRequest, Location
 from app.services import booking_service
+from fastapi import HTTPException
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 pytestmark = pytest.mark.asyncio
 
@@ -149,7 +148,10 @@ async def test_create_booking_commits_once(async_session: AsyncSession, mocker):
         passengers=1,
     )
 
-    booking, _ = await booking_service.create_booking(async_session, data, user)
+    booking, client_secret = await booking_service.create_booking(
+        async_session, data, user
+    )
 
     assert commit_spy.call_count == 1
     assert booking.id is not None
+    assert client_secret is None

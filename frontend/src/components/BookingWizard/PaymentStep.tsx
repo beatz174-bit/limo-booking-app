@@ -52,7 +52,7 @@ interface SavedPaymentMethod {
 }
 
 interface InnerProps extends Props {
-  clientSecret: string;
+  clientSecret: string | null;
   bookingData: { public_code: string };
   savePaymentMethod: (paymentMethodId: string) => Promise<void>;
   savedPaymentMethod: SavedPaymentMethod | null;
@@ -190,7 +190,7 @@ function PaymentInner({
     const token = tokenRes.token?.id;
     if (token) {
       const setup = await stripe.confirmSetup({
-        clientSecret,
+        clientSecret: clientSecret!,
         payment_method: token,
         confirmParams: {
           return_url: window.location.href,
@@ -235,7 +235,7 @@ function PaymentInner({
       }
       const setup = await stripe.confirmSetup({
         elements,
-        clientSecret,
+        clientSecret: clientSecret!,
         confirmParams: {
           payment_method_data: {
             billing_details: { name, email, phone },
@@ -387,7 +387,7 @@ export default function PaymentStep({ data, onBack }: Props) {
     );
   }
 
-  if (!clientSecret || !bookingData) {
+  if ((!clientSecret && !savedPaymentMethod) || !bookingData) {
     return (
       <Stack alignItems="center">
         <CircularProgress />
