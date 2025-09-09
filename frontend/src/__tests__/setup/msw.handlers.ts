@@ -7,8 +7,6 @@ type RegisterBody = {
   full_name: string;
   email: string;
   password: string;
-  phone?: string;
-  stripe_payment_method_id?: string;
 };
 type SettingsBody = {
   account_mode: boolean;
