@@ -1,5 +1,6 @@
 """Service layer for booking lifecycle operations."""
 
+import asyncio
 import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -11,6 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.ws import send_booking_update
+from app.db.database import AsyncSessionLocal
 from app.models.availability_slot import AvailabilitySlot
 from app.models.booking import Booking, BookingStatus
 from app.models.notification import NotificationType
@@ -83,6 +85,14 @@ async def create_booking(
     )
     await db.commit()
     await db.refresh(booking)
+    asyncio.create_task(
+        notifications.dispatch_notification(
+            AsyncSessionLocal,
+            UserRole.DRIVER,
+            NotificationType.NEW_BOOKING,
+            {"booking_id": str(booking.id)},
+        )
+    )
 
     client_secret = ""
     if customer.stripe_payment_method_id is None:
