@@ -1,7 +1,7 @@
 import { Stack, TextField, Button, Typography } from '@mui/material';
 import {
   Elements,
-  CardElement,
+  PaymentElement,
   PaymentRequestButtonElement,
   useStripe,
   useElements,
@@ -185,12 +185,13 @@ function PaymentInner({ data, onBack }: Props) {
       };
       const token = tokenRes.token?.id;
       if (token) {
-        const setup = await stripe.confirmCardSetup(res.clientSecret, {
+        const setup = await stripe.confirmSetup({
+          clientSecret: res.clientSecret,
           payment_method: token,
         });
         logger.info(
           'components/BookingWizard/PaymentStep',
-          'confirmCardSetup result',
+          'confirmSetup result',
           setup,
         );
         const pm = setup?.setupIntent?.payment_method;
@@ -245,14 +246,14 @@ function PaymentInner({ data, onBack }: Props) {
         );
         return;
       }
-      const card = elements.getElement(CardElement);
-      if (res.clientSecret && card) {
-        const setup = await stripe.confirmCardSetup(res.clientSecret, {
-          payment_method: { card },
+      if (res.clientSecret) {
+        const setup = await stripe.confirmSetup({
+          elements,
+          clientSecret: res.clientSecret,
         });
         logger.info(
           'components/BookingWizard/PaymentStep',
-          'confirmCardSetup result',
+          'confirmSetup result',
           setup,
         );
         const pm = setup?.setupIntent?.payment_method;
@@ -323,7 +324,7 @@ function PaymentInner({ data, onBack }: Props) {
           Using saved card {savedPaymentMethod.brand} ending in {savedPaymentMethod.last4}
         </Typography>
       ) : (
-        <CardElement />
+        <PaymentElement />
       )}
       <Stack direction="row" spacing={1}>
         <Button onClick={onBack}>Back</Button>

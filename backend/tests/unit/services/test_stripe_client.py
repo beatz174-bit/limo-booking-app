@@ -8,7 +8,7 @@ from app.services import stripe_client
 from app.services.user_service import save_payment_method
 
 
-def test_create_setup_intent_enables_automatic_payment_methods(mocker):
+def test_create_setup_intent_sets_payment_method_type(mocker):
     captured: dict = {}
 
     def fake_create(**kwargs):
@@ -19,8 +19,8 @@ def test_create_setup_intent_enables_automatic_payment_methods(mocker):
 
     stripe_client.create_setup_intent("cus_test", "booking")
 
-    assert captured["automatic_payment_methods"] == {"enabled": True}
-    assert "payment_method_types" not in captured
+    assert captured["payment_method_types"] == ["card"]
+    assert "automatic_payment_methods" not in captured
 
 
 @pytest.mark.asyncio
