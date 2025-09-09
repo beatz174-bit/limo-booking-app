@@ -2,38 +2,19 @@ import { renderWithProviders } from '@/__tests__/setup/renderWithProviders';
 import BookingWizardPage from './BookingWizardPage';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi, beforeAll } from 'vitest';
+import { vi, beforeAll, beforeEach, afterEach, expect, test } from 'vitest';
 import React from 'react';
 import { server } from '@/__tests__/setup/msw.server';
 import { http, HttpResponse } from 'msw';
 import { apiUrl } from '@/__tests__/setup/msw.handlers';
 
-// Stub Stripe components and hooks
-vi.mock('@stripe/react-stripe-js', () => ({
-  Elements: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  CardElement: () => <div data-testid="card-element" />,
-  PaymentElement: () => <div data-testid="payment-element" />,
-  useStripe: () => ({
-    confirmCardSetup: vi.fn(),
-    confirmSetup: vi.fn().mockResolvedValue({}),
-    paymentRequest: vi.fn(() => ({
-      canMakePayment: vi.fn(),
-      on: vi.fn(),
-    })),
-  }),
-  useElements: () => ({
-    getElement: vi.fn().mockReturnValue({}),
-    submit: vi.fn().mockResolvedValue({}),
-  }),
-}));
-vi.mock('@stripe/stripe-js', () => ({ loadStripe: vi.fn() }));
-
-// Stub backend and map related hooks
+// Backend and map related hooks
 const createBooking = vi
   .fn()
-  .mockResolvedValue({ clientSecret: 'sec', booking: { public_code: 'test' } });
+  .mockResolvedValue({ clientSecret: null, booking: { public_code: 'test' } });
+const mockUseStripeSetupIntent = vi.fn();
 vi.mock('@/hooks/useStripeSetupIntent', () => ({
-  useStripeSetupIntent: () => ({ createBooking }),
+  useStripeSetupIntent: () => mockUseStripeSetupIntent(),
 }));
 vi.mock('@/hooks/useAvailability', () => ({
   default: () => ({ data: { slots: [], bookings: [] } }),
@@ -77,13 +58,19 @@ beforeEach(() => {
       user: { full_name: 'John Doe', email: 'john@example.com', phone: '123' },
     })
   );
+  mockUseStripeSetupIntent.mockReturnValue({
+    createBooking,
+    savePaymentMethod: vi.fn(),
+    savedPaymentMethod: { brand: 'visa', last4: '4242' },
+    loading: false,
+  });
 });
 
 afterEach(() => {
   localStorage.clear();
 });
 
-test('advances through steps and aggregates form data', async () => {
+test('advances through steps and aggregates form data with saved card', async () => {
   renderWithProviders(<BookingWizardPage />);
   const input = (re: RegExp) => screen.getByLabelText(re, { selector: 'input' });
 
@@ -103,7 +90,10 @@ test('advances through steps and aggregates form data', async () => {
   await userEvent.click(screen.getByRole('button', { name: /next/i }));
 
   // Step 3: payment details
-  await userEvent.click(await screen.findByRole('button', { name: /submit/i }));
+  expect(
+    await screen.findByText(/using saved card visa ending in 4242/i)
+  ).toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: /submit/i }));
 
   expect(createBooking).toHaveBeenCalledWith({
     pickup_when: new Date('2025-01-01T10:00').toISOString(),
@@ -117,5 +107,31 @@ test('advances through steps and aggregates form data', async () => {
       phone: '123-4567',
     },
   });
-  localStorage.clear();
 });
+
+test('shows add card message when no saved method', async () => {
+  mockUseStripeSetupIntent.mockReturnValue({
+    createBooking,
+    savePaymentMethod: vi.fn(),
+    savedPaymentMethod: null,
+    loading: false,
+  });
+  createBooking.mockResolvedValueOnce({
+    clientSecret: 'sec',
+    booking: { public_code: 'test' },
+  });
+  renderWithProviders(<BookingWizardPage />);
+  const input = (re: RegExp) => screen.getByLabelText(re, { selector: 'input' });
+
+  await userEvent.type(input(/pickup time/i), '2025-01-01T10:00');
+  await userEvent.click(screen.getByRole('button', { name: /next/i }));
+
+  await userEvent.type(input(/pickup address/i), '123 A St');
+  await userEvent.click(await screen.findByText('123 A St'));
+  await userEvent.type(input(/dropoff address/i), '456 B St');
+  await userEvent.click(await screen.findByText('456 B St'));
+  await userEvent.click(screen.getByRole('button', { name: /next/i }));
+
+  expect(await screen.findByText(/add card/i)).toBeInTheDocument();
+});
+
