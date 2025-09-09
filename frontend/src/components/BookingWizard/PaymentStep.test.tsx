@@ -169,6 +169,7 @@ test('shows error when booking creation fails', async () => {
   expect(
     screen.getByRole('button', { name: /back/i }),
   ).toBeInTheDocument();
+});
 test('shows warning when no saved card', async () => {
   mockUseBooking.mockReturnValue({
     createBooking: mockCreateBooking,
