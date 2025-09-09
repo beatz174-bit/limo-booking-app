@@ -54,8 +54,6 @@ async def register_user(db: AsyncSession, data: RegisterRequest) -> UserRead:
         email=data.email,
         full_name=data.full_name,
         hashed_password=hash_password(data.password),
-        phone=data.phone,
-        stripe_payment_method_id=data.stripe_payment_method_id,
     )
 
     # Persist to database
