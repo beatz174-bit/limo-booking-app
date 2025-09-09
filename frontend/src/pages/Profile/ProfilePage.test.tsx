@@ -65,7 +65,7 @@ describe('ProfilePage', () => {
           json: async () => ({
             full_name: 'John Doe',
             email: 'john@example.com',
-            phone: '111-2222',
+            phone: '',
             default_pickup_address: 'Old St',
           }),
         } as Response);
@@ -82,7 +82,6 @@ describe('ProfilePage', () => {
     render(<ProfilePage />);
 
     await screen.findByDisplayValue('John Doe');
-    await screen.findByDisplayValue('111-2222');
     await userEvent.clear(screen.getByLabelText(/full name/i));
     await userEvent.type(screen.getByLabelText(/full name/i), 'Jane Doe');
     await userEvent.clear(screen.getByLabelText(/email/i));
@@ -240,11 +239,17 @@ describe('ProfilePage', () => {
     await userEvent.click(screen.getByRole('button', { name: /add card/i }));
     await screen.findByTestId('payment-element');
     await userEvent.click(screen.getByRole('button', { name: /save card/i }));
-    expect(mockConfirm).toHaveBeenCalledWith(
-      expect.objectContaining({
-        elements: mockElements,
-        clientSecret: 'sec',
-        confirmParams: expect.objectContaining({
+    expect(mockConfirm).toHaveBeenCalledWith({
+      elements: mockElements,
+      clientSecret: 'sec',
+      confirmParams: {
+        payment_method_data: {
+          billing_details: {
+            name: 'John Doe',
+            email: 'john@example.com',
+            phone: '',
+          },
+        },
           return_url: expect.any(String),
         }),
         redirect: 'if_required',

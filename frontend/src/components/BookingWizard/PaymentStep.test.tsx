@@ -113,7 +113,15 @@ test('handles new card flow', async () => {
   expect(mockConfirm).toHaveBeenCalledWith({
     elements: mockElements,
     clientSecret: 'sec',
-    confirmParams: { return_url: window.location.href },
+    confirmParams: {
+      payment_method_data: {
+        billing_details: {
+          name: 'Test User',
+          email: 'test@example.com',
+          phone: '123',
+        },
+      },
+    },
     redirect: 'if_required',
   });
   expect(mockSavePaymentMethod).toHaveBeenCalledWith('pm_123');

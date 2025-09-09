@@ -177,6 +177,15 @@ const ProfileForm = ({
         const setup = await stripe.confirmSetup({
           elements,
           clientSecret,
+          confirmParams: {
+            payment_method_data: {
+              billing_details: {
+                name: fullName,
+                email,
+                phone,
+              },
+            },
+          },
           confirmParams: { return_url: window.location.href },
           redirect: 'if_required',
         });
@@ -378,7 +387,22 @@ const ProfileForm = ({
             </Stack>
           </Stack>
         ) : editingCard && clientSecret ? (
-          <Elements stripe={stripePromise} options={{ clientSecret }}>
+          <Elements
+            stripe={stripePromise}
+            options={{
+              clientSecret,
+              defaultValues: {
+                billingDetails: { name: fullName, email, phone },
+              },
+              fields: {
+                billingDetails: {
+                  name: 'never',
+                  email: 'never',
+                  phone: 'never',
+                },
+              },
+            }}
+          >
             <CardSetup />
           </Elements>
         ) : editingCard ? null : (
