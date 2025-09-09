@@ -122,6 +122,7 @@ test('handles new card flow', async () => {
         },
       },
     },
+    redirect: 'if_required',
   });
   expect(mockSavePaymentMethod).toHaveBeenCalledWith('pm_123');
   const link = await screen.findByRole('link', { name: /track this ride/i });
@@ -216,6 +217,8 @@ test('handles google pay flow', async () => {
   expect(mockConfirm).toHaveBeenCalledWith({
     clientSecret: 'sec',
     payment_method: 'tok_123',
+    confirmParams: { return_url: window.location.href },
+    redirect: 'if_required',
   });
   expect(mockSavePaymentMethod).toHaveBeenCalledWith('pm_123');
   const link = await screen.findByRole('link', { name: /track this ride/i });

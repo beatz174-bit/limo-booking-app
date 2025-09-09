@@ -186,6 +186,8 @@ const ProfileForm = ({
               },
             },
           },
+          confirmParams: { return_url: window.location.href },
+          redirect: 'if_required',
         });
         logger.info(
           'pages/Profile/ProfileForm',

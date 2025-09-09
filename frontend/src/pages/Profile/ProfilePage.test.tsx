@@ -250,8 +250,11 @@ describe('ProfilePage', () => {
             phone: '',
           },
         },
-      },
-    });
+          return_url: expect.any(String),
+        }),
+        redirect: 'if_required',
+      }),
+    );
     const postCalls = fetch.mock.calls.filter(
       ([url, init]) =>
         typeof url === 'string' &&
