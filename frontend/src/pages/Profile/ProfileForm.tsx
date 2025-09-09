@@ -242,7 +242,20 @@ const ProfileForm = ({
     return (
       <Stack spacing={1}>
         {cardError && <Alert severity="error">{cardError}</Alert>}
-        <PaymentElement />
+        <PaymentElement
+          options={{
+            defaultValues: {
+              billingDetails: { name: fullName, email, phone },
+            },
+            fields: {
+              billingDetails: {
+                name: 'never',
+                email: 'never',
+                phone: 'never',
+              },
+            },
+          }}
+        />
         <Stack direction="row" spacing={1}>
           <Button type="button" variant="contained" onClick={handleSaveCard}>
             Save Card
@@ -392,22 +405,7 @@ const ProfileForm = ({
             </Stack>
           </Stack>
         ) : editingCard && clientSecret ? (
-          <Elements
-            stripe={stripePromise}
-            options={{
-              clientSecret,
-              defaultValues: {
-                billingDetails: { name: fullName, email, phone },
-              },
-              fields: {
-                billingDetails: {
-                  name: 'never',
-                  email: 'never',
-                  phone: 'never',
-                },
-              },
-            }}
-          >
+          <Elements stripe={stripePromise} options={{ clientSecret }}>
             <CardSetup />
           </Elements>
         ) : editingCard ? null : (

@@ -300,7 +300,18 @@ function PaymentInner({
           Using saved card {savedPaymentMethod.brand} ending in {savedPaymentMethod.last4}
         </Typography>
       ) : (
-        <PaymentElement />
+        <PaymentElement
+          options={{
+            defaultValues: { billingDetails: { name, email, phone } },
+            fields: {
+              billingDetails: {
+                name: 'never',
+                email: 'never',
+                phone: 'never',
+              },
+            },
+          }}
+        />
       )}
       <Stack direction="row" spacing={1}>
         <Button onClick={onBack}>Back</Button>
@@ -351,22 +362,8 @@ export default function PaymentStep({ data, onBack }: Props) {
     return null;
   }
 
-  const elementOptions = {
-    clientSecret,
-    defaultValues: {
-      billingDetails: { name, email, phone },
-    },
-    fields: {
-      billingDetails: {
-        name: 'never',
-        email: 'never',
-        phone: 'never',
-      },
-    },
-  };
-
   return (
-    <Elements stripe={stripePromise} options={elementOptions}>
+    <Elements stripe={stripePromise} options={{ clientSecret }}>
       <PaymentInner
         data={data}
         onBack={onBack}
