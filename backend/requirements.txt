@@ -33,6 +33,7 @@ python-dotenv
 pytest
 pytest-asyncio
 pytest-mock
+pytest-dotenv
 httpx
 python-multipart
 python-json-logger
