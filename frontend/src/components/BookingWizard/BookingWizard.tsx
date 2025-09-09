@@ -11,8 +11,10 @@ import { Link as RouterLink } from 'react-router-dom';
 import TripDetails from './TripDetails';
 import { MapProvider } from '@/components/MapProvider';
 import { MapRoute } from '@/components/MapRoute';
+import { PriceSummary } from '@/components/PriceSummary';
 import { BookingFormData } from '@/types/BookingFormData';
 import { useBooking } from '@/hooks/useBooking';
+import { useSettings } from '@/hooks/useSettings';
 import { useAuth } from '@/contexts/AuthContext';
 import * as logger from '@/lib/logger';
 
@@ -35,6 +37,10 @@ export default function BookingWizard({
     null,
   );
   const [error, setError] = useState<string | null>(null);
+  const [distanceKm, setDistanceKm] = useState<number | null>(null);
+  const [durationMin, setDurationMin] = useState<number | null>(null);
+  const [price, setPrice] = useState<number | null>(null);
+  const { data: settings } = useSettings();
   const update = (data: Partial<BookingFormData>) => {
     setForm((f) => ({ ...f, ...data }));
   };
@@ -99,8 +105,30 @@ export default function BookingWizard({
               pickup={form.pickup}
               dropoff={form.dropoff}
               rideTime={form.pickup_when}
+              onMetrics={(km, min) => {
+                setDistanceKm(km);
+                setDurationMin(min);
+              }}
             />
           </MapProvider>
+          {settings && (
+            <Box mt={2}>
+              <PriceSummary
+                pickup={form.pickup?.address || ''}
+                dropoff={form.dropoff?.address || ''}
+                rideTime={form.pickup_when || ''}
+                flagfall={settings.flagfall}
+                perKm={settings.per_km_rate}
+                perMin={settings.per_minute_rate}
+                distanceKm={distanceKm ?? undefined}
+                durationMin={durationMin ?? undefined}
+                onPrice={setPrice}
+              />
+              {price !== null && (
+                <Typography sx={{ mt: 1 }}>{`Deposit: $${(price / 2).toFixed(2)}`}</Typography>
+              )}
+            </Box>
+          )}
           {error && (
             <Alert severity="error" sx={{ mt: 2 }}>
               {error}
