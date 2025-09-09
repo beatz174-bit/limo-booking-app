@@ -243,6 +243,8 @@ describe('ProfilePage', () => {
     expect(mockConfirm).toHaveBeenCalledWith({
       elements: mockElements,
       clientSecret: 'sec',
+      confirmParams: { return_url: window.location.href },
+      redirect: 'if_required',
     });
     const postCalls = fetch.mock.calls.filter(
       ([url, init]) =>
