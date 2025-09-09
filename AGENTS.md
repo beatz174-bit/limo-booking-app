@@ -38,7 +38,7 @@ the frontend tests, only the tests you need to.
 ```bash
 npm run lint 2>&1 | tee /tmp/lint.log | tail -n 200
 cd backend && pytest -q --maxfail=1 --disable-warnings >/tmp/backend.log 2>&1; tail -n 200 /tmp/backend.log
-cd ../frontend && npm test >/tmp/frontend.log 2>&1; tail -n 200 /tmp/frontend.log
+cd ../frontend && npx vitest run >/tmp/frontend.log 2>&1; tail -n 200 /tmp/frontend.log
 ```
 
 ### Selective Test Runs
