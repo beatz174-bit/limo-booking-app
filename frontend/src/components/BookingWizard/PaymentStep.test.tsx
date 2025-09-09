@@ -94,9 +94,8 @@ test('handles new card flow', async () => {
     </MemoryRouter>,
   );
 
-  const phoneField = screen.getByLabelText(/phone/i);
+  const phoneField = await screen.findByLabelText(/phone/i);
   expect(phoneField).toHaveAttribute('readonly');
-  await userEvent.click(screen.getByRole('button', { name: /submit/i }));
   expect(mockCreateBooking).toHaveBeenCalledWith(
     expect.objectContaining({
       pickup_when: '2025-01-01T00:00:00Z',
@@ -107,6 +106,10 @@ test('handles new card flow', async () => {
       },
     }),
   );
+  await userEvent.click(
+    screen.getByRole('button', { name: /submit/i })
+  );
+  expect(mockCreateBooking).toHaveBeenCalledTimes(1);
   expect(mockConfirm).toHaveBeenCalledWith({
     elements: mockElements,
     clientSecret: 'sec',
@@ -199,7 +202,7 @@ test('handles google pay flow', async () => {
   await userEvent.click(gpButton);
 
   expect(mockStripe.paymentRequest).toHaveBeenCalled();
-  expect(mockCreateBooking).toHaveBeenCalled();
+  expect(mockCreateBooking).toHaveBeenCalledTimes(1);
   expect(mockShow).toHaveBeenCalled();
   expect(mockConfirm).toHaveBeenCalledWith({
     clientSecret: 'sec',
@@ -237,9 +240,10 @@ test('uses saved card when available', async () => {
     </MemoryRouter>,
   );
 
+  await screen.findByRole('button', { name: /submit/i });
   expect(screen.queryByTestId('payment-element')).not.toBeInTheDocument();
   await userEvent.click(screen.getByRole('button', { name: /submit/i }));
-  expect(mockCreateBooking).toHaveBeenCalled();
+  expect(mockCreateBooking).toHaveBeenCalledTimes(1);
   expect(mockConfirm).not.toHaveBeenCalled();
   expect(mockSavePaymentMethod).not.toHaveBeenCalled();
   const link = await screen.findByRole('link', { name: /track this ride/i });
@@ -273,7 +277,7 @@ test('updates metrics from route service', async () => {
   ).toBeInTheDocument();
 });
 
-test('renders fare breakdown when dev features enabled', () => {
+test('renders fare breakdown when dev features enabled', async () => {
   render(
     <MemoryRouter>
       <DevFeaturesProvider>
@@ -292,10 +296,10 @@ test('renders fare breakdown when dev features enabled', () => {
       </DevFeaturesProvider>
     </MemoryRouter>,
   );
-  expect(screen.getByText(/fare breakdown/i)).toBeInTheDocument();
+  expect(await screen.findByText(/fare breakdown/i)).toBeInTheDocument();
 });
 
-test('hides fare breakdown when dev features disabled', () => {
+test('hides fare breakdown when dev features disabled', async () => {
   vi.stubEnv('ENV', 'production');
   localStorage.setItem('devFeaturesEnabled', 'false');
 
@@ -318,6 +322,7 @@ test('hides fare breakdown when dev features disabled', () => {
     </MemoryRouter>,
   );
 
+  await screen.findByRole('button', { name: /submit/i });
   expect(screen.queryByText(/fare breakdown/i)).not.toBeInTheDocument();
 
   vi.unstubAllEnvs();
