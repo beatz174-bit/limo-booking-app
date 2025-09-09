@@ -2,16 +2,15 @@
 
 import logging
 
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.security import create_jwt_token, hash_password, verify_password
 from app.dependencies import get_db
 from app.models.user_v2 import User as UserV2  # <- ORM model
 from app.schemas.auth import LoginRequest, LoginResponse, RegisterRequest
 from app.schemas.user import UserRead  # <- your output schema
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 

@@ -18,19 +18,19 @@ const authApi = new AuthApi(configuration);
 
 function RegisterPage() {
     const [email, setEmail] = useState("");
-    const [full_name, setName] = useState("");
+    const [fullName, setFullName] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const { loginWithPassword } = useAuth();
     const navigate = useNavigate();
-    
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
 
         const registerRequest: RegisterRequest = {
             email,
-            full_name,
+            full_name: fullName,
             password,
         };
 
@@ -85,8 +85,8 @@ function RegisterPage() {
             <TextField
               label="Full Name"
               type="text"
-              value={full_name}
-              onChange={(e) => setName(e.target.value)}
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
               fullWidth
               required
               margin="normal"
