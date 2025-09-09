@@ -8,7 +8,13 @@ import {
   Stack,
   Alert,
 } from '@mui/material';
-import { PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
+import {
+  Elements,
+  PaymentElement,
+  useElements,
+  useStripe,
+} from '@stripe/react-stripe-js';
+import type { Stripe } from '@stripe/stripe-js';
 import * as logger from '@/lib/logger';
 import { AddressField } from '@/components/AddressField';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,7 +23,11 @@ import { CONFIG } from '@/config';
 import { apiFetch } from '@/services/apiFetch';
 import { useAddressAutocomplete } from '@/hooks/useAddressAutocomplete';
 
-const ProfileForm = () => {
+const ProfileForm = ({
+  stripePromise,
+}: {
+  stripePromise: Promise<Stripe | null>;
+}) => {
   const { ensureFreshToken } = useAuth();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -31,10 +41,9 @@ const ProfileForm = () => {
     useState<{ brand: string; last4: string } | null>(null);
   const [editingCard, setEditingCard] = useState(false);
   const [cardError, setCardError] = useState<string | null>(null);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
 
   const auto = useAddressAutocomplete(defaultPickup);
-  const stripe = useStripe();
-  const elements = useElements();
 
   useEffect(() => {
     const load = async () => {
@@ -120,8 +129,7 @@ const ProfileForm = () => {
     setConfirmPassword('');
   };
 
-  const handleSaveCard = async () => {
-    if (!stripe || !elements) return;
+  const startCardSetup = async () => {
     await ensureFreshToken();
     setCardError(null);
     try {
@@ -144,53 +152,97 @@ const ProfileForm = () => {
         'setup-intent response',
         json,
       );
-      if (!json.setup_intent_client_secret) return;
-      const setup = await stripe.confirmSetup({
-        elements,
-        clientSecret: json.setup_intent_client_secret,
-      });
-      logger.info(
-        'pages/Profile/ProfileForm',
-        'confirmSetup result',
-        setup,
-      );
-      const pm = setup?.setupIntent?.payment_method;
-      if (!pm) {
-        const message = setup?.error?.message || 'Failed to confirm card.';
-        logger.warn('pages/Profile/ProfileForm', 'save card failed', message);
-        setCardError(message);
+      if (!json.setup_intent_client_secret) {
+        setCardError('Failed to initiate card setup.');
         return;
       }
-      const putRes = await apiFetch(`${base}/users/me/payment-method`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ payment_method_id: pm }),
-      });
-      if (!putRes.ok) {
-        const text = await putRes.text().catch(() => '');
-        logger.warn('pages/Profile/ProfileForm', 'save card failed', {
-          status: putRes.status,
-          body: text,
-        });
-        setCardError('Failed to save payment method.');
-        return;
-      }
-      setEditingCard(false);
-      const pmRes = await apiFetch(`${base}/users/me/payment-method`);
-      if (pmRes.ok) {
-        try {
-          const meta = await pmRes.json();
-          if (meta && meta.last4) {
-            setPaymentMethod({ brand: meta.brand, last4: meta.last4 });
-          }
-        } catch {
-          /* ignore */
-        }
-      }
+      setClientSecret(json.setup_intent_client_secret);
+      setEditingCard(true);
     } catch (err) {
-      logger.warn('pages/Profile/ProfileForm', 'save card failed', err);
-      setCardError('Failed to save payment method.');
+      logger.warn('pages/Profile/ProfileForm', 'setup intent request failed', err);
+      setCardError('Failed to initiate card setup.');
     }
+  };
+
+  const CardSetup = () => {
+    const stripe = useStripe();
+    const elements = useElements();
+
+    const handleSaveCard = async () => {
+      if (!stripe || !elements || !clientSecret) return;
+      await ensureFreshToken();
+      setCardError(null);
+      try {
+        const base = CONFIG.API_BASE_URL ?? '';
+        const setup = await stripe.confirmSetup({
+          elements,
+          clientSecret,
+        });
+        logger.info(
+          'pages/Profile/ProfileForm',
+          'confirmSetup result',
+          setup,
+        );
+        const pm = setup?.setupIntent?.payment_method;
+        if (!pm) {
+          const message = setup?.error?.message || 'Failed to confirm card.';
+          logger.warn('pages/Profile/ProfileForm', 'save card failed', message);
+          setCardError(message);
+          return;
+        }
+        const putRes = await apiFetch(`${base}/users/me/payment-method`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ payment_method_id: pm }),
+        });
+        if (!putRes.ok) {
+          const text = await putRes.text().catch(() => '');
+          logger.warn('pages/Profile/ProfileForm', 'save card failed', {
+            status: putRes.status,
+            body: text,
+          });
+          setCardError('Failed to save payment method.');
+          return;
+        }
+        setEditingCard(false);
+        setClientSecret(null);
+        const pmRes = await apiFetch(`${base}/users/me/payment-method`);
+        if (pmRes.ok) {
+          try {
+            const meta = await pmRes.json();
+            if (meta && meta.last4) {
+              setPaymentMethod({ brand: meta.brand, last4: meta.last4 });
+            }
+          } catch {
+            /* ignore */
+          }
+        }
+      } catch (err) {
+        logger.warn('pages/Profile/ProfileForm', 'save card failed', err);
+        setCardError('Failed to save payment method.');
+      }
+    };
+
+    return (
+      <Stack spacing={1}>
+        {cardError && <Alert severity="error">{cardError}</Alert>}
+        <PaymentElement />
+        <Stack direction="row" spacing={1}>
+          <Button type="button" variant="contained" onClick={handleSaveCard}>
+            Save Card
+          </Button>
+          <Button
+            type="button"
+            onClick={() => {
+              setEditingCard(false);
+              setClientSecret(null);
+            }}
+          >
+            Cancel
+          </Button>
+        </Stack>
+      </Stack>
+    );
   };
 
   const handleRemoveCard = async () => {
@@ -315,7 +367,7 @@ const ProfileForm = () => {
               {paymentMethod.brand} ending in {paymentMethod.last4}
             </Typography>
             <Stack direction="row" spacing={1}>
-              <Button type="button" onClick={() => setEditingCard(true)}>
+              <Button type="button" onClick={startCardSetup}>
                 Replace
               </Button>
               <Button type="button" onClick={handleRemoveCard}>
@@ -323,29 +375,12 @@ const ProfileForm = () => {
               </Button>
             </Stack>
           </Stack>
-        ) : editingCard ? (
-          <Stack spacing={1}>
-            {cardError && <Alert severity="error">{cardError}</Alert>}
-            <PaymentElement />
-            <Stack direction="row" spacing={1}>
-              <Button
-                type="button"
-                variant="contained"
-                onClick={handleSaveCard}
-              >
-                Save Card
-              </Button>
-              <Button type="button" onClick={() => setEditingCard(false)}>
-                Cancel
-              </Button>
-            </Stack>
-          </Stack>
-        ) : (
-          <Button
-            type="button"
-            variant="contained"
-            onClick={() => setEditingCard(true)}
-          >
+        ) : editingCard && clientSecret ? (
+          <Elements stripe={stripePromise} options={{ clientSecret }}>
+            <CardSetup />
+          </Elements>
+        ) : editingCard ? null : (
+          <Button type="button" variant="contained" onClick={startCardSetup}>
             Add Card
           </Button>
         )}

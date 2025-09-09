@@ -238,11 +238,19 @@ describe('ProfilePage', () => {
     render(<ProfilePage />);
     await screen.findByRole('heading', { name: /payment method/i });
     await userEvent.click(screen.getByRole('button', { name: /add card/i }));
+    await screen.findByTestId('payment-element');
     await userEvent.click(screen.getByRole('button', { name: /save card/i }));
     expect(mockConfirm).toHaveBeenCalledWith({
       elements: mockElements,
       clientSecret: 'sec',
     });
+    const postCalls = fetch.mock.calls.filter(
+      ([url, init]) =>
+        typeof url === 'string' &&
+        url.endsWith('/users/me/payment-method') &&
+        (init as RequestInit)?.method === 'POST',
+    );
+    expect(postCalls).toHaveLength(1);
     const putCall = fetch.mock.calls.find(
       ([url, init]) =>
         typeof url === 'string' &&
