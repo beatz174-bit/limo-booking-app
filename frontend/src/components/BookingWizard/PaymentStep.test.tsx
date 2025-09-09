@@ -110,16 +110,12 @@ test('handles new card flow', async () => {
     screen.getByRole('button', { name: /submit/i })
   );
   expect(mockCreateBooking).toHaveBeenCalledTimes(1);
-  expect(mockConfirm).toHaveBeenCalledWith(
-    expect.objectContaining({
-      elements: mockElements,
-      clientSecret: 'sec',
-      confirmParams: expect.objectContaining({
-        return_url: expect.any(String),
-      }),
-      redirect: 'if_required',
-    }),
-  );
+  expect(mockConfirm).toHaveBeenCalledWith({
+    elements: mockElements,
+    clientSecret: 'sec',
+    confirmParams: { return_url: window.location.href },
+    redirect: 'if_required',
+  });
   expect(mockSavePaymentMethod).toHaveBeenCalledWith('pm_123');
   const link = await screen.findByRole('link', { name: /track this ride/i });
   expect(link).toHaveAttribute('href', '/t/ABC123');
@@ -210,16 +206,12 @@ test('handles google pay flow', async () => {
   expect(mockStripe.paymentRequest).toHaveBeenCalled();
   expect(mockCreateBooking).toHaveBeenCalledTimes(1);
   expect(mockShow).toHaveBeenCalled();
-  expect(mockConfirm).toHaveBeenCalledWith(
-    expect.objectContaining({
-      clientSecret: 'sec',
-      payment_method: 'tok_123',
-      confirmParams: expect.objectContaining({
-        return_url: expect.any(String),
-      }),
-      redirect: 'if_required',
-    }),
-  );
+  expect(mockConfirm).toHaveBeenCalledWith({
+    clientSecret: 'sec',
+    payment_method: 'tok_123',
+    confirmParams: { return_url: window.location.href },
+    redirect: 'if_required',
+  });
   expect(mockSavePaymentMethod).toHaveBeenCalledWith('pm_123');
   const link = await screen.findByRole('link', { name: /track this ride/i });
   expect(link).toHaveAttribute('href', '/t/ABC123');
