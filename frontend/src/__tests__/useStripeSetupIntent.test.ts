@@ -1,6 +1,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { useStripeSetupIntent } from '@/hooks/useStripeSetupIntent';
+import { CONFIG } from '@/config';
 
 describe('useStripeSetupIntent', () => {
   it('creates booking and returns client secret when no saved card', async () => {
@@ -27,6 +28,9 @@ describe('useStripeSetupIntent', () => {
     });
     const [, opts] = fetchMock.mock.calls[1];
     expect(JSON.parse(opts.body as string).pickup_when).toBe('2025-01-01T00:00:00Z');
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      `${CONFIG.API_BASE_URL}/users/me/payment-method`,
+    );
     expect(data.clientSecret).toBe('sec');
     expect(result.current.savedPaymentMethod).toBeNull();
   });
@@ -37,6 +41,9 @@ describe('useStripeSetupIntent', () => {
     global.fetch = fetchMock as unknown as typeof fetch;
     const { result } = renderHook(() => useStripeSetupIntent());
     await act(async () => {});
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      `${CONFIG.API_BASE_URL}/users/me/payment-method`,
+    );
     expect(result.current.savedPaymentMethod).toEqual(pm);
   });
 
@@ -48,7 +55,6 @@ describe('useStripeSetupIntent', () => {
       .mockResolvedValueOnce({ ok: false, json: async () => errorResp });
     global.fetch = fetchMock as unknown as typeof fetch;
     const { result } = renderHook(() => useStripeSetupIntent());
-
     await act(async () => {
       await expect(
         result.current.createBooking({
@@ -59,5 +65,8 @@ describe('useStripeSetupIntent', () => {
         }),
       ).rejects.toThrow('invalid booking');
     });
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      `${CONFIG.API_BASE_URL}/users/me/payment-method`,
+    );
   });
 });
