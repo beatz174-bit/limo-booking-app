@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -131,7 +132,7 @@ async def test_create_booking_requires_payment_method(
     async_session, client: AsyncClient
 ):
     user = User(
-        email="nopm@example.com",
+        email=f"nopm{uuid.uuid4()}@example.com",
         full_name="No PM",
         hashed_password=hash_password("pass"),
         role=UserRole.CUSTOMER,
