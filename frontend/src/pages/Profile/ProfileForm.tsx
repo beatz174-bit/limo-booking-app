@@ -185,8 +185,8 @@ const ProfileForm = ({
                 phone,
               },
             },
+            return_url: window.location.href,
           },
-          confirmParams: { return_url: window.location.href },
           redirect: 'if_required',
         });
         logger.info(
