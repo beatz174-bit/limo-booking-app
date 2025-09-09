@@ -1,4 +1,3 @@
-import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import * as logger from '@/lib/logger';
 import ProfileForm from './ProfileForm';
@@ -14,10 +13,6 @@ const stripePromise = (async () => {
   }
 })();
 
-const ProfilePage = () => (
-  <Elements stripe={stripePromise}>
-    <ProfileForm />
-  </Elements>
-);
+const ProfilePage = () => <ProfileForm stripePromise={stripePromise} />;
 
 export default ProfilePage;
