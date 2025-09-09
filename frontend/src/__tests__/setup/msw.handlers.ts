@@ -1,4 +1,3 @@
-// frontend/tests/msw/handlers.ts
 import { http, HttpResponse } from "msw";
 import { CONFIG } from "@/config"
 
