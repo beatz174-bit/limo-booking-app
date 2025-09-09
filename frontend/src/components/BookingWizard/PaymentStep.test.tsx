@@ -351,3 +351,32 @@ test('hides fare breakdown when dev features disabled', async () => {
   vi.unstubAllEnvs();
   localStorage.clear();
 });
+
+test('shows error when booking creation fails', async () => {
+  mockCreateBooking.mockRejectedValueOnce(new Error('boom'));
+  render(
+    <MemoryRouter>
+      <DevFeaturesProvider>
+        <PaymentStep
+          data={{
+            pickup_when: '2025-01-01T00:00:00Z',
+            pickup: { address: 'A', lat: 0, lng: 0 },
+            dropoff: { address: 'B', lat: 1, lng: 1 },
+            passengers: 1,
+            notes: '',
+            pickupValid: true,
+            dropoffValid: true,
+          }}
+          onBack={() => {}}
+        />
+      </DevFeaturesProvider>
+    </MemoryRouter>,
+  );
+
+  expect(
+    await screen.findByText(/failed to create booking/i),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole('button', { name: /back/i }),
+  ).toBeInTheDocument();
+});
