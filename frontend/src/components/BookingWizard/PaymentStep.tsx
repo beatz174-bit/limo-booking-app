@@ -1,4 +1,4 @@
-import { Stack, TextField, Button, Typography } from '@mui/material';
+import { Stack, Button, Typography } from '@mui/material';
 import {
   Elements,
   PaymentElement,
@@ -266,9 +266,6 @@ function PaymentInner({
 
   return (
     <Stack spacing={2}>
-      <TextField label="Name" value={name} InputProps={{ readOnly: true }} />
-      <TextField label="Email" value={email} InputProps={{ readOnly: true }} />
-      <TextField label="Phone" value={phone} InputProps={{ readOnly: true }} />
       {price != null && (
         <Typography>Estimated fare: ${price.toFixed(2)}</Typography>
       )}

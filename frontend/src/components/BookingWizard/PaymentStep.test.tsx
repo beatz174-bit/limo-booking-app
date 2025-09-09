@@ -93,9 +93,10 @@ test('handles new card flow', async () => {
       </DevFeaturesProvider>
     </MemoryRouter>,
   );
-
-  const phoneField = await screen.findByLabelText(/phone/i);
-  expect(phoneField).toHaveAttribute('readonly');
+  await screen.findByRole('button', { name: /submit/i });
+  expect(screen.queryByLabelText(/name/i)).not.toBeInTheDocument();
+  expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
+  expect(screen.queryByLabelText(/phone/i)).not.toBeInTheDocument();
   expect(mockCreateBooking).toHaveBeenCalledWith(
     expect.objectContaining({
       pickup_when: '2025-01-01T00:00:00Z',
@@ -121,6 +122,7 @@ test('handles new card flow', async () => {
           phone: '123',
         },
       },
+      return_url: window.location.href,
     },
     redirect: 'if_required',
   });
