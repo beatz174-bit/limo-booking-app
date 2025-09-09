@@ -12,19 +12,26 @@ import { apiUrl } from '@/__tests__/setup/msw.handlers';
 vi.mock('@stripe/react-stripe-js', () => ({
   Elements: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   CardElement: () => <div data-testid="card-element" />,
+  PaymentElement: () => <div data-testid="payment-element" />,
   useStripe: () => ({
     confirmCardSetup: vi.fn(),
+    confirmSetup: vi.fn().mockResolvedValue({}),
     paymentRequest: vi.fn(() => ({
       canMakePayment: vi.fn(),
       on: vi.fn(),
     })),
   }),
-  useElements: () => ({ getElement: vi.fn().mockReturnValue({}) }),
+  useElements: () => ({
+    getElement: vi.fn().mockReturnValue({}),
+    submit: vi.fn().mockResolvedValue({}),
+  }),
 }));
 vi.mock('@stripe/stripe-js', () => ({ loadStripe: vi.fn() }));
 
 // Stub backend and map related hooks
-const createBooking = vi.fn().mockResolvedValue({ clientSecret: 'sec' });
+const createBooking = vi
+  .fn()
+  .mockResolvedValue({ clientSecret: 'sec', booking: { public_code: 'test' } });
 vi.mock('@/hooks/useStripeSetupIntent', () => ({
   useStripeSetupIntent: () => ({ createBooking }),
 }));
@@ -96,7 +103,7 @@ test('advances through steps and aggregates form data', async () => {
   await userEvent.click(screen.getByRole('button', { name: /next/i }));
 
   // Step 3: payment details
-  await userEvent.click(screen.getByRole('button', { name: /submit/i }));
+  await userEvent.click(await screen.findByRole('button', { name: /submit/i }));
 
   expect(createBooking).toHaveBeenCalledWith({
     pickup_when: new Date('2025-01-01T10:00').toISOString(),
