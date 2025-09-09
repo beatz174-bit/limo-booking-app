@@ -22,10 +22,10 @@
       "name": "Test Frontend",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npm",
+      "runtimeExecutable": "npx",
       "runtimeArgs": [
-        "run",
-        "test"
+        "vitest",
+        "run"        
       ],
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}/frontend",
