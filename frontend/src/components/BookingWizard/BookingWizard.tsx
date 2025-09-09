@@ -12,6 +12,7 @@ import TripDetails from './TripDetails';
 import { MapProvider } from '@/components/MapProvider';
 import { MapRoute } from '@/components/MapRoute';
 import { PriceSummary } from '@/components/PriceSummary';
+import FareBreakdown from '@/components/FareBreakdown';
 import { BookingFormData } from '@/types/BookingFormData';
 import { useBooking } from '@/hooks/useBooking';
 import { useSettings } from '@/hooks/useSettings';
@@ -124,6 +125,14 @@ export default function BookingWizard({
                 distanceKm={distanceKm ?? undefined}
                 durationMin={durationMin ?? undefined}
                 onPrice={setPrice}
+              />
+              <FareBreakdown
+                price={price}
+                flagfall={settings.flagfall}
+                perKm={settings.per_km_rate}
+                perMin={settings.per_minute_rate}
+                distanceKm={distanceKm ?? undefined}
+                durationMin={durationMin ?? undefined}
               />
               {price !== null && (
                 <Typography sx={{ mt: 1 }}>{`Deposit: $${(price / 2).toFixed(2)}`}</Typography>
