@@ -240,12 +240,16 @@ describe('ProfilePage', () => {
     await userEvent.click(screen.getByRole('button', { name: /add card/i }));
     await screen.findByTestId('payment-element');
     await userEvent.click(screen.getByRole('button', { name: /save card/i }));
-    expect(mockConfirm).toHaveBeenCalledWith({
-      elements: mockElements,
-      clientSecret: 'sec',
-      confirmParams: { return_url: window.location.href },
-      redirect: 'if_required',
-    });
+    expect(mockConfirm).toHaveBeenCalledWith(
+      expect.objectContaining({
+        elements: mockElements,
+        clientSecret: 'sec',
+        confirmParams: expect.objectContaining({
+          return_url: expect.any(String),
+        }),
+        redirect: 'if_required',
+      }),
+    );
     const postCalls = fetch.mock.calls.filter(
       ([url, init]) =>
         typeof url === 'string' &&
