@@ -8,6 +8,7 @@ import { CONFIG } from '@/config';
 import { apiFetch } from '@/services/apiFetch';
 import * as logger from '@/lib/logger';
 import PaymentMethodForm from '@/components/PaymentMethodForm';
+import { useCallback } from 'react';
 
 const stripePromise = (async () => {
   try {
@@ -22,6 +23,28 @@ export default function BookingWizardPage() {
   const { user, ensureFreshToken } = useAuth();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+
+  const startAddCardFlow = useCallback(async () => {
+    await ensureFreshToken();
+    const base = CONFIG.API_BASE_URL ?? '';
+    try {
+      const res = await apiFetch(`${base}/users/me/payment-method`, {
+        method: 'POST',
+      });
+      if (!res.ok) return;
+      const json = await res.json();
+      if (json.setup_intent_client_secret) {
+        setClientSecret(json.setup_intent_client_secret);
+        setModalOpen(true);
+      }
+    } catch (err) {
+      logger.warn(
+        'pages/Booking/BookingWizardPage',
+        'setup intent request failed',
+        err,
+      );
+    }
+  }, [ensureFreshToken]);
 
   useEffect(() => {
     const checkPaymentMethod = async () => {
@@ -38,26 +61,14 @@ export default function BookingWizardPage() {
       } catch {
         /* ignore */
       }
-      try {
-        const res = await apiFetch(`${base}/users/me/payment-method`, {
-          method: 'POST',
-        });
-        if (!res.ok) return;
-        const json = await res.json();
-        if (json.setup_intent_client_secret) {
-          setClientSecret(json.setup_intent_client_secret);
-          setModalOpen(true);
-        }
-      } catch (err) {
-        logger.warn('pages/Booking/BookingWizardPage', 'setup intent request failed', err);
-      }
+      await startAddCardFlow();
     };
     checkPaymentMethod();
-  }, [ensureFreshToken]);
+  }, [ensureFreshToken, startAddCardFlow]);
 
   return (
     <>
-      <BookingWizard />
+      <BookingWizard onRequirePaymentMethod={startAddCardFlow} />
       <Dialog open={modalOpen} onClose={() => {}} disableEscapeKeyDown>
         <DialogTitle>Add payment method</DialogTitle>
         <DialogContent>

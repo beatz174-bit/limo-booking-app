@@ -30,12 +30,16 @@ export function useBooking() {
           if (typeof errJson.detail === 'string') {
             message = errJson.detail;
           } else if (Array.isArray(errJson.detail)) {
-            message = errJson.detail.map((d: { msg?: string }) => d.msg).join(', ');
+            message = errJson.detail
+              .map((d: { msg?: string }) => d.msg)
+              .join(', ');
           }
         } catch {
           // ignore JSON parse errors
         }
-        throw new Error(message);
+        const err = new Error(message) as Error & { status?: number };
+        err.status = res.status;
+        throw err;
       }
       const json = await res.json();
       logger.info('hooks/useBooking', 'booking created', { id: json?.booking?.id });

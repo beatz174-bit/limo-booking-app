@@ -148,3 +148,28 @@ test('prompts to add a payment method when missing', async () => {
   );
 });
 
+test('reopens add-card modal when booking has no payment method', async () => {
+  createBooking.mockReset();
+  createBooking.mockRejectedValue(
+    Object.assign(new Error('No payment method'), { status: 400 }),
+  );
+  server.use(
+    http.post(apiUrl('/users/me/payment-method'), () =>
+      HttpResponse.json({ setup_intent_client_secret: 'sec' }),
+    ),
+  );
+
+  renderWithProviders(<BookingWizardPage />);
+  expect(screen.queryByTestId('payment-element')).not.toBeInTheDocument();
+  const input = (re: RegExp) => screen.getByLabelText(re, { selector: 'input' });
+  await userEvent.type(input(/pickup time/i), '2025-01-01T10:00');
+  await userEvent.type(input(/pickup address/i), '123 A St');
+  await userEvent.click(await screen.findByText('123 A St'));
+  await userEvent.type(input(/dropoff address/i), '456 B St');
+  await userEvent.click(await screen.findByText('456 B St'));
+  await userEvent.click(screen.getByRole('button', { name: /confirm booking/i }));
+
+  await screen.findByText('No payment method');
+  await screen.findByTestId('payment-element');
+});
+
