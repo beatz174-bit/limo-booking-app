@@ -219,6 +219,11 @@ function PaymentInner({
       const setup = await stripe.confirmSetup({
         elements,
         clientSecret,
+        confirmParams: {
+          payment_method_data: {
+            billing_details: { name, email, phone },
+          },
+        },
       });
       logger.info(
         'components/BookingWizard/PaymentStep',
@@ -303,14 +308,14 @@ export default function PaymentStep({ data, onBack }: Props) {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [bookingData, setBookingData] =
     useState<{ public_code: string } | null>(null);
+  const name = profile?.full_name ?? '';
+  const email = profile?.email ?? '';
+  const phone = profile?.phone ?? '';
 
   useEffect(() => {
     let ignore = false;
     async function init() {
       if (clientSecret) return;
-      const name = profile?.full_name ?? '';
-      const email = profile?.email ?? '';
-      const phone = profile?.phone ?? '';
       const payload = {
         pickup_when: data.pickup_when,
         pickup: data.pickup,
@@ -329,14 +334,28 @@ export default function PaymentStep({ data, onBack }: Props) {
     return () => {
       ignore = true;
     };
-  }, [createBooking, data, profile, clientSecret]);
+  }, [createBooking, data, name, email, phone, clientSecret, profile]);
 
   if (!clientSecret || !bookingData) {
     return null;
   }
 
+  const elementOptions = {
+    clientSecret,
+    defaultValues: {
+      billingDetails: { name, email, phone },
+    },
+    fields: {
+      billingDetails: {
+        name: 'never',
+        email: 'never',
+        phone: 'never',
+      },
+    },
+  };
+
   return (
-    <Elements stripe={stripePromise} options={{ clientSecret }}>
+    <Elements stripe={stripePromise} options={elementOptions}>
       <PaymentInner
         data={data}
         onBack={onBack}
