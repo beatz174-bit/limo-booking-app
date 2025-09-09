@@ -1,4 +1,4 @@
-import { Stack, Button, Typography } from '@mui/material';
+import { Stack, Button, Typography, Alert } from '@mui/material';
 import {
   Elements,
   PaymentElement,
@@ -330,6 +330,7 @@ export default function PaymentStep({ data, onBack }: Props) {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [bookingData, setBookingData] =
     useState<{ public_code: string } | null>(null);
+  const [initError, setInitError] = useState<string | null>(null);
   const name = profile?.full_name ?? '';
   const email = profile?.email ?? '';
   const phone = profile?.phone ?? '';
@@ -346,10 +347,21 @@ export default function PaymentStep({ data, onBack }: Props) {
         notes: data.notes,
         customer: profile ? { name, email, phone } : undefined,
       };
-      const res = await createBooking(payload);
-      if (!ignore) {
-        setClientSecret(res.clientSecret);
-        setBookingData(res.booking);
+      try {
+        const res = await createBooking(payload);
+        if (!ignore) {
+          setClientSecret(res.clientSecret);
+          setBookingData(res.booking);
+        }
+      } catch (error) {
+        logger.error(
+          'components/BookingWizard/PaymentStep',
+          'Booking creation failed',
+          error,
+        );
+        if (!ignore) {
+          setInitError('Failed to create booking. Please try again.');
+        }
       }
     }
     init();
@@ -357,6 +369,15 @@ export default function PaymentStep({ data, onBack }: Props) {
       ignore = true;
     };
   }, [createBooking, data, name, email, phone, clientSecret, profile]);
+
+  if (initError) {
+    return (
+      <Stack spacing={2}>
+        <Alert severity="error">{initError}</Alert>
+        <Button onClick={onBack}>Back</Button>
+      </Stack>
+    );
+  }
 
   if (!clientSecret || !bookingData) {
     return null;
