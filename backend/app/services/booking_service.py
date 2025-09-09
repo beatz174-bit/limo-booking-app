@@ -7,6 +7,10 @@ from datetime import datetime, timedelta, timezone
 from math import atan2, cos, radians, sin, sqrt
 
 import stripe
+from fastapi import HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.api.ws import send_booking_update
 from app.db.database import AsyncSessionLocal
 from app.models.availability_slot import AvailabilitySlot
@@ -18,9 +22,6 @@ from app.models.trip import Trip
 from app.models.user_v2 import User, UserRole
 from app.schemas.api_booking import BookingCreateRequest
 from app.services import notifications, pricing_service, routing, stripe_client
-from fastapi import HTTPException
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def create_booking(
@@ -33,13 +34,6 @@ async def create_booking(
         raise ValueError("pickup time must be in the future")
 
     customer = user
-    if customer.stripe_payment_method_id is None:
-        raise ValueError("customer has no payment method")
-    if customer.stripe_customer_id is None:
-        stripe_customer = stripe_client.create_customer(
-            customer.email, customer.full_name, customer.phone
-        )
-        customer.stripe_customer_id = stripe_customer.id
 
     settings = (await db.execute(select(AdminConfig))).scalar_one_or_none()
     if settings is None:
