@@ -198,4 +198,13 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """Singleton-style accessor so we don't re-parse env every import."""
     logger.debug("loading settings", extra={"env": _ENV, "env_file": _ENV_FILE})
-    return Settings()
+    settings = Settings()
+    logger.debug(
+        "resolved FCM config",
+        extra={
+            "fcm_project_id": settings.fcm_project_id,
+            "fcm_client_email": settings.fcm_client_email,
+            "has_fcm_private_key": bool(settings.fcm_private_key),
+        },
+    )
+    return settings
