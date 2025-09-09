@@ -30,6 +30,7 @@ const ProfileForm = () => {
   const [paymentMethod, setPaymentMethod] =
     useState<{ brand: string; last4: string } | null>(null);
   const [editingCard, setEditingCard] = useState(false);
+  const [cardError, setCardError] = useState<string | null>(null);
 
   const auto = useAddressAutocomplete(defaultPickup);
   const stripe = useStripe();
@@ -122,12 +123,17 @@ const ProfileForm = () => {
   const handleSaveCard = async () => {
     if (!stripe || !elements) return;
     await ensureFreshToken();
+    setCardError(null);
     try {
       const base = CONFIG.API_BASE_URL ?? '';
       const res = await apiFetch(`${base}/users/me/payment-method`, {
         method: 'POST',
       });
-      if (!res.ok) return;
+      if (!res.ok) {
+        logger.warn('pages/Profile/ProfileForm', 'setup intent request failed', res.status);
+        setCardError('Failed to initiate card setup.');
+        return;
+      }
       const json = await res.json();
       logger.info(
         'pages/Profile/ProfileForm',
@@ -145,37 +151,38 @@ const ProfileForm = () => {
         setup,
       );
       const pm = setup?.setupIntent?.payment_method;
-      if (pm) {
-        logger.info(
-          'pages/Profile/ProfileForm',
-          'saving payment method',
-          { payment_method_id: pm },
-        );
-        const saveRes = await apiFetch(`${base}/users/me/payment-method`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ payment_method_id: pm }),
-        });
-        logger.info(
-          'pages/Profile/ProfileForm',
-          'save payment method response',
-          { status: saveRes.status },
-        );
-        setEditingCard(false);
-        const pmRes = await apiFetch(`${base}/users/me/payment-method`);
-        if (pmRes.ok) {
-          try {
-            const meta = await pmRes.json();
-            if (meta && meta.last4) {
-              setPaymentMethod({ brand: meta.brand, last4: meta.last4 });
-            }
-          } catch {
-            /* ignore */
+      if (!pm) {
+        const message = setup?.error?.message || 'Failed to confirm card.';
+        logger.warn('pages/Profile/ProfileForm', 'save card failed', message);
+        setCardError(message);
+        return;
+      }
+      const putRes = await apiFetch(`${base}/users/me/payment-method`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payment_method_id: pm }),
+      });
+      if (!putRes.ok) {
+        const text = await putRes.text().catch(() => '');
+        logger.warn('pages/Profile/ProfileForm', 'save card failed', { status: putRes.status, body: text });
+        setCardError('Failed to save payment method.');
+        return;
+      }
+      setEditingCard(false);
+      const pmRes = await apiFetch(`${base}/users/me/payment-method`);
+      if (pmRes.ok) {
+        try {
+          const meta = await pmRes.json();
+          if (meta && meta.last4) {
+            setPaymentMethod({ brand: meta.brand, last4: meta.last4 });
           }
+        } catch {
+          /* ignore */
         }
       }
     } catch (err) {
       logger.warn('pages/Profile/ProfileForm', 'save card failed', err);
+      setCardError('Failed to save payment method.');
     }
   };
 
@@ -311,6 +318,7 @@ const ProfileForm = () => {
           </Stack>
         ) : editingCard ? (
           <Stack spacing={1}>
+            {cardError && <Alert severity="error">{cardError}</Alert>}
             <CardElement />
             <Stack direction="row" spacing={1}>
               <Button
