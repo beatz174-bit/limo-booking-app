@@ -62,8 +62,6 @@ async def test_register_user_success(async_session: AsyncSession):
         email="new@async.com",
         full_name="New Async",
         password="newpass",
-        phone="555-1234",
-        stripe_payment_method_id="pm_123",
     )
     result = await auth_service.register_user(async_session, register_req)
     # Should return a UserRead schema for the new user
@@ -83,8 +81,6 @@ async def test_register_user_success(async_session: AsyncSession):
     assert new_user is not None
     # Password should be stored hashed
     assert verify_password("newpass", new_user.hashed_password)
-    assert new_user.phone == "555-1234"
-    assert new_user.stripe_payment_method_id == "pm_123"
 
 
 @pytest.mark.asyncio

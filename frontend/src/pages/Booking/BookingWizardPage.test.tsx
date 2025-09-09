@@ -1,12 +1,6 @@
 import { vi, beforeAll, beforeEach, afterEach, expect, test } from 'vitest';
+
 vi.stubEnv('VITE_API_BASE_URL', '');
-import { renderWithProviders } from '@/__tests__/setup/renderWithProviders';
-import { screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import React from 'react';
-import { server } from '@/__tests__/setup/msw.server';
-import { http, HttpResponse } from 'msw';
-import { apiUrl } from '@/__tests__/setup/msw.handlers';
 
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
@@ -16,6 +10,13 @@ vi.mock('@/contexts/AuthContext', () => ({
   AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+import { renderWithProviders } from '@/__tests__/setup/renderWithProviders';
+import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import React from 'react';
+import { server } from '@/__tests__/setup/msw.server';
+import { http, HttpResponse } from 'msw';
+import { apiUrl } from '@/__tests__/setup/msw.handlers';
 import BookingWizardPage from './BookingWizardPage';
 
 const createBooking = vi
