@@ -12,6 +12,7 @@ import {
 } from '@/components/ApiConfig';
 import type { BookingRead as Booking } from '@/api-client';
 import { apiFetch } from '@/services/apiFetch';
+import { getAccessToken } from '@/services/tokenStore';
 import { CONFIG } from '@/config';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDriverTracking } from '@/hooks/useDriverTracking';
@@ -121,7 +122,11 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
     );
     const sockets = socketsRef.current;
     if (!t) {
-      Object.values(sockets).forEach((ws) => ws.close());
+      Object.values(sockets).forEach((ws) => {
+        ws.onclose = null;
+        ws.onerror = null;
+        ws.close(1000, 'logout');
+      });
       socketsRef.current = {};
       return;
     }
@@ -154,16 +159,20 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
         setError('Real-time connection error');
         ws.close();
       };
-      ws.onclose = () => {
-        console.warn(`WebSocket closed for booking ${b.id}`);
+      ws.onclose = (event) => {
         if (sockets[b.id] === ws) {
           delete sockets[b.id];
         }
-        setTimeout(() => {
-          if (accessToken) {
-            refresh();
-          }
-        }, 1000);
+        if (event.code !== 1000 && getAccessToken()) {
+          console.warn(
+            `WebSocket closed for booking ${b.id}: ${event.code} ${event.reason}`,
+          );
+          setTimeout(() => {
+            if (getAccessToken()) {
+              refresh();
+            }
+          }, 1000);
+        }
       };
       sockets[b.id] = ws;
     });
