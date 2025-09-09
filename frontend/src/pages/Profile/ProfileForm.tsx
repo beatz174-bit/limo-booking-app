@@ -170,6 +170,11 @@ const ProfileForm = ({
 
     const handleSaveCard = async () => {
       if (!stripe || !elements || !clientSecret) return;
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        setCardError(submitError.message || 'Failed to submit card details.');
+        return;
+      }
       await ensureFreshToken();
       setCardError(null);
       try {

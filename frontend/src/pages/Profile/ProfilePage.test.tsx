@@ -24,7 +24,9 @@ vi.mock('@/hooks/useAddressAutocomplete', () => ({
 const mockConfirm = vi
   .fn()
   .mockResolvedValue({ setupIntent: { payment_method: 'pm_123' } });
-const mockElements = {};
+const mockElements = {
+  submit: vi.fn().mockResolvedValue({}),
+};
 vi.mock('@stripe/react-stripe-js', () => ({
   Elements: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   PaymentElement: () => <div data-testid="payment-element" />,
@@ -238,22 +240,27 @@ describe('ProfilePage', () => {
     await screen.findByRole('heading', { name: /payment method/i });
     await userEvent.click(screen.getByRole('button', { name: /add card/i }));
     await screen.findByTestId('payment-element');
-      await userEvent.click(screen.getByRole('button', { name: /save card/i }));
-      expect(mockConfirm).toHaveBeenCalledWith({
-        elements: mockElements,
-        clientSecret: 'sec',
-        confirmParams: {
-          payment_method_data: {
-            billing_details: {
-              name: 'John Doe',
-              email: 'john@example.com',
-              phone: '',
-            },
+    await userEvent.click(screen.getByRole('button', { name: /save card/i }));
+    expect(mockElements.submit).toHaveBeenCalled();
+    expect(
+      mockElements.submit.mock.invocationCallOrder[0] <
+        mockConfirm.mock.invocationCallOrder[0],
+    ).toBe(true);
+    expect(mockConfirm).toHaveBeenCalledWith({
+      elements: mockElements,
+      clientSecret: 'sec',
+      confirmParams: {
+        payment_method_data: {
+          billing_details: {
+            name: 'John Doe',
+            email: 'john@example.com',
+            phone: '',
           },
-          return_url: expect.any(String),
         },
-        redirect: 'if_required',
-      });
+        return_url: expect.any(String),
+      },
+      redirect: 'if_required',
+    });
     const postCalls = fetch.mock.calls.filter(
       ([url, init]) =>
         typeof url === 'string' &&
