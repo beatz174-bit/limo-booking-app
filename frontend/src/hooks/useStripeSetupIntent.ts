@@ -29,7 +29,7 @@ export function useStripeSetupIntent() {
     async function fetchPaymentMethod() {
       try {
         const res = await apiFetch(
-          `${CONFIG.API_BASE_URL}/api/v1/users/me/payment-method`,
+          `${CONFIG.API_BASE_URL}/users/me/payment-method`,
         );
         if (!ignore && res.ok) {
           try {
@@ -95,7 +95,7 @@ export function useStripeSetupIntent() {
       { payment_method_id: paymentMethodId },
     );
     const res = await apiFetch(
-      `${CONFIG.API_BASE_URL}/api/v1/users/me/payment-method`,
+      `${CONFIG.API_BASE_URL}/users/me/payment-method`,
       {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
