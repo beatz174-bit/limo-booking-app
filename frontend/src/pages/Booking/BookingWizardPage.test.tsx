@@ -1,6 +1,6 @@
 import { renderWithProviders } from '@/__tests__/setup/renderWithProviders';
 import BookingWizardPage from './BookingWizardPage';
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, beforeAll, beforeEach, afterEach, expect, test } from 'vitest';
 import React from 'react';
@@ -44,6 +44,22 @@ vi.mock('@/components/MapRoute', () => ({
   MapRoute: () => <div data-testid="map-route" />,
 }));
 
+const mockConfirm = vi
+  .fn()
+  .mockResolvedValue({ setupIntent: { payment_method: 'pm_123' } });
+const mockElements = {
+  submit: vi.fn().mockResolvedValue({}),
+};
+vi.mock('@stripe/react-stripe-js', () => ({
+  Elements: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  PaymentElement: () => <div data-testid="payment-element" />,
+  useStripe: () => ({ confirmSetup: mockConfirm }),
+  useElements: () => mockElements,
+}));
+vi.mock('@stripe/stripe-js', () => ({
+  loadStripe: () => Promise.resolve(null),
+}));
+
 beforeAll(() => {
   server.use(
     http.get(apiUrl('/geocode/search'), () =>
@@ -62,10 +78,17 @@ beforeEach(() => {
       user: { full_name: 'John Doe', email: 'john@example.com', phone: '123' },
     }),
   );
+  server.use(
+    http.get(apiUrl('/users/me/payment-method'), () =>
+      HttpResponse.json({ brand: 'visa', last4: '4242' }),
+    ),
+  );
 });
 
 afterEach(() => {
   localStorage.clear();
+  mockElements.submit.mockClear();
+  mockConfirm.mockClear();
 });
 
 test('creates booking on confirmation and shows tracking link', async () => {
@@ -100,5 +123,28 @@ test('creates booking on confirmation and shows tracking link', async () => {
       phone: '123-4567',
     },
   });
+});
+
+test('prompts to add a payment method when missing', async () => {
+  server.use(
+    http.get(apiUrl('/users/me/payment-method'), () =>
+      HttpResponse.json({}),
+    ),
+    http.post(apiUrl('/users/me/payment-method'), () =>
+      HttpResponse.json({ setup_intent_client_secret: 'sec' }),
+    ),
+    http.put(apiUrl('/users/me/payment-method'), () =>
+      HttpResponse.json({}),
+    ),
+  );
+
+  renderWithProviders(<BookingWizardPage />);
+  await screen.findByTestId('payment-element');
+  await userEvent.click(screen.getByRole('button', { name: /save card/i }));
+  expect(mockElements.submit).toHaveBeenCalled();
+  expect(mockConfirm).toHaveBeenCalled();
+  await waitFor(() =>
+    expect(screen.queryByTestId('payment-element')).not.toBeInTheDocument(),
+  );
 });
 
