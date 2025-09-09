@@ -128,6 +128,7 @@ test('handles new card flow', async () => {
           name: 'Test User',
           email: 'test@example.com',
           phone: '123',
+          address: { country: 'AU' },
         },
       },
       return_url: window.location.href,
@@ -164,7 +165,9 @@ test('renders google pay button when supported', async () => {
 
   const gpButton = await screen.findByTestId('google-pay');
   expect(gpButton).toBeInTheDocument();
-  expect(mockStripe.paymentRequest).toHaveBeenCalled();
+  expect(mockStripe.paymentRequest).toHaveBeenCalledWith(
+    expect.objectContaining({ country: 'AU', currency: 'aud' })
+  );
 });
 
 test('does not render google pay button when unsupported', async () => {
@@ -221,7 +224,9 @@ test('handles google pay flow', async () => {
   const gpButton = await screen.findByTestId('google-pay');
   await userEvent.click(gpButton);
 
-  expect(mockStripe.paymentRequest).toHaveBeenCalled();
+  expect(mockStripe.paymentRequest).toHaveBeenCalledWith(
+    expect.objectContaining({ country: 'AU', currency: 'aud' })
+  );
   expect(mockCreateBooking).toHaveBeenCalledTimes(1);
   expect(mockShow).toHaveBeenCalled();
   expect(mockConfirm).toHaveBeenCalledWith({
