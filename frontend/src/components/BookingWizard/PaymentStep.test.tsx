@@ -19,7 +19,7 @@ const mockCreateBooking = vi.fn().mockResolvedValue({
 const mockConfirm = vi
   .fn()
   .mockResolvedValue({ setupIntent: { payment_method: 'pm_123' } });
-const mockCard = {};
+const mockElements = {};
 const mockGetMetrics = vi.fn().mockResolvedValue(null);
 const mockSavePaymentMethod = vi.fn();
 const mockUseStripeSetupIntent = vi.fn();
@@ -30,7 +30,7 @@ const mockPaymentRequest = {
   show: mockShow,
 };
 const mockStripe = {
-  confirmCardSetup: mockConfirm,
+  confirmSetup: mockConfirm,
   paymentRequest: vi.fn(() => mockPaymentRequest),
 };
 
@@ -45,14 +45,14 @@ vi.mock('@/hooks/useRouteMetrics', () => ({
 }));
 vi.mock('@stripe/react-stripe-js', () => ({
   Elements: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  CardElement: () => <div data-testid="card" />,
+  PaymentElement: () => <div data-testid="payment-element" />,
   PaymentRequestButtonElement: ({
     onClick,
   }: {
     onClick: () => void;
   }) => <button data-testid="google-pay" onClick={onClick} />,
   useStripe: () => mockStripe,
-  useElements: () => ({ getElement: () => mockCard }),
+  useElements: () => mockElements,
 }));
 vi.mock('@stripe/stripe-js', () => ({
   loadStripe: () => Promise.resolve(null),
@@ -107,8 +107,9 @@ test('handles new card flow', async () => {
       },
     }),
   );
-  expect(mockConfirm).toHaveBeenCalledWith('sec', {
-    payment_method: { card: mockCard },
+  expect(mockConfirm).toHaveBeenCalledWith({
+    elements: mockElements,
+    clientSecret: 'sec',
   });
   expect(mockSavePaymentMethod).toHaveBeenCalledWith('pm_123');
   const link = await screen.findByRole('link', { name: /track this ride/i });
@@ -200,7 +201,10 @@ test('handles google pay flow', async () => {
   expect(mockStripe.paymentRequest).toHaveBeenCalled();
   expect(mockCreateBooking).toHaveBeenCalled();
   expect(mockShow).toHaveBeenCalled();
-  expect(mockConfirm).toHaveBeenCalledWith('sec', { payment_method: 'tok_123' });
+  expect(mockConfirm).toHaveBeenCalledWith({
+    clientSecret: 'sec',
+    payment_method: 'tok_123',
+  });
   expect(mockSavePaymentMethod).toHaveBeenCalledWith('pm_123');
   const link = await screen.findByRole('link', { name: /track this ride/i });
   expect(link).toHaveAttribute('href', '/t/ABC123');
@@ -233,7 +237,7 @@ test('uses saved card when available', async () => {
     </MemoryRouter>,
   );
 
-  expect(screen.queryByTestId('card')).not.toBeInTheDocument();
+  expect(screen.queryByTestId('payment-element')).not.toBeInTheDocument();
   await userEvent.click(screen.getByRole('button', { name: /submit/i }));
   expect(mockCreateBooking).toHaveBeenCalled();
   expect(mockConfirm).not.toHaveBeenCalled();

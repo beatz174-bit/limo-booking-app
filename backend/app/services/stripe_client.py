@@ -83,7 +83,7 @@ def create_setup_intent(customer_id: str, booking_reference: str):
         customer=customer_id,
         usage="off_session",
         metadata={"booking_reference": booking_reference},
-        automatic_payment_methods={"enabled": True},
+        payment_method_types=["card"],
     )
 
 
@@ -223,10 +223,7 @@ def charge_deposit(
         "currency": "aud",
         "payment_method": payment_method,
         "confirm": True,
-        "automatic_payment_methods": {
-            "enabled": True,
-            "allow_redirects": "never",
-        },
+        "payment_method_types": ["card"],
     }
 
     metadata = {
@@ -271,10 +268,7 @@ def charge_final(
         "currency": "aud",
         "payment_method": payment_method,
         "confirm": True,
-        "automatic_payment_methods": {
-            "enabled": True,
-            "allow_redirects": "never",
-        },
+        "payment_method_types": ["card"],
     }
 
     metadata = {

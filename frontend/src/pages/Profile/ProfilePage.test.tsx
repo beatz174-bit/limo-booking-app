@@ -24,12 +24,12 @@ vi.mock('@/hooks/useAddressAutocomplete', () => ({
 const mockConfirm = vi
   .fn()
   .mockResolvedValue({ setupIntent: { payment_method: 'pm_123' } });
-const mockCard = {};
+const mockElements = {};
 vi.mock('@stripe/react-stripe-js', () => ({
   Elements: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  CardElement: () => <div data-testid="card" />,
-  useStripe: () => ({ confirmCardSetup: mockConfirm }),
-  useElements: () => ({ getElement: () => mockCard }),
+  PaymentElement: () => <div data-testid="payment-element" />,
+  useStripe: () => ({ confirmSetup: mockConfirm }),
+  useElements: () => mockElements,
 }));
 vi.mock('@stripe/stripe-js', () => ({
   loadStripe: () => Promise.resolve(null),
@@ -239,8 +239,9 @@ describe('ProfilePage', () => {
     await screen.findByRole('heading', { name: /payment method/i });
     await userEvent.click(screen.getByRole('button', { name: /add card/i }));
     await userEvent.click(screen.getByRole('button', { name: /save card/i }));
-    expect(mockConfirm).toHaveBeenCalledWith('sec', {
-      payment_method: { card: mockCard },
+    expect(mockConfirm).toHaveBeenCalledWith({
+      elements: mockElements,
+      clientSecret: 'sec',
     });
     const putCall = fetch.mock.calls.find(
       ([url, init]) =>

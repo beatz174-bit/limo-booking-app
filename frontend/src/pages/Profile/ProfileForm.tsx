@@ -8,7 +8,7 @@ import {
   Stack,
   Alert,
 } from '@mui/material';
-import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
+import { PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import * as logger from '@/lib/logger';
 import { AddressField } from '@/components/AddressField';
 import { useAuth } from '@/contexts/AuthContext';
@@ -130,7 +130,11 @@ const ProfileForm = () => {
         method: 'POST',
       });
       if (!res.ok) {
-        logger.warn('pages/Profile/ProfileForm', 'setup intent request failed', res.status);
+        logger.warn(
+          'pages/Profile/ProfileForm',
+          'setup intent request failed',
+          res.status,
+        );
         setCardError('Failed to initiate card setup.');
         return;
       }
@@ -140,14 +144,14 @@ const ProfileForm = () => {
         'setup-intent response',
         json,
       );
-      const card = elements.getElement(CardElement);
-      if (!json.setup_intent_client_secret || !card) return;
-      const setup = await stripe.confirmCardSetup(json.setup_intent_client_secret, {
-        payment_method: { card },
+      if (!json.setup_intent_client_secret) return;
+      const setup = await stripe.confirmSetup({
+        elements,
+        clientSecret: json.setup_intent_client_secret,
       });
       logger.info(
         'pages/Profile/ProfileForm',
-        'confirmCardSetup result',
+        'confirmSetup result',
         setup,
       );
       const pm = setup?.setupIntent?.payment_method;
@@ -164,7 +168,10 @@ const ProfileForm = () => {
       });
       if (!putRes.ok) {
         const text = await putRes.text().catch(() => '');
-        logger.warn('pages/Profile/ProfileForm', 'save card failed', { status: putRes.status, body: text });
+        logger.warn('pages/Profile/ProfileForm', 'save card failed', {
+          status: putRes.status,
+          body: text,
+        });
         setCardError('Failed to save payment method.');
         return;
       }
@@ -319,7 +326,7 @@ const ProfileForm = () => {
         ) : editingCard ? (
           <Stack spacing={1}>
             {cardError && <Alert severity="error">{cardError}</Alert>}
-            <CardElement />
+            <PaymentElement />
             <Stack direction="row" spacing={1}>
               <Button
                 type="button"
