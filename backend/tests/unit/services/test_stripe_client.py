@@ -64,9 +64,12 @@ def test_charge_deposit_with_google_pay_payment_method(mocker):
         amount_cents=5000,
         booking_id=uuid.uuid4(),
         payment_method="pm_gpay",
+        customer_id="cus_test",
     )
 
     assert captured["payment_method"] == "pm_gpay"
+    assert captured["customer"] == "cus_test"
+    assert captured["off_session"] is True
 
 
 def test_charge_final_with_google_pay_payment_method(mocker):
@@ -82,6 +85,9 @@ def test_charge_final_with_google_pay_payment_method(mocker):
         amount_cents=5000,
         booking_id=uuid.uuid4(),
         payment_method="pm_gpay",
+        customer_id="cus_test",
     )
 
     assert captured["payment_method"] == "pm_gpay"
+    assert captured["customer"] == "cus_test"
+    assert captured["off_session"] is True

@@ -28,6 +28,7 @@ async def _create_booking(async_session) -> Booking:
         hashed_password=hash_password("pass"),
         role=UserRole.CUSTOMER,
         stripe_payment_method_id="pm_test",
+        stripe_customer_id="cus_test",
     )
     async_session.add(user)
     await async_session.flush()
