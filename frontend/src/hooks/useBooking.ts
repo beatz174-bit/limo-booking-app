@@ -19,7 +19,7 @@ interface SavedPaymentMethod {
   exp_year?: number;
 }
 
-export function useStripeSetupIntent() {
+export function useBooking() {
   const [loading, setLoading] = useState(false);
   const [savedPaymentMethod, setSavedPaymentMethod] =
     useState<SavedPaymentMethod | null>(null);
@@ -74,42 +74,12 @@ export function useStripeSetupIntent() {
         throw new Error(message);
       }
       const json = await res.json();
-      const clientSecret =
-        (json?.stripe?.setup_intent_client_secret ?? null) as string | null;
-      logger.info(
-        'hooks/useStripeSetupIntent',
-        'setup-intent response',
-        { clientSecret },
-      );
-      return {
-        booking: json.booking,
-        clientSecret,
-      };
+      logger.info('hooks/useBooking', 'booking created', { id: json?.booking?.id });
+      return { booking: json.booking };
     } finally {
       setLoading(false);
     }
   }
 
-  async function savePaymentMethod(paymentMethodId: string) {
-    logger.info(
-      'hooks/useStripeSetupIntent',
-      'saving payment method',
-      { payment_method_id: paymentMethodId },
-    );
-    const res = await apiFetch(
-      `${CONFIG.API_BASE_URL}/users/me/payment-method`,
-      {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ payment_method_id: paymentMethodId }),
-      },
-    );
-    logger.info(
-      'hooks/useStripeSetupIntent',
-      'save payment method response',
-      { status: res.status, payment_method_id: paymentMethodId },
-    );
-  }
-
-  return { createBooking, savePaymentMethod, savedPaymentMethod, loading };
+  return { createBooking, savedPaymentMethod, loading };
 }

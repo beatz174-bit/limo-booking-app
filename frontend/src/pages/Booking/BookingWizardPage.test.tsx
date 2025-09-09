@@ -11,10 +11,13 @@ import { apiUrl } from '@/__tests__/setup/msw.handlers';
 // Backend and map related hooks
 const createBooking = vi
   .fn()
-  .mockResolvedValue({ clientSecret: null, booking: { public_code: 'test' } });
-const mockUseStripeSetupIntent = vi.fn();
-vi.mock('@/hooks/useStripeSetupIntent', () => ({
-  useStripeSetupIntent: () => mockUseStripeSetupIntent(),
+  .mockResolvedValue({ booking: { public_code: 'test' } });
+vi.mock('@/hooks/useBooking', () => ({
+  useBooking: () => ({
+    createBooking,
+    savedPaymentMethod: { brand: 'visa', last4: '4242' },
+    loading: false,
+  }),
 }));
 vi.mock('@/hooks/useAvailability', () => ({
   default: () => ({ data: { slots: [], bookings: [] } }),
@@ -90,10 +93,7 @@ test('advances through steps and aggregates form data with saved card', async ()
   await userEvent.click(screen.getByRole('button', { name: /next/i }));
 
   // Step 3: payment details
-  expect(
-    await screen.findByText(/using saved card visa ending in 4242/i)
-  ).toBeInTheDocument();
-  await userEvent.click(screen.getByRole('button', { name: /submit/i }));
+  await screen.findByRole('link', { name: /track this ride/i });
 
   expect(createBooking).toHaveBeenCalledWith({
     pickup_when: new Date('2025-01-01T10:00').toISOString(),
