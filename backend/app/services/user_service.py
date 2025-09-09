@@ -120,6 +120,7 @@ async def create_setup_intent_for_user(db: AsyncSession, user: User) -> str:
         )
         user.stripe_customer_id = stripe_customer.id
         await db.flush()
+        await db.flush()
 
     setup_intent = stripe_client.create_setup_intent(
         user.stripe_customer_id, str(user.id)
@@ -137,6 +138,7 @@ async def save_payment_method(
             user.email, user.full_name, user.phone
         )
         user.stripe_customer_id = stripe_customer.id
+        await db.flush()
 
     stripe_client.set_default_payment_method(user.stripe_customer_id, payment_method_id)
     user.stripe_payment_method_id = payment_method_id

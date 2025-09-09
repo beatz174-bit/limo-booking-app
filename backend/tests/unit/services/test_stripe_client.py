@@ -32,19 +32,23 @@ async def test_save_payment_method_stores_id(async_session, mocker):
     )
     async_session.add(user)
     await async_session.flush()
-    mocker.patch(
+
+    mock_create_customer = mocker.patch(
         "app.services.stripe_client.create_customer",
         return_value=stripe_client._StubIntent(id="cus_test"),
     )
-
     mock_set_default = mocker.patch(
-        "app.services.stripe_client.set_default_payment_method"
+        "app.services.stripe_client.set_default_payment_method",
     )
 
     await save_payment_method(async_session, user, "pm_gpay")
-
+    mock_create_customer.assert_called_once()
     mock_set_default.assert_called_once_with("cus_test", "pm_gpay")
-    assert user.stripe_payment_method_id == "pm_gpay"
+
+    await async_session.commit()
+    refreshed = await async_session.get(User, user.id)
+    assert refreshed.stripe_customer_id == "cus_test"
+    assert refreshed.stripe_payment_method_id == "pm_gpay"
 
 
 def test_charge_deposit_with_google_pay_payment_method(mocker):
