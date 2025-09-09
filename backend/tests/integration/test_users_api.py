@@ -304,7 +304,7 @@ async def test_get_payment_method_not_found(
     client: AsyncClient, async_session: AsyncSession
 ):
     user = User(
-        email="nopm@example.com",
+        email=f"nopm{uuid.uuid4()}@example.com",
         full_name="No PM",
         hashed_password=hash_password("pass"),
     )
