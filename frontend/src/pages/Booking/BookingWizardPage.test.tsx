@@ -8,32 +8,16 @@ import { server } from '@/__tests__/setup/msw.server';
 import { http, HttpResponse } from 'msw';
 import { apiUrl } from '@/__tests__/setup/msw.handlers';
 
-// Stub Stripe components and hooks
-vi.mock('@stripe/react-stripe-js', () => ({
-  Elements: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  CardElement: () => <div data-testid="card-element" />,
-  PaymentElement: () => <div data-testid="payment-element" />,
-  useStripe: () => ({
-    confirmCardSetup: vi.fn(),
-    confirmSetup: vi.fn().mockResolvedValue({}),
-    paymentRequest: vi.fn(() => ({
-      canMakePayment: vi.fn(),
-      on: vi.fn(),
-    })),
-  }),
-  useElements: () => ({
-    getElement: vi.fn().mockReturnValue({}),
-    submit: vi.fn().mockResolvedValue({}),
-  }),
-}));
-vi.mock('@stripe/stripe-js', () => ({ loadStripe: vi.fn() }));
-
 // Stub backend and map related hooks
 const createBooking = vi
   .fn()
-  .mockResolvedValue({ clientSecret: 'sec', booking: { public_code: 'test' } });
+  .mockResolvedValue({ booking: { public_code: 'test' } });
 vi.mock('@/hooks/useStripeSetupIntent', () => ({
-  useStripeSetupIntent: () => ({ createBooking }),
+  useStripeSetupIntent: () => ({
+    createBooking,
+    savedPaymentMethod: { brand: 'visa', last4: '4242' },
+    loading: false,
+  }),
 }));
 vi.mock('@/hooks/useAvailability', () => ({
   default: () => ({ data: { slots: [], bookings: [] } }),
