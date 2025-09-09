@@ -273,6 +273,47 @@ test('uses saved card when available', async () => {
   expect(link).toHaveAttribute('href', '/t/ABC123');
 });
 
+test('uses saved card when no client secret returned', async () => {
+  mockCreateBooking.mockResolvedValueOnce({
+    booking: { public_code: 'ABC123' },
+    clientSecret: null,
+  });
+  mockUseStripeSetupIntent.mockReturnValue({
+    createBooking: mockCreateBooking,
+    savePaymentMethod: mockSavePaymentMethod,
+    savedPaymentMethod: { brand: 'visa', last4: '4242' },
+    loading: false,
+  });
+
+  render(
+    <MemoryRouter>
+      <DevFeaturesProvider>
+        <PaymentStep
+          data={{
+            pickup_when: '2025-01-01T00:00:00Z',
+            pickup: { address: 'A', lat: 0, lng: 0 },
+            dropoff: { address: 'B', lat: 1, lng: 1 },
+            passengers: 1,
+            notes: '',
+            pickupValid: true,
+            dropoffValid: true,
+          }}
+          onBack={() => {}}
+        />
+      </DevFeaturesProvider>
+    </MemoryRouter>,
+  );
+
+  await screen.findByRole('button', { name: /submit/i });
+  expect(screen.queryByTestId('payment-element')).not.toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: /submit/i }));
+  expect(mockCreateBooking).toHaveBeenCalledTimes(1);
+  expect(mockConfirm).not.toHaveBeenCalled();
+  expect(mockElements.submit).not.toHaveBeenCalled();
+  const link = await screen.findByRole('link', { name: /track this ride/i });
+  expect(link).toHaveAttribute('href', '/t/ABC123');
+});
+
 test('updates metrics from route service', async () => {
   mockGetMetrics.mockResolvedValueOnce({ km: 12, min: 34 });
   render(

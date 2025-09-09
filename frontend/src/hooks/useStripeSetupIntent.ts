@@ -74,14 +74,16 @@ export function useStripeSetupIntent() {
         throw new Error(message);
       }
       const json = await res.json();
+      const clientSecret =
+        (json?.stripe?.setup_intent_client_secret ?? null) as string | null;
       logger.info(
         'hooks/useStripeSetupIntent',
         'setup-intent response',
-        { clientSecret: json.stripe.setup_intent_client_secret },
+        { clientSecret },
       );
       return {
         booking: json.booking,
-        clientSecret: json.stripe.setup_intent_client_secret as string,
+        clientSecret,
       };
     } finally {
       setLoading(false);
