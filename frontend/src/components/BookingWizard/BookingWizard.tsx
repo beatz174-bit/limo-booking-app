@@ -1,66 +1,82 @@
-import { useState, useEffect } from 'react';
-import { Stepper, Step, StepLabel, Box } from '@mui/material';
-import SelectTimeStep from './SelectTimeStep';
-import TripDetailsStep from './TripDetailsStep';
-import PaymentStep from './PaymentStep';
+import { useState } from 'react';
+import {
+  Box,
+  Button,
+  Stack,
+  Typography,
+  Alert,
+  CircularProgress,
+} from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
+import TripDetails from './TripDetails';
 import { MapProvider } from '@/components/MapProvider';
 import { MapRoute } from '@/components/MapRoute';
 import { BookingFormData } from '@/types/BookingFormData';
+import { useBooking } from '@/hooks/useBooking';
 import { useAuth } from '@/contexts/AuthContext';
-
-const steps = ['Select time', 'Trip details', 'Payment'];
+import * as logger from '@/lib/logger';
 
 export default function BookingWizard() {
-  const { userName, user, phone } = useAuth();
-  const [active, setActive] = useState(0);
   const [form, setForm] = useState<BookingFormData>({
     passengers: 1,
     notes: '',
-    customer: {
-      name: userName ?? undefined,
-      email: user?.email ?? undefined,
-      phone: phone ?? user?.phone ?? undefined,
-    },
     pickupValid: false,
     dropoffValid: false,
   });
-  useEffect(() => {
-    setForm((f) => ({
-      ...f,
-      customer: {
-        ...f.customer,
-        name: userName ?? undefined,
-        email: user?.email ?? undefined,
-        phone: phone ?? user?.phone ?? undefined,
-      },
-    }));
-  }, [userName, user?.email, phone, user?.phone]);
+  const { user: profile } = useAuth();
+  const { createBooking, loading } = useBooking();
+  const [bookingData, setBookingData] = useState<{ public_code: string } | null>(
+    null,
+  );
+  const [error, setError] = useState<string | null>(null);
   const update = (data: Partial<BookingFormData>) => {
     setForm((f) => ({ ...f, ...data }));
   };
-  const next = (data: Partial<BookingFormData>) => {
-    update(data);
-    setActive((s) => s + 1);
+  const handleConfirm = async () => {
+    if (!form.pickup_when || !form.pickup || !form.dropoff) return;
+    setError(null);
+    try {
+      const payload = {
+        pickup_when: form.pickup_when,
+        pickup: form.pickup,
+        dropoff: form.dropoff,
+        passengers: form.passengers,
+        notes: form.notes,
+        customer: profile
+          ? {
+              name: profile.full_name ?? '',
+              email: profile.email ?? '',
+              phone: profile.phone ?? '',
+            }
+          : undefined,
+      };
+      const res = await createBooking(payload);
+      setBookingData(res.booking);
+    } catch (err) {
+      logger.error('components/BookingWizard/BookingWizard', 'Booking creation failed', err);
+      setError('Failed to create booking. Please try again.');
+    }
   };
-  const back = () => setActive((s) => s - 1);
+
+  if (bookingData) {
+    return (
+      <Stack spacing={2}>
+        <Typography>Your booking is confirmed.</Typography>
+        <Button
+          component={RouterLink}
+          to={`/t/${bookingData.public_code}`}
+          variant="contained"
+        >
+          Track this ride
+        </Button>
+      </Stack>
+    );
+  }
 
   return (
     <Box>
-      <Stepper activeStep={active} sx={{ mb: 2 }}>
-        {steps.map((label) => (
-          <Step key={label}>
-            <StepLabel>{label}</StepLabel>
-          </Step>
-        ))}
-      </Stepper>
-      {active === 0 && <SelectTimeStep data={form} onNext={next} />}
-      {active === 1 && (
-        <TripDetailsStep data={form} onChange={update} onNext={next} onBack={back} />
-      )}
-      {active === 2 && (
-        <PaymentStep data={form as Required<BookingFormData>} onBack={back} />
-      )}
-      {active > 0 && form.pickupValid && form.dropoffValid && (
+      <TripDetails data={form} onChange={update} />
+      {form.pickupValid && form.dropoffValid && (
         <Box mt={2}>
           <MapProvider>
             <MapRoute
@@ -69,6 +85,24 @@ export default function BookingWizard() {
               rideTime={form.pickup_when}
             />
           </MapProvider>
+          {error && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {error}
+            </Alert>
+          )}
+          {loading ? (
+            <Stack alignItems="center" sx={{ mt: 2 }}>
+              <CircularProgress />
+            </Stack>
+          ) : (
+            <Button
+              sx={{ mt: 2 }}
+              variant="contained"
+              onClick={handleConfirm}
+            >
+              Confirm booking
+            </Button>
+          )}
         </Box>
       )}
     </Box>
