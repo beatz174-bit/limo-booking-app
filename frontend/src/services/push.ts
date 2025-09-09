@@ -2,6 +2,27 @@ import { initializeApp } from 'firebase/app';
 import { deleteToken, getMessaging, getToken } from 'firebase/messaging';
 import * as logger from '@/lib/logger';
 
+function mask(value: string | undefined): string | undefined {
+  if (!value) return value;
+  return value.length > 8
+    ? `${value.slice(0, 4)}...${value.slice(-4)}`
+    : value;
+}
+
+const vapidEnv = import.meta.env.VITE_FCM_VAPID_KEY;
+const apiKeyEnv = import.meta.env.VITE_FCM_API_KEY;
+const projectIdEnv = import.meta.env.VITE_FCM_PROJECT_ID;
+const appIdEnv = import.meta.env.VITE_FCM_APP_ID;
+const senderIdEnv = import.meta.env.VITE_FCM_SENDER_ID;
+
+logger.debug('services/push', 'FCM env variables', {
+  VITE_FCM_VAPID_KEY: mask(vapidEnv),
+  VITE_FCM_API_KEY: mask(apiKeyEnv),
+  VITE_FCM_PROJECT_ID: projectIdEnv,
+  VITE_FCM_APP_ID: mask(appIdEnv),
+  VITE_FCM_SENDER_ID: mask(senderIdEnv),
+});
+
 let messaging: ReturnType<typeof getMessaging> | null = null;
 
 function getMessagingConfig() {
