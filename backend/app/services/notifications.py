@@ -9,7 +9,7 @@ from typing import Any
 import httpx
 from jose import jwt
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.config import get_settings
 from app.models.notification import Notification, NotificationType
@@ -70,8 +70,17 @@ async def create_notification(
     )
     db.add(note)
     await db.flush()
-    await _send_fcm(db, to_role, notif_type, payload or {})
     return note
+
+
+async def dispatch_notification(
+    db: async_sessionmaker[AsyncSession],
+    to_role: UserRole,
+    notif_type: NotificationType,
+    payload: dict[str, Any] | None = None,
+) -> None:
+    async with db() as session:
+        await _send_fcm(session, to_role, notif_type, payload or {})
 
 
 async def _send_fcm(
