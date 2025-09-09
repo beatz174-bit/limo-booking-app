@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Dialog, DialogContent, DialogTitle, Alert, Button, Stack } from '@mui/material';
-import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
+import { Dialog, DialogContent, DialogTitle } from '@mui/material';
+import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import BookingWizard from '@/components/BookingWizard/BookingWizard';
 import { useAuth } from '@/contexts/AuthContext';
 import { CONFIG } from '@/config';
 import { apiFetch } from '@/services/apiFetch';
 import * as logger from '@/lib/logger';
+import PaymentMethodForm from '@/components/PaymentMethodForm';
 
 const stripePromise = (async () => {
   try {
@@ -17,80 +18,8 @@ const stripePromise = (async () => {
   }
 })();
 
-function CardSetup({ clientSecret, onSaved }: { clientSecret: string; onSaved: () => void }) {
-  const stripe = useStripe();
-  const elements = useElements();
-  const { user, ensureFreshToken } = useAuth();
-  const [cardError, setCardError] = useState<string | null>(null);
-
-  const handleSaveCard = async () => {
-    if (!stripe || !elements) return;
-    const { error: submitError } = await elements.submit();
-    if (submitError) {
-      setCardError(submitError.message || 'Failed to submit card details.');
-      return;
-    }
-    await ensureFreshToken();
-    setCardError(null);
-    try {
-      const base = CONFIG.API_BASE_URL ?? '';
-      const setup = await stripe.confirmSetup({
-        elements,
-        clientSecret,
-        confirmParams: {
-          payment_method_data: {
-            billing_details: {
-              name: user?.full_name ?? '',
-              email: user?.email ?? '',
-              phone: user?.phone ?? '',
-            },
-          },
-          return_url: window.location.href,
-        },
-        redirect: 'if_required',
-      });
-      const pm = setup?.setupIntent?.payment_method;
-      if (!pm) {
-        const message = setup?.error?.message || 'Failed to confirm card.';
-        logger.warn('pages/Booking/BookingWizardPage', 'save card failed', message);
-        setCardError(message);
-        return;
-      }
-      const putRes = await apiFetch(`${base}/users/me/payment-method`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ payment_method_id: pm }),
-      });
-      if (!putRes.ok) {
-        setCardError('Failed to save payment method.');
-        return;
-      }
-      onSaved();
-    } catch (err) {
-      logger.warn('pages/Booking/BookingWizardPage', 'save card failed', err);
-      setCardError('Failed to save payment method.');
-    }
-  };
-
-  return (
-    <Stack spacing={2} sx={{ mt: 1 }}>
-      {cardError && <Alert severity="error">{cardError}</Alert>}
-      <PaymentElement
-        options={{
-          fields: {
-            billingDetails: { name: 'never', email: 'never', phone: 'never' },
-          },
-        }}
-      />
-      <Button variant="contained" onClick={handleSaveCard}>
-        Save Card
-      </Button>
-    </Stack>
-  );
-}
-
 export default function BookingWizardPage() {
-  const { ensureFreshToken } = useAuth();
+  const { user, ensureFreshToken } = useAuth();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -134,8 +63,14 @@ export default function BookingWizardPage() {
         <DialogContent>
           {clientSecret && (
             <Elements stripe={stripePromise} options={{ clientSecret }}>
-              <CardSetup
+              <PaymentMethodForm
                 clientSecret={clientSecret}
+                billingDetails={{
+                  name: user?.full_name ?? '',
+                  email: user?.email ?? '',
+                  phone: user?.phone ?? '',
+                }}
+                ensureFreshToken={ensureFreshToken}
                 onSaved={() => {
                   setModalOpen(false);
                   setClientSecret(null);

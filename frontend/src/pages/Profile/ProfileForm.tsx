@@ -8,15 +8,11 @@ import {
   Stack,
   Alert,
 } from '@mui/material';
-import {
-  Elements,
-  PaymentElement,
-  useElements,
-  useStripe,
-} from '@stripe/react-stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
 import type { Stripe } from '@stripe/stripe-js';
 import * as logger from '@/lib/logger';
 import { AddressField } from '@/components/AddressField';
+import PaymentMethodForm from '@/components/PaymentMethodForm';
 import { useAuth } from '@/contexts/AuthContext';
 import PushToggle from '@/components/PushToggle';
 import { CONFIG } from '@/config';
@@ -40,7 +36,6 @@ const ProfileForm = ({
   const [paymentMethod, setPaymentMethod] =
     useState<{ brand: string; last4: string } | null>(null);
   const [editingCard, setEditingCard] = useState(false);
-  const [cardError, setCardError] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
 
   const auto = useAddressAutocomplete(defaultPickup);
@@ -131,7 +126,6 @@ const ProfileForm = ({
 
   const startCardSetup = async () => {
     await ensureFreshToken();
-    setCardError(null);
     try {
       const base = CONFIG.API_BASE_URL ?? '';
       const res = await apiFetch(`${base}/users/me/payment-method`, {
@@ -143,7 +137,6 @@ const ProfileForm = ({
           'setup intent request failed',
           res.status,
         );
-        setCardError('Failed to initiate card setup.');
         return;
       }
       const json = await res.json();
@@ -153,125 +146,13 @@ const ProfileForm = ({
         json,
       );
       if (!json.setup_intent_client_secret) {
-        setCardError('Failed to initiate card setup.');
         return;
       }
       setClientSecret(json.setup_intent_client_secret);
       setEditingCard(true);
     } catch (err) {
       logger.warn('pages/Profile/ProfileForm', 'setup intent request failed', err);
-      setCardError('Failed to initiate card setup.');
     }
-  };
-
-  const CardSetup = () => {
-    const stripe = useStripe();
-    const elements = useElements();
-
-    const handleSaveCard = async () => {
-      if (!stripe || !elements || !clientSecret) return;
-      const { error: submitError } = await elements.submit();
-      if (submitError) {
-        setCardError(submitError.message || 'Failed to submit card details.');
-        return;
-      }
-      await ensureFreshToken();
-      setCardError(null);
-      try {
-        const base = CONFIG.API_BASE_URL ?? '';
-        const setup = await stripe.confirmSetup({
-          elements,
-          clientSecret,
-          confirmParams: {
-            payment_method_data: {
-              billing_details: {
-                name: fullName,
-                email,
-                phone,
-              },
-            },
-            return_url: window.location.href,
-          },
-          redirect: 'if_required',
-        });
-        logger.info(
-          'pages/Profile/ProfileForm',
-          'confirmSetup result',
-          setup,
-        );
-        const pm = setup?.setupIntent?.payment_method;
-        if (!pm) {
-          const message = setup?.error?.message || 'Failed to confirm card.';
-          logger.warn('pages/Profile/ProfileForm', 'save card failed', message);
-          setCardError(message);
-          return;
-        }
-        const putRes = await apiFetch(`${base}/users/me/payment-method`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ payment_method_id: pm }),
-        });
-        if (!putRes.ok) {
-          const text = await putRes.text().catch(() => '');
-          logger.warn('pages/Profile/ProfileForm', 'save card failed', {
-            status: putRes.status,
-            body: text,
-          });
-          setCardError('Failed to save payment method.');
-          return;
-        }
-        setEditingCard(false);
-        setClientSecret(null);
-        const pmRes = await apiFetch(`${base}/users/me/payment-method`);
-        if (pmRes.ok) {
-          try {
-            const meta = await pmRes.json();
-            if (meta && meta.last4) {
-              setPaymentMethod({ brand: meta.brand, last4: meta.last4 });
-            }
-          } catch {
-            /* ignore */
-          }
-        }
-      } catch (err) {
-        logger.warn('pages/Profile/ProfileForm', 'save card failed', err);
-        setCardError('Failed to save payment method.');
-      }
-    };
-
-    return (
-      <Stack spacing={1}>
-        {cardError && <Alert severity="error">{cardError}</Alert>}
-        <PaymentElement
-          options={{
-            defaultValues: {
-              billingDetails: { name: fullName, email, phone },
-            },
-            fields: {
-              billingDetails: {
-                name: 'never',
-                email: 'never',
-                phone: 'never',
-              },
-            },
-          }}
-        />
-        <Stack direction="row" spacing={1}>
-          <Button type="button" variant="contained" onClick={handleSaveCard}>
-            Save Card
-          </Button>
-          <Button
-            type="button"
-            onClick={() => {
-              setEditingCard(false);
-              setClientSecret(null);
-            }}
-          >
-            Cancel
-          </Button>
-        </Stack>
-      </Stack>
-    );
   };
 
   const handleRemoveCard = async () => {
@@ -406,7 +287,31 @@ const ProfileForm = ({
           </Stack>
         ) : editingCard && clientSecret ? (
           <Elements stripe={stripePromise} options={{ clientSecret }}>
-            <CardSetup />
+            <PaymentMethodForm
+              clientSecret={clientSecret}
+              billingDetails={{ name: fullName, email, phone }}
+              ensureFreshToken={ensureFreshToken}
+              onSaved={async () => {
+                setEditingCard(false);
+                setClientSecret(null);
+                try {
+                  const base = CONFIG.API_BASE_URL ?? '';
+                  const pmRes = await apiFetch(`${base}/users/me/payment-method`);
+                  if (pmRes.ok) {
+                    const meta = await pmRes.json().catch(() => null);
+                    if (meta && meta.last4) {
+                      setPaymentMethod({ brand: meta.brand, last4: meta.last4 });
+                    }
+                  }
+                } catch {
+                  /* ignore */
+                }
+              }}
+              onCancel={() => {
+                setEditingCard(false);
+                setClientSecret(null);
+              }}
+            />
           </Elements>
         ) : editingCard ? null : (
           <Button type="button" variant="contained" onClick={startCardSetup}>
