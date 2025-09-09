@@ -16,7 +16,7 @@ backend/.env
 backend/*.db
 backend/new.*.py
 backend/old.*.py
-data/*.db
+data/
 *.sqlite
 backend/routes/new.*.py
 backend/routes/old.*.py
