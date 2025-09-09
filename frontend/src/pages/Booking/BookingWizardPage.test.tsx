@@ -1,12 +1,22 @@
+import { vi, beforeAll, beforeEach, afterEach, expect, test } from 'vitest';
+vi.stubEnv('VITE_API_BASE_URL', '');
 import { renderWithProviders } from '@/__tests__/setup/renderWithProviders';
-import BookingWizardPage from './BookingWizardPage';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi, beforeAll, beforeEach, afterEach, expect, test } from 'vitest';
 import React from 'react';
 import { server } from '@/__tests__/setup/msw.server';
 import { http, HttpResponse } from 'msw';
 import { apiUrl } from '@/__tests__/setup/msw.handlers';
+
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({
+    user: { full_name: 'Test User', email: 'test@example.com', phone: '123-4567' },
+    ensureFreshToken: vi.fn().mockResolvedValue('tok'),
+  }),
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+import BookingWizardPage from './BookingWizardPage';
 
 const createBooking = vi
   .fn()
@@ -70,14 +80,6 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
-  localStorage.setItem(
-    'auth_tokens',
-    JSON.stringify({
-      access_token: 'tok',
-      refresh_token: 'ref',
-      user: { full_name: 'John Doe', email: 'john@example.com', phone: '123' },
-    }),
-  );
   server.use(
     http.get(apiUrl('/users/me/payment-method'), () =>
       HttpResponse.json({ brand: 'visa', last4: '4242' }),
@@ -86,7 +88,6 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  localStorage.clear();
   mockElements.submit.mockClear();
   mockConfirm.mockClear();
 });
