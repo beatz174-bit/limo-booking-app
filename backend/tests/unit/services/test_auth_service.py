@@ -1,12 +1,11 @@
 import pytest
-from fastapi import HTTPException
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.security import hash_password, verify_password
 from app.models.user_v2 import User
 from app.schemas.auth import LoginRequest, RegisterRequest
 from app.services import auth_service
+from fastapi import HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest.mark.asyncio
