@@ -158,8 +158,8 @@ function PaymentInner({
     async function initPaymentRequest() {
       if (!stripe || savedPaymentMethod) return;
       const pr = stripe.paymentRequest({
-        country: 'US',
-        currency: 'usd',
+        country: 'AU',
+        currency: 'aud',
         total: { label: 'Deposit', amount: 0 },
         requestPayerName: true,
         requestPayerEmail: true,
@@ -238,7 +238,12 @@ function PaymentInner({
         clientSecret: clientSecret!,
         confirmParams: {
           payment_method_data: {
-            billing_details: { name, email, phone },
+            billing_details: {
+              name,
+              email,
+              phone,
+              address: { country: 'AU' },
+            },
           },
           return_url: window.location.href,
         },
@@ -306,11 +311,11 @@ function PaymentInner({
           Using saved card {savedPaymentMethod.brand} ending in {savedPaymentMethod.last4}
         </Typography>
       ) : (
-        <>
-          <Typography>Add card</Typography>
           <PaymentElement
             options={{
-              defaultValues: { billingDetails: { name, email, phone } },
+              defaultValues: {
+                billingDetails: { name, email, phone, address: { country: 'AU' } },
+              },
               fields: {
                 billingDetails: {
                   name: 'never',
@@ -320,7 +325,6 @@ function PaymentInner({
               },
             }}
           />
-        </>
       )}
       <Stack direction="row" spacing={1}>
         <Button onClick={onBack}>Back</Button>
