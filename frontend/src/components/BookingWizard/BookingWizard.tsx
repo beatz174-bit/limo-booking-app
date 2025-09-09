@@ -41,9 +41,10 @@ export default function BookingWizard({
   const [durationMin, setDurationMin] = useState<number | null>(null);
   const [price, setPrice] = useState<number | null>(null);
   const { data: settings } = useSettings();
-  const update = (data: Partial<BookingFormData>) => {
-    setForm((f) => ({ ...f, ...data }));
-  }, []);
+  const update = useCallback(
+    (data: Partial<BookingFormData>) => setForm((f) => ({ ...f, ...data })),
+    [],
+  );
   const handleConfirm = async () => {
     if (!form.pickup_when || !form.pickup || !form.dropoff) return;
     setError(null);
