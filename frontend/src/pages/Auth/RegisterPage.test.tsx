@@ -10,6 +10,12 @@ import { apiUrl } from '@/__tests__/setup/msw.handlers';
 
 const label = (re: RegExp | string) => screen.getByLabelText(re, { selector: 'input' });
 
+test('does not render phone or payment method fields', () => {
+  renderWithProviders(<RegisterPage />, { initialPath: '/register' });
+  expect(screen.queryByLabelText(/phone/i)).not.toBeInTheDocument();
+  expect(screen.queryByLabelText(/payment method/i)).not.toBeInTheDocument();
+});
+
 test('registers successfully and navigates to /book', async () => {
   renderWithProviders(<RegisterPage />, {
     initialPath: '/register',
