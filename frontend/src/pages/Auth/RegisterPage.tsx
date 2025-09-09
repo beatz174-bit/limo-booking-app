@@ -18,26 +18,21 @@ const authApi = new AuthApi(configuration);
 
 function RegisterPage() {
     const [email, setEmail] = useState("");
-    const [full_name, setName] = useState("");
+    const [fullName, setFullName] = useState("");
     const [password, setPassword] = useState("");
-    const [phone, setPhone] = useState("");
-    const [paymentMethodId, setPaymentMethodId] = useState("");
     const [error, setError] = useState("");
     const { loginWithPassword } = useAuth();
     const navigate = useNavigate();
-    
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
 
         const registerRequest: RegisterRequest = {
             email,
-            full_name,
+            full_name: fullName,
             password,
         };
-        if (phone) registerRequest.phone = phone;
-        if (paymentMethodId)
-            registerRequest.stripe_payment_method_id = paymentMethodId;
 
         try {
             // Register the user
@@ -90,8 +85,8 @@ function RegisterPage() {
             <TextField
               label="Full Name"
               type="text"
-              value={full_name}
-              onChange={(e) => setName(e.target.value)}
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
               fullWidth
               required
               margin="normal"
@@ -113,22 +108,6 @@ function RegisterPage() {
               onChange={(e) => setPassword(e.target.value)}
               fullWidth
               required
-              margin="normal"
-            />
-            <TextField
-              label="Phone"
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              fullWidth
-              margin="normal"
-            />
-            <TextField
-              label="Default Payment Method ID"
-              type="text"
-              value={paymentMethodId}
-              onChange={(e) => setPaymentMethodId(e.target.value)}
-              fullWidth
               margin="normal"
             />
 
