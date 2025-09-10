@@ -38,3 +38,17 @@ messaging.onBackgroundMessage((payload) => {
       }
     });
 });
+
+self.addEventListener('push', (event) => {
+  const payload = event.data ? event.data.json() : {};
+  console.log('firebase-messaging-sw', 'Push received', payload);
+  const notification = payload.notification || {};
+  const title = notification.title || 'Notification';
+  const options = {
+    body: notification.body,
+    icon: notification.icon || '/logo.svg',
+  };
+  event.waitUntil(
+    self.registration.showNotification(title, options),
+  );
+});
