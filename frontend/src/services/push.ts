@@ -56,7 +56,10 @@ async function initOneSignal() {
 
 export async function subscribePush(): Promise<string | null> {
   const os = await initOneSignal();
-  if (!os) return null;
+  if (!os?.User?.pushSubscription) {
+    logger.error('services/push', 'OneSignal pushSubscription not available');
+    return null;
+  }
   try {
     await os.User.pushSubscription.optIn();
     const id = await os.User.pushSubscription.id;
@@ -70,7 +73,10 @@ export async function subscribePush(): Promise<string | null> {
 
 export async function unsubscribePush(): Promise<void> {
   const os = await initOneSignal();
-  if (!os) return;
+  if (!os?.User?.pushSubscription) {
+    logger.error('services/push', 'OneSignal pushSubscription not available');
+    return;
+  }
   try {
     await os.User.pushSubscription.optOut();
     logger.debug('services/push', 'OneSignal unsubscribed');
@@ -81,7 +87,10 @@ export async function unsubscribePush(): Promise<void> {
 
 export async function refreshPushToken(): Promise<string | null> {
   const os = await initOneSignal();
-  if (!os) return null;
+  if (!os?.User?.pushSubscription) {
+    logger.error('services/push', 'OneSignal pushSubscription not available');
+    return null;
+  }
   try {
     const id = await os.User.pushSubscription.id;
     return id ?? null;
