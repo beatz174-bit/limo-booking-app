@@ -1,4 +1,6 @@
 import * as logger from '@/lib/logger';
+import { apiFetch } from '@/services/apiFetch';
+import { CONFIG } from '@/config';
 
 interface OneSignalSDK {
   init(options: { appId: string; allowLocalhostAsSecureOrigin?: boolean }): Promise<void>;
@@ -36,15 +38,22 @@ async function initOneSignal() {
       if (!window.OneSignal) {
         logger.debug('services/push', 'Loading OneSignal SDK');
         await import('https://cdn.onesignal.com/sdks/OneSignalSDK.js');
+        logger.debug('services/push', 'OneSignal SDK loaded');
       }
       if (!initialized) {
+        logger.debug('services/push', 'Initializing OneSignal');
         await window.OneSignal?.init({
           appId,
           allowLocalhostAsSecureOrigin: true,
         });
+        logger.debug('services/push', 'OneSignal initialization complete');
         initialized = true;
       }
-      return window.OneSignal ?? null;
+      const status = window.OneSignal ?? null;
+      logger.debug('services/push', 'OneSignal resolved', {
+        available: !!status,
+      });
+      return status;
     } catch (err) {
       logger.error('services/push', 'OneSignal init failed', err);
       return null;
@@ -77,9 +86,35 @@ export async function subscribePush(): Promise<string | null> {
     return null;
   }
   try {
+    logger.debug('services/push', 'Calling pushSubscription.optIn');
     await os.User.pushSubscription.optIn();
-    const id = await os.User.pushSubscription.id;
+    logger.debug('services/push', 'pushSubscription.optIn resolved');
+
+    const subscription = os.User.pushSubscription;
+    const id = await subscription.id;
+    logger.debug('services/push', 'Subscription object', {
+      id,
+      hasOptIn: typeof subscription.optIn === 'function',
+      hasOptOut: typeof subscription.optOut === 'function',
+    });
     logger.info('services/push', 'OneSignal subscribed', { id });
+
+    if (id) {
+      const base = CONFIG.API_BASE_URL ?? '';
+      const url = `${base}/users/me`;
+      try {
+        logger.debug('services/push', 'Persisting push ID', { url, id });
+        const res = await apiFetch(url, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ onesignal_player_id: id }),
+        });
+        logger.debug('services/push', 'Persisted push ID', { status: res.status });
+      } catch (err) {
+        logger.error('services/push', 'Persisting push ID failed', err);
+      }
+    }
+
     return id ?? null;
   } catch (err) {
     logger.error('services/push', 'OneSignal subscribe failed', err);
