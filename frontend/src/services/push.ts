@@ -28,6 +28,7 @@ async function initOneSignal() {
     logger.warn('services/push', 'Missing OneSignal app ID');
     return null;
   }
+  logger.debug('services/push', 'Using OneSignal app ID', { appId });
   if (initPromise) return initPromise;
 
   initPromise = (async () => {
