@@ -54,10 +54,25 @@ async function initOneSignal() {
   return initPromise;
 }
 
+function ensureAppId(): boolean {
+  if (!import.meta.env.VITE_ONESIGNAL_APP_ID) {
+    logger.warn(
+      'services/push',
+      'VITE_ONESIGNAL_APP_ID is not set; push notifications are disabled',
+    );
+    return false;
+  }
+  return true;
+}
+
 export async function subscribePush(): Promise<string | null> {
+  if (!ensureAppId()) return null;
   const os = await initOneSignal();
   if (!os?.User?.pushSubscription) {
-    logger.error('services/push', 'OneSignal pushSubscription not available');
+    logger.warn(
+      'services/push',
+      'OneSignal pushSubscription not available. Verify VITE_ONESIGNAL_APP_ID and browser push support',
+    );
     return null;
   }
   try {
@@ -72,9 +87,13 @@ export async function subscribePush(): Promise<string | null> {
 }
 
 export async function unsubscribePush(): Promise<void> {
+  if (!ensureAppId()) return;
   const os = await initOneSignal();
   if (!os?.User?.pushSubscription) {
-    logger.error('services/push', 'OneSignal pushSubscription not available');
+    logger.warn(
+      'services/push',
+      'OneSignal pushSubscription not available. Verify VITE_ONESIGNAL_APP_ID and browser push support',
+    );
     return;
   }
   try {
@@ -86,9 +105,13 @@ export async function unsubscribePush(): Promise<void> {
 }
 
 export async function refreshPushToken(): Promise<string | null> {
+  if (!ensureAppId()) return null;
   const os = await initOneSignal();
   if (!os?.User?.pushSubscription) {
-    logger.error('services/push', 'OneSignal pushSubscription not available');
+    logger.warn(
+      'services/push',
+      'OneSignal pushSubscription not available. Verify VITE_ONESIGNAL_APP_ID and browser push support',
+    );
     return null;
   }
   try {
