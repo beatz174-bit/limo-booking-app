@@ -27,7 +27,7 @@ class UserRead(UserBase):
     id: uuid.UUID
     # role: str
     # is_approved: bool
-    fcm_token: Optional[str] = None
+    onesignal_player_id: Optional[str] = None
     stripe_customer_id: Optional[str] = None
     stripe_payment_method_id: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
@@ -40,7 +40,7 @@ class UserUpdate(BaseModel):
     full_name: Optional[str] = None
     password: Optional[str] = None
     default_pickup_address: Optional[str] = None
-    fcm_token: Optional[str] = None
+    onesignal_player_id: Optional[str] = None
     stripe_customer_id: Optional[str] = None
     stripe_payment_method_id: Optional[str] = None
     phone: Optional[str] = None

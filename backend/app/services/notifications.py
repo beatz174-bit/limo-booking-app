@@ -149,8 +149,8 @@ async def _send_fcm(
                 notification = {k: str(v) for k, v in notification.items()}
 
             result = await db.execute(
-                select(UserV2.fcm_token).where(
-                    UserV2.role == to_role, UserV2.fcm_token.is_not(None)
+                select(UserV2.onesignal_player_id).where(
+                    UserV2.role == to_role, UserV2.onesignal_player_id.is_not(None)
                 )
             )
             tokens = result.scalars().all()

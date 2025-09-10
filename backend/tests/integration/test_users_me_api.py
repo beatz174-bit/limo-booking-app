@@ -54,14 +54,18 @@ async def test_enable_disable_push(client: AsyncClient, async_session: AsyncSess
     token = create_jwt_token(user.id)
     headers = {"Authorization": f"Bearer {token}"}
 
-    resp = await client.patch("/users/me", json={"fcm_token": "tok"}, headers=headers)
+    resp = await client.patch(
+        "/users/me", json={"onesignal_player_id": "tok"}, headers=headers
+    )
     assert resp.status_code == 200
-    assert resp.json()["fcm_token"] == "tok"
+    assert resp.json()["onesignal_player_id"] == "tok"
     await async_session.refresh(user)
-    assert user.fcm_token == "tok"
+    assert user.onesignal_player_id == "tok"
 
-    resp = await client.patch("/users/me", json={"fcm_token": None}, headers=headers)
+    resp = await client.patch(
+        "/users/me", json={"onesignal_player_id": None}, headers=headers
+    )
     assert resp.status_code == 200
-    assert resp.json()["fcm_token"] is None
+    assert resp.json()["onesignal_player_id"] is None
     await async_session.refresh(user)
-    assert user.fcm_token is None
+    assert user.onesignal_player_id is None
