@@ -19,6 +19,7 @@ async def test_get_and_update_me(client: AsyncClient, async_session: AsyncSessio
     async_session.add(user)
     await async_session.commit()
     await async_session.refresh(user)
+    assert user.onesignal_player_id is None
 
     token = create_jwt_token(user.id)
     headers = {"Authorization": f"Bearer {token}"}
