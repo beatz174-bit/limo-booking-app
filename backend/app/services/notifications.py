@@ -7,12 +7,13 @@ from datetime import datetime, timezone
 from typing import Any
 
 import httpx
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
 from app.core.config import get_settings
 from app.models.notification import Notification, NotificationType
 from app.models.user_v2 import User as UserV2
 from app.models.user_v2 import UserRole
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 logger = logging.getLogger(__name__)
 
@@ -116,7 +117,20 @@ async def _send_onesignal(
             UserV2.role == to_role, UserV2.onesignal_player_id.is_not(None)
         )
     )
-    player_ids = result.scalars().all()
+    try:
+        raw_result = result.all()
+        player_ids = [row[0] for row in raw_result]
+    except AttributeError:
+        player_ids = result.scalars().all()
+        raw_result = [(pid,) for pid in player_ids]
+    logger.info(
+        "Queried OneSignal player IDs",
+        extra={
+            "role": to_role.value,
+            "raw_result": raw_result,
+            "count": len(player_ids),
+        },
+    )
 
     if not player_ids:
         logger.info(
@@ -141,17 +155,35 @@ async def _send_onesignal(
                 headers={"Authorization": f"Basic {settings.onesignal_api_key}"},
                 json=message,
             )
+            logger.info(
+                "OneSignal request",
+                extra={
+                    "player_ids": player_ids,
+                    "payload": data,
+                    "request_payload": message,
+                    "status_code": response.status_code,
+                },
+            )
             response.raise_for_status()
             logger.info(
                 "OneSignal response",
                 extra={
                     "player_ids": player_ids,
                     "payload": data,
+                    "request_payload": message,
+                    "status_code": response.status_code,
                     "response": response.json(),
                 },
             )
-    except httpx.HTTPError:
+    except httpx.HTTPError as exc:
+        status_code = getattr(getattr(exc, "response", None), "status_code", None)
         logger.exception(
             "OneSignal send failed",
-            extra={"player_ids": player_ids, "payload": data},
+            extra={
+                "player_ids": player_ids,
+                "payload": data,
+                "request_payload": message,
+                "status_code": status_code,
+                "error": str(exc),
+            },
         )
