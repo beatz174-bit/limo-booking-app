@@ -32,6 +32,10 @@ Start the development server:
 npm run dev
 ```
 
+> **Note:** Run the dev server with `npm run dev` so the `predev` hook can
+> inject the Firebase service worker. Starting `vite` directly skips this step
+> and leaves placeholders in the service worker.
+
 ## Testing
 
 Run unit tests with:

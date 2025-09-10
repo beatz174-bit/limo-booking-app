@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -20,3 +20,14 @@ for (const [key, value] of Object.entries(replacements)) {
 }
 
 writeFileSync(targetPath, content);
+
+if (!existsSync(targetPath)) {
+  console.error(`Failed to create ${targetPath}`);
+  process.exit(1);
+}
+
+const written = readFileSync(targetPath, 'utf-8');
+if (/\$\{VITE_FCM_[^}]+\}/.test(written)) {
+  console.error(`Unresolved VITE_FCM placeholders remain in ${targetPath}`);
+  process.exit(1);
+}

@@ -93,6 +93,11 @@ cd frontend
 npm run dev
 ```
 
+> **Note:** Always start the frontend with `npm run dev` rather than invoking
+> `vite` directly. The `predev` script injects the Firebase Cloud Messaging
+> service worker before the dev server boots and is skipped when running `vite`
+> manually.
+
 ## Realtime tracking
 
 Drivers send location updates over `/ws/bookings/{id}` using a JWT token.
