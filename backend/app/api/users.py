@@ -4,6 +4,10 @@ import logging
 import uuid
 from typing import List, Optional
 
+from fastapi import APIRouter, Depends, status
+from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.dependencies import get_current_user, get_db
 from app.models.user_v2 import User
 from app.schemas.api_booking import StripePaymentMethod
@@ -19,9 +23,6 @@ from app.services.user_service import (
     save_payment_method,
     update_user,
 )
-from fastapi import APIRouter, Depends, status
-from pydantic import BaseModel, Field
-from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +60,21 @@ async def api_update_me(
     current_user: User = Depends(get_current_user),
 ):
     """Allow the current user to update their profile, including phone."""
+    logger.info(
+        "api_update_me:start",
+        extra={
+            "user_id": current_user.id,
+            "update_fields": data.model_dump(exclude_unset=True),
+        },
+    )
     user = await update_user(db, current_user.id, data)
+    logger.info(
+        "api_update_me:success",
+        extra={
+            "user_id": current_user.id,
+            "onesignal_player_id": user.onesignal_player_id,
+        },
+    )
     return user
 
 
