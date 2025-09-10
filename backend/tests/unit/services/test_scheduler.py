@@ -2,14 +2,13 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.security import hash_password
 from app.models.booking import Booking, BookingStatus
 from app.models.notification import Notification, NotificationRole, NotificationType
 from app.models.user_v2 import User, UserRole
 from app.services.scheduler import _leave_now_job
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 pytestmark = pytest.mark.asyncio
 
@@ -17,7 +16,7 @@ pytestmark = pytest.mark.asyncio
 async def test_leave_now_job_creates_notifications(
     async_session: AsyncSession, mocker
 ) -> None:
-    mocker.patch("app.services.notifications._send_fcm", return_value=None)
+    mocker.patch("app.services.notifications._send_onesignal", return_value=None)
 
     customer = User(
         email=f"test{uuid.uuid4().hex}@example.com",
