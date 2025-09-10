@@ -24,6 +24,7 @@ class UserRead(UserBase):
     id: uuid.UUID
     created_at: datetime
     updated_at: datetime
+    onesignal_player_id: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -35,7 +36,7 @@ class UserUpdate(BaseModel):
     password: Optional[str] = None
     phone: Optional[str] = None
     role: Optional[UserRole] = None
-    fcm_token: Optional[str] = None
+    onesignal_player_id: Optional[str] = None
     stripe_customer_id: Optional[str] = None
     stripe_payment_method_id: Optional[str] = None
 

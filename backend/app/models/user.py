@@ -28,8 +28,8 @@ class User(Base):
     default_pickup_address: Mapped[Union[str, None]] = mapped_column(
         Text, nullable=True, default=None
     )
-    # Firebase Cloud Messaging token for push notifications
-    fcm_token: Mapped[Union[str, None]] = mapped_column(
+    # OneSignal player identifier for push notifications
+    onesignal_player_id: Mapped[Union[str, None]] = mapped_column(
         Text, nullable=True, default=None
     )
     # is_approved:     Mapped[bool]   = mapped_column(Boolean, default=False)

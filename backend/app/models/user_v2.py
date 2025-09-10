@@ -32,7 +32,7 @@ class User(Base):
         String, nullable=True
     )  # Optional contact number
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.CUSTOMER)
-    fcm_token: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    onesignal_player_id: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     stripe_customer_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     stripe_payment_method_id: Mapped[Optional[str]] = mapped_column(
         String, nullable=True
