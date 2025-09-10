@@ -24,8 +24,12 @@ const PushToggle = ({ ensureFreshToken }: Props) => {
       const res = await apiFetch(`${base}/users/me`);
       if (res.ok) {
         const data = await res.json();
+        console.log('Fetched onesignal_player_id', data.onesignal_player_id);
         setEnabled(!!data.onesignal_player_id);
         setPlayerId(data.onesignal_player_id ?? null);
+      } else {
+        const body = res.text ? await res.text() : '';
+        console.log('Failed to fetch /users/me', res.status, body);
       }
     };
     load();
@@ -35,30 +39,37 @@ const PushToggle = ({ ensureFreshToken }: Props) => {
     _e: React.ChangeEvent<HTMLInputElement>,
     checked: boolean,
   ) => {
+    console.log('Push toggle desired state', checked);
     const auth = await ensureFreshToken();
     if (!auth) return;
     if (checked) {
       const newId = await subscribePush();
+      console.log('New player ID', newId);
       if (!newId) return;
       const base = CONFIG.API_BASE_URL ?? '';
-      await apiFetch(`${base}/users/me`, {
+      const res = await apiFetch(`${base}/users/me`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ onesignal_player_id: newId }),
       });
+      const body = res.text ? await res.text() : '';
+      console.log('PATCH /users/me', res.status, body);
       setPlayerId(newId);
     } else {
       await unsubscribePush();
+      console.log('New player ID', null);
       const base = CONFIG.API_BASE_URL ?? '';
-      await apiFetch(`${base}/users/me`, {
+      const res = await apiFetch(`${base}/users/me`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ onesignal_player_id: null }),
       });
+      const body = res.text ? await res.text() : '';
+      console.log('PATCH /users/me', res.status, body);
       setPlayerId(null);
     }
     setEnabled(checked);
@@ -68,17 +79,22 @@ const PushToggle = ({ ensureFreshToken }: Props) => {
     if (!enabled) return;
     const interval = setInterval(async () => {
       const refreshed = await refreshPushToken();
+      console.log('Refreshed onesignal_player_id', refreshed);
       if (!refreshed || refreshed === playerId) return;
       const auth = await ensureFreshToken();
       if (!auth) return;
       const base = CONFIG.API_BASE_URL ?? '';
-      await apiFetch(`${base}/users/me`, {
+      const res = await apiFetch(`${base}/users/me`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ onesignal_player_id: refreshed }),
       });
+      if (!res.ok) {
+        const body = res.text ? await res.text() : '';
+        console.log('PATCH /users/me failed', res.status, body);
+      }
       setPlayerId(refreshed);
     }, 1000 * 60 * 60 * 24);
     return () => clearInterval(interval);
