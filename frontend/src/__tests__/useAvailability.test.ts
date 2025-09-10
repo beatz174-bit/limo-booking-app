@@ -12,5 +12,7 @@ describe('useAvailability', () => {
     const { result } = renderHook(() => useAvailability('2025-01'));
     await waitFor(() => expect(result.current.data).not.toBeNull());
     expect(result.current.data).toEqual(fake);
+    expect(result.current.dayStates['2025-01-01']).toBe('free');
+    expect(result.current.hourlyAvailability['2025-01-01'].length).toBe(24);
   });
 });

@@ -1,10 +1,9 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Box, Button, IconButton, Stack, Typography } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import useAvailability from '@/hooks/useAvailability';
-
-export type DayState = 'free' | 'partial' | 'full';
+import type { DayState } from '@/lib/availabilityUtils';
 
 interface AvailabilityCalendarProps {
   value?: string;
@@ -22,45 +21,7 @@ export default function AvailabilityCalendar({
     new Date(initial.getFullYear(), initial.getMonth(), 1),
   );
   const monthStr = month.toISOString().slice(0, 7);
-  const { data } = useAvailability(monthStr);
-
-  const dayStates = useMemo(() => {
-    if (!data) return {} as Record<string, DayState>;
-    const states: Record<string, DayState> = {};
-    const daysInMonth = new Date(
-      month.getFullYear(),
-      month.getMonth() + 1,
-      0,
-    ).getDate();
-    for (let d = 1; d <= daysInMonth; d++) {
-      const day = new Date(month.getFullYear(), month.getMonth(), d);
-      const start = new Date(day);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(day);
-      end.setHours(23, 59, 59, 999);
-      let hasFull = false;
-      let hasAny = false;
-      data.slots.forEach((s) => {
-        const slotStart = new Date(s.start_dt);
-        const slotEnd = new Date(s.end_dt);
-        if (slotStart <= start && slotEnd >= end) {
-          hasFull = true;
-        } else if (slotEnd > start && slotStart < end) {
-          hasAny = true;
-        }
-      });
-      data.bookings.forEach((b) => {
-        const bookingStart = new Date(b.pickup_when);
-        const bookingEnd = new Date(bookingStart.getTime() + 60 * 60 * 1000);
-        if (bookingEnd > start && bookingStart < end) {
-          hasAny = true;
-        }
-      });
-      const key = day.toISOString().slice(0, 10);
-      states[key] = hasFull ? 'full' : hasAny ? 'partial' : 'free';
-    }
-    return states;
-  }, [data, month]);
+  const { dayStates } = useAvailability(monthStr);
 
   const changeMonth = useCallback(
     (offset: number) => {
@@ -104,7 +65,7 @@ export default function AvailabilityCalendar({
           const dayNum = idx + 1;
           const date = new Date(month.getFullYear(), month.getMonth(), dayNum);
           const dateStr = date.toISOString().slice(0, 10);
-          const state = dayStates[dateStr] || 'free';
+          const state: DayState = dayStates[dateStr] || 'free';
           const selected = value === dateStr;
           let color: 'primary' | 'warning' | 'inherit' = 'inherit';
           if (state === 'partial') color = 'warning';

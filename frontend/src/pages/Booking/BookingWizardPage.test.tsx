@@ -11,7 +11,7 @@ vi.mock('@/contexts/AuthContext', () => ({
 }));
 
 import { renderWithProviders } from '@/__tests__/setup/renderWithProviders';
-import { screen, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { server } from '@/__tests__/setup/msw.server';
