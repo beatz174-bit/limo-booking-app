@@ -20,7 +20,7 @@ declare global {
   }
 }
 
-let initialized = !!window.OneSignal;
+let initialized = false;
 let initPromise: Promise<OneSignalSDK | null> | undefined =
   window.__oneSignalInitPromise;
 
@@ -37,9 +37,10 @@ async function initOneSignal() {
     try {
       if (!window.OneSignal) {
         logger.debug('services/push', 'Loading OneSignal SDK');
-        await import(
-          'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js'
-        );
+        const mod = await import('onesignal-web-sdk/src/OneSignal');
+        window.OneSignal = new (mod.default as unknown as {
+          new (): OneSignalSDK;
+        })();
         logger.debug('services/push', 'OneSignal SDK loaded');
       }
       if (!initialized) {
