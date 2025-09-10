@@ -5,21 +5,18 @@ import pytest
 from _pytest.monkeypatch import MonkeyPatch
 from app.models.notification import NotificationType
 from app.models.user_v2 import UserRole
-from app.services.notifications import _send_fcm, notification_map
-from jose import jwt
+from app.services.notifications import _send_onesignal, notification_map
 
 
 @pytest.mark.asyncio
-async def test_send_fcm_uses_async_client(monkeypatch: MonkeyPatch):
+async def test_send_onesignal_uses_async_client(monkeypatch: MonkeyPatch):
     dummy_settings = SimpleNamespace(
-        fcm_project_id="pid",
-        fcm_client_email="email@example.com",
-        fcm_private_key="key",
+        onesignal_app_id="aid",
+        onesignal_api_key="key",
     )
     monkeypatch.setattr(
         "app.services.notifications.get_settings", lambda: dummy_settings
     )
-    monkeypatch.setattr(jwt, "encode", lambda *args, **kwargs: "assertion")
 
     class Response:
         def __init__(self, status_code=200, data=None):
@@ -45,8 +42,6 @@ async def test_send_fcm_uses_async_client(monkeypatch: MonkeyPatch):
 
         async def post(self, url, **kwargs):
             self.calls.append((url, kwargs))
-            if "oauth2.googleapis.com/token" in url:
-                return Response(200, {"access_token": "abc"})
             return Response(200)
 
     dummy_client = DummyClient()
@@ -64,16 +59,15 @@ async def test_send_fcm_uses_async_client(monkeypatch: MonkeyPatch):
         async def execute(self, *args, **kwargs):
             return DummyResult()
 
-    await _send_fcm(
+    await _send_onesignal(
         DummyDB(), UserRole.DRIVER, NotificationType.ON_THE_WAY, {"foo": "bar"}
     )
 
-    assert len(dummy_client.calls) == 2
-    token_call = dummy_client.calls[0]
-    msg_call = dummy_client.calls[1]
-    assert "oauth2.googleapis.com/token" in token_call[0]
-    assert msg_call[1]["headers"]["Authorization"] == "Bearer abc"
-    assert msg_call[1]["json"]["message"]["token"] == "tok"
-    notif = msg_call[1]["json"]["message"]["webpush"]["notification"]
-    assert notif == notification_map[NotificationType.ON_THE_WAY]
-    assert all(isinstance(v, str) for v in notif.values())
+    assert len(dummy_client.calls) == 1
+    url, kwargs = dummy_client.calls[0]
+    assert "onesignal.com/api/v1/notifications" in url
+    assert kwargs["headers"]["Authorization"] == "Basic key"
+    assert kwargs["json"]["include_player_ids"] == ["tok"]
+    notif = kwargs["json"]["headings"]
+    assert notif == {"en": notification_map[NotificationType.ON_THE_WAY]["headings"]}
+    assert all(isinstance(v, str) for v in kwargs["json"]["data"].values())

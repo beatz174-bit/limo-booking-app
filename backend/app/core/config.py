@@ -121,6 +121,8 @@ class Settings(BaseSettings):
     fcm_project_id: Optional[str] = None
     fcm_client_email: Optional[str] = None
     fcm_private_key: Optional[str] = None
+    onesignal_app_id: Optional[str] = None
+    onesignal_api_key: Optional[str] = None
     app_tz: str = "Australia/Brisbane"
     app_base_url: Optional[str] = None
     frontend_base_url: Optional[str] = None
@@ -200,11 +202,13 @@ def get_settings() -> Settings:
     logger.debug("loading settings", extra={"env": _ENV, "env_file": _ENV_FILE})
     settings = Settings()
     logger.debug(
-        "resolved FCM config",
+        "resolved notification config",
         extra={
             "fcm_project_id": settings.fcm_project_id,
             "fcm_client_email": settings.fcm_client_email,
             "has_fcm_private_key": bool(settings.fcm_private_key),
+            "onesignal_app_id": settings.onesignal_app_id,
+            "has_onesignal_api_key": bool(settings.onesignal_api_key),
         },
     )
     return settings
