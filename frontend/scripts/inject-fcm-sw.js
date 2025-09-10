@@ -2,10 +2,12 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config as loadEnv } from 'dotenv';
+import { expand as dotenvExpand } from 'dotenv-expand';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const env = process.env.ENV || process.env.NODE_ENV || 'development';
-loadEnv({ path: resolve(__dirname, `../.env.${env}`) });
+const envConfig = loadEnv({ path: resolve(__dirname, `../.env.${env}`) });
+dotenvExpand(envConfig);
 const templatePath = resolve(__dirname, '../public/firebase-messaging-sw.template.js');
 const targetPath = resolve(__dirname, '../public/firebase-messaging-sw.js');
 
