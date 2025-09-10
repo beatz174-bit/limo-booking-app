@@ -1,3 +1,3 @@
 importScripts(
-  'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.worker.js'
+  'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js'
 );
