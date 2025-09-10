@@ -14,10 +14,13 @@ interface OneSignalSDK {
 declare global {
   interface Window {
     OneSignal?: OneSignalSDK;
+    __oneSignalInitPromise?: Promise<OneSignalSDK | null>;
   }
 }
 
-let initialized = false;
+let initialized = !!window.OneSignal;
+let initPromise: Promise<OneSignalSDK | null> | undefined =
+  window.__oneSignalInitPromise;
 
 async function initOneSignal() {
   const appId = import.meta.env.VITE_ONESIGNAL_APP_ID;
@@ -25,21 +28,30 @@ async function initOneSignal() {
     logger.warn('services/push', 'Missing OneSignal app ID');
     return null;
   }
-  try {
-    if (!initialized) {
-      logger.debug('services/push', 'Loading OneSignal SDK');
-      await import('https://cdn.onesignal.com/sdks/OneSignalSDK.js');
-      await window.OneSignal?.init({
-        appId,
-        allowLocalhostAsSecureOrigin: true,
-      });
-      initialized = true;
+  if (initPromise) return initPromise;
+
+  initPromise = (async () => {
+    try {
+      if (!window.OneSignal) {
+        logger.debug('services/push', 'Loading OneSignal SDK');
+        await import('https://cdn.onesignal.com/sdks/OneSignalSDK.js');
+      }
+      if (!initialized) {
+        await window.OneSignal?.init({
+          appId,
+          allowLocalhostAsSecureOrigin: true,
+        });
+        initialized = true;
+      }
+      return window.OneSignal ?? null;
+    } catch (err) {
+      logger.error('services/push', 'OneSignal init failed', err);
+      return null;
     }
-    return window.OneSignal;
-  } catch (err) {
-    logger.error('services/push', 'OneSignal init failed', err);
-    return null;
-  }
+  })();
+
+  window.__oneSignalInitPromise = initPromise;
+  return initPromise;
 }
 
 export async function subscribePush(): Promise<string | null> {
