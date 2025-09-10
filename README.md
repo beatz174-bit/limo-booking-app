@@ -34,6 +34,7 @@ The application relies on several external services. Set these variables in a `.
 | `LOG_LEVEL` | (backend) Logging verbosity (`DEBUG`, `INFO`, etc.). Defaults to `INFO`. |
 | `GRAYLOG_HOST` / `GRAYLOG_PORT` | (backend) Optional Graylog host and port for log forwarding. Port defaults to `12201`. |
 | `FCM_PROJECT_ID` / `FCM_CLIENT_EMAIL` / `FCM_PRIVATE_KEY` | (backend) Optional Firebase credentials for push notifications. |
+| `ONESIGNAL_APP_ID` / `ONESIGNAL_API_KEY` | (backend) OneSignal credentials for push notifications. |
 | `VITE_FCM_API_KEY` / `VITE_FCM_PROJECT_ID` / `VITE_FCM_APP_ID` / `VITE_FCM_SENDER_ID` / `VITE_FCM_VAPID_KEY` | (frontend) Optional Firebase config for web push. |
 
 ## Logging
