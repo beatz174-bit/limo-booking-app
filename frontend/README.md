@@ -19,6 +19,7 @@ Create a `.env` file or export the following variables:
 - `VITE_API_BASE_URL` – URL of the backend API (e.g. `http://localhost:8000`).
 - `VITE_GOOGLE_MAPS_API_KEY` – Google Maps key for rendering maps.
 - `VITE_ONESIGNAL_APP_ID` – OneSignal application ID.
+- `VITE_ONESIGNAL_API_KEY` – OneSignal REST API key.
 
 ## Development
 
