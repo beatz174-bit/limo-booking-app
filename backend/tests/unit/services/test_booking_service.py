@@ -3,15 +3,14 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 import stripe
-from fastapi import HTTPException
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.security import hash_password
 from app.models.booking import Booking, BookingStatus
 from app.models.user_v2 import User, UserRole
 from app.schemas.api_booking import BookingCreateRequest, Location
 from app.services import booking_service
+from fastapi import HTTPException
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 pytestmark = pytest.mark.asyncio
 
@@ -140,7 +139,7 @@ async def test_create_booking_commits_once(async_session: AsyncSession, mocker):
     await async_session.commit()
 
     mocker.patch("app.services.routing.estimate_route", return_value=(1.0, 1.0))
-    mocker.patch("app.services.notifications._send_fcm", return_value=None)
+    mocker.patch("app.services.notifications._send_onesignal", return_value=None)
 
     commit_spy = mocker.spy(async_session, "commit")
 
