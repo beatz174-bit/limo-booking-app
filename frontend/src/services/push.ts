@@ -113,3 +113,22 @@ export async function unsubscribePush(): Promise<void> {
     logger.warn('services/push', 'FCM delete failed', err);
   }
 }
+
+export async function refreshPushToken(): Promise<string | null> {
+  const config = getMessagingConfig();
+  if (!config) return null;
+  const { messaging, vapid } = config;
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    const token = await getToken(messaging, {
+      vapidKey: vapid,
+      serviceWorkerRegistration: registration,
+    });
+    console.log('Refreshed FCM token:', token);
+    logger.info('services/push', 'FCM token refreshed', { token });
+    return token;
+  } catch (err) {
+    logger.warn('services/push', 'FCM token refresh failed', err);
+    return null;
+  }
+}
