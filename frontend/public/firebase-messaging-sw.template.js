@@ -29,6 +29,7 @@ firebase.initializeApp(config);
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
+  console.log('firebase-messaging-sw', 'Background message received', payload);
   self.clients
     .matchAll({ type: 'window', includeUncontrolled: true })
     .then((clients) => {

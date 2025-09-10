@@ -1,5 +1,10 @@
 import { initializeApp } from 'firebase/app';
-import { deleteToken, getMessaging, getToken } from 'firebase/messaging';
+import {
+  deleteToken,
+  getMessaging,
+  getToken,
+  onMessage,
+} from 'firebase/messaging';
 import * as logger from '@/lib/logger';
 
 function mask(value: string | undefined): string | undefined {
@@ -59,6 +64,10 @@ function getMessagingConfig() {
       messagingSenderId: senderId,
     });
     messaging = getMessaging(app);
+    onMessage(messaging, (payload) => {
+      console.log('Foreground FCM message:', payload);
+      logger.info('services/push', 'Foreground FCM message', payload);
+    });
   }
   return { messaging, vapid } as const;
 }
