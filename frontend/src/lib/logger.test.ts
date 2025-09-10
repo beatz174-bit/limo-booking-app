@@ -56,4 +56,26 @@ describe("logger", () => {
     import.meta.env.VITE_LOG_LEVEL = originalLevel;
     import.meta.env.VITE_GRAYLOG_URL = originalUrl;
   });
+
+  test("serializes Error objects", async () => {
+    const originalUrl = import.meta.env.VITE_GRAYLOG_URL;
+    import.meta.env.VITE_GRAYLOG_URL = "";
+    vi.resetModules();
+    const { createPayload, error } = await import("./logger");
+    const err = new Error("fail");
+    const payload = createPayload("error", "facility", [err]);
+    const parsed = JSON.parse(payload.message);
+    expect(parsed.message).toBe("fail");
+    expect(parsed.stack).toBe(err.stack);
+
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    error("facility", err);
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining("fail"),
+      }),
+    );
+    errorSpy.mockRestore();
+    import.meta.env.VITE_GRAYLOG_URL = originalUrl;
+  });
 });

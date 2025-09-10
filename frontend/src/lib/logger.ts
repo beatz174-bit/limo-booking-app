@@ -33,7 +33,13 @@ function shouldLog(level: LogLevel): boolean {
 
 function createPayload(level: LogLevel, facility: string, args: unknown[]): LogPayload {
   const message = args
-    .map((a) => (typeof a === "string" ? a : JSON.stringify(a)))
+    .map((a) => {
+      if (typeof a === "string") return a;
+      if (a instanceof Error) {
+        return JSON.stringify({ message: a.message, stack: a.stack });
+      }
+      return JSON.stringify(a);
+    })
     .join(" ");
   return {
     level,
