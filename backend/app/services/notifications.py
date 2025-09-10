@@ -7,13 +7,14 @@ from datetime import datetime, timezone
 from typing import Any
 
 import httpx
+from jose import jwt
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
 from app.core.config import get_settings
 from app.models.notification import Notification, NotificationType
 from app.models.user_v2 import User as UserV2
 from app.models.user_v2 import UserRole
-from jose import jwt
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 logger = logging.getLogger(__name__)
 
@@ -163,13 +164,48 @@ async def _send_fcm(
                             "webpush": {"notification": notification},
                         }
                     }
-                    logger.info("FCM request: %s", message)
-                    response = await client.post(
-                        f"https://fcm.googleapis.com/v1/projects/{settings.fcm_project_id}/messages:send",
-                        headers={"Authorization": f"Bearer {access_token}"},
-                        json=message,
+                    logger.info(
+                        "Sending FCM message",
+                        extra={"token": token, "payload": data},
                     )
-                    logger.info("FCM response: %s", response.json())
+                    try:
+                        response = await client.post(
+                            f"https://fcm.googleapis.com/v1/projects/{settings.fcm_project_id}/messages:send",
+                            headers={"Authorization": f"Bearer {access_token}"},
+                            json=message,
+                        )
+                        response.raise_for_status()
+                        resp_data = response.json()
+                        logger.info(
+                            "FCM response",
+                            extra={
+                                "token": token,
+                                "payload": data,
+                                "response": resp_data,
+                            },
+                        )
+                        error_msg = (
+                            resp_data.get("error", {}).get("message", "")
+                            if isinstance(resp_data, dict)
+                            else ""
+                        )
+                        if any(
+                            err in error_msg
+                            for err in ["NotRegistered", "InvalidRegistration"]
+                        ):
+                            logger.error(
+                                "FCM token error",
+                                extra={
+                                    "token": token,
+                                    "payload": data,
+                                    "response": resp_data,
+                                },
+                            )
+                    except httpx.HTTPError:
+                        logger.exception(
+                            "FCM send failed",
+                            extra={"token": token, "payload": data},
+                        )
             else:
                 message = {
                     "message": {
@@ -178,13 +214,48 @@ async def _send_fcm(
                         "webpush": {"notification": notification},
                     }
                 }
-                logger.info("FCM request: %s", message)
-                response = await client.post(
-                    f"https://fcm.googleapis.com/v1/projects/{settings.fcm_project_id}/messages:send",
-                    headers={"Authorization": f"Bearer {access_token}"},
-                    json=message,
+                logger.info(
+                    "Sending FCM message",
+                    extra={"token": None, "payload": data},
                 )
-                logger.info("FCM response: %s", response.json())
+                try:
+                    response = await client.post(
+                        f"https://fcm.googleapis.com/v1/projects/{settings.fcm_project_id}/messages:send",
+                        headers={"Authorization": f"Bearer {access_token}"},
+                        json=message,
+                    )
+                    response.raise_for_status()
+                    resp_data = response.json()
+                    logger.info(
+                        "FCM response",
+                        extra={
+                            "token": None,
+                            "payload": data,
+                            "response": resp_data,
+                        },
+                    )
+                    error_msg = (
+                        resp_data.get("error", {}).get("message", "")
+                        if isinstance(resp_data, dict)
+                        else ""
+                    )
+                    if any(
+                        err in error_msg
+                        for err in ["NotRegistered", "InvalidRegistration"]
+                    ):
+                        logger.error(
+                            "FCM token error",
+                            extra={
+                                "token": None,
+                                "payload": data,
+                                "response": resp_data,
+                            },
+                        )
+                except httpx.HTTPError:
+                    logger.exception(
+                        "FCM send failed",
+                        extra={"token": None, "payload": data},
+                    )
         except httpx.HTTPError:
             logger.exception("FCM send failed")
             # Silently ignore push delivery issues to keep core flow resilient
