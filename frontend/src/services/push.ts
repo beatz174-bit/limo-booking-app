@@ -48,6 +48,38 @@ async function initOneSignal() {
           appId,
           allowLocalhostAsSecureOrigin: true,
         });
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        logger.debug('services/push', 'Service worker registrations', {
+          registrations,
+        });
+        if (registrations.length === 0) {
+          logger.error(
+            'services/push',
+            'OneSignal service worker not registered',
+            {
+              expected: [
+                '/OneSignalSDKWorker.js',
+                '/OneSignalSDKUpdaterWorker.js',
+              ],
+            },
+          );
+          try {
+            const registration = await navigator.serviceWorker.register(
+              '/OneSignalSDKWorker.js',
+            );
+            logger.debug(
+              'services/push',
+              'Manually registered OneSignal service worker',
+              { scope: registration.scope },
+            );
+          } catch (err) {
+            logger.error(
+              'services/push',
+              'Manual OneSignal service worker registration failed',
+              err,
+            );
+          }
+        }
         logger.debug('services/push', 'OneSignal initialization complete');
         initialized = true;
       }
