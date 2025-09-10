@@ -14,7 +14,7 @@ interface Props {
 
 const PushToggle = ({ ensureFreshToken }: Props) => {
   const [enabled, setEnabled] = useState(false);
-  const [token, setToken] = useState<string | null>(null);
+  const [playerId, setPlayerId] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -24,8 +24,8 @@ const PushToggle = ({ ensureFreshToken }: Props) => {
       const res = await apiFetch(`${base}/users/me`);
       if (res.ok) {
         const data = await res.json();
-        setEnabled(!!data.fcm_token);
-        setToken(data.fcm_token ?? null);
+        setEnabled(!!data.onesignal_player_id);
+        setPlayerId(data.onesignal_player_id ?? null);
       }
     };
     load();
@@ -38,17 +38,17 @@ const PushToggle = ({ ensureFreshToken }: Props) => {
     const auth = await ensureFreshToken();
     if (!auth) return;
     if (checked) {
-      const newToken = await subscribePush();
-      if (!newToken) return;
+      const newId = await subscribePush();
+      if (!newId) return;
       const base = CONFIG.API_BASE_URL ?? '';
       await apiFetch(`${base}/users/me`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ fcm_token: newToken }),
+        body: JSON.stringify({ onesignal_player_id: newId }),
       });
-      setToken(newToken);
+      setPlayerId(newId);
     } else {
       await unsubscribePush();
       const base = CONFIG.API_BASE_URL ?? '';
@@ -57,9 +57,9 @@ const PushToggle = ({ ensureFreshToken }: Props) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ fcm_token: null }),
+        body: JSON.stringify({ onesignal_player_id: null }),
       });
-      setToken(null);
+      setPlayerId(null);
     }
     setEnabled(checked);
   };
@@ -68,7 +68,7 @@ const PushToggle = ({ ensureFreshToken }: Props) => {
     if (!enabled) return;
     const interval = setInterval(async () => {
       const refreshed = await refreshPushToken();
-      if (!refreshed || refreshed === token) return;
+      if (!refreshed || refreshed === playerId) return;
       const auth = await ensureFreshToken();
       if (!auth) return;
       const base = CONFIG.API_BASE_URL ?? '';
@@ -77,12 +77,12 @@ const PushToggle = ({ ensureFreshToken }: Props) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ fcm_token: refreshed }),
+        body: JSON.stringify({ onesignal_player_id: refreshed }),
       });
-      setToken(refreshed);
+      setPlayerId(refreshed);
     }, 1000 * 60 * 60 * 24);
     return () => clearInterval(interval);
-  }, [enabled, token, ensureFreshToken]);
+  }, [enabled, playerId, ensureFreshToken]);
 
   return (
     <FormControlLabel

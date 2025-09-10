@@ -48,15 +48,7 @@ const oauthCfg: OAuthConfig = {
 };
 
 async function maybeSubscribePush() {
-  if (
-    typeof window !== "undefined" &&
-    "serviceWorker" in navigator &&
-    import.meta.env.VITE_FCM_VAPID_KEY &&
-    import.meta.env.VITE_FCM_API_KEY &&
-    import.meta.env.VITE_FCM_PROJECT_ID &&
-    import.meta.env.VITE_FCM_APP_ID &&
-    import.meta.env.VITE_FCM_SENDER_ID
-  ) {
+  if (typeof window !== "undefined" && import.meta.env.VITE_ONESIGNAL_APP_ID) {
     try {
       await subscribePush();
     } catch (err) {

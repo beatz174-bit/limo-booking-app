@@ -12,7 +12,7 @@ describe('PushToggle', () => {
   it('shows unchecked when no subscription', async () => {
     vi.spyOn(global, 'fetch').mockResolvedValue({
       ok: true,
-      json: async () => ({ fcm_token: null }),
+      json: async () => ({ onesignal_player_id: null }),
     } as Response);
     render(<PushToggle ensureFreshToken={ensureFreshToken} />);
     const checkbox = await screen.findByRole('switch', { name: /push notifications/i });
@@ -22,7 +22,7 @@ describe('PushToggle', () => {
   it('shows checked when subscribed', async () => {
     vi.spyOn(global, 'fetch').mockResolvedValue({
       ok: true,
-      json: async () => ({ fcm_token: 'tok' }),
+      json: async () => ({ onesignal_player_id: 'tok' }),
     } as Response);
     render(<PushToggle ensureFreshToken={ensureFreshToken} />);
     const checkbox = await screen.findByRole('switch', { name: /push notifications/i });
