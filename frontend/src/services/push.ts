@@ -37,7 +37,9 @@ async function initOneSignal() {
     try {
       if (!window.OneSignal) {
         logger.debug('services/push', 'Loading OneSignal SDK');
-        await import('https://cdn.onesignal.com/sdks/OneSignalSDK.js');
+        await import(
+          'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js'
+        );
         logger.debug('services/push', 'OneSignal SDK loaded');
       }
       if (!initialized) {
