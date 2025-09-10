@@ -56,6 +56,9 @@ engine_kwargs: Dict[str, Union[int, bool, Dict[str, Union[bool, int]]]] = {
     "connect_args": {"timeout": 30}
 }
 
+if settings.debug:
+    engine_kwargs["echo"] = True
+
 if is_sqlite_async:
     engine_kwargs["connect_args"]["check_same_thread"] = False
 else:

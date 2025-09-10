@@ -84,6 +84,10 @@ async def update_user(
         )
 
     update_data = data.model_dump(exclude_unset=True)
+    logger.info(
+        "update_user:fields",
+        extra={"user_id": user_id, "update_data": update_data},
+    )
 
     # Handle password specially; everything else set directly
     if "password" in update_data:
@@ -95,6 +99,15 @@ async def update_user(
 
     await db.flush()
     await db.refresh(user)
+    for field in update_data.keys():
+        logger.info(
+            "update_user:field_updated",
+            extra={
+                "user_id": user_id,
+                "field": field,
+                "value": getattr(user, field),
+            },
+        )
     return UserRead.model_validate(user)
 
 
