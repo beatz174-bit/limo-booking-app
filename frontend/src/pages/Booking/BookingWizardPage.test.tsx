@@ -34,7 +34,28 @@ vi.mock('@/hooks/useBookings', () => ({
   useBookings: () => ({ addBooking }),
 }));
 vi.mock('@/hooks/useAvailability', () => ({
-  default: () => ({ data: { slots: [], bookings: [] } }),
+  default: (month: string) => ({
+    data: {
+      slots: [
+        {
+          id: 1,
+          start_dt: `${month}-02T00:00:00Z`,
+          end_dt: `${month}-02T12:00:00Z`,
+        },
+        {
+          id: 2,
+          start_dt: `${month}-03T00:00:00Z`,
+          end_dt: `${month}-03T23:59:59Z`,
+        },
+      ],
+      bookings: [],
+    },
+    dayStates: {
+      [`${month}-01`]: 'free',
+      [`${month}-02`]: 'partial',
+      [`${month}-03`]: 'full',
+    },
+  }),
 }));
 vi.mock('@/hooks/useSettings', () => ({
   useSettings: () => ({
