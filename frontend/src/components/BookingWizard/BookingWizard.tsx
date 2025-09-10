@@ -17,6 +17,7 @@ import { BookingFormData } from '@/types/BookingFormData';
 import { useBooking } from '@/hooks/useBooking';
 import { useSettings } from '@/hooks/useSettings';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBookings } from '@/hooks/useBookings';
 import * as logger from '@/lib/logger';
 
 interface BookingWizardProps {
@@ -34,6 +35,7 @@ export default function BookingWizard({
   });
   const { user: profile } = useAuth();
   const { createBooking, loading } = useBooking();
+  const { addBooking } = useBookings();
   const [bookingData, setBookingData] = useState<{ public_code: string } | null>(
     null,
   );
@@ -65,6 +67,7 @@ export default function BookingWizard({
           : undefined,
       };
       const res = await createBooking(payload);
+      addBooking(res.booking);
       setBookingData(res.booking);
     } catch (err) {
       logger.error(

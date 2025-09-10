@@ -21,13 +21,17 @@ import BookingWizardPage from './BookingWizardPage';
 
 const createBooking = vi
   .fn()
-  .mockResolvedValue({ booking: { public_code: 'test' } });
+  .mockResolvedValue({ booking: { id: '1', public_code: 'test' } });
+const addBooking = vi.fn();
 
 vi.mock('@/hooks/useBooking', () => ({
   useBooking: () => ({
     createBooking,
     loading: false,
   }),
+}));
+vi.mock('@/hooks/useBookings', () => ({
+  useBookings: () => ({ addBooking }),
 }));
 vi.mock('@/hooks/useAvailability', () => ({
   default: () => ({ data: { slots: [], bookings: [] } }),
@@ -91,6 +95,7 @@ beforeEach(() => {
 afterEach(() => {
   mockElements.submit.mockClear();
   mockConfirm.mockClear();
+  addBooking.mockClear();
 });
 
 test('creates booking on confirmation and shows tracking link', async () => {
@@ -122,9 +127,10 @@ test('creates booking on confirmation and shows tracking link', async () => {
     customer: {
       name: 'Test User',
       email: 'test@example.com',
-      phone: '123-4567',
+    phone: '123-4567',
     },
   });
+  expect(addBooking).toHaveBeenCalledWith({ id: '1', public_code: 'test' });
 });
 
 test('prompts to add a payment method when missing', async () => {
