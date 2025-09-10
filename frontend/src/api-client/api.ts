@@ -795,7 +795,7 @@ export interface UserRead {
      * @type {string}
      * @memberof UserRead
      */
-    'fcm_token'?: string | null;
+    'onesignal_player_id'?: string | null;
     /**
      * 
      * @type {string}
@@ -844,7 +844,7 @@ export interface UserUpdate {
      * @type {string}
      * @memberof UserUpdate
      */
-    'fcm_token'?: string | null;
+    'onesignal_player_id'?: string | null;
     /**
      * 
      * @type {string}

@@ -49,9 +49,6 @@ export default async function globalSetup(): Promise<void> {
         ENV: "test",
         STRIPE_SECRET_KEY: "",
         GOOGLE_MAPS_API_KEY: "",
-        FCM_PROJECT_ID: "",
-        FCM_CLIENT_EMAIL: "",
-        FCM_PRIVATE_KEY: "",
       },
       stdio: "inherit",
     }
