@@ -4,7 +4,7 @@ import { CONFIG } from '@/config';
 
 interface OneSignalSDK {
   init(options: { appId: string; allowLocalhostAsSecureOrigin?: boolean }): Promise<void>;
-  User: {
+  User?: {
     pushSubscription: {
       id: Promise<string | null>;
       optIn: () => Promise<void>;
@@ -78,7 +78,16 @@ function ensureAppId(): boolean {
 export async function subscribePush(): Promise<string | null> {
   if (!ensureAppId()) return null;
   const os = await initOneSignal();
-  if (!os?.User?.pushSubscription) {
+  const user = os?.User;
+  if (!user) {
+    logger.warn(
+      'services/push',
+      'OneSignal SDK initialized but no User object; check browser storage/permission settings',
+    );
+    return null;
+  }
+  const subscription = user.pushSubscription;
+  if (!subscription) {
     logger.warn(
       'services/push',
       'OneSignal pushSubscription not available. Verify VITE_ONESIGNAL_APP_ID and browser push support',
@@ -87,10 +96,9 @@ export async function subscribePush(): Promise<string | null> {
   }
   try {
     logger.debug('services/push', 'Calling pushSubscription.optIn');
-    await os.User.pushSubscription.optIn();
+    await subscription.optIn();
     logger.debug('services/push', 'pushSubscription.optIn resolved');
 
-    const subscription = os.User.pushSubscription;
     const id = await subscription.id;
     logger.debug('services/push', 'Subscription object', {
       id,
@@ -125,7 +133,16 @@ export async function subscribePush(): Promise<string | null> {
 export async function unsubscribePush(): Promise<void> {
   if (!ensureAppId()) return;
   const os = await initOneSignal();
-  if (!os?.User?.pushSubscription) {
+  const user = os?.User;
+  if (!user) {
+    logger.warn(
+      'services/push',
+      'OneSignal SDK initialized but no User object; check browser storage/permission settings',
+    );
+    return;
+  }
+  const subscription = user.pushSubscription;
+  if (!subscription) {
     logger.warn(
       'services/push',
       'OneSignal pushSubscription not available. Verify VITE_ONESIGNAL_APP_ID and browser push support',
@@ -133,7 +150,7 @@ export async function unsubscribePush(): Promise<void> {
     return;
   }
   try {
-    await os.User.pushSubscription.optOut();
+    await subscription.optOut();
     logger.debug('services/push', 'OneSignal unsubscribed');
   } catch (err) {
     logger.warn('services/push', 'OneSignal unsubscribe failed', err);
@@ -143,7 +160,16 @@ export async function unsubscribePush(): Promise<void> {
 export async function refreshPushToken(): Promise<string | null> {
   if (!ensureAppId()) return null;
   const os = await initOneSignal();
-  if (!os?.User?.pushSubscription) {
+  const user = os?.User;
+  if (!user) {
+    logger.warn(
+      'services/push',
+      'OneSignal SDK initialized but no User object; check browser storage/permission settings',
+    );
+    return null;
+  }
+  const subscription = user.pushSubscription;
+  if (!subscription) {
     logger.warn(
       'services/push',
       'OneSignal pushSubscription not available. Verify VITE_ONESIGNAL_APP_ID and browser push support',
@@ -151,7 +177,7 @@ export async function refreshPushToken(): Promise<string | null> {
     return null;
   }
   try {
-    const id = await os.User.pushSubscription.id;
+    const id = await subscription.id;
     return id ?? null;
   } catch (err) {
     logger.warn('services/push', 'OneSignal id retrieval failed', err);
