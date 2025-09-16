@@ -6,7 +6,7 @@ interface OneSignalSDK {
   init(options: { appId: string; allowLocalhostAsSecureOrigin?: boolean }): Promise<void>;
   User?: {
     pushSubscription: {
-      id: Promise<string | null>;
+      id: string | null | undefined;
       optIn: () => Promise<void>;
       optOut: () => Promise<void>;
     };
@@ -99,7 +99,7 @@ export async function subscribePush(): Promise<string | null> {
     await subscription.optIn();
     logger.debug('services/push', 'pushSubscription.optIn resolved');
 
-    const id = await subscription.id;
+    const id = subscription.id;
     logger.debug('services/push', 'Subscription object', {
       id,
       hasOptIn: typeof subscription.optIn === 'function',
@@ -177,7 +177,7 @@ export async function refreshPushToken(): Promise<string | null> {
     return null;
   }
   try {
-    const id = await subscription.id;
+    const id = subscription.id;
     return id ?? null;
   } catch (err) {
     logger.warn('services/push', 'OneSignal id retrieval failed', err);
