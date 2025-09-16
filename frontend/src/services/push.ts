@@ -1,28 +1,23 @@
+import OneSignal, { IInitObject, IOneSignalOneSignal } from 'react-onesignal';
+
 import * as logger from '@/lib/logger';
 import { apiFetch } from '@/services/apiFetch';
 import { CONFIG } from '@/config';
 
-interface OneSignalSDK {
-  init(options: { appId: string; allowLocalhostAsSecureOrigin?: boolean }): Promise<void>;
-  User?: {
-    pushSubscription: {
-      id: string | null | undefined;
-      optIn: () => Promise<void>;
-      optOut: () => Promise<void>;
-    };
-  };
-}
+let initPromise: Promise<IOneSignalOneSignal | null> | undefined;
 
-declare global {
-  interface Window {
-    OneSignal?: OneSignalSDK;
-    __oneSignalInitPromise?: Promise<OneSignalSDK | null>;
+function resolveServiceWorkerPath(): { path: string; scope: string } {
+  const configuredPath =
+    import.meta.env.VITE_ONESIGNAL_SERVICE_WORKER_PATH ?? 'OneSignalSDK.sw.js';
+  const path = configuredPath.startsWith('/')
+    ? configuredPath
+    : `/${configuredPath}`;
+  if (path.endsWith('/')) {
+    return { path, scope: path };
   }
+  const scope = path.slice(0, path.lastIndexOf('/') + 1) || '/';
+  return { path, scope };
 }
-
-let initialized = false;
-let initPromise: Promise<OneSignalSDK | null> | undefined =
-  window.__oneSignalInitPromise;
 
 async function initOneSignal() {
   const appId = import.meta.env.VITE_ONESIGNAL_APP_ID;
@@ -30,37 +25,38 @@ async function initOneSignal() {
     logger.warn('services/push', 'Missing OneSignal app ID');
     return null;
   }
-  logger.debug('services/push', 'Using OneSignal app ID', { appId });
   if (initPromise) return initPromise;
+
+  logger.debug('services/push', 'Using OneSignal app ID', { appId });
+  const { path: serviceWorkerPath, scope: serviceWorkerScope } =
+    resolveServiceWorkerPath();
 
   initPromise = (async () => {
     try {
-      if (!window.OneSignal) {
-        logger.debug('services/push', 'Loading OneSignal SDK');
-        await import('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.js');
-        logger.debug('services/push', 'OneSignal SDK loaded');
-      }
-      if (!initialized) {
-        logger.debug('services/push', 'Initializing OneSignal');
-        await window.OneSignal?.init({
-          appId,
-          allowLocalhostAsSecureOrigin: true,
-        });
-        logger.debug('services/push', 'OneSignal initialization complete');
-        initialized = true;
-      }
-      const status = window.OneSignal ?? null;
-      logger.debug('services/push', 'OneSignal resolved', {
-        available: !!status,
+      logger.debug('services/push', 'Initializing OneSignal', {
+        serviceWorkerPath,
+        serviceWorkerScope,
       });
-      return status;
+
+      const options: IInitObject = {
+        appId,
+        allowLocalhostAsSecureOrigin: true,
+        serviceWorkerPath,
+        serviceWorkerUpdaterPath: serviceWorkerPath,
+        serviceWorkerParam: { scope: serviceWorkerScope },
+      };
+
+      await OneSignal.init(options);
+
+      logger.debug('services/push', 'OneSignal initialization complete');
+
+      return OneSignal;
     } catch (err) {
       logger.error('services/push', 'OneSignal init failed', err);
+      initPromise = undefined;
       return null;
     }
   })();
-
-  window.__oneSignalInitPromise = initPromise;
   return initPromise;
 }
 
@@ -77,23 +73,12 @@ function ensureAppId(): boolean {
 
 export async function subscribePush(): Promise<string | null> {
   if (!ensureAppId()) return null;
-  const os = await initOneSignal();
-  const user = os?.User;
-  if (!user) {
-    logger.warn(
-      'services/push',
-      'OneSignal SDK initialized but no User object; check browser storage/permission settings',
-    );
+  const sdk = await initOneSignal();
+  if (!sdk) {
+    logger.warn('services/push', 'OneSignal SDK unavailable after init');
     return null;
   }
-  const subscription = user.PushSubscription;
-  if (!subscription) {
-    logger.warn(
-      'services/push',
-      'OneSignal pushSubscription not available. Verify VITE_ONESIGNAL_APP_ID and browser push support',
-    );
-    return null;
-  }
+  const subscription = sdk.User.PushSubscription;
   try {
     logger.debug('services/push', 'Calling pushSubscription.optIn');
     await subscription.optIn();
@@ -132,23 +117,12 @@ export async function subscribePush(): Promise<string | null> {
 
 export async function unsubscribePush(): Promise<void> {
   if (!ensureAppId()) return;
-  const os = await initOneSignal();
-  const user = os?.User;
-  if (!user) {
-    logger.warn(
-      'services/push',
-      'OneSignal SDK initialized but no User object; check browser storage/permission settings',
-    );
+  const sdk = await initOneSignal();
+  if (!sdk) {
+    logger.warn('services/push', 'OneSignal SDK unavailable after init');
     return;
   }
-  const subscription = user.PushSubscription;
-  if (!subscription) {
-    logger.warn(
-      'services/push',
-      'OneSignal pushSubscription not available. Verify VITE_ONESIGNAL_APP_ID and browser push support',
-    );
-    return;
-  }
+  const subscription = sdk.User.PushSubscription;
   try {
     await subscription.optOut();
     logger.debug('services/push', 'OneSignal unsubscribed');
@@ -159,23 +133,12 @@ export async function unsubscribePush(): Promise<void> {
 
 export async function refreshPushToken(): Promise<string | null> {
   if (!ensureAppId()) return null;
-  const os = await initOneSignal();
-  const user = os?.User;
-  if (!user) {
-    logger.warn(
-      'services/push',
-      'OneSignal SDK initialized but no User object; check browser storage/permission settings',
-    );
+  const sdk = await initOneSignal();
+  if (!sdk) {
+    logger.warn('services/push', 'OneSignal SDK unavailable after init');
     return null;
   }
-  const subscription = user.PushSubscription;
-  if (!subscription) {
-    logger.warn(
-      'services/push',
-      'OneSignal pushSubscription not available. Verify VITE_ONESIGNAL_APP_ID and browser push support',
-    );
-    return null;
-  }
+  const subscription = sdk.User.PushSubscription;
   try {
     const id = subscription.id;
     return id ?? null;
