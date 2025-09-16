@@ -6,17 +6,42 @@ import { CONFIG } from '@/config';
 
 let initPromise: Promise<IOneSignalOneSignal | null> | undefined;
 
-function resolveServiceWorkerPath(): { path: string; scope: string } {
+const DEFAULT_SW_PATH = 'onesignal/OneSignalSDKWorker.js';
+const DEFAULT_SW_UPDATER_PATH = 'onesignal/OneSignalSDKUpdaterWorker.js';
+
+function ensureAbsolute(path: string): string {
+  return path.startsWith('/') ? path : `/${path}`;
+}
+
+function resolveServiceWorkerConfig(): {
+  path: string;
+  scope: string;
+  updaterPath: string;
+} {
   const configuredPath =
-    import.meta.env.VITE_ONESIGNAL_SERVICE_WORKER_PATH ?? 'OneSignalSDK.sw.js';
-  const path = configuredPath.startsWith('/')
-    ? configuredPath
-    : `/${configuredPath}`;
-  if (path.endsWith('/')) {
-    return { path, scope: path };
-  }
-  const scope = path.slice(0, path.lastIndexOf('/') + 1) || '/';
-  return { path, scope };
+    import.meta.env.VITE_ONESIGNAL_SERVICE_WORKER_PATH ?? DEFAULT_SW_PATH;
+  const path = ensureAbsolute(configuredPath);
+
+  const scope = path.endsWith('/')
+    ? path
+    : path.slice(0, path.lastIndexOf('/') + 1) || '/';
+
+  const configuredUpdater =
+    import.meta.env.VITE_ONESIGNAL_SERVICE_WORKER_UPDATER_PATH;
+  const derivedUpdaterPath = deriveUpdaterPath(path);
+  const updaterPath = configuredUpdater
+    ? ensureAbsolute(configuredUpdater)
+    : derivedUpdaterPath ?? ensureAbsolute(DEFAULT_SW_UPDATER_PATH);
+
+  return { path, scope, updaterPath };
+}
+
+function deriveUpdaterPath(workerPath: string): string | null {
+  const replaced = workerPath.replace(
+    /OneSignalSDKWorker\.js(\?.*)?$/i,
+    'OneSignalSDKUpdaterWorker.js$1',
+  );
+  return replaced === workerPath ? null : replaced;
 }
 
 async function initOneSignal() {
@@ -28,21 +53,25 @@ async function initOneSignal() {
   if (initPromise) return initPromise;
 
   logger.debug('services/push', 'Using OneSignal app ID', { appId });
-  const { path: serviceWorkerPath, scope: serviceWorkerScope } =
-    resolveServiceWorkerPath();
+  const {
+    path: serviceWorkerPath,
+    scope: serviceWorkerScope,
+    updaterPath: serviceWorkerUpdaterPath,
+  } = resolveServiceWorkerConfig();
 
   initPromise = (async () => {
     try {
       logger.debug('services/push', 'Initializing OneSignal', {
         serviceWorkerPath,
         serviceWorkerScope,
+        serviceWorkerUpdaterPath,
       });
 
       const options: IInitObject = {
         appId,
         allowLocalhostAsSecureOrigin: true,
         serviceWorkerPath,
-        serviceWorkerUpdaterPath: serviceWorkerPath,
+        serviceWorkerUpdaterPath,
         serviceWorkerParam: { scope: serviceWorkerScope },
       };
 
