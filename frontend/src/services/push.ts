@@ -37,7 +37,7 @@ async function initOneSignal() {
     try {
       if (!window.OneSignal) {
         logger.debug('services/push', 'Loading OneSignal SDK');
-        await import('https://cdn.onesignal.com/sdks/OneSignalSDK.js');
+        await import('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.js');
         logger.debug('services/push', 'OneSignal SDK loaded');
       }
       if (!initialized) {
@@ -86,7 +86,7 @@ export async function subscribePush(): Promise<string | null> {
     );
     return null;
   }
-  const subscription = user.pushSubscription;
+  const subscription = user.PushSubscription;
   if (!subscription) {
     logger.warn(
       'services/push',
@@ -141,7 +141,7 @@ export async function unsubscribePush(): Promise<void> {
     );
     return;
   }
-  const subscription = user.pushSubscription;
+  const subscription = user.PushSubscription;
   if (!subscription) {
     logger.warn(
       'services/push',
@@ -168,7 +168,7 @@ export async function refreshPushToken(): Promise<string | null> {
     );
     return null;
   }
-  const subscription = user.pushSubscription;
+  const subscription = user.PushSubscription;
   if (!subscription) {
     logger.warn(
       'services/push',
