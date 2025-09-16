@@ -5,7 +5,7 @@ import { CONFIG } from '@/config';
 interface OneSignalSDK {
   init(options: { appId: string; allowLocalhostAsSecureOrigin?: boolean }): Promise<void>;
   User?: {
-    pushSubscription: {
+    PushSubscription: {
       id: Promise<string | null>;
       optIn: () => Promise<void>;
       optOut: () => Promise<void>;
@@ -86,7 +86,7 @@ export async function subscribePush(): Promise<string | null> {
     );
     return null;
   }
-  const subscription = user.pushSubscription;
+  const subscription = user.PushSubscription;
   if (!subscription) {
     logger.warn(
       'services/push',
@@ -141,7 +141,7 @@ export async function unsubscribePush(): Promise<void> {
     );
     return;
   }
-  const subscription = user.pushSubscription;
+  const subscription = user.PushSubscription;
   if (!subscription) {
     logger.warn(
       'services/push',
@@ -168,7 +168,7 @@ export async function refreshPushToken(): Promise<string | null> {
     );
     return null;
   }
-  const subscription = user.pushSubscription;
+  const subscription = user.PushSubscription;
   if (!subscription) {
     logger.warn(
       'services/push',
