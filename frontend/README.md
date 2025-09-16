@@ -20,9 +20,10 @@ Create a `.env` file or export the following variables:
 - `VITE_GOOGLE_MAPS_API_KEY` – Google Maps key for rendering maps.
 - `VITE_ONESIGNAL_APP_ID` – OneSignal application ID.
 - `VITE_ONESIGNAL_API_KEY` – OneSignal REST API key.
-- `VITE_ONESIGNAL_SERVICE_WORKER_PATH` – Optional relative path to the OneSignal service worker script. Defaults to `OneSignalSDK.sw.js` in `public/`.
+- `VITE_ONESIGNAL_SERVICE_WORKER_PATH` – Optional relative path to the OneSignal service worker script. Defaults to `onesignal/OneSignalSDKWorker.js` served from `public/`.
+- `VITE_ONESIGNAL_SERVICE_WORKER_UPDATER_PATH` – Optional relative path for the updater worker. Defaults to `onesignal/OneSignalSDKUpdaterWorker.js`.
 
-The OneSignal web SDK expects a service worker bundle to be served from `public/OneSignalSDK.sw.js`. Update that file with the latest worker from OneSignal and adjust `VITE_ONESIGNAL_SERVICE_WORKER_PATH` if you host it at a different path.
+The OneSignal web SDK expects the service worker bundle and wrapper scripts (`OneSignalSDKWorker.js` and `OneSignalSDKUpdaterWorker.js`) to be served from `public/onesignal/`. The `public/OneSignalSDK.sw.js` file now contains the bundled worker from OneSignal v16 so local builds do not reach out to the CDN. Adjust the environment variables above if you move these files.
 
 ## Development
 
