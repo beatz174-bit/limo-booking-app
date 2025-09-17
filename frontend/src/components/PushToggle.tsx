@@ -1,10 +1,6 @@
 import { useEffect, useState } from 'react';
 import { FormControlLabel, Switch } from '@mui/material';
-import {
-  refreshPushToken,
-  subscribePush,
-  unsubscribePush,
-} from '@/services/push';
+import { onPushSubscriptionChange, subscribePush, unsubscribePush } from '@/services/push';
 import { CONFIG } from '@/config';
 import { apiFetch } from '@/services/apiFetch';
 
@@ -76,29 +72,13 @@ const PushToggle = ({ ensureFreshToken }: Props) => {
   };
 
   useEffect(() => {
-    if (!enabled) return;
-    const interval = setInterval(async () => {
-      const refreshed = await refreshPushToken();
-      console.log('Refreshed onesignal_player_id', refreshed);
-      if (!refreshed || refreshed === playerId) return;
-      const auth = await ensureFreshToken();
-      if (!auth) return;
-      const base = CONFIG.API_BASE_URL ?? '';
-      const res = await apiFetch(`${base}/users/me`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ onesignal_player_id: refreshed }),
-      });
-      if (!res.ok) {
-        const body = res.text ? await res.text() : '';
-        console.log('PATCH /users/me failed', res.status, body);
-      }
-      setPlayerId(refreshed);
-    }, 1000 * 60 * 60 * 24);
-    return () => clearInterval(interval);
-  }, [enabled, playerId, ensureFreshToken]);
+    const unsubscribe = onPushSubscriptionChange((id) => {
+      console.log('Observed subscription change', id);
+      setEnabled(!!id);
+      setPlayerId(id);
+    });
+    return unsubscribe;
+  }, []);
 
   return (
     <FormControlLabel

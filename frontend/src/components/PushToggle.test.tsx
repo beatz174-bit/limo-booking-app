@@ -1,11 +1,28 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 
-vi.mock('@/services/push', () => ({
-  subscribePush: vi.fn().mockResolvedValue('player'),
-  unsubscribePush: vi.fn().mockResolvedValue(undefined),
-  refreshPushToken: vi.fn().mockResolvedValue('player'),
-}));
+const pushListeners: Array<(id: string | null) => void> = [];
+
+vi.mock('@/services/push', () => {
+  const subscribePush = vi.fn().mockResolvedValue('player');
+  const unsubscribePush = vi.fn().mockResolvedValue(undefined);
+  const onPushSubscriptionChange = vi.fn(
+    (listener: (id: string | null) => void) => {
+      pushListeners.push(listener);
+      return () => {
+        const index = pushListeners.indexOf(listener);
+        if (index >= 0) {
+          pushListeners.splice(index, 1);
+        }
+      };
+    },
+  );
+  return {
+    subscribePush,
+    unsubscribePush,
+    onPushSubscriptionChange,
+  };
+});
 
 import PushToggle from '@/components/PushToggle';
 import { subscribePush, unsubscribePush } from '@/services/push';
@@ -16,6 +33,7 @@ describe('PushToggle', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    pushListeners.length = 0;
   });
 
   afterEach(() => {
@@ -65,5 +83,25 @@ describe('PushToggle', () => {
     await fireEvent.click(checkbox);
     await waitFor(() => expect(unsubscribePush).toHaveBeenCalled());
     await waitFor(() => expect(checkbox).not.toBeChecked());
+  });
+
+  it('reacts to subscription change events', async () => {
+    fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({ onesignal_player_id: null }),
+    } as Response);
+
+    render(<PushToggle ensureFreshToken={ensureFreshToken} />);
+
+    const checkbox = await screen.findByRole('switch', {
+      name: /push notifications/i,
+    });
+    expect(checkbox).not.toBeChecked();
+
+    await act(async () => {
+      pushListeners.forEach((listener) => listener('new-player'));
+    });
+
+    await waitFor(() => expect(checkbox).toBeChecked());
   });
 });
