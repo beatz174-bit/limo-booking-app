@@ -4,6 +4,8 @@ import type { ReactNode } from 'react';
 
 const apiFetchMock = vi.hoisted(() => vi.fn());
 const loginRequestMock = vi.hoisted(() => vi.fn());
+const subscribePushMock = vi.hoisted(() => vi.fn());
+const logoutPushUserMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/services/apiFetch', () => ({
   apiFetch: apiFetchMock,
@@ -13,6 +15,11 @@ vi.mock('@/components/ApiConfig', () => ({
   authApi: {
     loginAuthLoginPost: loginRequestMock,
   },
+}));
+
+vi.mock('@/services/push', () => ({
+  subscribePush: subscribePushMock,
+  logoutPushUser: logoutPushUserMock,
 }));
 
 vi.mock('@/services/oauth', () => ({
@@ -29,35 +36,17 @@ vi.mock('@/lib/logger', () => ({
 }));
 
 describe('AuthContext push integrations', () => {
-  let oneSignalLogin: ReturnType<typeof vi.fn>;
-  let oneSignalLogout: ReturnType<typeof vi.fn>;
-  let optInMock: ReturnType<typeof vi.fn>;
-  let optOutMock: ReturnType<typeof vi.fn>;
-
   beforeEach(() => {
     vi.resetModules();
     localStorage.clear();
     apiFetchMock.mockReset();
     loginRequestMock.mockReset();
+    subscribePushMock.mockReset();
+    logoutPushUserMock.mockReset();
     import.meta.env.VITE_ONESIGNAL_APP_ID = 'test-app';
     import.meta.env.VITE_API_BASE_URL = 'https://api.example.com';
-    oneSignalLogin = vi.fn().mockResolvedValue(undefined);
-    oneSignalLogout = vi.fn().mockResolvedValue(undefined);
-    optInMock = vi.fn().mockResolvedValue(undefined);
-    optOutMock = vi.fn().mockResolvedValue(undefined);
-    (window as any).OneSignal = {
-      init: vi.fn().mockResolvedValue(undefined),
-      User: {
-        PushSubscription: {
-          id: 'player-id',
-          optIn: optInMock,
-          optOut: optOutMock,
-        },
-      },
-      login: oneSignalLogin,
-      logout: oneSignalLogout,
-    };
-    (window as any).__oneSignalInitPromise = undefined;
+    subscribePushMock.mockResolvedValue('player-id');
+    logoutPushUserMock.mockResolvedValue(undefined);
     apiFetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
       if (url.endsWith('/users/me')) {
@@ -106,14 +95,12 @@ describe('AuthContext push integrations', () => {
   });
 
   afterEach(() => {
-    delete (window as any).OneSignal;
-    delete (window as any).__oneSignalInitPromise;
     delete (import.meta.env as any).VITE_ONESIGNAL_APP_ID;
     delete (import.meta.env as any).VITE_API_BASE_URL;
     vi.clearAllMocks();
   });
 
-  it('logs into and out of OneSignal when logging in and out', async () => {
+  it('subscribes to push with numeric IDs and logs out when logging out', async () => {
     const { AuthProvider, useAuth } = await import('@/contexts/AuthContext');
     const wrapper = ({ children }: { children: ReactNode }) => (
       <AuthProvider>{children}</AuthProvider>
@@ -124,12 +111,39 @@ describe('AuthContext push integrations', () => {
       await result.current.loginWithPassword('user@example.com', 'password');
     });
 
-    await waitFor(() => expect(oneSignalLogin).toHaveBeenCalledWith('123'));
+    await waitFor(() => expect(subscribePushMock).toHaveBeenCalledWith('123'));
 
     await act(async () => {
       result.current.logout();
     });
 
-    await waitFor(() => expect(oneSignalLogout).toHaveBeenCalled());
+    await waitFor(() => expect(logoutPushUserMock).toHaveBeenCalled());
+  });
+
+  it('preserves string user IDs when subscribing to push', async () => {
+    const { AuthProvider, useAuth } = await import('@/contexts/AuthContext');
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <AuthProvider>{children}</AuthProvider>
+    );
+    const { result } = renderHook(() => useAuth(), { wrapper });
+
+    loginRequestMock.mockResolvedValueOnce({
+      data: {
+        access_token: 'access',
+        refresh_token: 'refresh',
+        id: 'user-123',
+        full_name: 'Test User',
+        role: 'user',
+        email: 'test@example.com',
+      },
+    });
+
+    await act(async () => {
+      await result.current.loginWithPassword('user@example.com', 'password');
+    });
+
+    await waitFor(() => expect(subscribePushMock).toHaveBeenCalledWith('user-123'));
+    const externalIds = subscribePushMock.mock.calls.map((call) => call[0]);
+    expect(externalIds).not.toContain('NaN');
   });
 });
