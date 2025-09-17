@@ -24,11 +24,20 @@ interface OneSignalSDK {
   };
 }
 
+type OneSignalDeferredCallback = (
+  sdk: OneSignalSDK,
+) => void | Promise<void>;
+
 declare global {
   interface Window {
     OneSignal?: OneSignalSDK;
+    OneSignalDeferred?: OneSignalDeferredCallback[];
     __oneSignalInitPromise?: Promise<OneSignalSDK | null>;
   }
+}
+
+if (typeof window !== 'undefined') {
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
 }
 
 let initialized = false;
@@ -43,6 +52,27 @@ type SubscriptionChangeListener = (id: string | null) => void;
 let subscriptionListeners: SubscriptionChangeListener[] = [];
 let subscriptionListenerAttached = false;
 let removeSubscriptionChangeHandler: (() => void) | undefined;
+
+async function relinkStoredExternalId(
+  sdk: OneSignalSDK | null | undefined,
+  {
+    successMessage,
+    failureMessage,
+  }: { successMessage: string; failureMessage: string },
+) {
+  if (!sdk || typeof sdk.login !== 'function') return;
+
+  const externalId = storedExternalId ?? getStoredExternalId();
+  if (!externalId) return;
+
+  try {
+    storedExternalId = externalId;
+    await sdk.login(externalId);
+    logger.debug('services/push', successMessage, { externalId });
+  } catch (err) {
+    logger.error('services/push', failureMessage, err);
+  }
+}
 
 function emitSubscriptionChange(id: string | null) {
   subscriptionListeners.forEach((listener) => {
@@ -110,17 +140,10 @@ function registerPushSubscriptionChangeHandler(
       logger.error('services/push', 'Persisting push ID after change failed', err);
     }
 
-    const externalId = getStoredExternalId();
-    if (externalId && typeof sdk.login === 'function') {
-      try {
-        await sdk.login(externalId);
-        logger.debug('services/push', 'Re-linked external ID after change', {
-          externalId,
-        });
-      } catch (err) {
-        logger.error('services/push', 'Re-linking external ID failed', err);
-      }
-    }
+    await relinkStoredExternalId(sdk, {
+      successMessage: 'Re-linked external ID after change',
+      failureMessage: 'Re-linking external ID failed',
+    });
 
     emitSubscriptionChange(currentId);
   };
@@ -142,33 +165,56 @@ async function initOneSignal() {
   logger.debug('services/push', 'Using OneSignal app ID', { appId });
   if (initPromise) return initPromise;
 
-  initPromise = (async () => {
-    try {
-      if (!window.OneSignal) {
-        logger.debug('services/push', 'Loading OneSignal SDK');
-        await import('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.js');
-        logger.debug('services/push', 'OneSignal SDK loaded');
-      }
-      if (!initialized) {
-        logger.debug('services/push', 'Initializing OneSignal');
-        await window.OneSignal?.init({
-          appId,
-          allowLocalhostAsSecureOrigin: true,
-        });
-        logger.debug('services/push', 'OneSignal initialization complete');
-        initialized = true;
-      }
-      const status = window.OneSignal ?? null;
-      logger.debug('services/push', 'OneSignal resolved', {
-        available: !!status,
-      });
-      registerPushSubscriptionChangeHandler(status);
-      return status;
-    } catch (err) {
-      logger.error('services/push', 'OneSignal init failed', err);
-      return null;
+  initPromise = new Promise<OneSignalSDK | null>((resolve) => {
+    const queue = window.OneSignalDeferred;
+    if (!queue) {
+      logger.error('services/push', 'OneSignalDeferred queue unavailable');
+      resolve(null);
+      return;
     }
-  })();
+
+    const callback: OneSignalDeferredCallback = async (sdk) => {
+      try {
+        if (!sdk || typeof sdk.init !== 'function') {
+          logger.error('services/push', 'OneSignal SDK unavailable during init');
+          resolve(null);
+          return;
+        }
+
+        if (!initialized) {
+          logger.debug('services/push', 'Initializing OneSignal');
+          await sdk.init({
+            appId,
+            allowLocalhostAsSecureOrigin: true,
+          });
+          logger.debug('services/push', 'OneSignal initialization complete');
+          initialized = true;
+        }
+
+        const status = window.OneSignal ?? sdk ?? null;
+        logger.debug('services/push', 'OneSignal resolved', {
+          available: !!status,
+        });
+
+        registerPushSubscriptionChangeHandler(status);
+        await relinkStoredExternalId(status, {
+          successMessage: 'Re-linked external ID after init',
+          failureMessage: 'Re-linking external ID after init failed',
+        });
+
+        resolve(status);
+      } catch (err) {
+        logger.error('services/push', 'OneSignal init failed', err);
+        resolve(null);
+      }
+    };
+
+    queue.push(callback);
+
+    if (window.OneSignal && queue.push === Array.prototype.push) {
+      void callback(window.OneSignal);
+    }
+  });
 
   window.__oneSignalInitPromise = initPromise;
   return initPromise;
