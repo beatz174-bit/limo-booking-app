@@ -7,7 +7,7 @@ import { apiFetch } from "@/services/apiFetch";
 import { beginLogin, completeLoginFromRedirect, refreshTokens, TokenResponse, OAuthConfig } from "../services/oauth";
 import { useLocation, useNavigate } from "react-router-dom";
 import { type AuthContextType, type UserShape } from "@/types/AuthContextType";
-import { subscribePush } from "@/services/push";
+import { subscribePush, logoutPushUser } from "@/services/push";
 import * as logger from "@/lib/logger";
 
 // Seed token store from localStorage before any React code runs so that
@@ -47,10 +47,10 @@ const oauthCfg: OAuthConfig = {
   redirectUri: CONFIG.OAUTH_REDIRECT_URI,
 };
 
-async function maybeSubscribePush() {
+async function maybeSubscribePush(externalId?: string | null) {
   if (typeof window !== "undefined" && import.meta.env.VITE_ONESIGNAL_APP_ID) {
     try {
-      await subscribePush();
+      await subscribePush(externalId);
     } catch (err) {
       logger.warn("contexts/AuthContext", "push subscribe failed", err);
     }
@@ -209,44 +209,48 @@ useEffect(() => {
 
   const persist = useCallback(
     (t?: TokenResponse | null, user?: UserShape | null, role?: string | null) => {
-    const access_token = t?.access_token ?? null;
-    const refresh_token = t?.refresh_token ?? null;
-    if (access_token || refresh_token || user) {
-      logger.debug(
-        "contexts/AuthContext",
-        "persisting tokens",
-        { hasAccess: !!access_token, hasRefresh: !!refresh_token },
-      );
-      localStorage.setItem(
-        "auth_tokens",
-        JSON.stringify({ access_token, refresh_token, user }),
-      );
-      if (user?.role) {
-        localStorage.setItem("role", user.role ?? "");
-      }
-    } else {
-      logger.debug("contexts/AuthContext", "clearing stored tokens");
-      localStorage.removeItem("auth_tokens");
-      localStorage.removeItem("role");
-    }
-    if (role !== undefined) {
-      if (role) {
-        localStorage.setItem("userRole", role ?? "");
+      const access_token = t?.access_token ?? null;
+      const refresh_token = t?.refresh_token ?? null;
+      const nextExternalId =
+        state.userID ?? (user?.id != null ? String(user.id) : null);
+      if (access_token || refresh_token || user) {
+        logger.debug(
+          "contexts/AuthContext",
+          "persisting tokens",
+          { hasAccess: !!access_token, hasRefresh: !!refresh_token },
+        );
+        localStorage.setItem(
+          "auth_tokens",
+          JSON.stringify({ access_token, refresh_token, user }),
+        );
+        if (user?.role) {
+          localStorage.setItem("role", user.role ?? "");
+        }
       } else {
-        localStorage.removeItem("userRole");
+        logger.debug("contexts/AuthContext", "clearing stored tokens");
+        localStorage.removeItem("auth_tokens");
+        localStorage.removeItem("role");
       }
-    }
-    setTokens(access_token, refresh_token);
-    setState((s): AuthState => ({
-      ...s,
-      accessToken: access_token,
-      user: user ?? s.user,
-      role: user?.role ?? s.role,
-    }));
-    if (access_token) {
-      maybeSubscribePush();
-    }
-  }, [setState]);
+      if (role !== undefined) {
+        if (role) {
+          localStorage.setItem("userRole", role ?? "");
+        } else {
+          localStorage.removeItem("userRole");
+        }
+      }
+      setTokens(access_token, refresh_token);
+      setState((s): AuthState => ({
+        ...s,
+        accessToken: access_token,
+        user: user ?? s.user,
+        role: user?.role ?? s.role,
+      }));
+      if (access_token) {
+        maybeSubscribePush(nextExternalId);
+      }
+    },
+    [setState, state.userID],
+  );
 
   const loginWithPassword = useCallback(async (email: string, password: string): Promise<string | null> => {
     logger.info(
@@ -363,6 +367,15 @@ useEffect(() => {
     localStorage.removeItem("role");
     localStorage.removeItem("adminID");
     localStorage.removeItem("phone");
+    if (typeof window !== "undefined" && import.meta.env.VITE_ONESIGNAL_APP_ID) {
+      void (async () => {
+        try {
+          await logoutPushUser();
+        } catch (err) {
+          logger.warn("contexts/AuthContext", "push logout failed", err);
+        }
+      })();
+    }
     setState((s): AuthState => ({
       ...s,
       accessToken: null,

@@ -34,6 +34,7 @@ declare global {
 let initialized = false;
 let initPromise: Promise<OneSignalSDK | null> | undefined =
   window.__oneSignalInitPromise;
+let storedExternalId: string | null = null;
 
 const EXTERNAL_ID_STORAGE_KEYS = ['onesignal_external_id', 'onesignalExternalId'];
 
@@ -184,7 +185,15 @@ function ensureAppId(): boolean {
   return true;
 }
 
-export async function subscribePush(): Promise<string | null> {
+export async function subscribePush(
+  externalId?: string | null,
+): Promise<string | null> {
+  if (typeof externalId === 'string') {
+    const normalized = externalId.trim();
+    storedExternalId = normalized ? normalized : null;
+  } else if (externalId === null) {
+    storedExternalId = null;
+  }
   if (!ensureAppId()) return null;
   const os = await initOneSignal();
   registerPushSubscriptionChangeHandler(os);
@@ -196,7 +205,7 @@ export async function subscribePush(): Promise<string | null> {
     );
     return null;
   }
-  const subscription = user.PushSubscription;
+  const subscription = user.PushSubscription ?? user.pushSubscription;
   if (!subscription) {
     logger.warn(
       'services/push',
@@ -208,6 +217,19 @@ export async function subscribePush(): Promise<string | null> {
     logger.debug('services/push', 'Calling pushSubscription.optIn');
     await subscription.optIn();
     logger.debug('services/push', 'pushSubscription.optIn resolved');
+
+    const effectiveExternalId = storedExternalId;
+    if (effectiveExternalId && os?.login) {
+      try {
+        logger.debug('services/push', 'Logging into OneSignal', {
+          externalId: effectiveExternalId,
+        });
+        await os.login(effectiveExternalId);
+        logger.debug('services/push', 'OneSignal login complete');
+      } catch (err) {
+        logger.warn('services/push', 'OneSignal login failed', err);
+      }
+    }
 
     const id = subscription.id;
     logger.debug('services/push', 'Subscription object', {
@@ -240,6 +262,24 @@ export async function subscribePush(): Promise<string | null> {
   }
 }
 
+export async function logoutPushUser(): Promise<void> {
+  storedExternalId = null;
+  if (!ensureAppId()) return;
+  const os = await initOneSignal();
+  if (!os) return;
+  if (!os.logout) {
+    logger.debug('services/push', 'OneSignal logout not available on SDK');
+    return;
+  }
+  try {
+    logger.debug('services/push', 'Calling OneSignal logout');
+    await os.logout();
+    logger.debug('services/push', 'OneSignal logout resolved');
+  } catch (err) {
+    logger.warn('services/push', 'OneSignal logout failed', err);
+  }
+}
+
 export async function unsubscribePush(): Promise<void> {
   if (!ensureAppId()) return;
   const os = await initOneSignal();
@@ -252,7 +292,7 @@ export async function unsubscribePush(): Promise<void> {
     );
     return;
   }
-  const subscription = user.PushSubscription;
+  const subscription = user.PushSubscription ?? user.pushSubscription;
   if (!subscription) {
     logger.warn(
       'services/push',
@@ -280,7 +320,7 @@ export async function refreshPushToken(): Promise<string | null> {
     );
     return null;
   }
-  const subscription = user.PushSubscription;
+  const subscription = user.PushSubscription ?? user.pushSubscription;
   if (!subscription) {
     logger.warn(
       'services/push',
