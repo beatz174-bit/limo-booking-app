@@ -16,17 +16,38 @@ interface OneSignalPushSubscription {
   ) => void;
 }
 
+interface OneSignalUser {
+  PushSubscription?: OneSignalPushSubscription;
+  pushSubscription?: OneSignalPushSubscription;
+}
+
 interface OneSignalSDK {
   init(options: { appId: string; allowLocalhostAsSecureOrigin?: boolean }): Promise<void>;
   login?: (externalId: string) => Promise<void>;
-  User?: {
-    PushSubscription?: OneSignalPushSubscription;
-  };
+  logout?: () => Promise<void>;
+  setEmail?: (email: string) => Promise<void>;
+  setSMSNumber?: (phoneNumber: string) => Promise<void>;
+  addTag?: (key: string, value: string | number | boolean) => Promise<void> | void;
+  User?: OneSignalUser;
 }
 
 type OneSignalDeferredCallback = (
   sdk: OneSignalSDK,
 ) => void | Promise<void>;
+
+export type PushUserAdditionalTags = Record<
+  string,
+  string | number | boolean | null | undefined
+>;
+
+export interface PushUserMetadata {
+  externalId?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  fullName?: string | null;
+  role?: string | null;
+  tags?: PushUserAdditionalTags;
+}
 
 declare global {
   interface Window {
@@ -231,9 +252,61 @@ function ensureAppId(): boolean {
   return true;
 }
 
+function normalizeString(value?: string | null): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
+async function syncUserMetadata(
+  sdk: OneSignalSDK | null | undefined,
+  {
+    email,
+    phone,
+    tags,
+  }: {
+    email: string | null;
+    phone: string | null;
+    tags: Record<string, string>;
+  },
+) {
+  if (!sdk) return;
+
+  if (email && typeof sdk.setEmail === 'function') {
+    try {
+      logger.debug('services/push', 'Setting OneSignal email', { email });
+      await sdk.setEmail(email);
+    } catch (err) {
+      logger.warn('services/push', 'Setting OneSignal email failed', err);
+    }
+  }
+
+  if (phone && typeof sdk.setSMSNumber === 'function') {
+    try {
+      logger.debug('services/push', 'Setting OneSignal SMS number', { phone });
+      await sdk.setSMSNumber(phone);
+    } catch (err) {
+      logger.warn('services/push', 'Setting OneSignal SMS number failed', err);
+    }
+  }
+
+  if (Object.keys(tags).length && typeof sdk.addTag === 'function') {
+    for (const [key, value] of Object.entries(tags)) {
+      if (!key || !value) continue;
+      try {
+        logger.debug('services/push', 'Adding OneSignal tag', { key, value });
+        await sdk.addTag(key, value);
+      } catch (err) {
+        logger.warn('services/push', `Adding OneSignal tag failed: ${key}`, err);
+      }
+    }
+  }
+}
+
 export async function subscribePush(
-  externalId?: string | null,
+  metadata?: PushUserMetadata | null,
 ): Promise<string | null> {
+  const externalId = metadata?.externalId;
   if (typeof externalId === 'string') {
     const normalized = externalId.trim();
     storedExternalId = normalized ? normalized : null;
@@ -276,6 +349,35 @@ export async function subscribePush(
         logger.warn('services/push', 'OneSignal login failed', err);
       }
     }
+
+    const email = normalizeString(metadata?.email ?? null);
+    const phone = normalizeString(metadata?.phone ?? null);
+    const fullName = normalizeString(metadata?.fullName ?? null);
+    const role = normalizeString(metadata?.role ?? null);
+    const tags: Record<string, string> = {};
+    if (fullName) {
+      tags.full_name = fullName;
+    }
+    if (role) {
+      tags.role = role;
+    }
+    if (metadata?.tags) {
+      for (const [key, rawValue] of Object.entries(metadata.tags)) {
+        if (!key) continue;
+        if (rawValue === null || rawValue === undefined) continue;
+        const rawString = String(rawValue);
+        const value =
+          typeof rawValue === 'string' ? rawString.trim() : rawString;
+        if (!value) continue;
+        tags[key] = value;
+      }
+    }
+
+    await syncUserMetadata(os, {
+      email,
+      phone,
+      tags,
+    });
 
     const id = subscription.id;
     logger.debug('services/push', 'Subscription object', {

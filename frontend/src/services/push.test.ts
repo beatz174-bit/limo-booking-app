@@ -23,6 +23,7 @@ describe('services/push subscription change handling', () => {
   let onPushSubscriptionChange: typeof import('./push').onPushSubscriptionChange;
   let resetForTests: typeof import('./push').__resetPushListenersForTests;
   let teardownPushListeners: typeof import('./push').teardownPushListeners;
+  let subscribePushFn: typeof import('./push').subscribePush;
   let changeHandlers: Array<() => Promise<void> | void>;
   let pushSubscription: {
     id: string | null;
@@ -32,6 +33,9 @@ describe('services/push subscription change handling', () => {
     removeEventListener: ReturnType<typeof vi.fn>;
   };
   let loginMock: ReturnType<typeof vi.fn>;
+  let setEmailMock: ReturnType<typeof vi.fn>;
+  let setSMSNumberMock: ReturnType<typeof vi.fn>;
+  let addTagMock: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
     vi.resetModules();
@@ -59,11 +63,17 @@ describe('services/push subscription change handling', () => {
     };
 
     loginMock = vi.fn(() => Promise.resolve());
+    setEmailMock = vi.fn(() => Promise.resolve());
+    setSMSNumberMock = vi.fn(() => Promise.resolve());
+    addTagMock = vi.fn(() => Promise.resolve());
     const initMock = vi.fn(() => Promise.resolve());
 
     (window as unknown as { OneSignal?: unknown }).OneSignal = {
       init: initMock,
       login: loginMock,
+      setEmail: setEmailMock,
+      setSMSNumber: setSMSNumberMock,
+      addTag: addTagMock,
       User: {
         PushSubscription: pushSubscription,
       },
@@ -75,6 +85,7 @@ describe('services/push subscription change handling', () => {
     onPushSubscriptionChange = mod.onPushSubscriptionChange;
     resetForTests = mod.__resetPushListenersForTests;
     teardownPushListeners = mod.teardownPushListeners;
+    subscribePushFn = mod.subscribePush;
 
     resetForTests();
     apiFetchMock.mockResolvedValue({ status: 200 } as Response);
@@ -139,5 +150,32 @@ describe('services/push subscription change handling', () => {
 
     expect(callback).toHaveBeenCalledWith('player-abc');
     unsubscribe();
+  });
+
+  it('syncs user metadata with OneSignal when subscribing', async () => {
+    await subscribePushFn({
+      externalId: 'user-123',
+      email: 'user@example.com',
+      phone: '+1234567890',
+      fullName: 'Jane Doe',
+      role: 'admin',
+      tags: {
+        organization: 'Acme Inc',
+        fleet_size: 12,
+        opted_in: true,
+        empty: '',
+      },
+    });
+
+    expect(pushSubscription.optIn).toHaveBeenCalled();
+    expect(loginMock).toHaveBeenCalledWith('user-123');
+    expect(setEmailMock).toHaveBeenCalledWith('user@example.com');
+    expect(setSMSNumberMock).toHaveBeenCalledWith('+1234567890');
+    expect(addTagMock).toHaveBeenCalledWith('full_name', 'Jane Doe');
+    expect(addTagMock).toHaveBeenCalledWith('role', 'admin');
+    expect(addTagMock).toHaveBeenCalledWith('organization', 'Acme Inc');
+    expect(addTagMock).toHaveBeenCalledWith('fleet_size', '12');
+    expect(addTagMock).toHaveBeenCalledWith('opted_in', 'true');
+    expect(addTagMock).not.toHaveBeenCalledWith('empty', expect.anything());
   });
 });

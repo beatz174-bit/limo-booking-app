@@ -7,7 +7,7 @@ import { apiFetch } from "@/services/apiFetch";
 import { beginLogin, completeLoginFromRedirect, refreshTokens, TokenResponse, OAuthConfig } from "../services/oauth";
 import { useLocation, useNavigate } from "react-router-dom";
 import { type AuthContextType, type UserShape } from "@/types/AuthContextType";
-import { subscribePush, logoutPushUser } from "@/services/push";
+import { subscribePush, logoutPushUser, type PushUserAdditionalTags, type PushUserMetadata } from "@/services/push";
 import * as logger from "@/lib/logger";
 
 // Seed token store from localStorage before any React code runs so that
@@ -47,10 +47,10 @@ const oauthCfg: OAuthConfig = {
   redirectUri: CONFIG.OAUTH_REDIRECT_URI,
 };
 
-async function maybeSubscribePush(externalId?: string | null) {
+async function maybeSubscribePush(metadata?: PushUserMetadata | null) {
   if (typeof window !== "undefined" && import.meta.env.VITE_ONESIGNAL_APP_ID) {
     try {
-      await subscribePush(externalId);
+      await subscribePush(metadata);
     } catch (err) {
       logger.warn("contexts/AuthContext", "push subscribe failed", err);
     }
@@ -213,6 +213,42 @@ useEffect(() => {
       const refresh_token = t?.refresh_token ?? null;
       const nextExternalId =
         state.userID ?? (user?.id != null ? String(user.id) : null);
+      const getStoredValue = (key: string): string | null => {
+        if (typeof window === "undefined" || !window.localStorage) return null;
+        try {
+          return window.localStorage.getItem(key);
+        } catch {
+          return null;
+        }
+      };
+      const metadata: PushUserMetadata = {
+        externalId: nextExternalId,
+        email: user?.email ?? state.user?.email ?? getStoredValue("userEmail") ?? null,
+        phone: user?.phone ?? state.phone ?? getStoredValue("phone") ?? null,
+        fullName:
+          user?.full_name ??
+          state.userName ??
+          state.user?.full_name ??
+          getStoredValue("userName") ??
+          null,
+        role:
+          user?.role ??
+          role ??
+          state.role ??
+          getStoredValue("userRole") ??
+          null,
+      };
+      const adminId = state.adminID ?? getStoredValue("adminID");
+      const extraTags: PushUserAdditionalTags = {};
+      if (adminId) {
+        extraTags.admin_id = adminId;
+      }
+      if (metadata.externalId) {
+        extraTags.user_id = metadata.externalId;
+      }
+      if (Object.keys(extraTags).length > 0) {
+        metadata.tags = { ...(metadata.tags ?? {}), ...extraTags };
+      }
       if (access_token || refresh_token || user) {
         logger.debug(
           "contexts/AuthContext",
@@ -246,10 +282,18 @@ useEffect(() => {
         role: user?.role ?? s.role,
       }));
       if (access_token) {
-        maybeSubscribePush(nextExternalId);
+        maybeSubscribePush(metadata);
       }
     },
-    [setState, state.userID],
+    [
+      setState,
+      state.userID,
+      state.user,
+      state.userName,
+      state.phone,
+      state.role,
+      state.adminID,
+    ],
   );
 
   const loginWithPassword = useCallback(async (email: string, password: string): Promise<string | null> => {
