@@ -264,14 +264,13 @@ useEffect(() => {
       const token = body.access_token ?? body.token ?? null;
       const role: string | null = body.role ?? body.user?.role ?? null;
       const userFromResp: UserShape | null =
-        body.user ||
-        ({
-          id: typeof body.id === "number" ? body.id : Number(body.id),
+        body.user ?? {
+          id: body.id,
           email: body.email ?? email,
           full_name: body.full_name,
           role: role ?? undefined,
           phone: body.phone,
-        } as UserShape);
+        };
       const tokenRes: TokenResponse | null = token
         ? {
             access_token: token,

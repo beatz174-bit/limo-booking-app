@@ -1,6 +1,6 @@
 // Type definitions for the authentication context values.
 export type UserShape = {
-  id?: number;
+  id?: string | number;
   email?: string;
   full_name?: string;
   role?: string;
