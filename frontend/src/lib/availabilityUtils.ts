@@ -7,17 +7,15 @@ export function summarizeMonthlyAvailability(
   month: Date,
 ): Record<string, DayState> {
   const states: Record<string, DayState> = {};
-  const daysInMonth = new Date(
-    month.getFullYear(),
-    month.getMonth() + 1,
-    0,
-  ).getDate();
+  const year = month.getUTCFullYear();
+  const monthIndex = month.getUTCMonth();
+  const daysInMonth = new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate();
   for (let d = 1; d <= daysInMonth; d++) {
-    const day = new Date(month.getFullYear(), month.getMonth(), d);
-    const start = new Date(day);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(day);
-    end.setHours(23, 59, 59, 999);
+    const dayStart = Date.UTC(year, monthIndex, d, 0, 0, 0, 0);
+    const dayEnd = Date.UTC(year, monthIndex, d, 23, 59, 59, 999);
+    const day = new Date(dayStart);
+    const start = new Date(dayStart);
+    const end = new Date(dayEnd);
     let hasFull = false;
     let hasAny = false;
     data.slots.forEach((s) => {
@@ -46,10 +44,12 @@ export function calculateHourlyAvailability(
   availability: AvailabilityResponse | null,
   date: string,
 ) {
-  const day = new Date(`${date}T00:00:00`);
+  const [yearString, monthString, dayString] = date.split('-');
+  const year = Number(yearString);
+  const monthIndex = Number(monthString) - 1;
+  const dayOfMonth = Number(dayString);
   return Array.from({ length: 24 }).map((_, h) => {
-    const start = new Date(day);
-    start.setHours(h, 0, 0, 0);
+    const start = new Date(Date.UTC(year, monthIndex, dayOfMonth, h, 0, 0, 0));
     const end = new Date(start.getTime() + 60 * 60 * 1000);
     const disabled = availability
       ? availability.bookings.some((b) => {
