@@ -1,5 +1,31 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { describe, expect, it, vi, beforeEach, afterEach, type SpyInstance } from 'vitest';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+
+const pushListeners: Array<(id: string | null) => void> = [];
+
+vi.mock('@/services/push', () => {
+  const subscribePush = vi.fn().mockResolvedValue('player');
+  const unsubscribePush = vi.fn().mockResolvedValue(undefined);
+  const onPushSubscriptionChange = vi.fn(
+    (listener: (id: string | null) => void) => {
+      pushListeners.push(listener);
+      return () => {
+        const index = pushListeners.indexOf(listener);
+        if (index >= 0) {
+          pushListeners.splice(index, 1);
+        }
+      };
+    },
+  );
+  return {
+    subscribePush,
+    unsubscribePush,
+    onPushSubscriptionChange,
+  };
+});
+
+import PushToggle from '@/components/PushToggle';
+import { subscribePush, unsubscribePush } from '@/services/push';
 
 describe('PushToggle', () => {
   let ensureFreshToken: ReturnType<typeof vi.fn>;
@@ -8,21 +34,9 @@ describe('PushToggle', () => {
   let refreshPushTokenSpy: SpyInstance;
   let fetchSpy: ReturnType<typeof vi.spyOn> | null;
 
-  beforeEach(async () => {
-    vi.resetModules();
-    vi.unmock('@/services/push');
-    ensureFreshToken = vi.fn().mockResolvedValue('auth');
-    const pushModule = await import('@/services/push');
-    subscribePushSpy = vi
-      .spyOn(pushModule, 'subscribePush')
-      .mockResolvedValue('player');
-    unsubscribePushSpy = vi
-      .spyOn(pushModule, 'unsubscribePush')
-      .mockResolvedValue(undefined);
-    refreshPushTokenSpy = vi
-      .spyOn(pushModule, 'refreshPushToken')
-      .mockResolvedValue('player');
-    fetchSpy = null;
+  beforeEach(() => {
+    vi.clearAllMocks();
+    pushListeners.length = 0;
   });
 
   afterEach(() => {
@@ -80,6 +94,26 @@ describe('PushToggle', () => {
     await fireEvent.click(checkbox);
     await waitFor(() => expect(unsubscribePushSpy).toHaveBeenCalled());
     await waitFor(() => expect(checkbox).not.toBeChecked());
+  });
+
+  it('reacts to subscription change events', async () => {
+    fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({ onesignal_player_id: null }),
+    } as Response);
+
+    render(<PushToggle ensureFreshToken={ensureFreshToken} />);
+
+    const checkbox = await screen.findByRole('switch', {
+      name: /push notifications/i,
+    });
+    expect(checkbox).not.toBeChecked();
+
+    await act(async () => {
+      pushListeners.forEach((listener) => listener('new-player'));
+    });
+
+    await waitFor(() => expect(checkbox).toBeChecked());
   });
 });
 
