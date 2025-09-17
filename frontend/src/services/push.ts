@@ -2,14 +2,25 @@ import * as logger from '@/lib/logger';
 import { apiFetch } from '@/services/apiFetch';
 import { CONFIG } from '@/config';
 
+interface OneSignalPushSubscription {
+  id: string | null | undefined;
+  optIn: () => Promise<void>;
+  optOut: () => Promise<void>;
+  addEventListener?: (
+    event: 'change',
+    handler: (event?: unknown) => void | Promise<void>,
+  ) => void;
+  removeEventListener?: (
+    event: 'change',
+    handler: (event?: unknown) => void | Promise<void>,
+  ) => void;
+}
+
 interface OneSignalSDK {
   init(options: { appId: string; allowLocalhostAsSecureOrigin?: boolean }): Promise<void>;
+  login?: (externalId: string) => Promise<void>;
   User?: {
-    pushSubscription: {
-      id: string | null | undefined;
-      optIn: () => Promise<void>;
-      optOut: () => Promise<void>;
-    };
+    PushSubscription?: OneSignalPushSubscription;
   };
 }
 
@@ -23,6 +34,104 @@ declare global {
 let initialized = false;
 let initPromise: Promise<OneSignalSDK | null> | undefined =
   window.__oneSignalInitPromise;
+let storedExternalId: string | null = null;
+
+const EXTERNAL_ID_STORAGE_KEYS = ['onesignal_external_id', 'onesignalExternalId'];
+
+type SubscriptionChangeListener = (id: string | null) => void;
+
+let subscriptionListeners: SubscriptionChangeListener[] = [];
+let subscriptionListenerAttached = false;
+let removeSubscriptionChangeHandler: (() => void) | undefined;
+
+function emitSubscriptionChange(id: string | null) {
+  subscriptionListeners.forEach((listener) => {
+    try {
+      listener(id);
+    } catch (err) {
+      logger.error('services/push', 'Push subscription listener failed', err);
+    }
+  });
+}
+
+export function onPushSubscriptionChange(listener: SubscriptionChangeListener) {
+  subscriptionListeners.push(listener);
+  return () => {
+    subscriptionListeners = subscriptionListeners.filter((fn) => fn !== listener);
+  };
+}
+
+function getStoredExternalId(): string | null {
+  if (typeof window === 'undefined' || !window.localStorage) return null;
+
+  for (const key of EXTERNAL_ID_STORAGE_KEYS) {
+    try {
+      const value = window.localStorage.getItem(key);
+      if (value) {
+        return value;
+      }
+    } catch (err) {
+      logger.debug('services/push', 'Reading external ID failed', { key }, err);
+    }
+  }
+  return null;
+}
+
+function registerPushSubscriptionChangeHandler(
+  sdk: OneSignalSDK | null | undefined,
+) {
+  if (!sdk || subscriptionListenerAttached) return;
+
+  const subscription = sdk.User?.PushSubscription;
+  if (!subscription || typeof subscription.addEventListener !== 'function') {
+    logger.debug(
+      'services/push',
+      'OneSignal pushSubscription change events unavailable',
+    );
+    return;
+  }
+
+  const handler = async () => {
+    const currentId = sdk.User?.PushSubscription?.id ?? null;
+    logger.debug('services/push', 'Push subscription changed', { id: currentId });
+
+    const base = CONFIG.API_BASE_URL ?? '';
+    const url = `${base}/users/me`;
+    try {
+      await apiFetch(url, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ onesignal_player_id: currentId }),
+      });
+      logger.debug('services/push', 'Persisted push ID after change', {
+        id: currentId,
+      });
+    } catch (err) {
+      logger.error('services/push', 'Persisting push ID after change failed', err);
+    }
+
+    const externalId = getStoredExternalId();
+    if (externalId && typeof sdk.login === 'function') {
+      try {
+        await sdk.login(externalId);
+        logger.debug('services/push', 'Re-linked external ID after change', {
+          externalId,
+        });
+      } catch (err) {
+        logger.error('services/push', 'Re-linking external ID failed', err);
+      }
+    }
+
+    emitSubscriptionChange(currentId);
+  };
+
+  subscription.addEventListener('change', handler);
+  subscriptionListenerAttached = true;
+  removeSubscriptionChangeHandler = () => {
+    subscription.removeEventListener?.('change', handler);
+    subscriptionListenerAttached = false;
+  };
+}
 
 async function initOneSignal() {
   const appId = import.meta.env.VITE_ONESIGNAL_APP_ID;
@@ -53,6 +162,7 @@ async function initOneSignal() {
       logger.debug('services/push', 'OneSignal resolved', {
         available: !!status,
       });
+      registerPushSubscriptionChangeHandler(status);
       return status;
     } catch (err) {
       logger.error('services/push', 'OneSignal init failed', err);
@@ -75,9 +185,18 @@ function ensureAppId(): boolean {
   return true;
 }
 
-export async function subscribePush(): Promise<string | null> {
+export async function subscribePush(
+  externalId?: string | null,
+): Promise<string | null> {
+  if (typeof externalId === 'string') {
+    const normalized = externalId.trim();
+    storedExternalId = normalized ? normalized : null;
+  } else if (externalId === null) {
+    storedExternalId = null;
+  }
   if (!ensureAppId()) return null;
   const os = await initOneSignal();
+  registerPushSubscriptionChangeHandler(os);
   const user = os?.User;
   if (!user) {
     logger.warn(
@@ -86,7 +205,7 @@ export async function subscribePush(): Promise<string | null> {
     );
     return null;
   }
-  const subscription = user.PushSubscription;
+  const subscription = user.PushSubscription ?? user.pushSubscription;
   if (!subscription) {
     logger.warn(
       'services/push',
@@ -98,6 +217,19 @@ export async function subscribePush(): Promise<string | null> {
     logger.debug('services/push', 'Calling pushSubscription.optIn');
     await subscription.optIn();
     logger.debug('services/push', 'pushSubscription.optIn resolved');
+
+    const effectiveExternalId = storedExternalId;
+    if (effectiveExternalId && os?.login) {
+      try {
+        logger.debug('services/push', 'Logging into OneSignal', {
+          externalId: effectiveExternalId,
+        });
+        await os.login(effectiveExternalId);
+        logger.debug('services/push', 'OneSignal login complete');
+      } catch (err) {
+        logger.warn('services/push', 'OneSignal login failed', err);
+      }
+    }
 
     const id = subscription.id;
     logger.debug('services/push', 'Subscription object', {
@@ -130,9 +262,28 @@ export async function subscribePush(): Promise<string | null> {
   }
 }
 
+export async function logoutPushUser(): Promise<void> {
+  storedExternalId = null;
+  if (!ensureAppId()) return;
+  const os = await initOneSignal();
+  if (!os) return;
+  if (!os.logout) {
+    logger.debug('services/push', 'OneSignal logout not available on SDK');
+    return;
+  }
+  try {
+    logger.debug('services/push', 'Calling OneSignal logout');
+    await os.logout();
+    logger.debug('services/push', 'OneSignal logout resolved');
+  } catch (err) {
+    logger.warn('services/push', 'OneSignal logout failed', err);
+  }
+}
+
 export async function unsubscribePush(): Promise<void> {
   if (!ensureAppId()) return;
   const os = await initOneSignal();
+  registerPushSubscriptionChangeHandler(os);
   const user = os?.User;
   if (!user) {
     logger.warn(
@@ -141,7 +292,7 @@ export async function unsubscribePush(): Promise<void> {
     );
     return;
   }
-  const subscription = user.PushSubscription;
+  const subscription = user.PushSubscription ?? user.pushSubscription;
   if (!subscription) {
     logger.warn(
       'services/push',
@@ -160,6 +311,7 @@ export async function unsubscribePush(): Promise<void> {
 export async function refreshPushToken(): Promise<string | null> {
   if (!ensureAppId()) return null;
   const os = await initOneSignal();
+  registerPushSubscriptionChangeHandler(os);
   const user = os?.User;
   if (!user) {
     logger.warn(
@@ -168,7 +320,7 @@ export async function refreshPushToken(): Promise<string | null> {
     );
     return null;
   }
-  const subscription = user.PushSubscription;
+  const subscription = user.PushSubscription ?? user.pushSubscription;
   if (!subscription) {
     logger.warn(
       'services/push',
@@ -183,4 +335,25 @@ export async function refreshPushToken(): Promise<string | null> {
     logger.warn('services/push', 'OneSignal id retrieval failed', err);
     return null;
   }
+}
+
+export function teardownPushListeners() {
+  if (removeSubscriptionChangeHandler) {
+    try {
+      removeSubscriptionChangeHandler();
+    } catch (err) {
+      logger.warn('services/push', 'Removing push listener failed', err);
+    } finally {
+      removeSubscriptionChangeHandler = undefined;
+    }
+  }
+  subscriptionListenerAttached = false;
+  subscriptionListeners = [];
+}
+
+export function __resetPushListenersForTests() {
+  teardownPushListeners();
+  initialized = false;
+  initPromise = undefined;
+  window.__oneSignalInitPromise = undefined;
 }
