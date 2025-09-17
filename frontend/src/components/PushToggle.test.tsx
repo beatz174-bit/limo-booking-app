@@ -1,51 +1,67 @@
-import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import {
+  render,
+  screen,
+  waitFor,
+  fireEvent,
+  act,
+  cleanup,
+} from '@testing-library/react';
+import {
+  describe,
+  expect,
+  it,
+  vi,
+  beforeEach,
+  afterEach,
+  type MockInstance,
+} from 'vitest';
 
 const pushListeners: Array<(id: string | null) => void> = [];
 
-vi.mock('@/services/push', () => {
-  const subscribePush = vi.fn().mockResolvedValue('player');
-  const unsubscribePush = vi.fn().mockResolvedValue(undefined);
-  const onPushSubscriptionChange = vi.fn(
-    (listener: (id: string | null) => void) => {
-      pushListeners.push(listener);
-      return () => {
-        const index = pushListeners.indexOf(listener);
-        if (index >= 0) {
-          pushListeners.splice(index, 1);
-        }
-      };
-    },
-  );
-  return {
-    subscribePush,
-    unsubscribePush,
-    onPushSubscriptionChange,
-  };
-});
-
-import PushToggle from '@/components/PushToggle';
-import { subscribePush, unsubscribePush } from '@/services/push';
-
 describe('PushToggle', () => {
   let ensureFreshToken: ReturnType<typeof vi.fn>;
-  let subscribePushSpy: SpyInstance;
-  let unsubscribePushSpy: SpyInstance;
-  let refreshPushTokenSpy: SpyInstance;
+  let subscribePushSpy: MockInstance | undefined;
+  let unsubscribePushSpy: MockInstance | undefined;
   let fetchSpy: ReturnType<typeof vi.spyOn> | null;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    vi.doMock('@/services/push', () => {
+      const subscribePush = vi.fn().mockResolvedValue('player');
+      const unsubscribePush = vi.fn().mockResolvedValue(undefined);
+      const onPushSubscriptionChange = vi.fn(
+        (listener: (id: string | null) => void) => {
+          pushListeners.push(listener);
+          return () => {
+            const index = pushListeners.indexOf(listener);
+            if (index >= 0) {
+              pushListeners.splice(index, 1);
+            }
+          };
+        },
+      );
+      return {
+        subscribePush,
+        unsubscribePush,
+        onPushSubscriptionChange,
+      };
+    });
+    ensureFreshToken = vi.fn().mockResolvedValue('auth');
+    const pushModule = await import('@/services/push');
+    subscribePushSpy = pushModule.subscribePush as MockInstance;
+    unsubscribePushSpy = pushModule.unsubscribePush as MockInstance;
     pushListeners.length = 0;
   });
 
   afterEach(() => {
     fetchSpy?.mockRestore();
     fetchSpy = null;
-    subscribePushSpy.mockRestore();
-    unsubscribePushSpy.mockRestore();
-    refreshPushTokenSpy.mockRestore();
+    subscribePushSpy?.mockClear?.();
+    unsubscribePushSpy?.mockClear?.();
+    cleanup();
     vi.clearAllMocks();
+    vi.unmock('@/services/push');
+    vi.doUnmock('@/services/push');
     vi.resetModules();
   });
 
@@ -88,15 +104,16 @@ describe('PushToggle', () => {
     expect(checkbox).not.toBeChecked();
 
     await fireEvent.click(checkbox);
-    await waitFor(() => expect(subscribePushSpy).toHaveBeenCalled());
+    await waitFor(() => expect(subscribePushSpy!).toHaveBeenCalled());
     await waitFor(() => expect(checkbox).toBeChecked());
 
     await fireEvent.click(checkbox);
-    await waitFor(() => expect(unsubscribePushSpy).toHaveBeenCalled());
+    await waitFor(() => expect(unsubscribePushSpy!).toHaveBeenCalled());
     await waitFor(() => expect(checkbox).not.toBeChecked());
   });
 
   it('reacts to subscription change events', async () => {
+    const { default: PushToggle } = await import('@/components/PushToggle');
     fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
       ok: true,
       json: async () => ({ onesignal_player_id: null }),
@@ -127,6 +144,7 @@ describe('PushToggle OneSignal integration', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.unmock('@/services/push');
+    vi.doUnmock('@/services/push');
     loginMock = vi.fn().mockResolvedValue(undefined);
     logoutMock = vi.fn().mockResolvedValue(undefined);
     optInMock = vi.fn().mockResolvedValue(undefined);
