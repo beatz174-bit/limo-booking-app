@@ -203,7 +203,7 @@ describe('PushToggle OneSignal integration', () => {
 
   it('logs into OneSignal using a stored external id', async () => {
     const pushModule = await import('@/services/push');
-    await pushModule.subscribePush('user-123');
+    await pushModule.subscribePush({ externalId: 'user-123' });
     await waitFor(() => expect(loginMock).toHaveBeenCalledWith('user-123'));
     loginMock.mockClear();
 

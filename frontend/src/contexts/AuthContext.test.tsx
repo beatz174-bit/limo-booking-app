@@ -111,7 +111,16 @@ describe('AuthContext push integrations', () => {
       await result.current.loginWithPassword('user@example.com', 'password');
     });
 
-    await waitFor(() => expect(subscribePushMock).toHaveBeenCalledWith('123'));
+    await waitFor(() => expect(subscribePushMock).toHaveBeenCalled());
+    const metadata = subscribePushMock.mock.calls.at(-1)?.[0];
+    expect(metadata).toMatchObject({
+      externalId: '123',
+      email: 'test@example.com',
+      fullName: 'Test User',
+      role: 'user',
+    });
+    expect(metadata?.phone).toBeNull();
+    expect(metadata?.tags?.user_id).toBe('123');
 
     await act(async () => {
       result.current.logout();
@@ -142,8 +151,16 @@ describe('AuthContext push integrations', () => {
       await result.current.loginWithPassword('user@example.com', 'password');
     });
 
-    await waitFor(() => expect(subscribePushMock).toHaveBeenCalledWith('user-123'));
-    const externalIds = subscribePushMock.mock.calls.map((call) => call[0]);
+    await waitFor(() => expect(subscribePushMock).toHaveBeenCalled());
+    const metadata = subscribePushMock.mock.calls.at(-1)?.[0];
+    expect(metadata).toMatchObject({
+      externalId: 'user-123',
+      email: 'test@example.com',
+      fullName: 'Test User',
+      role: 'user',
+    });
+    expect(metadata?.tags?.user_id).toBe('user-123');
+    const externalIds = subscribePushMock.mock.calls.map((call) => call[0]?.externalId);
     expect(externalIds).not.toContain('NaN');
   });
 });
