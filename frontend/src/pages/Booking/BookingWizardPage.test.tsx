@@ -146,7 +146,15 @@ test('creates booking on confirmation and shows tracking link', async () => {
 
   const now = new Date();
   const first = new Date(now.getFullYear(), now.getMonth(), 1);
-  const expectedWhen = new Date(`${first.toISOString().slice(0, 10)}T10:00`).toISOString();
+  const expectedWhen = new Date(
+    first.getFullYear(),
+    first.getMonth(),
+    1,
+    10,
+    0,
+    0,
+    0,
+  ).toISOString();
   expect(createBooking).toHaveBeenCalledWith({
     pickup_when: expectedWhen,
     pickup: { address: '123 A St', lat: 0, lng: 0 },
@@ -160,6 +168,8 @@ test('creates booking on confirmation and shows tracking link', async () => {
     },
   });
   expect(addBooking).toHaveBeenCalledWith({ id: '1', public_code: 'test' });
+  const [[createdBooking]] = createBooking.mock.calls;
+  expect(new Date(createdBooking.pickup_when).getHours()).toBe(10);
 });
 
 test('prompts to add a payment method when missing', async () => {

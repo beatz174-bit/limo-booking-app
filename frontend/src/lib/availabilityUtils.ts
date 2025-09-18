@@ -49,18 +49,23 @@ export function calculateHourlyAvailability(
   const monthIndex = Number(monthString) - 1;
   const dayOfMonth = Number(dayString);
   return Array.from({ length: 24 }).map((_, h) => {
-    const start = new Date(Date.UTC(year, monthIndex, dayOfMonth, h, 0, 0, 0));
+    const start = new Date(year, monthIndex, dayOfMonth, h, 0, 0, 0);
     const end = new Date(start.getTime() + 60 * 60 * 1000);
+    const startMs = start.getTime();
+    const endMs = end.getTime();
     const disabled = availability
       ? availability.bookings.some((b) => {
           const bStart = new Date(b.pickup_when);
-          const bEnd = new Date(bStart.getTime() + 60 * 60 * 1000);
-          return bStart < end && bEnd > start;
+          const bStartMs = bStart.getTime();
+          const bEndMs = bStartMs + 60 * 60 * 1000;
+          return bStartMs < endMs && bEndMs > startMs;
         }) ||
         availability.slots.some((s) => {
           const sStart = new Date(s.start_dt);
           const sEnd = new Date(s.end_dt);
-          return sStart < end && sEnd > start;
+          const sStartMs = sStart.getTime();
+          const sEndMs = sEnd.getTime();
+          return sStartMs < endMs && sEndMs > startMs;
         })
       : false;
     return { start, disabled };
