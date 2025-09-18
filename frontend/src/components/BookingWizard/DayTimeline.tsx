@@ -24,7 +24,7 @@ export default function DayTimeline({
   return (
     <Stack direction="row" flexWrap="wrap" gap={1}>
       {slots.map(({ start, disabled }) => {
-        const label = `${String(start.getHours()).padStart(2, '0')}:00`;
+        const label = `${String(start.getUTCHours()).padStart(2, '0')}:00`;
         const iso = start.toISOString();
         return (
           <Button
