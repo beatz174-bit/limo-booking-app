@@ -1,11 +1,6 @@
 import json
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.api.ws import send_booking_update
 from app.core.broadcast import broadcast
 from app.db.database import get_async_session
 from app.dependencies import require_admin
@@ -15,6 +10,10 @@ from app.models.user_v2 import UserRole
 from app.schemas.api_booking import BookingStatusResponse
 from app.schemas.booking import BookingRead
 from app.services import booking_service, notifications, scheduler
+from app.services.booking_updates import send_booking_update
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(
     prefix="/api/v1/driver/bookings",
