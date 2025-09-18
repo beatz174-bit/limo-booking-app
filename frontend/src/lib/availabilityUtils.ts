@@ -40,34 +40,45 @@ export function summarizeMonthlyAvailability(
   return states;
 }
 
+export interface HourlyAvailabilitySlot {
+  label: string;
+  iso: string;
+  disabled: boolean;
+}
+
 export function calculateHourlyAvailability(
   availability: AvailabilityResponse | null,
   date: string,
-) {
+): HourlyAvailabilitySlot[] {
   const [yearString, monthString, dayString] = date.split('-');
   const year = Number(yearString);
   const monthIndex = Number(monthString) - 1;
   const dayOfMonth = Number(dayString);
+
+  const bookingWindows = availability
+    ? availability.bookings.map((b) => {
+        const startMs = Date.parse(b.pickup_when);
+        return { startMs, endMs: startMs + 60 * 60 * 1000 };
+      })
+    : [];
+
+  const slotWindows = availability
+    ? availability.slots.map((s) => ({
+        startMs: Date.parse(s.start_dt),
+        endMs: Date.parse(s.end_dt),
+      }))
+    : [];
+
   return Array.from({ length: 24 }).map((_, h) => {
-    const start = new Date(year, monthIndex, dayOfMonth, h, 0, 0, 0);
-    const end = new Date(start.getTime() + 60 * 60 * 1000);
-    const startMs = start.getTime();
-    const endMs = end.getTime();
-    const disabled = availability
-      ? availability.bookings.some((b) => {
-          const bStart = new Date(b.pickup_when);
-          const bStartMs = bStart.getTime();
-          const bEndMs = bStartMs + 60 * 60 * 1000;
-          return bStartMs < endMs && bEndMs > startMs;
-        }) ||
-        availability.slots.some((s) => {
-          const sStart = new Date(s.start_dt);
-          const sEnd = new Date(s.end_dt);
-          const sStartMs = sStart.getTime();
-          const sEndMs = sEnd.getTime();
-          return sStartMs < endMs && sEndMs > startMs;
-        })
-      : false;
-    return { start, disabled };
+    const startMs = Date.UTC(year, monthIndex, dayOfMonth, h, 0, 0, 0);
+    const endMs = startMs + 60 * 60 * 1000;
+    const disabled =
+      bookingWindows.some((b) => b.startMs < endMs && b.endMs > startMs) ||
+      slotWindows.some((s) => s.startMs < endMs && s.endMs > startMs);
+    return {
+      label: `${String(h).padStart(2, '0')}:00`,
+      iso: new Date(startMs).toISOString(),
+      disabled,
+    };
   });
 }

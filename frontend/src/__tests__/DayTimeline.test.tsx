@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import { renderWithProviders } from '@/__tests__/setup/renderWithProviders';
 import DayTimeline from '@/components/BookingWizard/DayTimeline';
+import { calculateHourlyAvailability } from '@/lib/availabilityUtils';
 
 describe('DayTimeline', () => {
   it('disables unavailable hours and emits selection', async () => {
@@ -14,8 +15,9 @@ describe('DayTimeline', () => {
       bookings: [{ id: 'b1', pickup_when: '2025-01-01T10:00:00Z' }],
     };
     const onSelect = vi.fn();
+    const slots = calculateHourlyAvailability(availability, '2025-01-01');
     renderWithProviders(
-      <DayTimeline date="2025-01-01" availability={availability} onSelect={onSelect} />,
+      <DayTimeline slots={slots} onSelect={onSelect} />,
     );
     expect(screen.getByRole('button', { name: '05:00' })).toBeDisabled();
     expect(screen.getByRole('button', { name: '10:00' })).toBeDisabled();
@@ -24,10 +26,10 @@ describe('DayTimeline', () => {
     const eleven = screen.getByRole('button', { name: '11:00' });
     expect(eleven).toBeEnabled();
     await userEvent.click(eleven);
-    const expectedIso = new Date(2025, 0, 1, 11, 0, 0, 0).toISOString();
+    const expectedIso = '2025-01-01T11:00:00.000Z';
     expect(onSelect).toHaveBeenCalledWith(expectedIso);
     const [[selectedIso]] = onSelect.mock.calls;
-    expect(new Date(selectedIso).getHours()).toBe(11);
+    expect(selectedIso).toBe(expectedIso);
   });
 });
 

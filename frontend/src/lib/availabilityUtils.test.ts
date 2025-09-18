@@ -27,4 +27,17 @@ describe('availabilityUtils', () => {
     expect(hours[10].disabled).toBe(true);
     expect(hours[11].disabled).toBe(false);
   });
+
+  it('produces stable UTC labels and iso timestamps', () => {
+    const hours = calculateHourlyAvailability(availability, '2025-01-01');
+    expect(hours[0]).toMatchObject({
+      label: '00:00',
+      iso: '2025-01-01T00:00:00.000Z',
+    });
+    expect(hours[5]).toMatchObject({
+      label: '05:00',
+      iso: '2025-01-01T05:00:00.000Z',
+      disabled: true,
+    });
+  });
 });

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Stack, TextField, Typography } from '@mui/material';
 import useAvailability from '@/hooks/useAvailability';
 import AvailabilityCalendar from './AvailabilityCalendar';
@@ -6,6 +6,10 @@ import DayTimeline from './DayTimeline';
 import { AddressField } from '@/components/AddressField';
 import { useAddressAutocomplete } from '@/hooks/useAddressAutocomplete';
 import { BookingFormData } from '@/types/BookingFormData';
+import {
+  calculateHourlyAvailability,
+  type HourlyAvailabilitySlot,
+} from '@/lib/availabilityUtils';
 
 interface Props {
   data: BookingFormData;
@@ -14,7 +18,9 @@ interface Props {
 
 export default function TripDetails({ data, onChange }: Props) {
   const initialDate = data.pickup_when ? data.pickup_when.slice(0, 10) : '';
-  const initialTime = data.pickup_when ? data.pickup_when : '';
+  const initialTime = data.pickup_when
+    ? new Date(data.pickup_when).toISOString()
+    : '';
   const [selectedDate, setSelectedDate] = useState(initialDate);
   const [selectedTime, setSelectedTime] = useState(initialTime);
   const [month, setMonth] = useState(
@@ -22,21 +28,20 @@ export default function TripDetails({ data, onChange }: Props) {
   );
   const { data: availability } = useAvailability(month);
 
-  const isBlocked = (iso: string) => {
-    if (!availability) return false;
-    const when = new Date(iso);
-    return (
-      availability.slots.some(
-        (s) =>
-          when >= new Date(s.start_dt) && when < new Date(s.end_dt),
-      ) ||
-      availability.bookings.some((b) => {
-        const start = new Date(b.pickup_when);
-        const end = new Date(start.getTime() + 60 * 60 * 1000);
-        return when >= start && when < end;
-      })
-    );
-  };
+  const timelineSlots = useMemo<HourlyAvailabilitySlot[]>(() => {
+    if (!selectedDate) return [];
+    return calculateHourlyAvailability(availability, selectedDate);
+  }, [availability, selectedDate]);
+
+  const isBlocked = useCallback(
+    (iso: string) => {
+      if (!iso) return false;
+      const normalizedIso = new Date(iso).toISOString();
+      const slot = timelineSlots.find((s) => s.iso === normalizedIso);
+      return slot ? slot.disabled : false;
+    },
+    [timelineSlots],
+  );
 
   const blocked = selectedTime ? isBlocked(selectedTime) : false;
 
@@ -76,8 +81,7 @@ export default function TripDetails({ data, onChange }: Props) {
       {selectedDate && (
         <>
           <DayTimeline
-            date={selectedDate}
-            availability={availability}
+            slots={timelineSlots}
             value={selectedTime}
             onSelect={handleTimeSelect}
           />

@@ -1,31 +1,20 @@
-import { useMemo } from 'react';
 import { Button, Stack } from '@mui/material';
-import type { AvailabilityResponse } from '@/api-client';
-import { calculateHourlyAvailability } from '@/lib/availabilityUtils';
+import type { HourlyAvailabilitySlot } from '@/lib/availabilityUtils';
 
 interface DayTimelineProps {
-  date: string;
-  availability: AvailabilityResponse | null;
+  slots: HourlyAvailabilitySlot[];
   value?: string;
   onSelect?: (iso: string) => void;
 }
 
 export default function DayTimeline({
-  date,
-  availability,
+  slots,
   value,
   onSelect,
 }: DayTimelineProps) {
-  const slots = useMemo(
-    () => calculateHourlyAvailability(availability, date),
-    [availability, date],
-  );
-
   return (
     <Stack direction="row" flexWrap="wrap" gap={1}>
-      {slots.map(({ start, disabled }) => {
-        const label = `${String(start.getHours()).padStart(2, '0')}:00`;
-        const iso = start.toISOString();
+      {slots.map(({ label, iso, disabled }) => {
         return (
           <Button
             key={iso}
