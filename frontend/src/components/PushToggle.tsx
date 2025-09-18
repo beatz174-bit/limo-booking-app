@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FormControlLabel, Switch } from '@mui/material';
 import { onPushSubscriptionChange, subscribePush, unsubscribePush } from '@/services/push';
 import { CONFIG } from '@/config';
@@ -13,22 +13,41 @@ const PushToggle = ({ ensureFreshToken }: Props) => {
   const [playerId, setPlayerId] = useState<string | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
+    let isActive = true;
+
     const load = async () => {
-      const auth = await ensureFreshToken();
-      if (!auth) return;
-      const base = CONFIG.API_BASE_URL ?? '';
-      const res = await apiFetch(`${base}/users/me`);
-      if (res.ok) {
-        const data = await res.json();
-        console.log('Fetched onesignal_player_id', data.onesignal_player_id);
-        setEnabled(!!data.onesignal_player_id);
-        setPlayerId(data.onesignal_player_id ?? null);
-      } else {
-        const body = res.text ? await res.text() : '';
-        console.log('Failed to fetch /users/me', res.status, body);
+      try {
+        const auth = await ensureFreshToken();
+        if (!auth || !isActive) return;
+
+        const base = CONFIG.API_BASE_URL ?? '';
+        const res = await apiFetch(`${base}/users/me`, { signal: controller.signal });
+        if (!isActive) return;
+
+        if (res.ok) {
+          const data = await res.json();
+          if (!isActive) return;
+          console.log('Fetched onesignal_player_id', data.onesignal_player_id);
+          setEnabled(!!data.onesignal_player_id);
+          setPlayerId(data.onesignal_player_id ?? null);
+        } else {
+          const body = res.text ? await res.text() : '';
+          if (!isActive) return;
+          console.log('Failed to fetch /users/me', res.status, body);
+        }
+      } catch (err) {
+        if (controller.signal.aborted || !isActive) return;
+        throw err;
       }
     };
+
     load();
+
+    return () => {
+      isActive = false;
+      controller.abort();
+    };
   }, [ensureFreshToken]);
 
   const handleChange = async (
@@ -71,13 +90,28 @@ const PushToggle = ({ ensureFreshToken }: Props) => {
     setEnabled(checked);
   };
 
+  const subscriptionCleanupRef = useRef<(() => void) | null>(null);
+
   useEffect(() => {
+    if (subscriptionCleanupRef.current) {
+      subscriptionCleanupRef.current();
+      subscriptionCleanupRef.current = null;
+    }
+
     const unsubscribe = onPushSubscriptionChange((id) => {
       console.log('Observed subscription change', id);
       setEnabled(!!id);
       setPlayerId(id);
     });
-    return unsubscribe;
+
+    subscriptionCleanupRef.current = unsubscribe;
+
+    return () => {
+      if (subscriptionCleanupRef.current) {
+        subscriptionCleanupRef.current();
+        subscriptionCleanupRef.current = null;
+      }
+    };
   }, []);
 
   return (
