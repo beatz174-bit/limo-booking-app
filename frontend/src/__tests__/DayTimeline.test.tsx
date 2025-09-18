@@ -24,9 +24,10 @@ describe('DayTimeline', () => {
     const eleven = screen.getByRole('button', { name: '11:00' });
     expect(eleven).toBeEnabled();
     await userEvent.click(eleven);
-    expect(onSelect).toHaveBeenCalledWith(
-      new Date('2025-01-01T11:00:00').toISOString(),
-    );
+    const expectedIso = new Date(2025, 0, 1, 11, 0, 0, 0).toISOString();
+    expect(onSelect).toHaveBeenCalledWith(expectedIso);
+    const [[selectedIso]] = onSelect.mock.calls;
+    expect(new Date(selectedIso).getHours()).toBe(11);
   });
 });
 
