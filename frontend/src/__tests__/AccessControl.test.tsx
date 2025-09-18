@@ -1,10 +1,40 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { vi } from 'vitest';
+
+vi.mock('@/contexts/BookingsContext', async () => {
+  const React = await vi.importActual<typeof import('react')>('react');
+  const mockValue = {
+    bookings: [],
+    loading: false,
+    error: null,
+    refresh: async () => {},
+    updateBooking: async () => {},
+    addBooking: () => {},
+  };
+  const BookingsContext = React.createContext(mockValue);
+  const BookingsProvider = ({
+    children,
+  }: {
+    children?: import('react').ReactNode;
+  }) =>
+    React.createElement(
+      BookingsContext.Provider,
+      { value: mockValue },
+      children,
+    );
+  return {
+    __esModule: true,
+    BookingsContext,
+    BookingsProvider,
+    default: BookingsProvider,
+  };
+});
+
 import App from '@/App';
 import { AuthContextType, UserShape } from '@/types/AuthContextType';
 import { AuthContext } from '@/contexts/AuthContext';
 import { DevFeaturesProvider } from '@/contexts/DevFeaturesContext';
-import { vi } from 'vitest';
 import { CONFIG } from '@/config';
 
 vi.mock('@/components/ApiConfig', async () => {
