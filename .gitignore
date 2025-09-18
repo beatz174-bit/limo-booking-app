@@ -27,3 +27,4 @@ archive/
 old.*
 .env
 frontend/public/firebase-messaging-sw.js
+node_modules
