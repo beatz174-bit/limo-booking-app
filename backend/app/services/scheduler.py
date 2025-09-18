@@ -3,13 +3,13 @@
 import uuid
 from datetime import datetime, timedelta
 
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-
 from app.core.config import get_settings
 from app.db.database import AsyncSessionLocal
 from app.models.notification import NotificationType
 from app.models.user_v2 import UserRole
 from app.services import booking_service, notifications, routing
+from app.services.settings_service import get_admin_user_id
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 settings = get_settings()
 scheduler = AsyncIOScheduler(timezone=settings.app_tz)
@@ -36,12 +36,14 @@ async def schedule_leave_now(booking):
 
 async def _leave_now_job(booking_id: uuid.UUID):
     async with AsyncSessionLocal() as session:
-        await booking_service.leave_booking(session, booking_id)
+        booking = await booking_service.leave_booking(session, booking_id)
+        admin_user_id = await get_admin_user_id(session)
         await notifications.create_notification(
             session,
             booking_id,
             NotificationType.LEAVE_NOW,
             UserRole.DRIVER,
+            admin_user_id,
             {},
         )
         await notifications.create_notification(
@@ -49,6 +51,7 @@ async def _leave_now_job(booking_id: uuid.UUID):
             booking_id,
             NotificationType.ON_THE_WAY,
             UserRole.CUSTOMER,
+            booking.customer_id,
             {},
         )
         await session.commit()

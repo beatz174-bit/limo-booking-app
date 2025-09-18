@@ -54,6 +54,7 @@ async def confirm_booking(
         booking.id,
         NotificationType.CONFIRMATION,
         UserRole.CUSTOMER,
+        booking.customer_id,
         {"deposit_required_cents": booking.deposit_required_cents},
     )
     await db.commit()
@@ -98,6 +99,7 @@ async def leave_booking(
         booking.id,
         NotificationType.ON_THE_WAY,
         UserRole.CUSTOMER,
+        booking.customer_id,
         {},
     )
     await db.commit()
@@ -128,6 +130,7 @@ async def start_trip(
         booking.id,
         NotificationType.STARTED,
         UserRole.CUSTOMER,
+        booking.customer_id,
         {},
     )
     await db.commit()
@@ -162,6 +165,7 @@ async def complete_booking(
         booking.id,
         NotificationType.COMPLETED,
         UserRole.CUSTOMER,
+        booking.customer_id,
         {},
     )
     await db.commit()

@@ -1,4 +1,6 @@
+import uuid
 from types import SimpleNamespace
+from typing import Any
 
 import httpx
 import pytest
@@ -47,20 +49,22 @@ async def test_send_onesignal_uses_async_client(monkeypatch: MonkeyPatch):
     dummy_client = DummyClient()
     monkeypatch.setattr(httpx, "AsyncClient", lambda *args, **kwargs: dummy_client)
 
-    class DummyResult:
-        def scalars(self):
-            class _Scalar:
-                def all(self):
-                    return ["tok"]
-
-            return _Scalar()
-
     class DummyDB:
-        async def execute(self, *args, **kwargs):
-            return DummyResult()
+        def __init__(self):
+            self.user = SimpleNamespace(
+                role=UserRole.DRIVER,
+                onesignal_player_id="tok",
+            )
+
+        async def get(self, model, pk):
+            return self.user
 
     await _send_onesignal(
-        DummyDB(), UserRole.DRIVER, NotificationType.ON_THE_WAY, {"foo": "bar"}
+        DummyDB(),
+        uuid.uuid4(),
+        UserRole.DRIVER,
+        NotificationType.ON_THE_WAY,
+        {"foo": "bar"},
     )
 
     assert len(dummy_client.calls) == 1
@@ -71,3 +75,86 @@ async def test_send_onesignal_uses_async_client(monkeypatch: MonkeyPatch):
     notif = kwargs["json"]["headings"]
     assert notif == {"en": notification_map[NotificationType.ON_THE_WAY]["headings"]}
     assert all(isinstance(v, str) for v in kwargs["json"]["data"].values())
+
+
+@pytest.mark.asyncio
+async def test_send_onesignal_skips_when_user_missing(monkeypatch: MonkeyPatch):
+    dummy_settings = SimpleNamespace(
+        onesignal_app_id="aid",
+        onesignal_api_key="key",
+    )
+    monkeypatch.setattr(
+        "app.services.notifications.get_settings", lambda: dummy_settings
+    )
+
+    class DummyClient:
+        def __init__(self):
+            self.calls: list[tuple[str, dict[str, Any]]] = []
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            pass
+
+        async def post(self, url, **kwargs):  # pragma: no cover - not expected
+            self.calls.append((url, kwargs))
+            return SimpleNamespace(
+                status_code=200, json=lambda: {}, raise_for_status=lambda: None
+            )
+
+    dummy_client = DummyClient()
+    monkeypatch.setattr(httpx, "AsyncClient", lambda *args, **kwargs: dummy_client)
+
+    class DummyDB:
+        async def get(self, model, pk):
+            return None
+
+    await _send_onesignal(
+        DummyDB(), uuid.uuid4(), UserRole.DRIVER, NotificationType.ON_THE_WAY, {}
+    )
+
+    assert dummy_client.calls == []
+
+
+@pytest.mark.asyncio
+async def test_send_onesignal_skips_when_player_missing(monkeypatch: MonkeyPatch):
+    dummy_settings = SimpleNamespace(
+        onesignal_app_id="aid",
+        onesignal_api_key="key",
+    )
+    monkeypatch.setattr(
+        "app.services.notifications.get_settings", lambda: dummy_settings
+    )
+
+    class DummyClient:
+        def __init__(self):
+            self.calls: list[tuple[str, dict[str, Any]]] = []
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            pass
+
+        async def post(self, url, **kwargs):  # pragma: no cover - not expected
+            self.calls.append((url, kwargs))
+            return SimpleNamespace(
+                status_code=200, json=lambda: {}, raise_for_status=lambda: None
+            )
+
+    dummy_client = DummyClient()
+    monkeypatch.setattr(httpx, "AsyncClient", lambda *args, **kwargs: dummy_client)
+
+    class DummyDB:
+        def __init__(self):
+            self.user = SimpleNamespace(role=UserRole.DRIVER, onesignal_player_id=None)
+
+        async def get(self, model, pk):
+            return self.user
+
+    await _send_onesignal(
+        DummyDB(), uuid.uuid4(), UserRole.DRIVER, NotificationType.ON_THE_WAY, {}
+    )
+
+    assert dummy_client.calls == []

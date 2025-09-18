@@ -3,11 +3,10 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict
 
-from sqlalchemy import JSON, UUID, DateTime, Enum, ForeignKey, String
+from app.db.database import Base
+from sqlalchemy import JSON, UUID, DateTime, Enum, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
-
-from app.db.database import Base
 
 
 class NotificationType(str, enum.Enum):
@@ -42,6 +41,9 @@ class Notification(Base):
     )
     to_role: Mapped[NotificationRole] = mapped_column(
         Enum(NotificationRole), nullable=False
+    )
+    to_user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users_v2.id"), nullable=True
     )
     payload: Mapped[Dict[str, Any]] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(

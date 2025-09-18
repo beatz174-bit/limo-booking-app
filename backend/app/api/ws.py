@@ -109,6 +109,7 @@ async def booking_ws(websocket: WebSocket, booking_id: uuid.UUID):
                                         booking.id,
                                         NotificationType.ARRIVED_PICKUP,
                                         UserRole.CUSTOMER,
+                                        booking.customer_id,
                                         {},
                                     )
                                     await db.commit()
@@ -132,6 +133,7 @@ async def booking_ws(websocket: WebSocket, booking_id: uuid.UUID):
                                         booking.id,
                                         NotificationType.ARRIVED_DROPOFF,
                                         UserRole.CUSTOMER,
+                                        booking.customer_id,
                                         {},
                                     )
                                     await db.commit()
