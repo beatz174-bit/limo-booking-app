@@ -7,11 +7,6 @@ from datetime import datetime, timedelta, timezone
 from math import atan2, cos, radians, sin, sqrt
 
 import stripe
-from fastapi import HTTPException
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.api.ws import send_booking_update
 from app.db.database import AsyncSessionLocal
 from app.models.availability_slot import AvailabilitySlot
 from app.models.booking import Booking, BookingStatus
@@ -22,6 +17,10 @@ from app.models.trip import Trip
 from app.models.user_v2 import User, UserRole
 from app.schemas.api_booking import BookingCreateRequest
 from app.services import notifications, pricing_service, routing, stripe_client
+from app.services.booking_updates import send_booking_update
+from fastapi import HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def create_booking(
