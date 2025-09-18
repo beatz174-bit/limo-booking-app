@@ -1,13 +1,12 @@
 # app/db/database.py
 import warnings
+from pathlib import Path
 
 """Database connection and session management utilities."""
 
-import asyncio
-from pathlib import Path
 from typing import Awaitable, Dict, Protocol, Union
 
-from sqlalchemy.engine.url import URL, make_url
+from sqlalchemy.engine.url import make_url
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -26,27 +25,29 @@ settings = get_settings()
 # 🚀 1. Build engine URL and detect async driver
 
 
-raw = settings.database_path
-path = Path(raw)  # type: ignore
-if not path.is_absolute():
-    # choose your root; e.g., repo root or backend dir
-    repo_root = Path(__file__).resolve().parents[3]  # adjust as needed
-    full_path = (repo_root / path).resolve()
-else:
-    full_path = settings.database_path
+database_uri = settings.sqlalchemy_database_uri
+url = make_url(database_uri)
 
-
-url = make_url(f"sqlite+aiosqlite:///{full_path}")
 if url.drivername == "sqlite":
     # Automatic fix: wrap sqlite into sqlite+aiosqlite
     warnings.warn(
         "Detected non-async SQLite URL—switching to 'sqlite+aiosqlite' automatically",
         stacklevel=2,
     )
-    url = URL.create(
-        drivername="sqlite+aiosqlite",
-        database=url.database or ":memory:",
-    )
+    url = url.set(drivername="sqlite+aiosqlite")
+
+if url.drivername.startswith("sqlite+aiosqlite"):
+    database_path = url.database
+    if (
+        database_path
+        and database_path != ":memory:"
+        and not database_path.startswith("file:")
+    ):
+        resolved_path = Path(database_path)
+        if not resolved_path.is_absolute():
+            resolved_path = resolved_path.resolve()
+        resolved_path.parent.mkdir(parents=True, exist_ok=True)
+        url = url.set(database=str(resolved_path))
 
 # --------------------------------------------------------------------
 # 📦 2. Engine kwargs (type-safe assignments)
@@ -71,7 +72,7 @@ else:
 # 🧰 3. Create actual AsyncEngine
 
 async_engine: AsyncEngine = create_async_engine(
-    str(url),
+    url,
     **engine_kwargs,
 )
 
