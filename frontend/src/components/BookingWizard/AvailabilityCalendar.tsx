@@ -63,7 +63,9 @@ export default function AvailabilityCalendar({
         ))}
         {Array.from({ length: daysInMonth }).map((_, idx) => {
           const dayNum = idx + 1;
-          const date = new Date(month.getFullYear(), month.getMonth(), dayNum);
+          const year = month.getFullYear();
+          const monthIndex = month.getMonth();
+          const date = new Date(Date.UTC(year, monthIndex, dayNum));
           const dateStr = date.toISOString().slice(0, 10);
           const state: DayState = dayStates[dateStr] || 'free';
           const selected = value === dateStr;
