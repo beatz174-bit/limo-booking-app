@@ -1,13 +1,11 @@
 """Service layer for booking lifecycle operations."""
 
-import asyncio
 import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 from math import atan2, cos, radians, sin, sqrt
 
 import stripe
-from app.db.database import AsyncSessionLocal
 from app.models.availability_slot import AvailabilitySlot
 from app.models.booking import Booking, BookingStatus
 from app.models.notification import NotificationType
@@ -18,6 +16,7 @@ from app.models.user_v2 import User, UserRole
 from app.schemas.api_booking import BookingCreateRequest
 from app.services import notifications, pricing_service, routing, stripe_client
 from app.services.booking_updates import send_booking_update
+from app.services.settings_service import get_admin_user_id
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -73,23 +72,17 @@ async def create_booking(
     )
     db.add(booking)
     await db.flush()
+    admin_user_id = await get_admin_user_id(db)
     await notifications.create_notification(
         db,
         booking.id,
         NotificationType.NEW_BOOKING,
         UserRole.DRIVER,
+        admin_user_id,
         {"booking_id": str(booking.id)},
     )
     await db.commit()
     await db.refresh(booking)
-    asyncio.create_task(
-        notifications.dispatch_notification(
-            AsyncSessionLocal,
-            UserRole.DRIVER,
-            NotificationType.NEW_BOOKING,
-            {"booking_id": str(booking.id)},
-        )
-    )
     return booking
 
 

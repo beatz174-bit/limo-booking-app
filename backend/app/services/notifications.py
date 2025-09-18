@@ -1,16 +1,19 @@
 """Notification helper service."""
 
+import asyncio
 import json
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Callable
 
 import httpx
-from sqlalchemy import select
+from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.db.database import AsyncSessionLocal
 from app.models.notification import Notification, NotificationType
 from app.models.user_v2 import User as UserV2
 from app.models.user_v2 import UserRole
@@ -53,37 +56,70 @@ notification_map: dict[NotificationType, dict[str, str]] = {
 }
 
 
+_DISPATCH_QUEUE_KEY = "_notification_after_commit_callbacks"
+
+
+@event.listens_for(Session, "after_commit")
+def _run_notification_dispatch(session: Session) -> None:
+    callbacks: list[Callable[[], None]] = session.info.pop(_DISPATCH_QUEUE_KEY, [])
+    for callback in callbacks:
+        try:
+            callback()
+        except Exception:  # pragma: no cover - defensive logging
+            logger.exception("Failed to schedule notification dispatch")
+
+
+@event.listens_for(Session, "after_rollback")
+def _clear_notification_dispatch(session: Session) -> None:
+    session.info.pop(_DISPATCH_QUEUE_KEY, None)
+
+
 async def create_notification(
     db: AsyncSession,
     booking_id: uuid.UUID,
     notif_type: NotificationType,
     to_role: UserRole,
+    to_user_id: uuid.UUID,
     payload: dict | None = None,
 ) -> Notification:
+    if to_user_id is None:  # pragma: no cover - guardrail for typing
+        raise ValueError("to_user_id is required for notification dispatch")
+
+    payload_data = dict(payload or {})
     note = Notification(
         booking_id=booking_id,
         type=notif_type,
         to_role=to_role,
-        payload=payload or {},
+        to_user_id=to_user_id,
+        payload=payload_data,
         created_at=datetime.now(timezone.utc),
     )
     db.add(note)
     await db.flush()
+    _queue_dispatch_after_commit(
+        db,
+        to_user_id=to_user_id,
+        to_role=to_role,
+        notif_type=notif_type,
+        payload=payload_data,
+    )
     return note
 
 
 async def dispatch_notification(
     db: async_sessionmaker[AsyncSession],
+    to_user_id: uuid.UUID,
     to_role: UserRole,
     notif_type: NotificationType,
     payload: dict[str, Any] | None = None,
 ) -> None:
     async with db() as session:
-        await _send_onesignal(session, to_role, notif_type, payload or {})
+        await _send_onesignal(session, to_user_id, to_role, notif_type, payload or {})
 
 
 async def _send_onesignal(
     db: AsyncSession,
+    to_user_id: uuid.UUID,
     to_role: UserRole,
     notif_type: NotificationType,
     payload: dict[str, Any],
@@ -112,36 +148,43 @@ async def _send_onesignal(
 
     notification = notification_map.get(notif_type)
 
-    result = await db.execute(
-        select(UserV2.onesignal_player_id).where(
-            UserV2.role == to_role, UserV2.onesignal_player_id.is_not(None)
-        )
-    )
-    try:
-        raw_result = result.all()
-        player_ids = [row[0] for row in raw_result]
-    except AttributeError:
-        player_ids = result.scalars().all()
-        raw_result = [(pid,) for pid in player_ids]
-    logger.info(
-        "Queried OneSignal player IDs",
-        extra={
-            "role": to_role.value,
-            "raw_result": raw_result,
-            "count": len(player_ids),
-        },
-    )
-
-    if not player_ids:
+    user = await db.get(UserV2, to_user_id)
+    if not user:
         logger.info(
-            "No OneSignal player IDs",
-            extra={"role": to_role.value, "payload": data},
+            "Notification recipient missing",
+            extra={
+                "to_user_id": str(to_user_id),
+                "role": to_role.value,
+                "type": notif_type.value,
+            },
+        )
+        return
+
+    if user.role is not to_role:
+        logger.warning(
+            "Notification recipient role mismatch",
+            extra={
+                "to_user_id": str(to_user_id),
+                "expected_role": to_role.value,
+                "actual_role": user.role.value,
+            },
+        )
+
+    player_id = user.onesignal_player_id
+    if not player_id:
+        logger.info(
+            "Notification recipient missing OneSignal ID",
+            extra={
+                "to_user_id": str(to_user_id),
+                "role": to_role.value,
+                "type": notif_type.value,
+            },
         )
         return
 
     message: dict[str, Any] = {
         "app_id": settings.onesignal_app_id,
-        "include_player_ids": player_ids,
+        "include_player_ids": [player_id],
         "data": data,
     }
     if notification:
@@ -158,7 +201,7 @@ async def _send_onesignal(
             logger.info(
                 "OneSignal request",
                 extra={
-                    "player_ids": player_ids,
+                    "player_ids": [player_id],
                     "payload": data,
                     "request_payload": message,
                     "status_code": response.status_code,
@@ -168,7 +211,7 @@ async def _send_onesignal(
             logger.info(
                 "OneSignal response",
                 extra={
-                    "player_ids": player_ids,
+                    "player_ids": [player_id],
                     "payload": data,
                     "request_payload": message,
                     "status_code": response.status_code,
@@ -180,10 +223,42 @@ async def _send_onesignal(
         logger.exception(
             "OneSignal send failed",
             extra={
-                "player_ids": player_ids,
+                "player_ids": [player_id] if player_id else [],
                 "payload": data,
                 "request_payload": message,
                 "status_code": status_code,
                 "error": str(exc),
             },
         )
+
+
+def _queue_dispatch_after_commit(
+    db: AsyncSession,
+    *,
+    to_user_id: uuid.UUID,
+    to_role: UserRole,
+    notif_type: NotificationType,
+    payload: dict[str, Any],
+) -> None:
+    sync_session = db.sync_session
+    queue: list[Callable[[], None]] = sync_session.info.setdefault(
+        _DISPATCH_QUEUE_KEY, []
+    )
+
+    def _schedule() -> None:
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:  # pragma: no cover - loop missing (shouldn't happen)
+            logger.exception("No running event loop to dispatch notification")
+            return
+        loop.create_task(
+            dispatch_notification(
+                AsyncSessionLocal,
+                to_user_id=to_user_id,
+                to_role=to_role,
+                notif_type=notif_type,
+                payload=dict(payload),
+            )
+        )
+
+    queue.append(_schedule)

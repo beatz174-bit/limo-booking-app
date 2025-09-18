@@ -1,6 +1,8 @@
+import asyncio
 import json
 import uuid
 from datetime import datetime, timedelta, timezone
+from unittest.mock import AsyncMock
 
 import pytest
 from starlette.testclient import TestClient
@@ -8,6 +10,7 @@ from starlette.testclient import TestClient
 from app.core.security import create_jwt_token, hash_password
 from app.main import app
 from app.models.booking import Booking, BookingStatus
+from app.models.notification import NotificationType
 from app.models.settings import AdminConfig
 from app.models.trip import Trip
 from app.models.user_v2 import User, UserRole
@@ -52,7 +55,7 @@ async def _create_booking(async_session, status: BookingStatus) -> tuple[User, B
         status=status,
     )
     async_session.add(booking)
-    async_session.merge(
+    await async_session.merge(
         AdminConfig(
             id=1,
             account_mode=False,
@@ -87,7 +90,11 @@ async def test_first_location_update_sets_on_the_way(async_session):
     assert booking.status is BookingStatus.ON_THE_WAY
 
 
-async def test_approaching_pickup_sets_arrived_pickup(async_session):
+async def test_approaching_pickup_sets_arrived_pickup(async_session, mocker):
+    dispatch = mocker.patch(
+        "app.services.notifications.dispatch_notification",
+        new_callable=AsyncMock,
+    )
     driver, booking = await _create_booking(async_session, BookingStatus.ON_THE_WAY)
     token = create_jwt_token(driver.id)
     with TestClient(app) as client:
@@ -101,9 +108,19 @@ async def test_approaching_pickup_sets_arrived_pickup(async_session):
             ws.receive_json()
     await async_session.refresh(booking)
     assert booking.status is BookingStatus.ARRIVED_PICKUP
+    await asyncio.sleep(0)
+    dispatch.assert_awaited()
+    call = dispatch.await_args_list[0]
+    assert call.kwargs["to_user_id"] == booking.customer_id
+    assert call.kwargs["to_role"] is UserRole.CUSTOMER
+    assert call.kwargs["notif_type"] is NotificationType.ARRIVED_PICKUP
 
 
-async def test_approaching_dropoff_sets_arrived_dropoff(async_session):
+async def test_approaching_dropoff_sets_arrived_dropoff(async_session, mocker):
+    dispatch = mocker.patch(
+        "app.services.notifications.dispatch_notification",
+        new_callable=AsyncMock,
+    )
     driver, booking = await _create_booking(async_session, BookingStatus.IN_PROGRESS)
     token = create_jwt_token(driver.id)
     with TestClient(app) as client:
@@ -117,3 +134,9 @@ async def test_approaching_dropoff_sets_arrived_dropoff(async_session):
             ws.receive_json()
     await async_session.refresh(booking)
     assert booking.status is BookingStatus.ARRIVED_DROPOFF
+    await asyncio.sleep(0)
+    dispatch.assert_awaited()
+    call = dispatch.await_args_list[0]
+    assert call.kwargs["to_user_id"] == booking.customer_id
+    assert call.kwargs["to_role"] is UserRole.CUSTOMER
+    assert call.kwargs["notif_type"] is NotificationType.ARRIVED_DROPOFF
