@@ -20,14 +20,14 @@ export default function AvailabilityCalendar({
   const [month, setMonth] = useState(
     new Date(initial.getFullYear(), initial.getMonth(), 1),
   );
-  const monthStr = month.toISOString().slice(0, 7);
+  const monthStr = formatMonthKey(month);
   const { dayStates } = useAvailability(monthStr);
 
   const changeMonth = useCallback(
     (offset: number) => {
       const newMonth = new Date(month.getFullYear(), month.getMonth() + offset, 1);
       setMonth(newMonth);
-      onMonthChange?.(newMonth.toISOString().slice(0, 7));
+      onMonthChange?.(formatMonthKey(newMonth));
     },
     [month, onMonthChange],
   );
@@ -88,5 +88,11 @@ export default function AvailabilityCalendar({
       </Box>
     </Stack>
   );
+}
+
+function formatMonthKey(date: Date): string {
+  const year = date.getFullYear();
+  const monthIndex = date.getMonth() + 1;
+  return `${year}-${monthIndex.toString().padStart(2, '0')}`;
 }
 
