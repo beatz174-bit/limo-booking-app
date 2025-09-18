@@ -38,7 +38,8 @@ const PushToggle = ({ ensureFreshToken }: Props) => {
         }
       } catch (err) {
         if (controller.signal.aborted || !isActive) return;
-        throw err;
+        console.error('Failed to bootstrap push toggle', err);
+        return;
       }
     };
 

@@ -87,6 +87,22 @@ describe('PushToggle', () => {
     await waitFor(() => expect(checkbox).toBeChecked());
   });
 
+  it('leaves the switch unchecked when bootstrap fails', async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
+    try {
+      const { default: PushToggle } = await import('@/components/PushToggle');
+      fetchSpy = vi.spyOn(global, 'fetch').mockRejectedValue(new Error('network oops'));
+      render(<PushToggle ensureFreshToken={ensureFreshToken} />);
+      const checkbox = await screen.findByRole('switch', { name: /push notifications/i });
+      expect(checkbox).not.toBeChecked();
+      await waitFor(() => expect(consoleErrorSpy).toHaveBeenCalled());
+    } finally {
+      consoleErrorSpy.mockRestore();
+    }
+  });
+
   it('enables and disables push', async () => {
     const { default: PushToggle } = await import('@/components/PushToggle');
     const fetchMock = vi
