@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { vi } from 'vitest';
 import type { LocationUpdate } from '@/hooks/useBookingChannel';
@@ -200,21 +200,23 @@ describe('TrackingPage', () => {
           ws_url: '',
         }),
     } as Response);
-    render(
-      <MemoryRouter initialEntries={['/t/abc']}>
-        <Routes>
-          <Route path="/t/:code" element={<TrackingPage />} />
-        </Routes>
-      </MemoryRouter>,
-    );
-    await new Promise((r) => setTimeout(r, 0));
-    await waitFor(() =>
-      expect(screen.getByTestId('dropoff-marker')).toBeInTheDocument(),
-    );
+    await act(async () => {
+      render(
+        <MemoryRouter initialEntries={['/t/abc']}>
+          <Routes>
+            <Route path="/t/:code" element={<TrackingPage />} />
+          </Routes>
+        </MemoryRouter>,
+      );
+    });
+    await screen.findByTestId('dropoff-marker');
     expect(screen.getByTestId('dropoff-marker')).toHaveAttribute(
       'data-icon',
       dropoffIcon,
     );
+    await screen.findByText('ETA: 10 min');
+    await screen.findByTestId('route');
+    await waitFor(() => expect(mockMap.fitBounds).toHaveBeenCalled());
   });
 
   it('sets zoom to 12 when distance is greater than 5 km', async () => {
