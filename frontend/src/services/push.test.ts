@@ -138,6 +138,31 @@ describe('services/push subscription change handling', () => {
     expect(loginMock).toHaveBeenCalledWith('external-42');
   });
 
+  it('skips relinking when the player ID is unchanged but re-links on change', async () => {
+    localStorage.setItem('onesignal_external_id', 'external-42');
+
+    await refreshPushToken();
+    const handler = getRegisteredHandler();
+
+    pushSubscription.id = 'player-original';
+    await handler?.();
+
+    expect(loginMock).toHaveBeenCalledWith('external-42');
+
+    loginMock.mockClear();
+
+    pushSubscription.id = 'player-original';
+    await handler?.();
+
+    expect(loginMock).not.toHaveBeenCalled();
+
+    pushSubscription.id = 'player-new';
+    await handler?.();
+
+    expect(loginMock).toHaveBeenCalledTimes(1);
+    expect(loginMock).toHaveBeenCalledWith('external-42');
+  });
+
   it('notifies local listeners about subscription changes', async () => {
     await refreshPushToken();
 
