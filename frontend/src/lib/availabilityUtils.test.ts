@@ -3,6 +3,7 @@ import type { AvailabilityResponse } from '@/api-client';
 import {
   summarizeMonthlyAvailability,
   calculateHourlyAvailability,
+  formatSlotLabel,
 } from './availabilityUtils';
 
 describe('availabilityUtils', () => {
@@ -28,15 +29,20 @@ describe('availabilityUtils', () => {
     expect(hours[11].disabled).toBe(false);
   });
 
-  it('produces stable UTC labels and iso timestamps', () => {
+  const isoForHour = (hour: number) =>
+    new Date(Date.UTC(2025, 0, 1, hour, 0, 0, 0)).toISOString();
+  const labelForHour = (hour: number) =>
+    formatSlotLabel(new Date(isoForHour(hour)));
+
+  it('produces UTC iso timestamps with localized labels', () => {
     const hours = calculateHourlyAvailability(availability, '2025-01-01');
     expect(hours[0]).toMatchObject({
-      label: '00:00',
-      iso: '2025-01-01T00:00:00.000Z',
+      label: labelForHour(0),
+      iso: isoForHour(0),
     });
     expect(hours[5]).toMatchObject({
-      label: '05:00',
-      iso: '2025-01-01T05:00:00.000Z',
+      label: labelForHour(5),
+      iso: isoForHour(5),
       disabled: true,
     });
   });

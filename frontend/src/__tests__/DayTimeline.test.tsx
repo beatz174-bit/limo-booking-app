@@ -3,7 +3,10 @@ import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import { renderWithProviders } from '@/__tests__/setup/renderWithProviders';
 import DayTimeline from '@/components/BookingWizard/DayTimeline';
-import { calculateHourlyAvailability } from '@/lib/availabilityUtils';
+import {
+  calculateHourlyAvailability,
+  formatSlotLabel,
+} from '@/lib/availabilityUtils';
 
 describe('DayTimeline', () => {
   it('disables unavailable hours and emits selection', async () => {
@@ -19,14 +22,16 @@ describe('DayTimeline', () => {
     renderWithProviders(
       <DayTimeline slots={slots} onSelect={onSelect} />,
     );
-    expect(screen.getByRole('button', { name: '05:00' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: '10:00' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: '15:00' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: '16:00' })).toBeDisabled();
-    const eleven = screen.getByRole('button', { name: '11:00' });
+    const labelForHour = (hour: number) =>
+      formatSlotLabel(new Date(Date.UTC(2025, 0, 1, hour, 0, 0, 0)));
+    expect(screen.getByRole('button', { name: labelForHour(5) })).toBeDisabled();
+    expect(screen.getByRole('button', { name: labelForHour(10) })).toBeDisabled();
+    expect(screen.getByRole('button', { name: labelForHour(15) })).toBeDisabled();
+    expect(screen.getByRole('button', { name: labelForHour(16) })).toBeDisabled();
+    const eleven = screen.getByRole('button', { name: labelForHour(11) });
     expect(eleven).toBeEnabled();
     await userEvent.click(eleven);
-    const expectedIso = '2025-01-01T11:00:00.000Z';
+    const expectedIso = new Date(Date.UTC(2025, 0, 1, 11, 0, 0, 0)).toISOString();
     expect(onSelect).toHaveBeenCalledWith(expectedIso);
     const [[selectedIso]] = onSelect.mock.calls;
     expect(selectedIso).toBe(expectedIso);

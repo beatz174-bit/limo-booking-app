@@ -28,6 +28,7 @@ import type { AvailabilityResponse } from '@/api-client';
 import TripDetails from './TripDetails';
 import type { BookingFormData } from '@/types/BookingFormData';
 import useAvailability from '@/hooks/useAvailability';
+import { formatSlotLabel } from '@/lib/availabilityUtils';
 
 describe('TripDetails', () => {
   const useAvailabilityMock = vi.mocked(useAvailability);
@@ -53,11 +54,18 @@ describe('TripDetails', () => {
 
     renderWithProviders(<TripDetails data={data} onChange={onChange} />);
 
-    expect(await screen.findByRole('button', { name: '05:00' })).toBeDisabled();
+    const labelForHour = (hour: number) =>
+      formatSlotLabel(new Date(Date.UTC(2025, 0, 1, hour, 0, 0, 0)));
+
+    expect(
+      await screen.findByRole('button', { name: labelForHour(5) }),
+    ).toBeDisabled();
     expect(screen.getByText('Time unavailable')).toBeInTheDocument();
 
-    const eleven = screen.getByRole('button', { name: '11:00' });
+    const eleven = screen.getByRole('button', { name: labelForHour(11) });
     await userEvent.click(eleven);
-    expect(onChange).toHaveBeenCalledWith({ pickup_when: '2025-01-01T11:00:00.000Z' });
+    expect(onChange).toHaveBeenCalledWith({
+      pickup_when: new Date(Date.UTC(2025, 0, 1, 11, 0, 0, 0)).toISOString(),
+    });
   });
 });
