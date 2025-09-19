@@ -93,6 +93,7 @@ export default function BookingWizard({
           component={RouterLink}
           to={`/t/${bookingData.public_code}`}
           variant="contained"
+          role="link"
         >
           Track this ride
         </Button>
