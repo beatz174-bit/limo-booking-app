@@ -355,10 +355,15 @@ export async function subscribePush(
 
     const effectiveExternalId =
       normalizedExternalId !== undefined ? normalizedExternalId : storedExternalId;
-    const alreadyLinked =
-      effectiveExternalId !== null && effectiveExternalId === lastLinkedExternalId;
 
-    if (effectiveExternalId && os?.login && !alreadyLinked) {
+    const shouldLogin =
+      !!effectiveExternalId &&
+      !!os &&
+      typeof os.login === 'function' &&
+      (normalizedExternalId === undefined ||
+        effectiveExternalId !== lastLinkedExternalId);
+
+    if (shouldLogin) {
       try {
         logger.debug('services/push', 'Logging into OneSignal', {
           externalId: effectiveExternalId,
