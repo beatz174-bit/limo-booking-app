@@ -89,6 +89,12 @@ async function relinkStoredExternalId(
 
   try {
     storedExternalId = externalId;
+    if (externalId === lastLinkedExternalId) {
+      logger.debug('services/push', 'Identity already linked; skipping login', {
+        externalId,
+      });
+      return;
+    }
     await sdk.login(externalId);
     lastLinkedExternalId = externalId;
     logger.debug('services/push', successMessage, { externalId });
