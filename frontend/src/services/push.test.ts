@@ -178,4 +178,13 @@ describe('services/push subscription change handling', () => {
     expect(addTagMock).toHaveBeenCalledWith('opted_in', 'true');
     expect(addTagMock).not.toHaveBeenCalledWith('empty', expect.anything());
   });
+
+  it('logs in exactly once when subscribing with a new external ID', async () => {
+    await subscribePushFn({
+      externalId: 'fresh-user',
+    });
+
+    expect(loginMock).toHaveBeenCalledTimes(1);
+    expect(loginMock).toHaveBeenCalledWith('fresh-user');
+  });
 });
