@@ -46,6 +46,16 @@ export interface HourlyAvailabilitySlot {
   disabled: boolean;
 }
 
+const slotLabelFormatter = new Intl.DateTimeFormat(undefined, {
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+});
+
+export function formatSlotLabel(date: Date): string {
+  return slotLabelFormatter.format(date);
+}
+
 export function calculateHourlyAvailability(
   availability: AvailabilityResponse | null,
   date: string,
@@ -70,14 +80,14 @@ export function calculateHourlyAvailability(
     : [];
 
   return Array.from({ length: 24 }).map((_, h) => {
-    const start = new Date(year, monthIndex, dayOfMonth, h, 0, 0, 0);
-    const startMs = start.getTime();
+    const startMs = Date.UTC(year, monthIndex, dayOfMonth, h, 0, 0, 0);
+    const start = new Date(startMs);
     const endMs = startMs + 60 * 60 * 1000;
     const disabled =
       bookingWindows.some((b) => b.startMs < endMs && b.endMs > startMs) ||
       slotWindows.some((s) => s.startMs < endMs && s.endMs > startMs);
     return {
-      label: `${String(h).padStart(2, '0')}:00`,
+      label: formatSlotLabel(start),
       iso: start.toISOString(),
       disabled,
     };

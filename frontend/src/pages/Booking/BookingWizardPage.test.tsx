@@ -18,6 +18,7 @@ import { server } from '@/__tests__/setup/msw.server';
 import { http, HttpResponse } from 'msw';
 import { apiUrl } from '@/__tests__/setup/msw.handlers';
 import BookingWizardPage from './BookingWizardPage';
+import { formatSlotLabel } from '@/lib/availabilityUtils';
 
 const createBooking = vi
   .fn()
@@ -121,9 +122,18 @@ afterEach(() => {
 
 test('creates booking on confirmation and shows tracking link', async () => {
   renderWithProviders(<BookingWizardPage />);
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonthIndex = now.getMonth();
+  const labelForHour = (hour: number) =>
+    formatSlotLabel(
+      new Date(Date.UTC(currentYear, currentMonthIndex, 1, hour, 0, 0, 0)),
+    );
   const pick = async () => {
     await userEvent.click(screen.getByRole('button', { name: '1' }));
-    await userEvent.click(screen.getByRole('button', { name: '10:00' }));
+    await userEvent.click(
+      screen.getByRole('button', { name: labelForHour(10) }),
+    );
   };
   await pick();
 
@@ -144,16 +154,8 @@ test('creates booking on confirmation and shows tracking link', async () => {
 
   await screen.findByRole('link', { name: /track this ride/i });
 
-  const now = new Date();
-  const first = new Date(now.getFullYear(), now.getMonth(), 1);
   const expectedWhen = new Date(
-    first.getFullYear(),
-    first.getMonth(),
-    1,
-    10,
-    0,
-    0,
-    0,
+    Date.UTC(currentYear, currentMonthIndex, 1, 10, 0, 0, 0),
   ).toISOString();
   expect(createBooking).toHaveBeenCalledWith({
     pickup_when: expectedWhen,
@@ -169,7 +171,7 @@ test('creates booking on confirmation and shows tracking link', async () => {
   });
   expect(addBooking).toHaveBeenCalledWith({ id: '1', public_code: 'test' });
   const [[createdBooking]] = createBooking.mock.calls;
-  expect(new Date(createdBooking.pickup_when).getHours()).toBe(10);
+  expect(new Date(createdBooking.pickup_when).getUTCHours()).toBe(10);
 });
 
 test('prompts to add a payment method when missing', async () => {
@@ -205,9 +207,18 @@ test('reopens add-card modal when booking has no payment method', async () => {
 
   renderWithProviders(<BookingWizardPage />);
   expect(screen.queryByTestId('payment-element')).not.toBeInTheDocument();
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonthIndex = now.getMonth();
+  const labelForHour = (hour: number) =>
+    formatSlotLabel(
+      new Date(Date.UTC(currentYear, currentMonthIndex, 1, hour, 0, 0, 0)),
+    );
   const pick = async () => {
     await userEvent.click(screen.getByRole('button', { name: '1' }));
-    await userEvent.click(screen.getByRole('button', { name: '10:00' }));
+    await userEvent.click(
+      screen.getByRole('button', { name: labelForHour(10) }),
+    );
   };
   await pick();
   const input = (re: RegExp) => screen.getByLabelText(re, { selector: 'input' });
