@@ -248,4 +248,16 @@ describe('PushToggle OneSignal integration', () => {
     await fireEvent.click(checkbox);
     await waitFor(() => expect(loginMock).toHaveBeenCalledWith('user-123'));
   });
+
+  it('avoids duplicate logins when the external id is unchanged', async () => {
+    const pushModule = await import('@/services/push');
+    await pushModule.subscribePush({ externalId: 'user-123' });
+    await waitFor(() => expect(loginMock).toHaveBeenCalledWith('user-123'));
+
+    loginMock.mockClear();
+
+    await pushModule.subscribePush({ externalId: 'user-123' });
+
+    expect(loginMock).not.toHaveBeenCalled();
+  });
 });
